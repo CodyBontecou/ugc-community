@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
       maxTokens = 16000;
-      model = "claude-sonnet-4-5-20250514";
+      model = "claude-sonnet-4-5";
     } else if (action === "refine-html") {
       // HTML refinement
       const { currentHtml, feedback } = htmlRefineSchema.parse(body);
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
       maxTokens = 16000;
-      model = "claude-sonnet-4-5-20250514";
+      model = "claude-sonnet-4-5";
     } else {
       const { description, niche } = generateSchema.parse(body);
       const prompts = buildPrompt(description, niche);

@@ -41,12 +41,19 @@ export function SignInForm() {
   };
 
   const handleGoogleSignIn = async () => {
+    setError(null);
     setIsLoading(true);
     try {
-      await signIn.social({
+      const result = await signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
       });
+
+      if (result?.error) {
+        setError(result.error.message || "Failed to sign in with Google");
+        setIsLoading(false);
+      }
+      // If successful, browser redirects to Google OAuth - no need to reset loading
     } catch {
       setError("Failed to sign in with Google");
       setIsLoading(false);
