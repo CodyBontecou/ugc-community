@@ -14,10 +14,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.23",
-    "@ai-sdk/react": "^3.0.52",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@neondatabase/serverless": "^0.10.4",
-    "ai": "^6.0.50",
     "better-auth": "^1.2.8",
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^11.18.0",

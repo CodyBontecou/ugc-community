@@ -1,5 +1,4 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { streamText } from "ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
@@ -29,42 +28,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
     const body = await request.json();
     const action = body.action || "generate";
 
+    let systemPrompt: string;
+    let userPrompt: string;
+
     if (action === "refine") {
-      // Handle refinement request
       const { currentContent, feedback } = refineSchema.parse(body);
-      const { systemPrompt, userPrompt } = buildRefinePrompt(
-        currentContent,
-        feedback
-      );
-
-      const result = streamText({
-        model: anthropic("claude-sonnet-4-20250514"),
-        system: systemPrompt,
-        prompt: userPrompt,
-        maxOutputTokens: 2000,
-      });
-
-      return result.toTextStreamResponse();
+      const prompts = buildRefinePrompt(currentContent, feedback);
+      systemPrompt = prompts.systemPrompt;
+      userPrompt = prompts.userPrompt;
+    } else {
+      const { description, niche } = generateSchema.parse(body);
+      const prompts = buildPrompt(description, niche);
+      systemPrompt = prompts.systemPrompt;
+      userPrompt = prompts.userPrompt;
     }
 
-    // Handle generation request
-    const { description, niche } = generateSchema.parse(body);
-    const { systemPrompt, userPrompt } = buildPrompt(description, niche);
-
-    // Log for debugging (remove in production)
     console.log(`Generating portfolio for user ${session.user.id}`);
 
-    const result = streamText({
-      model: anthropic("claude-sonnet-4-20250514"),
+    // Create streaming response
+    const stream = anthropic.messages.stream({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
       system: systemPrompt,
-      prompt: userPrompt,
-      maxOutputTokens: 2000,
+      messages: [{ role: "user", content: userPrompt }],
     });
 
-    return result.toTextStreamResponse();
+    // Create a ReadableStream that emits text chunks
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+
+        stream.on("text", (text) => {
+          controller.enqueue(encoder.encode(text));
+        });
+
+        stream.on("error", (error) => {
+          console.error("Stream error:", error);
+          controller.error(error);
+        });
+
+        stream.on("end", () => {
+          controller.close();
+        });
+
+        // Wait for the stream to complete
+        await stream.finalMessage();
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return new Response(

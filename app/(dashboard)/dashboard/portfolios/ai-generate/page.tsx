@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Wand2,
 } from "lucide-react";
-import { useCompletion } from "@ai-sdk/react";
 import { templates, type PortfolioTemplate } from "@/lib/ai/templates";
 
 type Step = "describe" | "template" | "generate" | "preview";
@@ -52,60 +51,98 @@ export default function AIGeneratePage() {
     useState<GeneratedContent | null>(null);
   const [refineFeedback, setRefineFeedback] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [completion, setCompletion] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const { complete, completion, isLoading } = useCompletion({
-    api: "/api/ai/generate",
-    streamProtocol: "text",
-    onFinish: (prompt, completion) => {
+  const streamGenerate = useCallback(
+    async (body: Record<string, unknown>) => {
+      setError(null);
+      setIsLoading(true);
+      setCompletion("");
+
+      // Abort any existing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       try {
-        // Extract JSON from the completion
-        const jsonMatch = completion.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          setGeneratedContent(parsed);
-          setStep("preview");
+        const response = await fetch("/api/ai/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to generate content");
         }
-      } catch {
-        console.error("Failed to parse AI response");
-        setError("Failed to parse generated content. Please try again.");
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("No response body");
+        }
+
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          fullText += chunk;
+          setCompletion(fullText);
+        }
+
+        // Parse the final JSON
+        try {
+          const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            setGeneratedContent(parsed);
+            setStep("preview");
+          }
+        } catch {
+          console.error("Failed to parse AI response");
+          setError("Failed to parse generated content. Please try again.");
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return; // Ignore abort errors
+        }
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setIsLoading(false);
       }
     },
-    onError: (error) => {
-      setError(error.message || "Failed to generate content");
-    },
-  });
+    []
+  );
 
   const handleGenerate = useCallback(async () => {
-    setError(null);
     setStep("generate");
-
-    await complete("", {
-      body: {
-        action: "generate",
-        description,
-        niche: selectedNiche,
-        templateId: selectedTemplate?.id,
-      },
+    await streamGenerate({
+      action: "generate",
+      description,
+      niche: selectedNiche,
+      templateId: selectedTemplate?.id,
     });
-  }, [complete, description, selectedNiche, selectedTemplate]);
+  }, [streamGenerate, description, selectedNiche, selectedTemplate]);
 
   const handleRefine = useCallback(async () => {
     if (!refineFeedback.trim() || !generatedContent) return;
 
-    setError(null);
     setStep("generate");
-
-    await complete("", {
-      body: {
-        action: "refine",
-        currentContent: JSON.stringify(generatedContent, null, 2),
-        feedback: refineFeedback,
-      },
+    await streamGenerate({
+      action: "refine",
+      currentContent: JSON.stringify(generatedContent, null, 2),
+      feedback: refineFeedback,
     });
-
     setRefineFeedback("");
-  }, [complete, generatedContent, refineFeedback]);
+  }, [streamGenerate, generatedContent, refineFeedback]);
 
   const handleCreatePortfolio = async () => {
     if (!generatedContent || !selectedTemplate) return;
