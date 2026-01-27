@@ -1,0 +1,302 @@
+"use client";
+
+import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  Send,
+  X,
+  Check,
+  Loader2,
+  RefreshCw,
+  Minus,
+  Plus,
+  Briefcase,
+  MessageCircle,
+  Zap,
+} from "lucide-react";
+import type { SelectedElement, QuickAction } from "@/lib/editor/types";
+import {
+  QUICK_ACTION_LABELS,
+  QUICK_ACTION_DESCRIPTIONS,
+} from "@/lib/editor/types";
+import { getElementTypeName } from "@/lib/editor/html-element-selector";
+
+interface AIEditPanelProps {
+  selectedElement: SelectedElement | null;
+  portfolioId: string;
+  fullHtml: string;
+  onApplyEdit: (newContent: string) => void;
+  onDeselect: () => void;
+  isStreaming: boolean;
+  onStreamingChange: (streaming: boolean) => void;
+}
+
+const QUICK_ACTIONS: { action: QuickAction; icon: React.ReactNode }[] = [
+  { action: "rewrite", icon: <RefreshCw size={14} /> },
+  { action: "shorten", icon: <Minus size={14} /> },
+  { action: "expand", icon: <Plus size={14} /> },
+  { action: "professional", icon: <Briefcase size={14} /> },
+  { action: "casual", icon: <MessageCircle size={14} /> },
+  { action: "energetic", icon: <Zap size={14} /> },
+];
+
+export function AIEditPanel({
+  selectedElement,
+  portfolioId,
+  fullHtml,
+  onApplyEdit,
+  onDeselect,
+  isStreaming,
+  onStreamingChange,
+}: AIEditPanelProps) {
+  const [instruction, setInstruction] = useState("");
+  const [streamedContent, setStreamedContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const fetchEdit = useCallback(
+    async (quickAction?: QuickAction) => {
+      if (!selectedElement) return;
+      if (!instruction && !quickAction) return;
+
+      setError(null);
+      setStreamedContent("");
+      onStreamingChange(true);
+
+      abortControllerRef.current = new AbortController();
+
+      try {
+        const response = await fetch("/api/ai/edit-element", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            portfolioId,
+            selector: selectedElement.selector,
+            currentContent: selectedElement.content,
+            instruction: quickAction ? undefined : instruction,
+            quickAction,
+            fullHtml,
+            tagName: selectedElement.tagName,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to generate edit");
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response stream");
+
+        const decoder = new TextDecoder();
+        let accumulated = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulated += chunk;
+          setStreamedContent(accumulated);
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          // User cancelled
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to generate edit");
+      } finally {
+        onStreamingChange(false);
+        abortControllerRef.current = null;
+      }
+    },
+    [selectedElement, instruction, portfolioId, fullHtml, onStreamingChange]
+  );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (instruction.trim()) {
+      fetchEdit();
+    }
+  };
+
+  const handleQuickAction = (action: QuickAction) => {
+    fetchEdit(action);
+  };
+
+  const handleAccept = () => {
+    if (streamedContent) {
+      onApplyEdit(streamedContent);
+      setStreamedContent("");
+      setInstruction("");
+    }
+  };
+
+  const handleReject = () => {
+    setStreamedContent("");
+    abortControllerRef.current?.abort();
+    onStreamingChange(false);
+  };
+
+  const handleClose = () => {
+    handleReject();
+    onDeselect();
+  };
+
+  if (!selectedElement) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-warm-gray-100 flex items-center justify-center mb-4">
+          <Sparkles size={24} className="text-warm-gray-400" />
+        </div>
+        <h3 className="font-medium text-warm-gray-900 mb-2">
+          Select an element to edit
+        </h3>
+        <p className="text-sm text-warm-gray-500 max-w-[200px]">
+          Click on any text element in your portfolio to edit it with AI
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="flex flex-col h-full"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-warm-gray-200">
+        <div>
+          <h3 className="font-medium text-warm-gray-900">Edit Element</h3>
+          <p className="text-xs text-warm-gray-500">
+            {getElementTypeName(selectedElement.tagName)}
+          </p>
+        </div>
+        <button
+          onClick={handleClose}
+          className="p-1.5 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-sm] transition-colors"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      {/* Current content */}
+      <div className="p-4 border-b border-warm-gray-200">
+        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+          Current
+        </label>
+        <div className="p-3 bg-warm-gray-50 rounded-[--radius-md] text-sm text-warm-gray-700 max-h-24 overflow-y-auto">
+          {selectedElement.content || "(empty)"}
+        </div>
+      </div>
+
+      {/* Streaming preview */}
+      <AnimatePresence>
+        {(isStreaming || streamedContent) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-4 border-b border-warm-gray-200 bg-rose/5"
+          >
+            <label className="block text-xs font-medium text-rose mb-2 uppercase tracking-wide">
+              {isStreaming ? "Generating..." : "Preview"}
+            </label>
+            <div className="p-3 bg-white rounded-[--radius-md] text-sm text-warm-gray-900 max-h-32 overflow-y-auto border border-rose/20">
+              {streamedContent || (
+                <span className="text-warm-gray-400 animate-pulse">...</span>
+              )}
+            </div>
+
+            {!isStreaming && streamedContent && (
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={handleAccept}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white text-sm font-medium rounded-[--radius-md] hover:shadow-lg transition-shadow"
+                >
+                  <Check size={16} />
+                  Accept
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-100 text-warm-gray-700 text-sm font-medium rounded-[--radius-md] hover:bg-warm-gray-200 transition-colors"
+                >
+                  <X size={16} />
+                  Reject
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error message */}
+      {error && (
+        <div className="p-4 border-b border-warm-gray-200">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-[--radius-md] text-sm text-red-700">
+            {error}
+          </div>
+        </div>
+      )}
+
+      {/* Quick actions */}
+      <div className="p-4 border-b border-warm-gray-200">
+        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+          Quick Actions
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {QUICK_ACTIONS.map(({ action, icon }) => (
+            <button
+              key={action}
+              onClick={() => handleQuickAction(action)}
+              disabled={isStreaming}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-warm-gray-700 bg-warm-gray-50 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors disabled:opacity-50"
+              title={QUICK_ACTION_DESCRIPTIONS[action]}
+            >
+              {icon}
+              {QUICK_ACTION_LABELS[action]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Custom instruction input */}
+      <div className="flex-1 p-4">
+        <form onSubmit={handleSubmit} className="h-full flex flex-col">
+          <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+            Custom Edit
+          </label>
+          <textarea
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            placeholder="Describe how you want to change this text..."
+            className="flex-1 w-full px-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors resize-none text-sm"
+            disabled={isStreaming}
+            rows={3}
+          />
+          <button
+            type="submit"
+            disabled={!instruction.trim() || isStreaming}
+            className="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:shadow-none transition-shadow"
+          >
+            {isStreaming ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Send size={18} />
+                Generate Edit
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+    </motion.div>
+  );
+}

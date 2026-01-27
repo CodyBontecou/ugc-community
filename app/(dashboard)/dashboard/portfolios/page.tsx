@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -89,6 +90,15 @@ async function PortfoliosContent() {
 
                 {/* Quick actions overlay */}
                 <div className="absolute inset-0 bg-warm-gray-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  {portfolio.portfolioType === "html" && portfolio.htmlContent ? (
+                    <Link
+                      href={`/dashboard/portfolios/${portfolio.id}/edit`}
+                      className="p-2 bg-gradient-to-br from-coral to-rose rounded-full text-white hover:shadow-lg transition-shadow"
+                      title="AI Edit"
+                    >
+                      <Sparkles size={18} />
+                    </Link>
+                  ) : null}
                   <Link
                     href={`/dashboard/portfolios/${portfolio.id}`}
                     className="p-2 bg-white rounded-full text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
@@ -133,12 +143,23 @@ async function PortfoliosContent() {
                   <span>
                     Updated {new Date(portfolio.updatedAt).toLocaleDateString()}
                   </span>
-                  <Link
-                    href={`/dashboard/portfolios/${portfolio.id}`}
-                    className="text-rose hover:text-rose/80 font-medium transition-colors"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    {portfolio.portfolioType === "html" && portfolio.htmlContent && (
+                      <Link
+                        href={`/dashboard/portfolios/${portfolio.id}/edit`}
+                        className="text-rose hover:text-rose/80 font-medium transition-colors flex items-center gap-1"
+                      >
+                        <Sparkles size={12} />
+                        AI Edit
+                      </Link>
+                    )}
+                    <Link
+                      href={`/dashboard/portfolios/${portfolio.id}`}
+                      className="text-warm-gray-500 hover:text-warm-gray-700 font-medium transition-colors"
+                    >
+                      Settings
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

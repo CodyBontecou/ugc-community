@@ -1,0 +1,345 @@
+"use client";
+
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Save,
+  Loader2,
+  ArrowLeft,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Eye,
+  Check,
+} from "lucide-react";
+import { EditableIframe } from "./editable-iframe";
+import { AIEditPanel } from "./ai-edit-panel";
+import { HistoryControls } from "./history-controls";
+import { SectionReorderer } from "./section-reorderer";
+import { replaceElementContent } from "@/lib/editor/html-element-selector";
+import type { SelectedElement, HistoryState } from "@/lib/editor/types";
+import { MAX_HISTORY_SIZE } from "@/lib/editor/types";
+
+interface InteractiveHtmlEditorProps {
+  portfolioId: string;
+  initialHtml: string;
+  portfolioTitle: string;
+  portfolioSlug: string;
+}
+
+type DeviceSize = "desktop" | "tablet" | "mobile";
+
+const DEVICE_WIDTHS: Record<DeviceSize, string> = {
+  desktop: "100%",
+  tablet: "768px",
+  mobile: "375px",
+};
+
+export function InteractiveHtmlEditor({
+  portfolioId,
+  initialHtml,
+  portfolioTitle,
+  portfolioSlug,
+}: InteractiveHtmlEditorProps) {
+  const router = useRouter();
+  const [html, setHtml] = useState(initialHtml);
+  const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(
+    null
+  );
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deviceSize, setDeviceSize] = useState<DeviceSize>("desktop");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // History state
+  const [history, setHistory] = useState<HistoryState>({
+    past: [],
+    present: initialHtml,
+    future: [],
+  });
+
+  // Track if initial HTML has changed
+  const initialHtmlRef = useRef(initialHtml);
+
+  // Update HTML and track history
+  const updateHtml = useCallback((newHtml: string) => {
+    setHistory((prev) => ({
+      past: [...prev.past.slice(-MAX_HISTORY_SIZE + 1), prev.present],
+      present: newHtml,
+      future: [],
+    }));
+    setHtml(newHtml);
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Undo
+  const handleUndo = useCallback(() => {
+    setHistory((prev) => {
+      if (prev.past.length === 0) return prev;
+      const previous = prev.past[prev.past.length - 1];
+      const newPast = prev.past.slice(0, -1);
+      setHtml(previous);
+      setHasUnsavedChanges(previous !== initialHtmlRef.current);
+      return {
+        past: newPast,
+        present: previous,
+        future: [prev.present, ...prev.future],
+      };
+    });
+    setSelectedElement(null);
+  }, []);
+
+  // Redo
+  const handleRedo = useCallback(() => {
+    setHistory((prev) => {
+      if (prev.future.length === 0) return prev;
+      const next = prev.future[0];
+      const newFuture = prev.future.slice(1);
+      setHtml(next);
+      setHasUnsavedChanges(next !== initialHtmlRef.current);
+      return {
+        past: [...prev.past, prev.present],
+        present: next,
+        future: newFuture,
+      };
+    });
+    setSelectedElement(null);
+  }, []);
+
+  // Apply AI edit
+  const handleApplyEdit = useCallback(
+    (newContent: string) => {
+      if (!selectedElement) return;
+
+      const newHtml = replaceElementContent(
+        html,
+        selectedElement.selector,
+        newContent
+      );
+
+      if (newHtml !== html) {
+        updateHtml(newHtml);
+        // Update selected element with new content
+        setSelectedElement((prev) =>
+          prev ? { ...prev, content: newContent } : null
+        );
+      }
+    },
+    [html, selectedElement, updateHtml]
+  );
+
+  // Handle section reorder
+  const handleReorder = useCallback(
+    (newHtml: string) => {
+      updateHtml(newHtml);
+      setSelectedElement(null);
+    },
+    [updateHtml]
+  );
+
+  // Save to server
+  const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
+    setSaveSuccess(false);
+
+    try {
+      const response = await fetch(`/api/portfolios/${portfolioId}/html`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ htmlContent: html }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to save");
+      }
+
+      setHasUnsavedChanges(false);
+      initialHtmlRef.current = html;
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  return (
+    <div className="h-screen flex flex-col bg-warm-gray-50">
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-warm-gray-200 shrink-0">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="p-2 text-warm-gray-500 hover:text-warm-gray-700 hover:bg-warm-gray-100 rounded-[--radius-sm] transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="font-semibold text-warm-gray-900">{portfolioTitle}</h1>
+            <p className="text-xs text-warm-gray-500">Editing portfolio</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Device size toggles */}
+          <div className="flex items-center gap-1 p-1 bg-warm-gray-100 rounded-[--radius-md]">
+            <button
+              onClick={() => setDeviceSize("desktop")}
+              className={`p-2 rounded-[--radius-sm] transition-colors ${
+                deviceSize === "desktop"
+                  ? "bg-white text-warm-gray-900 shadow-sm"
+                  : "text-warm-gray-500 hover:text-warm-gray-700"
+              }`}
+              title="Desktop view"
+            >
+              <Monitor size={18} />
+            </button>
+            <button
+              onClick={() => setDeviceSize("tablet")}
+              className={`p-2 rounded-[--radius-sm] transition-colors ${
+                deviceSize === "tablet"
+                  ? "bg-white text-warm-gray-900 shadow-sm"
+                  : "text-warm-gray-500 hover:text-warm-gray-700"
+              }`}
+              title="Tablet view"
+            >
+              <Tablet size={18} />
+            </button>
+            <button
+              onClick={() => setDeviceSize("mobile")}
+              className={`p-2 rounded-[--radius-sm] transition-colors ${
+                deviceSize === "mobile"
+                  ? "bg-white text-warm-gray-900 shadow-sm"
+                  : "text-warm-gray-500 hover:text-warm-gray-700"
+              }`}
+              title="Mobile view"
+            >
+              <Smartphone size={18} />
+            </button>
+          </div>
+
+          <HistoryControls
+            history={history}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+          />
+
+          <a
+            href={`/p/${portfolioSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors"
+          >
+            <Eye size={18} />
+            Preview
+          </a>
+
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !hasUnsavedChanges}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white font-medium text-sm rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:shadow-none transition-shadow"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Saving...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <Check size={18} />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Save
+              </>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Error banner */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="px-4 py-3 bg-red-50 border-b border-red-200 text-red-700 text-sm"
+          >
+            {error}
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 underline hover:no-underline"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Iframe preview */}
+        <div className="flex-1 flex items-center justify-center p-4 bg-warm-gray-100 overflow-auto">
+          <div
+            className={`bg-white shadow-lg rounded-[--radius-lg] overflow-hidden transition-all duration-300 ${
+              deviceSize === "desktop" ? "w-full h-full" : "h-[calc(100vh-180px)]"
+            }`}
+            style={{
+              width: DEVICE_WIDTHS[deviceSize],
+              maxWidth: "100%",
+            }}
+          >
+            <EditableIframe
+              html={html}
+              onElementSelect={setSelectedElement}
+              selectedSelector={selectedElement?.selector}
+            />
+          </div>
+        </div>
+
+        {/* Side panel */}
+        <div className="w-80 bg-white border-l border-warm-gray-200 flex flex-col shrink-0">
+          <div className="flex-1 overflow-y-auto">
+            <AIEditPanel
+              selectedElement={selectedElement}
+              portfolioId={portfolioId}
+              fullHtml={html}
+              onApplyEdit={handleApplyEdit}
+              onDeselect={() => setSelectedElement(null)}
+              isStreaming={isStreaming}
+              onStreamingChange={setIsStreaming}
+            />
+          </div>
+
+          <SectionReorderer
+            html={html}
+            onReorder={handleReorder}
+            disabled={isStreaming}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
