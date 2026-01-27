@@ -12,22 +12,13 @@ import {
   Check,
   RefreshCw,
   Wand2,
+  Monitor,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
-import { templates, type PortfolioTemplate } from "@/lib/ai/templates";
 
-type Step = "describe" | "template" | "generate" | "preview";
-
-interface GeneratedContent {
-  title?: string;
-  tagline?: string;
-  hero?: { headline?: string; subheadline?: string };
-  about?: { title?: string; body?: string };
-  services?: { title: string; description: string }[];
-  work?: { title?: string; description?: string };
-  contact?: { title?: string; body?: string; ctaText?: string };
-  stats?: { value: string; label: string }[];
-  socialLinks?: { platform: string; handle: string }[];
-}
+type Step = "describe" | "generate" | "preview";
+type PreviewSize = "mobile" | "tablet" | "desktop";
 
 const NICHES = [
   { id: "beauty", label: "Beauty & Skincare" },
@@ -40,27 +31,31 @@ const NICHES = [
   { id: "travel", label: "Travel & Adventure" },
 ];
 
+const PREVIEW_SIZES = {
+  mobile: { width: 375, height: 667, label: "Mobile" },
+  tablet: { width: 768, height: 1024, label: "Tablet" },
+  desktop: { width: 1280, height: 800, label: "Desktop" },
+};
+
 export default function AIGeneratePage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("describe");
   const [description, setDescription] = useState("");
   const [selectedNiche, setSelectedNiche] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<PortfolioTemplate | null>(null);
-  const [generatedContent, setGeneratedContent] =
-    useState<GeneratedContent | null>(null);
+  const [generatedHtml, setGeneratedHtml] = useState<string>("");
   const [refineFeedback, setRefineFeedback] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [completion, setCompletion] = useState("");
+  const [streamingHtml, setStreamingHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [previewSize, setPreviewSize] = useState<PreviewSize>("desktop");
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const streamGenerate = useCallback(
     async (body: Record<string, unknown>) => {
       setError(null);
       setIsLoading(true);
-      setCompletion("");
+      setStreamingHtml("");
 
       // Abort any existing request
       if (abortControllerRef.current) {
@@ -95,20 +90,23 @@ export default function AIGeneratePage() {
 
           const chunk = decoder.decode(value, { stream: true });
           fullText += chunk;
-          setCompletion(fullText);
+          setStreamingHtml(fullText);
         }
 
-        // Parse the final JSON
-        try {
-          const jsonMatch = fullText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            setGeneratedContent(parsed);
+        // Validate HTML - should start with <!DOCTYPE html>
+        const trimmedHtml = fullText.trim();
+        if (trimmedHtml.toLowerCase().startsWith("<!doctype html>")) {
+          setGeneratedHtml(trimmedHtml);
+          setStep("preview");
+        } else {
+          // Try to extract HTML from the response
+          const htmlMatch = fullText.match(/<!DOCTYPE html>[\s\S]*<\/html>/i);
+          if (htmlMatch) {
+            setGeneratedHtml(htmlMatch[0]);
             setStep("preview");
+          } else {
+            setError("Failed to generate valid HTML. Please try again.");
           }
-        } catch {
-          console.error("Failed to parse AI response");
-          setError("Failed to parse generated content. Please try again.");
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
@@ -125,39 +123,42 @@ export default function AIGeneratePage() {
   const handleGenerate = useCallback(async () => {
     setStep("generate");
     await streamGenerate({
-      action: "generate",
+      action: "generate-html",
       description,
       niche: selectedNiche,
-      templateId: selectedTemplate?.id,
     });
-  }, [streamGenerate, description, selectedNiche, selectedTemplate]);
+  }, [streamGenerate, description, selectedNiche]);
 
   const handleRefine = useCallback(async () => {
-    if (!refineFeedback.trim() || !generatedContent) return;
+    if (!refineFeedback.trim() || !generatedHtml) return;
 
     setStep("generate");
     await streamGenerate({
-      action: "refine",
-      currentContent: JSON.stringify(generatedContent, null, 2),
+      action: "refine-html",
+      currentHtml: generatedHtml,
       feedback: refineFeedback,
     });
     setRefineFeedback("");
-  }, [streamGenerate, generatedContent, refineFeedback]);
+  }, [streamGenerate, generatedHtml, refineFeedback]);
 
   const handleCreatePortfolio = async () => {
-    if (!generatedContent || !selectedTemplate) return;
+    if (!generatedHtml) return;
 
     setIsCreating(true);
     setError(null);
 
     try {
+      // Extract title from HTML
+      const titleMatch = generatedHtml.match(/<title>([^<]*)<\/title>/i);
+      const title = titleMatch ? titleMatch[1] : "My Portfolio";
+
       const response = await fetch("/api/portfolios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: generatedContent.title || "My Portfolio",
-          tagline: generatedContent.tagline,
-          templateId: selectedTemplate.id,
+          title,
+          htmlContent: generatedHtml,
+          portfolioType: "html",
         }),
       });
 
@@ -166,56 +167,6 @@ export default function AIGeneratePage() {
       }
 
       const portfolio = await response.json();
-
-      // Update sections with generated content
-      const sectionsToUpdate = [];
-
-      if (generatedContent.hero) {
-        sectionsToUpdate.push({
-          type: "hero",
-          content: {
-            title: generatedContent.hero.headline,
-            subtitle: generatedContent.hero.subheadline,
-          },
-        });
-      }
-
-      if (generatedContent.about) {
-        sectionsToUpdate.push({
-          type: "about",
-          content: {
-            title: generatedContent.about.title,
-            body: generatedContent.about.body,
-          },
-        });
-      }
-
-      if (generatedContent.contact) {
-        sectionsToUpdate.push({
-          type: "contact",
-          content: {
-            title: generatedContent.contact.title,
-            body: generatedContent.contact.body,
-            ctaText: generatedContent.contact.ctaText,
-          },
-        });
-      }
-
-      // Update sections via API
-      for (const section of portfolio.sections || []) {
-        const update = sectionsToUpdate.find((s) => s.type === section.type);
-        if (update) {
-          await fetch(`/api/portfolios/${portfolio.id}/sections`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sectionId: section.id,
-              content: update.content,
-            }),
-          });
-        }
-      }
-
       router.push(`/dashboard/portfolios/${portfolio.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -223,32 +174,10 @@ export default function AIGeneratePage() {
     }
   };
 
-  // Parse streaming content for live preview
-  const parseStreamingContent = (): Partial<GeneratedContent> => {
-    if (!completion) return {};
-    try {
-      const jsonMatch = completion.match(/\{[\s\S]*\}?/);
-      if (jsonMatch) {
-        // Try to parse even partial JSON
-        let jsonStr = jsonMatch[0];
-        // Close any unclosed braces for partial parsing
-        const openBraces = (jsonStr.match(/\{/g) || []).length;
-        const closeBraces = (jsonStr.match(/\}/g) || []).length;
-        for (let i = 0; i < openBraces - closeBraces; i++) {
-          jsonStr += "}";
-        }
-        return JSON.parse(jsonStr);
-      }
-    } catch {
-      // Partial JSON is expected during streaming
-    }
-    return {};
-  };
-
-  const streamingContent = parseStreamingContent();
+  const currentSize = PREVIEW_SIZES[previewSize];
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Back link */}
       <Link
         href="/dashboard/portfolios/new"
@@ -260,41 +189,34 @@ export default function AIGeneratePage() {
 
       {/* Progress indicator */}
       <div className="flex items-center gap-2 mb-8">
-        {(["describe", "template", "generate", "preview"] as const).map(
-          (s, i) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  step === s
-                    ? "bg-gradient-to-br from-coral to-rose text-white"
-                    : ["describe", "template", "generate", "preview"].indexOf(
-                          step
-                        ) > i
-                      ? "bg-mint text-warm-gray-900"
-                      : "bg-warm-gray-100 text-warm-gray-400"
-                }`}
-              >
-                {["describe", "template", "generate", "preview"].indexOf(step) >
-                i ? (
-                  <Check size={16} />
-                ) : (
-                  i + 1
-                )}
-              </div>
-              {i < 3 && (
-                <div
-                  className={`w-12 h-0.5 mx-2 ${
-                    ["describe", "template", "generate", "preview"].indexOf(
-                      step
-                    ) > i
-                      ? "bg-mint"
-                      : "bg-warm-gray-200"
-                  }`}
-                />
+        {(["describe", "generate", "preview"] as const).map((s, i) => (
+          <div key={s} className="flex items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                step === s
+                  ? "bg-gradient-to-br from-coral to-rose text-white"
+                  : ["describe", "generate", "preview"].indexOf(step) > i
+                    ? "bg-mint text-warm-gray-900"
+                    : "bg-warm-gray-100 text-warm-gray-400"
+              }`}
+            >
+              {["describe", "generate", "preview"].indexOf(step) > i ? (
+                <Check size={16} />
+              ) : (
+                i + 1
               )}
             </div>
-          )
-        )}
+            {i < 2 && (
+              <div
+                className={`w-12 h-0.5 mx-2 ${
+                  ["describe", "generate", "preview"].indexOf(step) > i
+                    ? "bg-mint"
+                    : "bg-warm-gray-200"
+                }`}
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Error display */}
@@ -324,7 +246,8 @@ export default function AIGeneratePage() {
               </h1>
               <p className="text-warm-gray-500">
                 Describe your content, niche, experience, and what makes you
-                unique. The more detail, the better!
+                unique. Our AI will create a stunning, custom portfolio just for
+                you.
               </p>
             </div>
 
@@ -381,13 +304,14 @@ export default function AIGeneratePage() {
               <div className="flex justify-end">
                 <motion.button
                   type="button"
-                  onClick={() => setStep("template")}
+                  onClick={handleGenerate}
                   disabled={description.length < 10}
-                  className="py-3 px-6 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center gap-2"
+                  className="py-3 px-6 bg-gradient-to-br from-lavender to-purple-dark text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(168,85,247,0.25)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center gap-2"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  Continue
+                  <Sparkles size={18} />
+                  Generate Portfolio
                   <ArrowRight size={18} />
                 </motion.button>
               </div>
@@ -395,90 +319,7 @@ export default function AIGeneratePage() {
           </motion.div>
         )}
 
-        {/* Step 2: Template Selection */}
-        {step === "template" && (
-          <motion.div
-            key="template"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
-            <div>
-              <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-                Choose your style
-              </h1>
-              <p className="text-warm-gray-500">
-                Select a template that matches your vibe. You can customize it
-                later.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => setSelectedTemplate(template)}
-                  className={`text-left bg-white rounded-[--radius-xl] border-2 p-6 transition-all ${
-                    selectedTemplate?.id === template.id
-                      ? "border-rose shadow-[0_4px_20px_rgba(255,107,149,0.25)]"
-                      : "border-warm-gray-200 hover:border-warm-gray-300"
-                  }`}
-                >
-                  <div
-                    className="w-12 h-12 rounded-[--radius-lg] mb-4 flex items-center justify-center text-2xl"
-                    style={{
-                      backgroundColor: template.theme.primaryColor + "20",
-                    }}
-                  >
-                    {template.preview === "minimal" && "✨"}
-                    {template.preview === "bold" && "🎨"}
-                    {template.preview === "elegant" && "🌸"}
-                    {template.preview === "playful" && "⚡"}
-                    {template.preview === "professional" && "💼"}
-                  </div>
-                  <h3 className="font-semibold text-warm-gray-900 mb-1">
-                    {template.name}
-                  </h3>
-                  <p className="text-sm text-warm-gray-500">
-                    {template.description}
-                  </p>
-                  {selectedTemplate?.id === template.id && (
-                    <div className="mt-3 flex items-center gap-1 text-rose text-sm font-medium">
-                      <Check size={16} />
-                      Selected
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setStep("describe")}
-                className="py-3 px-6 text-warm-gray-600 hover:text-warm-gray-900 font-medium transition-colors flex items-center gap-2"
-              >
-                <ArrowLeft size={18} />
-                Back
-              </button>
-              <motion.button
-                type="button"
-                onClick={handleGenerate}
-                disabled={!selectedTemplate}
-                className="py-3 px-6 bg-gradient-to-br from-lavender to-purple-dark text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(168,85,247,0.25)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center gap-2"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <Sparkles size={18} />
-                Generate with AI
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 3: Generating */}
+        {/* Step 2: Generating */}
         {step === "generate" && (
           <motion.div
             key="generate"
@@ -495,76 +336,39 @@ export default function AIGeneratePage() {
                 Creating your portfolio...
               </h1>
               <p className="text-warm-gray-500">
-                AI is crafting personalized content just for you
+                AI is designing a custom portfolio just for you
               </p>
             </div>
 
             {/* Live preview during generation */}
-            <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 min-h-[400px]">
-              <div className="space-y-6">
-                {/* Hero preview */}
-                {streamingContent.hero && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-8 border-b border-warm-gray-100"
-                  >
-                    <h2 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-                      {streamingContent.hero.headline || "..."}
-                    </h2>
-                    <p className="text-warm-gray-500">
-                      {streamingContent.hero.subheadline || "..."}
-                    </p>
-                  </motion.div>
-                )}
+            <div className="bg-warm-gray-900 rounded-[--radius-xl] p-4 min-h-[500px]">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div className="flex items-center gap-2 text-lavender">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm">Generating...</span>
+                </div>
+              </div>
 
-                {/* About preview */}
-                {streamingContent.about && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="py-4"
-                  >
-                    <h3 className="font-semibold text-warm-gray-900 mb-2">
-                      {streamingContent.about.title || "About"}
-                    </h3>
-                    <p className="text-warm-gray-600 text-sm line-clamp-4">
-                      {streamingContent.about.body || "..."}
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* Services preview */}
-                {streamingContent.services &&
-                  streamingContent.services.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="py-4"
-                    >
-                      <h3 className="font-semibold text-warm-gray-900 mb-3">
-                        Services
-                      </h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {streamingContent.services.map((service, i) => (
-                          <div
-                            key={i}
-                            className="p-3 bg-warm-gray-50 rounded-[--radius-md]"
-                          >
-                            <p className="font-medium text-sm">
-                              {service.title}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-
-                {/* Loading indicator */}
-                {isLoading && (
-                  <div className="flex items-center justify-center gap-2 text-lavender py-4">
-                    <Loader2 size={20} className="animate-spin" />
-                    <span className="text-sm">Generating content...</span>
+              {/* Streaming HTML preview in iframe */}
+              <div className="bg-white rounded-lg overflow-hidden h-[450px]">
+                {streamingHtml ? (
+                  <iframe
+                    srcDoc={streamingHtml}
+                    className="w-full h-full border-0"
+                    sandbox="allow-same-origin"
+                    title="Portfolio Preview"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-warm-gray-400">
+                    <div className="text-center">
+                      <Loader2 size={32} className="animate-spin mx-auto mb-2" />
+                      <p>Initializing...</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -572,8 +376,8 @@ export default function AIGeneratePage() {
           </motion.div>
         )}
 
-        {/* Step 4: Preview & Refine */}
-        {step === "preview" && generatedContent && (
+        {/* Step 3: Preview & Refine */}
+        {step === "preview" && generatedHtml && (
           <motion.div
             key="preview"
             initial={{ opacity: 0, x: 20 }}
@@ -587,90 +391,83 @@ export default function AIGeneratePage() {
                   Preview your portfolio
                 </h1>
                 <p className="text-warm-gray-500">
-                  Review the generated content. You can refine it or create your
-                  portfolio.
+                  Review your generated portfolio. You can refine it or create
+                  it.
                 </p>
+              </div>
+
+              {/* Responsive preview controls */}
+              <div className="flex items-center gap-1 bg-warm-gray-100 p-1 rounded-[--radius-md]">
+                <button
+                  type="button"
+                  onClick={() => setPreviewSize("mobile")}
+                  className={`p-2 rounded-[--radius-sm] transition-colors ${
+                    previewSize === "mobile"
+                      ? "bg-white text-warm-gray-900 shadow-sm"
+                      : "text-warm-gray-500 hover:text-warm-gray-700"
+                  }`}
+                  title="Mobile preview"
+                >
+                  <Smartphone size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSize("tablet")}
+                  className={`p-2 rounded-[--radius-sm] transition-colors ${
+                    previewSize === "tablet"
+                      ? "bg-white text-warm-gray-900 shadow-sm"
+                      : "text-warm-gray-500 hover:text-warm-gray-700"
+                  }`}
+                  title="Tablet preview"
+                >
+                  <Tablet size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSize("desktop")}
+                  className={`p-2 rounded-[--radius-sm] transition-colors ${
+                    previewSize === "desktop"
+                      ? "bg-white text-warm-gray-900 shadow-sm"
+                      : "text-warm-gray-500 hover:text-warm-gray-700"
+                  }`}
+                  title="Desktop preview"
+                >
+                  <Monitor size={18} />
+                </button>
               </div>
             </div>
 
-            {/* Generated content preview */}
-            <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
-              {/* Hero Section */}
+            {/* Preview iframe with responsive sizing */}
+            <div className="bg-warm-gray-100 rounded-[--radius-xl] p-6 flex items-center justify-center min-h-[600px]">
               <div
-                className="p-12 text-center"
+                className="bg-white shadow-2xl rounded-lg overflow-hidden transition-all duration-300"
                 style={{
-                  backgroundColor:
-                    selectedTemplate?.theme.primaryColor + "10" || "#FFF5F3",
+                  width: `${currentSize.width}px`,
+                  height: `${currentSize.height}px`,
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
                 }}
               >
-                <h2 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-3">
-                  {generatedContent.hero?.headline || generatedContent.title}
-                </h2>
-                <p className="text-lg text-warm-gray-600 max-w-xl mx-auto">
-                  {generatedContent.hero?.subheadline ||
-                    generatedContent.tagline}
-                </p>
-              </div>
-
-              {/* About Section */}
-              {generatedContent.about && (
-                <div className="p-8 border-t border-warm-gray-100">
-                  <h3 className="text-xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-4">
-                    {generatedContent.about.title}
-                  </h3>
-                  <div className="text-warm-gray-600 whitespace-pre-line">
-                    {generatedContent.about.body}
-                  </div>
-                </div>
-              )}
-
-              {/* Services Section */}
-              {generatedContent.services &&
-                generatedContent.services.length > 0 && (
-                  <div className="p-8 bg-warm-gray-50 border-t border-warm-gray-100">
-                    <h3 className="text-xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-4">
-                      Services
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {generatedContent.services.map((service, i) => (
-                        <div
-                          key={i}
-                          className="p-4 bg-white rounded-[--radius-md] border border-warm-gray-200"
-                        >
-                          <h4 className="font-semibold text-warm-gray-900 mb-1">
-                            {service.title}
-                          </h4>
-                          <p className="text-sm text-warm-gray-500">
-                            {service.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Contact Section */}
-              {generatedContent.contact && (
-                <div
-                  className="p-8 text-center"
+                <iframe
+                  srcDoc={generatedHtml}
+                  className="w-full h-full border-0"
+                  sandbox="allow-same-origin allow-scripts"
+                  title="Portfolio Preview"
                   style={{
-                    backgroundColor:
-                      selectedTemplate?.theme.primaryColor || "#FF6B95",
-                    color: "#FFFFFF",
+                    transform:
+                      previewSize !== "desktop"
+                        ? `scale(${Math.min(1, 800 / currentSize.width)})`
+                        : "none",
+                    transformOrigin: "top left",
                   }}
-                >
-                  <h3 className="text-xl font-[family-name:var(--font-display)] mb-2">
-                    {generatedContent.contact.title}
-                  </h3>
-                  <p className="mb-4 opacity-90">
-                    {generatedContent.contact.body}
-                  </p>
-                  <span className="inline-block px-6 py-2 bg-white/20 rounded-full font-medium">
-                    {generatedContent.contact.ctaText}
-                  </span>
-                </div>
-              )}
+                />
+              </div>
             </div>
+
+            {/* Size indicator */}
+            <p className="text-center text-sm text-warm-gray-400">
+              {currentSize.label} ({currentSize.width} x {currentSize.height}px)
+            </p>
 
             {/* Refine section */}
             <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
@@ -682,7 +479,7 @@ export default function AIGeneratePage() {
                   type="text"
                   value={refineFeedback}
                   onChange={(e) => setRefineFeedback(e.target.value)}
-                  placeholder="e.g., Make the about section more casual, add more personality..."
+                  placeholder="e.g., Use warmer colors, make the hero section bigger, add more whitespace..."
                   className="flex-1 px-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender/20 focus:border-lavender transition-colors"
                 />
                 <motion.button
@@ -703,11 +500,11 @@ export default function AIGeneratePage() {
             <div className="flex justify-between">
               <button
                 type="button"
-                onClick={() => setStep("template")}
+                onClick={() => setStep("describe")}
                 className="py-3 px-6 text-warm-gray-600 hover:text-warm-gray-900 font-medium transition-colors flex items-center gap-2"
               >
                 <ArrowLeft size={18} />
-                Back
+                Start Over
               </button>
               <motion.button
                 type="button"

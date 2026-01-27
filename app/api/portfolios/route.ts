@@ -9,6 +9,8 @@ const createPortfolioSchema = z.object({
   title: z.string().min(1).max(100),
   tagline: z.string().max(200).optional(),
   templateId: z.string().default("default"),
+  htmlContent: z.string().optional(),
+  portfolioType: z.enum(["json", "html"]).default("json"),
 });
 
 // GET /api/portfolios - List user's portfolios
@@ -43,7 +45,8 @@ export async function POST(request: NextRequest) {
     const session = await requireAuth();
 
     const body = await request.json();
-    const { title, tagline, templateId } = createPortfolioSchema.parse(body);
+    const { title, tagline, templateId, htmlContent, portfolioType } =
+      createPortfolioSchema.parse(body);
 
     // Create portfolio
     const [portfolio] = await db
@@ -53,6 +56,8 @@ export async function POST(request: NextRequest) {
         title,
         tagline,
         templateId,
+        htmlContent: portfolioType === "html" ? htmlContent : null,
+        portfolioType,
         content: {
           headline: title,
           subheadline: tagline || "",
@@ -60,7 +65,12 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // Create default sections
+    // For HTML portfolios, skip creating default sections
+    if (portfolioType === "html") {
+      return NextResponse.json(portfolio, { status: 201 });
+    }
+
+    // Create default sections for JSON portfolios
     const defaultSections = [
       {
         portfolioId: portfolio.id,

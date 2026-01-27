@@ -2,7 +2,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
-import { buildPrompt, buildRefinePrompt } from "@/lib/ai/prompts";
+import {
+  buildPrompt,
+  buildRefinePrompt,
+  buildHtmlPrompt,
+  buildHtmlRefinePrompt,
+} from "@/lib/ai/prompts";
 
 const generateSchema = z.object({
   description: z.string().min(10).max(2000),
@@ -12,6 +17,11 @@ const generateSchema = z.object({
 
 const refineSchema = z.object({
   currentContent: z.string(),
+  feedback: z.string().min(1).max(1000),
+});
+
+const htmlRefineSchema = z.object({
+  currentHtml: z.string(),
   feedback: z.string().min(1).max(1000),
 });
 
@@ -37,12 +47,30 @@ export async function POST(request: NextRequest) {
 
     let systemPrompt: string;
     let userPrompt: string;
+    let maxTokens = 2000;
+    let model = "claude-sonnet-4-20250514";
 
     if (action === "refine") {
       const { currentContent, feedback } = refineSchema.parse(body);
       const prompts = buildRefinePrompt(currentContent, feedback);
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
+    } else if (action === "generate-html") {
+      // HTML generation uses Sonnet 4.5 with higher token limit
+      const { description, niche } = generateSchema.parse(body);
+      const prompts = buildHtmlPrompt(description, niche);
+      systemPrompt = prompts.systemPrompt;
+      userPrompt = prompts.userPrompt;
+      maxTokens = 16000;
+      model = "claude-sonnet-4-5-20250514";
+    } else if (action === "refine-html") {
+      // HTML refinement
+      const { currentHtml, feedback } = htmlRefineSchema.parse(body);
+      const prompts = buildHtmlRefinePrompt(currentHtml, feedback);
+      systemPrompt = prompts.systemPrompt;
+      userPrompt = prompts.userPrompt;
+      maxTokens = 16000;
+      model = "claude-sonnet-4-5-20250514";
     } else {
       const { description, niche } = generateSchema.parse(body);
       const prompts = buildPrompt(description, niche);
@@ -50,12 +78,12 @@ export async function POST(request: NextRequest) {
       userPrompt = prompts.userPrompt;
     }
 
-    console.log(`Generating portfolio for user ${session.user.id}`);
+    console.log(`Generating portfolio (${action}) for user ${session.user.id}`);
 
     // Create streaming response
     const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
+      model,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });

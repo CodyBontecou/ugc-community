@@ -90,6 +90,9 @@ export const portfolios = pgTable(
     tagline: text("tagline"),
     theme: jsonb("theme").$type<PortfolioTheme>().default({}),
     content: jsonb("content").$type<PortfolioContent>().default({}),
+    // AI-generated HTML portfolios
+    htmlContent: text("html_content"),
+    portfolioType: text("portfolio_type").notNull().default("json"), // "json" | "html"
     isPublished: boolean("is_published").notNull().default(false),
     publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),

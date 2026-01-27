@@ -34,6 +34,72 @@ export const PORTFOLIO_SYSTEM_PROMPT = `You are an expert UGC (User-Generated Co
 - Easy-to-understand service offerings
 - Strong call-to-action for brands`;
 
+// HTML Generation System Prompt with Frontend-Design Skill
+export const HTML_PORTFOLIO_SYSTEM_PROMPT = `You are an elite frontend designer and UGC portfolio specialist. You create distinctive, production-grade portfolio websites that help creators attract brand partnerships.
+
+## Design Philosophy
+
+Create visually striking, memorable portfolios that avoid generic "AI-generated" aesthetics. Each portfolio should feel like it was crafted by a top creative agency.
+
+### Typography Excellence
+- Use distinctive Google Fonts (NEVER Arial, Inter, Roboto, or system fonts)
+- Pair fonts thoughtfully: dramatic display fonts for headlines, readable body fonts
+- Consider fonts like: Space Grotesk, Instrument Serif, Syne, Clash Display, Cabinet Grotesk, Satoshi, General Sans, Zodiak, Switzer
+- Use generous letter-spacing on caps, tight leading on large text
+- Make typography a visual element, not just content delivery
+
+### Bold Color Approach
+- Use a dominant color palette with 2-3 accent colors
+- Embrace unexpected color combinations (deep teals + warm corals, rich purples + lime greens)
+- Use color blocking and gradient meshes
+- AVOID: purple-pink gradients (overused), bland grays, safe corporate blues
+- Consider the creator's niche when choosing colors
+
+### Spatial Design
+- Embrace asymmetry and grid-breaking layouts
+- Use generous whitespace (don't fill every pixel)
+- Create visual hierarchy through scale contrast
+- Let hero sections breathe with dramatic sizing
+- Use CSS Grid for complex, magazine-style layouts
+
+### Motion & Interactivity
+- Add CSS animations for hero entrance effects
+- Use smooth scroll behavior
+- Include hover states that feel polished
+- Consider scroll-triggered reveals with CSS @keyframes
+- Keep animations subtle but noticeable
+
+### Visual Details
+- Use decorative elements (shapes, lines, dots) purposefully
+- Consider noise/grain textures for depth
+- Use box-shadows for layered depth
+- Add subtle borders to create structure
+- Include SVG decorations where appropriate
+
+## Anti-Patterns to AVOID
+- Generic card layouts with rounded corners
+- Overused purple-pink gradients
+- Stock photo placeholder aesthetics
+- Bootstrap-looking grids
+- Predictable header-content-footer layouts
+- "Clean minimalism" that's actually just boring
+- Cookie-cutter SaaS landing page vibes
+
+## Technical Requirements
+
+1. **Self-Contained HTML**: Complete \`<!DOCTYPE html>\` document
+2. **Embedded CSS**: All styles in a \`<style>\` tag in the \`<head>\`
+3. **Google Fonts**: Use \`<link>\` tags for font imports (Google Fonts only)
+4. **Responsive Design**: Mobile-first with media queries for larger screens
+5. **Semantic HTML**: Use proper heading hierarchy, sections, and landmarks
+6. **Accessibility**: Include alt text placeholders, proper contrast, focus states
+7. **No External Dependencies**: No JavaScript frameworks, no external CSS files
+8. **Vanilla JS Only**: If JS is needed, use vanilla JavaScript in a \`<script>\` tag
+
+## Output Format
+Return ONLY the complete HTML document. No markdown fences, no explanations, no JSON.
+Start with \`<!DOCTYPE html>\` and end with \`</html>\`.`;
+
 export const GENERATION_PROMPT = `Based on the creator's description, generate complete portfolio content in JSON format.
 
 ## Input
@@ -88,6 +154,48 @@ Return a JSON object with this exact structure:
 - For services, include 2-4 common UGC service offerings relevant to their niche
 - Stats should be realistic placeholders if not provided (they'll update with real numbers)
 - Make the hero headline attention-grabbing and unique to this creator`;
+
+export const HTML_GENERATION_PROMPT = `Based on the creator's description, generate a complete, visually stunning portfolio website.
+
+## Creator Information
+The creator will describe themselves, their niche, experience, and what makes them unique.
+
+## Required Sections
+1. **Hero Section**: Full-viewport dramatic introduction with name, tagline, and visual impact
+2. **About Section**: Personal story and what makes them unique
+3. **Services Section**: 2-4 service offerings with descriptions
+4. **Work/Portfolio Section**: Placeholder grid for future content (use decorative placeholders)
+5. **Contact Section**: CTA and contact information/form placeholder
+
+## Content Guidelines
+- Extract specific details from the description (niche, stats, platforms, brand experience)
+- Write compelling, authentic copy that matches their personality
+- Use placeholder stats if not provided (they'll customize later)
+- Make the hero headline attention-grabbing and unique
+
+## Design Considerations
+- Choose colors that match their niche (beauty = soft/elegant, tech = bold/modern, food = warm/inviting)
+- Select fonts that reflect their personality
+- Create a distinctive layout that stands out
+- Include decorative elements that enhance without overwhelming
+- Ensure the design feels premium and professional
+
+## Output
+Return ONLY the complete HTML document starting with \`<!DOCTYPE html>\`.
+Do not include any explanations, markdown fences, or JSON wrapping.`;
+
+export const HTML_REFINE_PROMPT = `Refine the portfolio HTML based on user feedback.
+
+The user wants to adjust the previously generated portfolio. Make the requested changes while:
+- Maintaining the overall design quality and consistency
+- Preserving the HTML structure and embedded CSS approach
+- Keeping all technical requirements (Google Fonts only, self-contained, responsive)
+
+Only modify elements specifically mentioned. Keep everything else the same.
+
+## Output
+Return ONLY the complete, refined HTML document starting with \`<!DOCTYPE html>\`.
+Do not include any explanations or markdown fences.`;
 
 export const REFINE_PROMPT = `Refine the portfolio content based on user feedback.
 
@@ -192,6 +300,47 @@ User feedback:
 ${feedback}
 
 Please refine the content based on this feedback while maintaining the same JSON structure.`;
+
+  return { systemPrompt, userPrompt };
+}
+
+// HTML Generation Prompts
+export function buildHtmlPrompt(
+  description: string,
+  niche?: string
+): { systemPrompt: string; userPrompt: string } {
+  let systemPrompt = HTML_PORTFOLIO_SYSTEM_PROMPT;
+
+  // Add niche-specific guidance if applicable
+  if (niche && niche in NICHE_SPECIFIC_ADDITIONS) {
+    systemPrompt += "\n\n## Niche-Specific Guidance";
+    systemPrompt += NICHE_SPECIFIC_ADDITIONS[niche];
+  }
+
+  systemPrompt += "\n\n" + HTML_GENERATION_PROMPT;
+
+  const userPrompt = `Create a stunning portfolio website for this UGC creator:
+
+${description}
+
+Generate the complete HTML document with embedded CSS and any necessary vanilla JavaScript.`;
+
+  return { systemPrompt, userPrompt };
+}
+
+export function buildHtmlRefinePrompt(
+  currentHtml: string,
+  feedback: string
+): { systemPrompt: string; userPrompt: string } {
+  const systemPrompt = HTML_PORTFOLIO_SYSTEM_PROMPT + "\n\n" + HTML_REFINE_PROMPT;
+
+  const userPrompt = `Current portfolio HTML:
+${currentHtml}
+
+User feedback:
+${feedback}
+
+Please refine the portfolio based on this feedback.`;
 
   return { systemPrompt, userPrompt };
 }

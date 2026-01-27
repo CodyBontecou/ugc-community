@@ -21,6 +21,8 @@ interface PortfolioRendererProps {
   portfolio: Portfolio & {
     sections: PortfolioSection[];
     media: Media[];
+    htmlContent?: string | null;
+    portfolioType?: string;
   };
   user: {
     name: string;
@@ -32,6 +34,19 @@ interface PortfolioRendererProps {
     twitter?: string | null;
     website?: string | null;
   };
+}
+
+// HTML Portfolio Renderer - renders AI-generated HTML portfolios via iframe
+function HtmlPortfolioRenderer({ htmlContent }: { htmlContent: string }) {
+  return (
+    <iframe
+      srcDoc={htmlContent}
+      className="w-full min-h-screen border-0"
+      sandbox="allow-same-origin allow-scripts"
+      title="Portfolio"
+      style={{ height: "100vh" }}
+    />
+  );
 }
 
 // TikTok icon component
@@ -386,6 +401,12 @@ function GenericSection({ section }: { section: PortfolioSection }) {
 }
 
 export function PortfolioRenderer({ portfolio, user }: PortfolioRendererProps) {
+  // Check if this is an HTML portfolio
+  if (portfolio.portfolioType === "html" && portfolio.htmlContent) {
+    return <HtmlPortfolioRenderer htmlContent={portfolio.htmlContent} />;
+  }
+
+  // Legacy JSON-based portfolio rendering
   const theme = portfolio.theme as PortfolioTheme;
 
   // Generate custom CSS from theme
