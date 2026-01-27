@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/* =====================================================
+   UGC.COMMUNITY - Design Tokens & Global Styles
+   ===================================================== */
+
+@theme {
+  /* Primary Palette - Warm Coral to Soft Purple */
+  --color-peach-100: #FFF5F3;
+  --color-peach-200: #FFE8E3;
+  --color-peach-300: #FFCEC4;
+  --color-coral: #FF9A8B;
+  --color-coral-dark: #FF7A68;
+  --color-rose: #FF6B95;
+  --color-lavender: #A855F7;
+  --color-lavender-soft: #C4B5FD;
+  --color-purple-dark: #7C3AED;
+
+  /* Neutrals - Warm tinted */
+  --color-cream: #FFFBF9;
+  --color-warm-white: #FDF9F7;
+  --color-warm-gray-50: #FAF7F5;
+  --color-warm-gray-100: #F3EFEC;
+  --color-warm-gray-200: #E8E2DD;
+  --color-warm-gray-300: #D4CBC4;
+  --color-warm-gray-400: #A69B91;
+  --color-warm-gray-500: #857A70;
+  --color-warm-gray-600: #625850;
+  --color-warm-gray-700: #453D37;
+  --color-warm-gray-800: #2D2723;
+  --color-warm-gray-900: #1A1614;
+
+  /* Accent */
+  --color-mint: #6EE7B7;
+  --color-sky: #7DD3FC;
+
+  /* Typography */
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "Outfit", system-ui, sans-serif;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 40px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(26, 22, 20, 0.04);
+  --shadow-md: 0 4px 20px rgba(26, 22, 20, 0.08);
+  --shadow-lg: 0 8px 40px rgba(26, 22, 20, 0.12);
+  --shadow-xl: 0 20px 60px rgba(26, 22, 20, 0.16);
+  --shadow-glow: 0 0 60px rgba(255, 107, 149, 0.3);
+  --shadow-glow-hover: 0 20px 40px rgba(255, 107, 149, 0.3);
+}
+
+/* =====================================================
+   Base Styles
+   ===================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-warm-gray-800);
+  background: var(--color-cream);
+  overflow-x: hidden;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--color-warm-gray-900);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Selection */
+::selection {
+  background: var(--color-peach-300);
+  color: var(--color-warm-gray-900);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-warm-gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-coral), var(--color-lavender));
+  border-radius: 9999px;
+  border: 2px solid var(--color-warm-gray-100);
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-rose);
+  outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =====================================================
+   Utility Classes
+   ===================================================== */
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-coral), var(--color-rose), var(--color-lavender));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
