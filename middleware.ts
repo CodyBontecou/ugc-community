@@ -90,15 +90,19 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Rewrite to the portfolio route with the username
+    // Rewrite to the portfolio subdomain route
+    // Use dedicated subdomain route to distinguish from username-based lookups
     const newPathname =
       url.pathname === "/"
-        ? `/portfolio/${subdomain}`
-        : `/portfolio/${subdomain}${url.pathname}`;
+        ? `/s/${subdomain}`
+        : `/s/${subdomain}${url.pathname}`;
 
     url.pathname = newPathname;
 
-    return NextResponse.rewrite(url);
+    // Add header to indicate this is a subdomain request (useful for debugging)
+    const response = NextResponse.rewrite(url);
+    response.headers.set("x-subdomain", subdomain.toLowerCase());
+    return response;
   }
 
   return NextResponse.next();
