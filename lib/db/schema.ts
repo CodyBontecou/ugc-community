@@ -15,24 +15,34 @@ import { relations } from "drizzle-orm";
 // Better Auth Tables
 // =====================================================
 
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  // Custom extensions for ugc.community
-  username: text("username").unique(),
-  displayName: text("display_name"),
-  bio: text("bio"),
-  websiteUrl: text("website_url"),
-  instagramHandle: text("instagram_handle"),
-  tiktokHandle: text("tiktok_handle"),
-  youtubeHandle: text("youtube_handle"),
-  twitterHandle: text("twitter_handle"),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    // Custom extensions for ugc.community
+    username: text("username").unique(),
+    displayName: text("display_name"),
+    bio: text("bio"),
+    websiteUrl: text("website_url"),
+    instagramHandle: text("instagram_handle"),
+    tiktokHandle: text("tiktok_handle"),
+    youtubeHandle: text("youtube_handle"),
+    twitterHandle: text("twitter_handle"),
+    // Subdomain for custom portfolio URL (e.g., johndoe.mysite.com)
+    // Stored as lowercase for consistent matching
+    subdomain: text("subdomain").unique(),
+  },
+  (table) => [
+    // Index for fast subdomain lookups (directory queries, routing)
+    uniqueIndex("users_subdomain_idx").on(table.subdomain),
+  ]
+);
 
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
