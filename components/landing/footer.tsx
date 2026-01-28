@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Instagram, Youtube } from "lucide-react";
 
 export function Footer() {
@@ -8,11 +9,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12">
           <div>
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="w-9 h-9 rounded-[--radius-md] bg-gradient-to-br from-coral to-rose flex items-center justify-center">
-                <span className="font-[family-name:var(--font-display)] text-xl text-white mt-0.5">
-                  u
-                </span>
-              </div>
+              <Image
+                src="/icon.png"
+                alt="ugc.community logo"
+                width={36}
+                height={36}
+                className="rounded-[--radius-md]"
+              />
               <span className="font-semibold text-[1.1rem] text-white">
                 ugc.community
               </span>

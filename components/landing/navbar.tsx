@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export function Navbar() {
   return (
@@ -13,11 +14,13 @@ export function Navbar() {
     >
       <div className="container flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-[--radius-md] bg-gradient-to-br from-coral via-rose to-lavender flex items-center justify-center shadow-[0_4px_12px_rgba(255,107,149,0.3)]">
-            <span className="font-[family-name:var(--font-display)] text-xl text-white mt-0.5">
-              u
-            </span>
-          </div>
+          <Image
+            src="/icon.png"
+            alt="ugc.community logo"
+            width={36}
+            height={36}
+            className="rounded-[--radius-md] shadow-[0_4px_12px_rgba(255,107,149,0.3)]"
+          />
           <span className="font-semibold text-[1.1rem] text-warm-gray-900">
             ugc.community
           </span>
