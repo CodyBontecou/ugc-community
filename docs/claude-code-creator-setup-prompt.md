@@ -100,7 +100,7 @@ After creating the files, tell the user:
 > 1. Go to GitHub → Repository → Settings → Secrets and variables → Actions
 > 2. Click "New repository secret"
 > 3. Name: `CREATOR_REGISTRATION_SECRET`
-> 4. Value: (get this from Cody / ugc.community team)
+> 4. Value: `MoMuo1ba34PRJuhH06LjCTWzmQAi2cdFe1u+fBQ0uxY=`
 > 5. Click "Add secret"
 >
 > Once added, push these changes to `main` and the creator will be automatically registered.
