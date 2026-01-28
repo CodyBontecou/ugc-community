@@ -112,8 +112,23 @@ export function InvitesTable() {
 
   return (
     <>
+      {/* Header with title and create button */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-semibold text-warm-gray-900">Invites</h2>
+          <p className="text-sm text-warm-gray-500">Manage invite links for new users</p>
+        </div>
+        <button
+          onClick={() => setShowCreateDialog(true)}
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-coral hover:bg-coral-dark rounded-full transition-colors shadow-sm"
+        >
+          <Plus size={18} />
+          Create Invite
+        </button>
+      </div>
+
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
-        {/* Header with search, filters, and create button */}
+        {/* Search and filters */}
         <div className="p-4 border-b border-warm-gray-200 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search
@@ -139,13 +154,6 @@ export function InvitesTable() {
             <option value="expired">Expired</option>
             <option value="revoked">Revoked</option>
           </select>
-          <button
-            onClick={() => setShowCreateDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-full transition-colors"
-          >
-            <Plus size={16} />
-            Create Invite
-          </button>
         </div>
 
         {/* Table */}
