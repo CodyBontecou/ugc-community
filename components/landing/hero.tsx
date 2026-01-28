@@ -74,9 +74,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          Your UGC portfolio,
+          Free for creators
           <br />
-          <span className="gradient-text">beautifully crafted</span>
+          <span className="gradient-text">who create</span>
         </motion.h1>
 
         <motion.p
@@ -85,10 +85,10 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Create a stunning portfolio that showcases your content and lands you
-          brand deals. Your own corner of the internet at{" "}
-          <em className="not-italic text-rose font-medium">yourname</em>
-          .ugc.community
+          Build your portfolio. Share your journey. Never pay a dime.
+          <br />
+          <span className="text-rose font-medium">10 posts/month = unlimited features.</span>
+          {" "}Your content is your subscription.
         </motion.p>
 
         <motion.div
@@ -104,7 +104,7 @@ export function Hero() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Start Building Free
+            Become a Creator Partner
             <ArrowRight size={18} />
           </motion.a>
           <motion.a

@@ -1,31 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Hash } from "lucide-react";
 
 const plans = [
   {
-    name: "Starter",
-    description: "Perfect for getting started",
-    price: "$0",
-    period: "/month",
-    featured: false,
-    features: [
-      "1 portfolio page",
-      "5 video uploads",
-      "Basic templates",
-      "yourname.ugc.community",
-      "Contact form",
-    ],
-    cta: "Get Started Free",
-  },
-  {
-    name: "Creator Pro",
-    description: "For serious creators",
-    price: "$12",
-    period: "/month",
+    name: "Creator Partner",
+    description: "Free forever with content",
+    price: "Free",
+    period: "",
     featured: true,
     badge: "Most Popular",
+    commitment: "10 posts/month",
     features: [
       "Unlimited pages",
       "Unlimited uploads",
@@ -35,7 +21,21 @@ const plans = [
       "Priority support",
       "Remove ugc.community badge",
     ],
-    cta: "Start 14-day Free Trial",
+    cta: "Become a Partner",
+    footnote: "#ugccommunity",
+  },
+  {
+    name: "Pro",
+    description: "No content commitment",
+    price: "$12",
+    period: "/month",
+    featured: false,
+    features: [
+      "Everything in Partner",
+      "No posting requirement",
+      "Support the platform directly",
+    ],
+    cta: "Subscribe",
   },
   {
     name: "Agency",
@@ -70,12 +70,13 @@ export function Pricing() {
             Pricing
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)] mb-6">
-            Simple pricing,
+            Pay with posts,
             <br />
-            <span className="gradient-text">no surprises</span>
+            <span className="gradient-text">not payments</span>
           </h2>
-          <p className="text-lg text-warm-gray-500 max-w-[500px] mx-auto">
-            Start free, upgrade when you're ready to grow.
+          <p className="text-lg text-warm-gray-500 max-w-[560px] mx-auto">
+            We'd rather have your content than your money. Create 10 posts/month
+            documenting your creator journey and get Pro features free forever.
           </p>
         </motion.div>
 
@@ -109,10 +110,17 @@ export function Pricing() {
                   <span className="font-[family-name:var(--font-display)] text-5xl text-warm-gray-900">
                     {plan.price}
                   </span>
-                  <span className="text-base text-warm-gray-500">
-                    {plan.period}
-                  </span>
+                  {plan.period && (
+                    <span className="text-base text-warm-gray-500">
+                      {plan.period}
+                    </span>
+                  )}
                 </div>
+                {plan.commitment && (
+                  <div className="mt-3 inline-flex items-center gap-1.5 py-1.5 px-3 bg-peach-100 text-rose rounded-full text-xs font-medium">
+                    {plan.commitment}
+                  </div>
+                )}
               </div>
               <ul className="flex flex-col gap-4 mb-8">
                 {plan.features.map((feature, j) => (
@@ -137,6 +145,12 @@ export function Pricing() {
               >
                 {plan.cta}
               </motion.button>
+              {plan.footnote && (
+                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-warm-gray-500">
+                  <Hash size={12} className="text-rose" />
+                  <span>Post with <span className="font-medium text-rose">{plan.footnote}</span></span>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
