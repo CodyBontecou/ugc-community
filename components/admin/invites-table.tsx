@@ -120,7 +120,8 @@ export function InvitesTable() {
         </div>
         <button
           onClick={() => setShowCreateDialog(true)}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-full transition-colors shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-colors shadow-sm"
+          style={{ backgroundColor: '#1A1614', color: '#FFFFFF' }}
         >
           <Plus size={18} />
           Create Invite
