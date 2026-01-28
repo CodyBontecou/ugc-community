@@ -109,7 +109,7 @@ export const portfolios = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    index("portfolios_user_id_idx").on(table.userId),
+    uniqueIndex("portfolios_user_id_idx").on(table.userId),
     index("portfolios_is_published_idx").on(table.isPublished),
   ]
 );
@@ -231,7 +231,10 @@ export const contactSubmissions = pgTable(
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
-  portfolios: many(portfolios),
+  portfolio: one(portfolios, {
+    fields: [users.id],
+    references: [portfolios.userId],
+  }),
   media: many(media),
   directoryListing: one(creatorDirectory, {
     fields: [users.id],
