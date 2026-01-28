@@ -208,7 +208,7 @@ export function AIEditPanel({
 
       {/* Current content */}
       <div className="p-4 border-b border-warm-gray-200">
-        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-medium text-warm-gray-600 mb-2 uppercase tracking-wide">
           Current
         </label>
         <div className="p-3 bg-warm-gray-50 rounded-[--radius-md] text-sm text-warm-gray-700 max-h-24 overflow-y-auto">
@@ -280,7 +280,7 @@ export function AIEditPanel({
 
       {/* Text Quick Actions */}
       <div className="p-4 border-b border-warm-gray-200">
-        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-medium text-warm-gray-600 mb-2 uppercase tracking-wide">
           Text
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -301,7 +301,7 @@ export function AIEditPanel({
 
       {/* Style Quick Actions */}
       <div className="p-4 border-b border-warm-gray-200">
-        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+        <label className="block text-xs font-medium text-warm-gray-600 mb-2 uppercase tracking-wide">
           Style
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -323,7 +323,7 @@ export function AIEditPanel({
       {/* Custom instruction input */}
       <div className="flex-1 p-4">
         <form onSubmit={handleSubmit} className="h-full flex flex-col">
-          <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+          <label className="block text-xs font-medium text-warm-gray-600 mb-2 uppercase tracking-wide">
             Custom Edit
           </label>
           <textarea

@@ -160,7 +160,7 @@ export function SubdomainInline({
               {!isChecking && isAvailable === false && <X size={14} className="text-red-500" />}
             </div>
           </div>
-          <span className="text-xs text-warm-gray-400 whitespace-nowrap">.{domain}</span>
+          <span className="text-xs text-warm-gray-600 whitespace-nowrap">.{domain}</span>
         </div>
 
         {error && (
