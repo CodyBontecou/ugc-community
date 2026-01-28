@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { getServerSession } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { PendingInviteHandler } from "@/components/dashboard/pending-invite-handler";
@@ -23,17 +22,8 @@ export default async function DashboardLayout({
       <header className="bg-white border-b border-warm-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Image
-                src="/icon.png"
-                alt="ugc.community logo"
-                width={32}
-                height={32}
-                className="rounded-[--radius-md]"
-              />
-              <span className="font-semibold text-warm-gray-900">
-                ugc.community
-              </span>
+            <Link href="/dashboard" className="font-semibold text-warm-gray-900">
+              ugc.community
             </Link>
 
             <DashboardNav user={session.user} />

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { BackgroundBlobs } from "@/components/landing";
 
 export default function AuthLayout({
@@ -14,17 +13,8 @@ export default function AuthLayout({
       {/* Header */}
       <header className="relative z-10 p-4">
         <div className="container">
-          <Link href="/" className="flex items-center gap-2 w-fit">
-            <Image
-              src="/icon.png"
-              alt="ugc.community logo"
-              width={36}
-              height={36}
-              className="rounded-[--radius-md] shadow-[0_4px_12px_rgba(255,107,149,0.3)]"
-            />
-            <span className="font-semibold text-[1.1rem] text-warm-gray-900">
-              ugc.community
-            </span>
+          <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900">
+            ugc.community
           </Link>
         </div>
       </header>

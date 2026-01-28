@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
 
 export function Navbar() {
   return (
@@ -13,17 +12,8 @@ export function Navbar() {
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="container flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/icon.png"
-            alt="ugc.community logo"
-            width={36}
-            height={36}
-            className="rounded-[--radius-md] shadow-[0_4px_12px_rgba(255,107,149,0.3)]"
-          />
-          <span className="font-semibold text-[1.1rem] text-warm-gray-900">
-            ugc.community
-          </span>
+        <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900">
+          ugc.community
         </Link>
 
         <div className="hidden md:flex gap-12">
