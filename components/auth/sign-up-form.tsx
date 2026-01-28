@@ -231,18 +231,17 @@ export function SignUpForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-warm-gray-900 font-medium rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            style={{ color: '#FFFFFF' }}
+            className="w-full py-3 px-4 bg-warm-gray-900 font-medium rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-[#FFFFFF] [&>*]:text-[#FFFFFF]"
             whileHover={{ scale: isLoading ? 1 : 1.01 }}
             whileTap={{ scale: isLoading ? 1 : 0.99 }}
           >
             {isLoading ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
-                Creating account...
+                <Loader2 size={18} className="animate-spin text-white" />
+                <span className="text-white">Creating account...</span>
               </>
             ) : (
-              "Create account"
+              <span className="text-white">Create account</span>
             )}
           </motion.button>
         </form>
