@@ -3,20 +3,21 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { portfolios } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
-  Plus,
-  FolderOpen,
+  Pencil,
   Eye,
+  EyeOff,
   Clock,
   ArrowRight,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Dashboard - ugc.community",
-  description: "Manage your UGC portfolios",
+  description: "Manage your UGC portfolio",
 };
 
 // Force dynamic rendering - dashboard needs auth session
@@ -26,13 +27,12 @@ async function DashboardContent() {
   const session = await getServerSession();
   if (!session) return null;
 
-  const userPortfolios = await db.query.portfolios.findMany({
+  const portfolio = await db.query.portfolios.findFirst({
     where: eq(portfolios.userId, session.user.id),
-    orderBy: [desc(portfolios.updatedAt)],
-    limit: 5,
+    with: {
+      sections: true,
+    },
   });
-
-  const publishedCount = userPortfolios.filter((p) => p.isPublished).length;
 
   return (
     <div className="space-y-8">
@@ -42,36 +42,22 @@ async function DashboardContent() {
           Welcome back, {session.user.name?.split(" ")[0] || "Creator"}
         </h1>
         <p className="mt-1 text-warm-gray-500">
-          Manage your portfolios and track your brand opportunities
+          Manage your portfolio and track your brand opportunities
         </p>
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-[--radius-xl] p-6 border border-warm-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[--radius-lg] bg-peach-100 flex items-center justify-center text-rose">
-              <FolderOpen size={24} />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-warm-gray-900">
-                {userPortfolios.length}
-              </p>
-              <p className="text-sm text-warm-gray-500">Total Portfolios</p>
-            </div>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-[--radius-xl] p-6 border border-warm-gray-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-[--radius-lg] bg-green-100 flex items-center justify-center text-green-600">
-              <Eye size={24} />
+              {portfolio?.isPublished ? <Eye size={24} /> : <EyeOff size={24} />}
             </div>
             <div>
               <p className="text-2xl font-semibold text-warm-gray-900">
-                {publishedCount}
+                {portfolio?.isPublished ? "Live" : "Draft"}
               </p>
-              <p className="text-sm text-warm-gray-500">Published</p>
+              <p className="text-sm text-warm-gray-500">Portfolio Status</p>
             </div>
           </div>
         </div>
@@ -92,19 +78,19 @@ async function DashboardContent() {
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
-          href="/dashboard/portfolios/new"
+          href="/dashboard/portfolio"
           className="group bg-gradient-to-br from-coral to-rose rounded-[--radius-xl] p-6 text-white hover:shadow-lg transition-shadow"
         >
           <div className="flex items-start justify-between">
             <div>
               <div className="w-10 h-10 rounded-[--radius-md] bg-white/20 flex items-center justify-center mb-4">
-                <Plus size={20} />
+                <Pencil size={20} />
               </div>
               <h3 className="text-lg font-semibold mb-1">
-                Create New Portfolio
+                Edit Your Portfolio
               </h3>
               <p className="text-white/80 text-sm">
-                Start from scratch or use AI to generate your portfolio
+                Customize your portfolio content and settings
               </p>
             </div>
             <ArrowRight
@@ -115,7 +101,7 @@ async function DashboardContent() {
         </Link>
 
         <Link
-          href="/dashboard/portfolios/ai-generate"
+          href="/dashboard/ai-generate"
           className="group bg-gradient-to-br from-lavender to-purple-dark rounded-[--radius-xl] p-6 text-white hover:shadow-lg transition-shadow"
         >
           <div className="flex items-start justify-between">
@@ -138,78 +124,86 @@ async function DashboardContent() {
         </Link>
       </div>
 
-      {/* Recent portfolios */}
+      {/* Portfolio preview */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-warm-gray-900">
-            Recent Portfolios
+            Your Portfolio
           </h2>
-          {userPortfolios.length > 0 && (
-            <Link
-              href="/dashboard/portfolios"
-              className="text-sm font-medium text-rose hover:text-rose/80 transition-colors"
+          {portfolio?.isPublished && session.user.username && (
+            <a
+              href={`/?subdomain=${session.user.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-rose hover:text-rose/80 transition-colors flex items-center gap-1"
             >
-              View all
-            </Link>
+              <ExternalLink size={14} />
+              View Live
+            </a>
           )}
         </div>
 
-        {userPortfolios.length === 0 ? (
+        {!portfolio ? (
           <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-12 text-center">
             <div className="w-16 h-16 rounded-full bg-warm-gray-100 flex items-center justify-center mx-auto mb-4">
-              <FolderOpen size={28} className="text-warm-gray-400" />
+              <Sparkles size={28} className="text-warm-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-warm-gray-900 mb-2">
-              No portfolios yet
+              Set up your portfolio
             </h3>
             <p className="text-warm-gray-500 mb-6 max-w-sm mx-auto">
-              Create your first portfolio to start showcasing your work to
-              brands
+              Create your portfolio to start showcasing your work to brands
             </p>
             <Link
-              href="/dashboard/portfolios/new"
+              href="/dashboard/portfolio"
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] hover:shadow-md transition-shadow"
             >
-              <Plus size={18} />
-              Create Portfolio
+              <Pencil size={18} />
+              Set Up Portfolio
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 divide-y divide-warm-gray-100">
-            {userPortfolios.map((portfolio) => (
-              <Link
-                key={portfolio.id}
-                href={`/dashboard/portfolios/${portfolio.id}`}
-                className="flex items-center justify-between p-4 hover:bg-warm-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-[--radius-md] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center text-rose">
-                    <FolderOpen size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-warm-gray-900">
-                      {portfolio.title}
-                    </h3>
-                    <p className="text-sm text-warm-gray-500">
-                      {portfolio.tagline || "No tagline"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  {portfolio.isPublished ? (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
-                      Published
-                    </span>
+          <Link
+            href="/dashboard/portfolio"
+            className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 hover:shadow-lg transition-shadow overflow-hidden"
+          >
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-[--radius-lg] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center">
+                  {portfolio.portfolioType === "html" ? (
+                    <Sparkles size={24} className="text-rose" />
                   ) : (
-                    <span className="px-2 py-1 text-xs font-medium bg-warm-gray-100 text-warm-gray-600 rounded-full">
-                      Draft
-                    </span>
+                    <Pencil size={24} className="text-rose" />
                   )}
-                  <ArrowRight size={18} className="text-warm-gray-400" />
                 </div>
-              </Link>
-            ))}
-          </div>
+                <div>
+                  <h3 className="text-lg font-medium text-warm-gray-900">
+                    {portfolio.title}
+                  </h3>
+                  <p className="text-sm text-warm-gray-500">
+                    {portfolio.tagline || "No tagline set"}
+                  </p>
+                  <p className="text-xs text-warm-gray-400 mt-1">
+                    Last updated {new Date(portfolio.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {portfolio.isPublished ? (
+                  <span className="px-3 py-1.5 text-sm font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1.5">
+                    <Eye size={14} />
+                    Published
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 text-sm font-medium bg-warm-gray-100 text-warm-gray-600 rounded-full flex items-center gap-1.5">
+                    <EyeOff size={14} />
+                    Draft
+                  </span>
+                )}
+                <ArrowRight size={20} className="text-warm-gray-400" />
+              </div>
+            </div>
+          </Link>
         )}
       </div>
     </div>
@@ -222,8 +216,8 @@ export default function DashboardPage() {
       fallback={
         <div className="animate-pulse space-y-8">
           <div className="h-12 bg-warm-gray-200 rounded w-1/3" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => (
               <div
                 key={i}
                 className="h-24 bg-warm-gray-200 rounded-[--radius-xl]"

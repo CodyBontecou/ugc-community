@@ -13,20 +13,22 @@ const createPortfolioSchema = z.object({
   portfolioType: z.enum(["json", "html"]).default("json"),
 });
 
-// GET /api/portfolios - List user's portfolios
+// GET /api/portfolios - Returns user's single portfolio as an array for backwards compatibility
 export async function GET() {
   try {
     const session = await requireAuth();
 
-    const userPortfolios = await db.query.portfolios.findMany({
+    const portfolio = await db.query.portfolios.findFirst({
       where: eq(portfolios.userId, session.user.id),
       with: {
-        sections: true,
+        sections: {
+          orderBy: (sections, { asc }) => [asc(sections.order)],
+        },
       },
-      orderBy: (portfolios, { desc }) => [desc(portfolios.updatedAt)],
     });
 
-    return NextResponse.json(userPortfolios);
+    // Return array for backwards compatibility
+    return NextResponse.json(portfolio ? [portfolio] : []);
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,10 +41,22 @@ export async function GET() {
   }
 }
 
-// POST /api/portfolios - Create a new portfolio
+// POST /api/portfolios - Create or update user's portfolio (only one allowed)
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
+
+    // Check if user already has a portfolio
+    const existing = await db.query.portfolios.findFirst({
+      where: eq(portfolios.userId, session.user.id),
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "User already has a portfolio. Use PATCH /api/portfolio to update." },
+        { status: 409 }
+      );
+    }
 
     const body = await request.json();
     const { title, tagline, templateId, htmlContent, portfolioType } =

@@ -26,7 +26,7 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/portfolios", label: "Portfolios", icon: FolderOpen },
+  { href: "/dashboard/portfolio", label: "Portfolio", icon: FolderOpen },
   { href: "/dashboard/media", label: "Media", icon: Image },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];

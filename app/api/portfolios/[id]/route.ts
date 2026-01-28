@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { portfolios, portfolioSections } from "@/lib/db/schema";
+import { portfolios } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
@@ -18,7 +18,7 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
-// GET /api/portfolios/[id] - Get a specific portfolio
+// GET /api/portfolios/[id] - Get user's portfolio (ID verified for ownership)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await requireAuth();
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// PATCH /api/portfolios/[id] - Update a portfolio
+// PATCH /api/portfolios/[id] - Update user's portfolio
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await requireAuth();
@@ -119,7 +119,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// DELETE /api/portfolios/[id] - Delete a portfolio
+// DELETE /api/portfolios/[id] - Delete user's portfolio
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await requireAuth();

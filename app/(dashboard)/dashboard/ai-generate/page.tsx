@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ import {
   Monitor,
   Tablet,
   Smartphone,
+  AlertTriangle,
 } from "lucide-react";
 
 type Step = "describe" | "generate" | "preview";
@@ -37,6 +38,14 @@ const PREVIEW_SIZES = {
   desktop: { width: 1280, height: 800, label: "Desktop" },
 };
 
+interface ExistingPortfolio {
+  id: string;
+  title: string;
+  portfolioType: string;
+  htmlContent: string | null;
+  isPublished: boolean;
+}
+
 export default function AIGeneratePage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("describe");
@@ -44,12 +53,32 @@ export default function AIGeneratePage() {
   const [selectedNiche, setSelectedNiche] = useState<string | null>(null);
   const [generatedHtml, setGeneratedHtml] = useState<string>("");
   const [refineFeedback, setRefineFeedback] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingHtml, setStreamingHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [previewSize, setPreviewSize] = useState<PreviewSize>("desktop");
+  const [existingPortfolio, setExistingPortfolio] = useState<ExistingPortfolio | null>(null);
+  const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Check for existing portfolio on mount
+  useEffect(() => {
+    async function checkExistingPortfolio() {
+      try {
+        const response = await fetch("/api/portfolio");
+        if (response.ok) {
+          const portfolio = await response.json();
+          if (portfolio) {
+            setExistingPortfolio(portfolio);
+          }
+        }
+      } catch {
+        // Ignore errors - portfolio may not exist
+      }
+    }
+    checkExistingPortfolio();
+  }, []);
 
   const streamGenerate = useCallback(
     async (body: Record<string, unknown>) => {
@@ -141,10 +170,16 @@ export default function AIGeneratePage() {
     setRefineFeedback("");
   }, [streamGenerate, generatedHtml, refineFeedback]);
 
-  const handleCreatePortfolio = async () => {
+  const handleSavePortfolio = async () => {
     if (!generatedHtml) return;
 
-    setIsCreating(true);
+    // Show warning if portfolio exists and has content
+    if (existingPortfolio && !showOverwriteWarning) {
+      setShowOverwriteWarning(true);
+      return;
+    }
+
+    setIsSaving(true);
     setError(null);
 
     try {
@@ -152,8 +187,9 @@ export default function AIGeneratePage() {
       const titleMatch = generatedHtml.match(/<title>([^<]*)<\/title>/i);
       const title = titleMatch ? titleMatch[1] : "My Portfolio";
 
-      const response = await fetch("/api/portfolios", {
-        method: "POST",
+      // Update existing portfolio with new HTML content
+      const response = await fetch("/api/portfolio", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
@@ -163,14 +199,14 @@ export default function AIGeneratePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create portfolio");
+        throw new Error("Failed to save portfolio");
       }
 
-      const portfolio = await response.json();
-      router.push(`/dashboard/portfolios/${portfolio.id}`);
+      router.push("/dashboard/portfolio");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-      setIsCreating(false);
+      setIsSaving(false);
+      setShowOverwriteWarning(false);
     }
   };
 
@@ -180,11 +216,11 @@ export default function AIGeneratePage() {
     <div className="max-w-6xl mx-auto">
       {/* Back link */}
       <Link
-        href="/dashboard/portfolios/new"
+        href="/dashboard"
         className="inline-flex items-center gap-2 text-sm text-warm-gray-500 hover:text-warm-gray-900 mb-8 transition-colors"
       >
         <ArrowLeft size={16} />
-        Back to options
+        Back to dashboard
       </Link>
 
       {/* Progress indicator */}
@@ -242,7 +278,7 @@ export default function AIGeneratePage() {
           >
             <div>
               <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-                Tell us about yourself
+                {existingPortfolio ? "Redesign Your Portfolio" : "Create Your Portfolio"}
               </h1>
               <p className="text-warm-gray-500">
                 Describe your content, niche, experience, and what makes you
@@ -250,6 +286,21 @@ export default function AIGeneratePage() {
                 you.
               </p>
             </div>
+
+            {/* Existing portfolio warning */}
+            {existingPortfolio && existingPortfolio.htmlContent && (
+              <div className="bg-amber-50 border border-amber-200 rounded-[--radius-md] p-4 flex items-start gap-3">
+                <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    You already have a portfolio
+                  </p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Generating a new portfolio will replace your existing one. Make sure you want to do this.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 space-y-6">
               {/* Niche selection */}
@@ -391,8 +442,7 @@ export default function AIGeneratePage() {
                   Preview your portfolio
                 </h1>
                 <p className="text-warm-gray-500">
-                  Review your generated portfolio. You can refine it or create
-                  it.
+                  Review your generated portfolio. You can refine it or save it.
                 </p>
               </div>
 
@@ -496,37 +546,84 @@ export default function AIGeneratePage() {
               </div>
             </div>
 
+            {/* Overwrite confirmation */}
+            {showOverwriteWarning && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-50 border border-amber-200 rounded-[--radius-md] p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800">
+                      This will replace your existing portfolio
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Your current portfolio will be permanently replaced with this new AI-generated design.
+                    </p>
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowOverwriteWarning(false)}
+                        className="px-4 py-2 text-sm font-medium text-warm-gray-700 bg-white border border-warm-gray-200 rounded-[--radius-md] hover:bg-warm-gray-50 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSavePortfolio}
+                        disabled={isSaving}
+                        className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-[--radius-md] hover:bg-amber-700 transition-colors flex items-center gap-2"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          "Yes, Replace Portfolio"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Actions */}
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setStep("describe")}
-                className="py-3 px-6 text-warm-gray-600 hover:text-warm-gray-900 font-medium transition-colors flex items-center gap-2"
-              >
-                <ArrowLeft size={18} />
-                Start Over
-              </button>
-              <motion.button
-                type="button"
-                onClick={handleCreatePortfolio}
-                disabled={isCreating}
-                className="py-3 px-6 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center gap-2"
-                whileHover={{ scale: isCreating ? 1 : 1.01 }}
-                whileTap={{ scale: isCreating ? 1 : 0.99 }}
-              >
-                {isCreating ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Creating Portfolio...
-                  </>
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Create Portfolio
-                  </>
-                )}
-              </motion.button>
-            </div>
+            {!showOverwriteWarning && (
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep("describe")}
+                  className="py-3 px-6 text-warm-gray-600 hover:text-warm-gray-900 font-medium transition-colors flex items-center gap-2"
+                >
+                  <ArrowLeft size={18} />
+                  Start Over
+                </button>
+                <motion.button
+                  type="button"
+                  onClick={handleSavePortfolio}
+                  disabled={isSaving}
+                  className="py-3 px-6 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center gap-2"
+                  whileHover={{ scale: isSaving ? 1 : 1.01 }}
+                  whileTap={{ scale: isSaving ? 1 : 0.99 }}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Save Portfolio
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
