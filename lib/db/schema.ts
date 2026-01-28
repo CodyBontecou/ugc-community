@@ -201,6 +201,35 @@ export const creatorDirectory = pgTable(
 );
 
 // =====================================================
+// Portfolio View Tracking
+// =====================================================
+
+export const portfolioViews = pgTable(
+  "portfolio_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    portfolioId: uuid("portfolio_id")
+      .notNull()
+      .references(() => portfolios.id, { onDelete: "cascade" }),
+    // Hashed IP for privacy-preserving deduplication
+    viewerIpHash: text("viewer_ip_hash"),
+    userAgent: text("user_agent"),
+    referrer: text("referrer"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("portfolio_views_portfolio_id_idx").on(table.portfolioId),
+    index("portfolio_views_created_at_idx").on(table.createdAt),
+    // Composite index for deduplication queries
+    index("portfolio_views_dedup_idx").on(
+      table.portfolioId,
+      table.viewerIpHash,
+      table.createdAt
+    ),
+  ]
+);
+
+// =====================================================
 // Contact Form Submissions
 // =====================================================
 
@@ -264,6 +293,7 @@ export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
   sections: many(portfolioSections),
   media: many(media),
   contactSubmissions: many(contactSubmissions),
+  views: many(portfolioViews),
   directoryListing: one(creatorDirectory, {
     fields: [portfolios.id],
     references: [creatorDirectory.portfolioId],
@@ -314,6 +344,13 @@ export const contactSubmissionsRelations = relations(
     }),
   })
 );
+
+export const portfolioViewsRelations = relations(portfolioViews, ({ one }) => ({
+  portfolio: one(portfolios, {
+    fields: [portfolioViews.portfolioId],
+    references: [portfolios.id],
+  }),
+}));
 
 // =====================================================
 // Types
@@ -377,3 +414,5 @@ export type CreatorDirectoryEntry = typeof creatorDirectory.$inferSelect;
 export type NewCreatorDirectoryEntry = typeof creatorDirectory.$inferInsert;
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
+export type PortfolioView = typeof portfolioViews.$inferSelect;
+export type NewPortfolioView = typeof portfolioViews.$inferInsert;

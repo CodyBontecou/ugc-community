@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { users, portfolios } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { PortfolioRenderer } from "@/components/portfolio/renderer";
+import { ViewTracker } from "@/components/portfolio/view-tracker";
 import type { Metadata } from "next";
 
 type Props = {
@@ -88,19 +89,22 @@ export default async function SubdomainPortfolioPage({ params }: Props) {
   }
 
   return (
-    <PortfolioRenderer
-      portfolio={portfolio}
-      user={{
-        name: user.displayName || user.name,
-        image: user.image,
-        bio: user.bio,
-        instagram: user.instagramHandle,
-        tiktok: user.tiktokHandle,
-        youtube: user.youtubeHandle,
-        twitter: user.twitterHandle,
-        website: user.websiteUrl,
-      }}
-    />
+    <>
+      <ViewTracker portfolioId={portfolio.id} />
+      <PortfolioRenderer
+        portfolio={portfolio}
+        user={{
+          name: user.displayName || user.name,
+          image: user.image,
+          bio: user.bio,
+          instagram: user.instagramHandle,
+          tiktok: user.tiktokHandle,
+          youtube: user.youtubeHandle,
+          twitter: user.twitterHandle,
+          website: user.websiteUrl,
+        }}
+      />
+    </>
   );
 }
 

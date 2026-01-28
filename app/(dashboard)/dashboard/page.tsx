@@ -1,13 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { portfolios } from "@/lib/db/schema";
+import { portfolios, portfolioViews } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 import { getServerSession } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import {
   Eye,
   EyeOff,
-  Clock,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -32,6 +32,16 @@ async function DashboardContent() {
       sections: true,
     },
   });
+
+  // Get portfolio view count
+  let viewCount = 0;
+  if (portfolio) {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(portfolioViews)
+      .where(eq(portfolioViews.portfolioId, portfolio.id));
+    viewCount = result[0]?.count ?? 0;
+  }
 
   return (
     <div className="space-y-8">
@@ -64,10 +74,12 @@ async function DashboardContent() {
         <div className="bg-white rounded-[--radius-xl] p-6 border border-warm-gray-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-[--radius-lg] bg-lavender-soft/30 flex items-center justify-center text-lavender">
-              <Clock size={24} />
+              <Eye size={24} />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-warm-gray-900">0</p>
+              <p className="text-2xl font-semibold text-warm-gray-900">
+                {viewCount.toLocaleString()}
+              </p>
               <p className="text-sm text-warm-gray-500">Profile Views</p>
             </div>
           </div>
