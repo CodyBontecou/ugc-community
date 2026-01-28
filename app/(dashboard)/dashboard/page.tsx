@@ -5,7 +5,6 @@ import { portfolios } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import {
-  Pencil,
   Eye,
   EyeOff,
   Clock,
@@ -75,54 +74,29 @@ async function DashboardContent() {
         </div>
       </div>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link
-          href="/dashboard/portfolio"
-          className="group bg-gradient-to-br from-coral to-rose rounded-[--radius-xl] p-6 text-white hover:shadow-lg transition-shadow"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-[--radius-md] bg-white/20 flex items-center justify-center mb-4">
-                <Pencil size={20} />
-              </div>
-              <h3 className="text-lg font-semibold mb-1">
-                Edit Your Portfolio
-              </h3>
-              <p className="text-white/80 text-sm">
-                Customize your portfolio content and settings
-              </p>
+      {/* Quick action */}
+      <Link
+        href="/dashboard/ai-generate"
+        className="group bg-gradient-to-br from-lavender to-purple-dark rounded-[--radius-xl] p-6 text-white hover:shadow-lg transition-shadow"
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="w-10 h-10 rounded-[--radius-md] bg-white/20 flex items-center justify-center mb-4">
+              <Sparkles size={20} />
             </div>
-            <ArrowRight
-              size={20}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-            />
+            <h3 className="text-lg font-semibold mb-1">
+              AI Portfolio Generator
+            </h3>
+            <p className="text-white/80 text-sm">
+              Describe your brand and let AI create your portfolio
+            </p>
           </div>
-        </Link>
-
-        <Link
-          href="/dashboard/ai-generate"
-          className="group bg-gradient-to-br from-lavender to-purple-dark rounded-[--radius-xl] p-6 text-white hover:shadow-lg transition-shadow"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="w-10 h-10 rounded-[--radius-md] bg-white/20 flex items-center justify-center mb-4">
-                <Sparkles size={20} />
-              </div>
-              <h3 className="text-lg font-semibold mb-1">
-                AI Portfolio Generator
-              </h3>
-              <p className="text-white/80 text-sm">
-                Describe your brand and let AI create your portfolio
-              </p>
-            </div>
-            <ArrowRight
-              size={20}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-            />
-          </div>
-        </Link>
-      </div>
+          <ArrowRight
+            size={20}
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+          />
+        </div>
+      </Link>
 
       {/* Portfolio preview */}
       <div>
@@ -149,32 +123,73 @@ async function DashboardContent() {
               <Sparkles size={28} className="text-warm-gray-400" />
             </div>
             <h3 className="text-lg font-semibold text-warm-gray-900 mb-2">
-              Set up your portfolio
+              Create your portfolio
             </h3>
             <p className="text-warm-gray-500 mb-6 max-w-sm mx-auto">
-              Create your portfolio to start showcasing your work to brands
+              Let AI help you create a stunning portfolio to showcase your work to brands
             </p>
             <Link
-              href="/dashboard/portfolio"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] hover:shadow-md transition-shadow"
+              href="/dashboard/ai-generate"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-lavender to-purple-dark text-white font-medium rounded-[--radius-md] hover:shadow-md transition-shadow"
             >
-              <Pencil size={18} />
-              Set Up Portfolio
+              <Sparkles size={18} />
+              Create with AI
             </Link>
+          </div>
+        ) : portfolio.portfolioType === "json" ? (
+          <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
+            <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+              <p className="text-sm text-amber-800">
+                <strong>Upgrade available:</strong> Regenerate your portfolio with our AI generator for a more stunning design with interactive editing.
+              </p>
+            </div>
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-[--radius-lg] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center">
+                  <Sparkles size={24} className="text-rose" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-warm-gray-900">
+                    {portfolio.title}
+                  </h3>
+                  <p className="text-sm text-warm-gray-500">
+                    {portfolio.tagline || "No tagline set"}
+                  </p>
+                  <p className="text-xs text-warm-gray-400 mt-1">
+                    Last updated {new Date(portfolio.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {portfolio.isPublished ? (
+                  <span className="px-3 py-1.5 text-sm font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1.5">
+                    <Eye size={14} />
+                    Published
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 text-sm font-medium bg-warm-gray-100 text-warm-gray-600 rounded-full flex items-center gap-1.5">
+                    <EyeOff size={14} />
+                    Draft
+                  </span>
+                )}
+                <Link
+                  href="/dashboard/ai-generate"
+                  className="px-4 py-2 bg-gradient-to-br from-lavender to-purple-dark text-white font-medium rounded-[--radius-md] hover:shadow-md transition-shadow text-sm"
+                >
+                  Regenerate
+                </Link>
+              </div>
+            </div>
           </div>
         ) : (
           <Link
-            href="/dashboard/portfolio"
+            href="/dashboard/portfolio/edit"
             className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 hover:shadow-lg transition-shadow overflow-hidden"
           >
             <div className="flex items-center justify-between p-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-[--radius-lg] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center">
-                  {portfolio.portfolioType === "html" ? (
-                    <Sparkles size={24} className="text-rose" />
-                  ) : (
-                    <Pencil size={24} className="text-rose" />
-                  )}
+                  <Sparkles size={24} className="text-rose" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-warm-gray-900">

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { portfolios, portfolioSections } from "@/lib/db/schema";
+import { portfolios } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -10,84 +10,16 @@ const updatePortfolioSchema = z.object({
   tagline: z.string().max(200).optional(),
   templateId: z.string().optional(),
   theme: z.record(z.unknown()).optional(),
-  content: z.record(z.unknown()).optional(),
   isPublished: z.boolean().optional(),
   htmlContent: z.string().optional(),
-  portfolioType: z.enum(["json", "html"]).optional(),
 });
 
-/**
- * Creates a new portfolio with default sections for the user
- */
-async function createDefaultPortfolio(userId: string, userName?: string) {
-  const title = userName ? `${userName}'s Portfolio` : "My Portfolio";
-
-  const [portfolio] = await db
-    .insert(portfolios)
-    .values({
-      userId,
-      title,
-      tagline: "Creator & Content Specialist",
-      templateId: "default",
-      portfolioType: "json",
-      content: {
-        headline: title,
-        subheadline: "Creator & Content Specialist",
-      },
-    })
-    .returning();
-
-  // Create default sections
-  const defaultSections = [
-    {
-      portfolioId: portfolio.id,
-      type: "hero",
-      order: 0,
-      content: {
-        title: title,
-        subtitle: "Welcome to my portfolio",
-      },
-    },
-    {
-      portfolioId: portfolio.id,
-      type: "about",
-      order: 1,
-      content: {
-        title: "About Me",
-        body: "Tell brands about yourself and what makes you unique.",
-      },
-    },
-    {
-      portfolioId: portfolio.id,
-      type: "work",
-      order: 2,
-      content: {
-        title: "My Work",
-        items: [],
-      },
-    },
-    {
-      portfolioId: portfolio.id,
-      type: "contact",
-      order: 3,
-      content: {
-        title: "Let's Work Together",
-        ctaText: "Get in Touch",
-      },
-    },
-  ];
-
-  await db.insert(portfolioSections).values(defaultSections);
-
-  return portfolio;
-}
-
-// GET /api/portfolio - Get user's portfolio (auto-create if doesn't exist)
+// GET /api/portfolio - Get user's portfolio
 export async function GET() {
   try {
     const session = await requireAuth();
 
-    let portfolio = await db.query.portfolios.findFirst({
+    const portfolio = await db.query.portfolios.findFirst({
       where: eq(portfolios.userId, session.user.id),
       with: {
         sections: {
@@ -97,22 +29,9 @@ export async function GET() {
       },
     });
 
-    // Auto-create portfolio if user doesn't have one
+    // Return null if no portfolio exists - client handles redirect
     if (!portfolio) {
-      const newPortfolio = await createDefaultPortfolio(
-        session.user.id,
-        session.user.name
-      );
-
-      portfolio = await db.query.portfolios.findFirst({
-        where: eq(portfolios.id, newPortfolio.id),
-        with: {
-          sections: {
-            orderBy: (sections, { asc }) => [asc(sections.order)],
-          },
-          media: true,
-        },
-      });
+      return NextResponse.json(null);
     }
 
     return NextResponse.json(portfolio);
@@ -157,9 +76,7 @@ export async function PATCH(request: NextRequest) {
     if (data.tagline !== undefined) updateData.tagline = data.tagline;
     if (data.templateId !== undefined) updateData.templateId = data.templateId;
     if (data.theme !== undefined) updateData.theme = data.theme;
-    if (data.content !== undefined) updateData.content = data.content;
     if (data.htmlContent !== undefined) updateData.htmlContent = data.htmlContent;
-    if (data.portfolioType !== undefined) updateData.portfolioType = data.portfolioType;
 
     // Handle publishing
     if (data.isPublished !== undefined) {

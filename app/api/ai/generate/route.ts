@@ -2,22 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
-import {
-  buildPrompt,
-  buildRefinePrompt,
-  buildHtmlPrompt,
-  buildHtmlRefinePrompt,
-} from "@/lib/ai/prompts";
+import { buildHtmlPrompt, buildHtmlRefinePrompt } from "@/lib/ai/prompts";
 
 const generateSchema = z.object({
   description: z.string().min(10).max(2000),
   niche: z.string().optional(),
-  templateId: z.string().optional(),
-});
-
-const refineSchema = z.object({
-  currentContent: z.string(),
-  feedback: z.string().min(1).max(1000),
 });
 
 const htmlRefineSchema = z.object({
@@ -25,7 +14,7 @@ const htmlRefineSchema = z.object({
   feedback: z.string().min(1).max(1000),
 });
 
-// POST /api/ai/generate - Generate portfolio content
+// POST /api/ai/generate - Generate HTML portfolio content
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth();
@@ -43,42 +32,30 @@ export async function POST(request: NextRequest) {
     });
 
     const body = await request.json();
-    const action = body.action || "generate";
+    const action = body.action || "generate-html";
 
     let systemPrompt: string;
     let userPrompt: string;
-    let maxTokens = 2000;
-    let model = "claude-sonnet-4-20250514";
+    const maxTokens = 16000;
+    const model = "claude-sonnet-4-5";
 
-    if (action === "refine") {
-      const { currentContent, feedback } = refineSchema.parse(body);
-      const prompts = buildRefinePrompt(currentContent, feedback);
-      systemPrompt = prompts.systemPrompt;
-      userPrompt = prompts.userPrompt;
-    } else if (action === "generate-html") {
-      // HTML generation uses Sonnet 4.5 with higher token limit
-      const { description, niche } = generateSchema.parse(body);
-      const prompts = buildHtmlPrompt(description, niche);
-      systemPrompt = prompts.systemPrompt;
-      userPrompt = prompts.userPrompt;
-      maxTokens = 16000;
-      model = "claude-sonnet-4-5";
-    } else if (action === "refine-html") {
+    if (action === "refine-html") {
       // HTML refinement
       const { currentHtml, feedback } = htmlRefineSchema.parse(body);
       const prompts = buildHtmlRefinePrompt(currentHtml, feedback);
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
-      maxTokens = 16000;
-      model = "claude-sonnet-4-5";
     } else {
+      // Default to HTML generation
       const { description, niche } = generateSchema.parse(body);
-      const prompts = buildPrompt(description, niche);
+      const prompts = buildHtmlPrompt(description, niche);
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
     }
 
-    console.log(`Generating portfolio (${action}) for user ${session.user.id}`);
+    console.log(
+      `Generating portfolio (${action}) for user ${session.user.id}`
+    );
 
     // Create streaming response
     const stream = anthropic.messages.stream({
