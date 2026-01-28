@@ -53,6 +53,8 @@ export function InteractiveHtmlEditor({
   const [error, setError] = useState<string | null>(null);
   const [deviceSize, setDeviceSize] = useState<DeviceSize>("desktop");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isRefreshLoading, setIsRefreshLoading] = useState(false);
+  const refreshAbortControllerRef = useRef<AbortController | null>(null);
 
   // History state
   const [history, setHistory] = useState<HistoryState>({
@@ -139,6 +141,71 @@ export function InteractiveHtmlEditor({
       setSelectedElement(null);
     },
     [updateHtml]
+  );
+
+  // Handle element refresh (regenerate with AI) - calls API directly and auto-applies
+  const handleElementRefresh = useCallback(
+    async (element: SelectedElement) => {
+      // Don't start a new refresh if one is in progress
+      if (isRefreshLoading) return;
+
+      setIsRefreshLoading(true);
+      refreshAbortControllerRef.current = new AbortController();
+
+      try {
+        const response = await fetch("/api/ai/edit-element", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            portfolioId,
+            selector: element.selector,
+            currentContent: element.content,
+            outerHtml: element.outerHtml,
+            instruction: "randomize",
+            fullHtml: html,
+            tagName: element.tagName,
+          }),
+          signal: refreshAbortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to generate");
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response stream");
+
+        const decoder = new TextDecoder();
+        let accumulated = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulated += decoder.decode(value, { stream: true });
+        }
+
+        // Auto-apply the result
+        if (accumulated.trim()) {
+          const trimmed = accumulated.trim();
+          const newHtml = replaceElementOuter(html, element.selector, trimmed);
+          if (newHtml !== html) {
+            updateHtml(newHtml);
+          }
+        }
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          // User cancelled - ignore
+          return;
+        }
+        console.error("Refresh failed:", err);
+        setError(err instanceof Error ? err.message : "Failed to refresh element");
+      } finally {
+        setIsRefreshLoading(false);
+        refreshAbortControllerRef.current = null;
+      }
+    },
+    [isRefreshLoading, portfolioId, html, updateHtml]
   );
 
   // Save to server
@@ -315,7 +382,9 @@ export function InteractiveHtmlEditor({
             <EditableIframe
               html={html}
               onElementSelect={setSelectedElement}
+              onElementRefresh={handleElementRefresh}
               selectedSelector={selectedElement?.selector}
+              isRefreshLoading={isRefreshLoading}
             />
           </div>
         </div>

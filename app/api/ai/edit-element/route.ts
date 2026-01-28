@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       instruction: data.instruction || "",
       tagName: data.tagName,
       quickAction: data.quickAction as QuickAction | undefined,
+      fullHtml: data.fullHtml,
     });
 
     // Use faster model for element edits (lower latency)

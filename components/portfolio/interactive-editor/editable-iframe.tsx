@@ -8,7 +8,9 @@ interface EditableIframeProps {
   html: string;
   onElementSelect: (element: SelectedElement) => void;
   onElementHover?: (element: SelectedElement | null) => void;
+  onElementRefresh?: (element: SelectedElement) => void;
   selectedSelector?: string | null;
+  isRefreshLoading?: boolean;
   className?: string;
 }
 
@@ -16,7 +18,9 @@ export function EditableIframe({
   html,
   onElementSelect,
   onElementHover,
+  onElementRefresh,
   selectedSelector,
+  isRefreshLoading = false,
   className = "",
 }: EditableIframeProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -42,6 +46,11 @@ export function EditableIframe({
         case "element-unhover":
           onElementHover?.(null);
           break;
+        case "refresh-element":
+          if (message.payload) {
+            onElementRefresh?.(message.payload);
+          }
+          break;
         case "ready":
           // Iframe is ready, update selection if needed
           if (selectedSelector) {
@@ -53,7 +62,7 @@ export function EditableIframe({
           break;
       }
     },
-    [onElementSelect, onElementHover, selectedSelector]
+    [onElementSelect, onElementHover, onElementRefresh, selectedSelector]
   );
 
   // Set up message listener
@@ -79,6 +88,13 @@ export function EditableIframe({
       iframeRef.current.contentWindow.postMessage({ type: "deselect" }, "*");
     }
   }, [selectedSelector]);
+
+  // Send stop-loading message when refresh loading ends
+  useEffect(() => {
+    if (!isRefreshLoading && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: "stop-loading" }, "*");
+    }
+  }, [isRefreshLoading]);
 
   return (
     <iframe

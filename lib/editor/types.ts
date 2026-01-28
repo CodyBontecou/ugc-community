@@ -17,7 +17,7 @@ export interface SelectedElement {
 }
 
 export interface IframeMessage {
-  type: "element-selected" | "element-hover" | "element-unhover" | "ready";
+  type: "element-selected" | "element-hover" | "element-unhover" | "refresh-element" | "ready";
   payload?: SelectedElement | null;
 }
 
