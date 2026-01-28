@@ -1,41 +1,41 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, Hash } from "lucide-react";
 
 const plans = [
   {
-    name: "Starter",
-    description: "Perfect for new creators",
-    price: "$299",
-    period: " one-time",
-    featured: false,
-    features: [
-      "Custom portfolio design",
-      "Up to 10 content pieces",
-      "Your own subdomain",
-      "Contact form",
-      "Mobile optimized",
-      "1 revision round",
-    ],
-    cta: "Get Started",
-  },
-  {
-    name: "Professional",
-    description: "For established creators",
-    price: "$499",
-    period: " one-time",
+    name: "Creator Partner",
+    description: "Free forever with content",
+    price: "Free",
+    period: "",
     featured: true,
     badge: "Most Popular",
+    commitment: "10 posts/month",
     features: [
-      "Everything in Starter",
-      "Unlimited content pieces",
+      "Unlimited pages",
+      "Unlimited uploads",
+      "Premium templates",
       "Analytics dashboard",
-      "Social media integration",
+      "Custom branding",
       "Priority support",
-      "3 revision rounds",
+      "Remove ugc.community badge",
     ],
-    cta: "Get Started",
+    cta: "Become a Partner",
+    footnote: "#ugccommunity",
+  },
+  {
+    name: "Pro",
+    description: "No content commitment",
+    price: "$12",
+    period: "/month",
+    featured: false,
+    features: [
+      "Everything in Partner",
+      "No posting requirement",
+      "Support the platform directly",
+    ],
+    cta: "Subscribe",
   },
 ];
 
@@ -54,13 +54,13 @@ export function Pricing() {
             Pricing
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)] mb-6">
-            Simple pricing,
+            Pay with posts,
             <br />
-            <span className="gradient-text">exceptional value</span>
+            <span className="gradient-text">not payments</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[560px] mx-auto">
-            One-time investment for a professionally crafted portfolio that helps
-            you stand out to brands and grow your creator business.
+            We'd rather have your content than your money. Create 10 posts/month
+            documenting your creator journey and get Pro features free forever.
           </p>
         </motion.div>
 
@@ -100,6 +100,11 @@ export function Pricing() {
                     </span>
                   )}
                 </div>
+                {plan.commitment && (
+                  <div className="mt-3 inline-flex items-center gap-1.5 py-1.5 px-3 bg-peach-100 text-rose rounded-full text-xs font-medium">
+                    {plan.commitment}
+                  </div>
+                )}
               </div>
               <ul className="flex flex-col gap-4 mb-8">
                 {plan.features.map((feature, j) => (
@@ -112,9 +117,8 @@ export function Pricing() {
                   </li>
                 ))}
               </ul>
-              <motion.a
-                href="#pricing"
-                className={`w-full py-4 px-8 rounded-full font-medium text-base transition-all flex items-center justify-center gap-2 ${
+              <motion.button
+                className={`w-full py-4 px-8 rounded-full font-medium text-base transition-all ${
                   plan.featured
                     ? "bg-warm-gray-900 hover:bg-warm-gray-800"
                     : "bg-white text-warm-gray-800 border border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
@@ -124,8 +128,13 @@ export function Pricing() {
                 whileTap={{ scale: 0.98 }}
               >
                 {plan.cta}
-                <ArrowRight size={16} />
-              </motion.a>
+              </motion.button>
+              {plan.footnote && (
+                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-warm-gray-500">
+                  <Hash size={12} className="text-rose" />
+                  <span>Post with <span className="font-medium text-rose">{plan.footnote}</span></span>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
