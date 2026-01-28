@@ -7,15 +7,21 @@ import { motion } from "framer-motion";
 import { Mail, Lock, User, Loader2, Eye, EyeOff, AtSign } from "lucide-react";
 import { signUp, signIn } from "@/lib/auth/client";
 
-export function SignUpForm() {
+interface SignUpFormProps {
+  inviteToken: string;
+  prefilledEmail?: string;
+}
+
+export function SignUpForm({ inviteToken, prefilledEmail }: SignUpFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefilledEmail || "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isEmailLocked = !!prefilledEmail;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +56,17 @@ export function SignUpForm() {
         return;
       }
 
+      // Mark invite as used
+      const inviteResult = await fetch("/api/invites/use", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: inviteToken }),
+      });
+
+      if (!inviteResult.ok) {
+        console.error("Failed to mark invite as used");
+      }
+
       // If username provided, update user profile via API
       if (username.trim()) {
         await fetch("/api/user/username", {
@@ -72,6 +89,9 @@ export function SignUpForm() {
     setError(null);
     setIsLoading(true);
     try {
+      // Store invite token in sessionStorage for use after OAuth callback
+      sessionStorage.setItem("pendingInviteToken", inviteToken);
+
       const result = await signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
@@ -79,11 +99,13 @@ export function SignUpForm() {
 
       if (result?.error) {
         setError(result.error.message || "Failed to sign up with Google");
+        sessionStorage.removeItem("pendingInviteToken");
         setIsLoading(false);
       }
       // If successful, browser redirects to Google OAuth - no need to reset loading
     } catch {
       setError("Failed to sign up with Google");
+      sessionStorage.removeItem("pendingInviteToken");
       setIsLoading(false);
     }
   };
@@ -186,13 +208,19 @@ export function SignUpForm() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                onChange={(e) => !isEmailLocked && setEmail(e.target.value)}
+                className={`w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors ${isEmailLocked ? "bg-warm-gray-50" : ""}`}
                 placeholder="you@example.com"
                 required
                 disabled={isLoading}
+                readOnly={isEmailLocked}
               />
             </div>
+            {isEmailLocked && (
+              <p className="mt-1.5 text-xs text-warm-gray-500">
+                This invite was sent to this email address
+              </p>
+            )}
           </div>
 
           <div>

@@ -85,6 +85,31 @@ export const verifications = pgTable("verifications", {
 });
 
 // =====================================================
+// Invite System Tables
+// =====================================================
+
+export const invites = pgTable(
+  "invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    token: text("token").notNull().unique(),
+    email: text("email"), // Optional - can pre-assign to specific email
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    usedBy: text("used_by").references(() => users.id, { onDelete: "set null" }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("invites_token_idx").on(table.token),
+    index("invites_email_idx").on(table.email),
+    index("invites_created_by_idx").on(table.createdBy),
+  ]
+);
+
+// =====================================================
 // Portfolio Tables
 // =====================================================
 
@@ -269,6 +294,12 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.id],
     references: [creatorDirectory.userId],
   }),
+  createdInvites: many(invites, { relationName: "createdInvites" }),
+  usedInvite: one(invites, {
+    fields: [users.id],
+    references: [invites.usedBy],
+    relationName: "usedInvite",
+  }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -352,6 +383,19 @@ export const portfolioViewsRelations = relations(portfolioViews, ({ one }) => ({
   }),
 }));
 
+export const invitesRelations = relations(invites, ({ one }) => ({
+  creator: one(users, {
+    fields: [invites.createdBy],
+    references: [users.id],
+    relationName: "createdInvites",
+  }),
+  usedByUser: one(users, {
+    fields: [invites.usedBy],
+    references: [users.id],
+    relationName: "usedInvite",
+  }),
+}));
+
 // =====================================================
 // Types
 // =====================================================
@@ -416,3 +460,5 @@ export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
 export type PortfolioView = typeof portfolioViews.$inferSelect;
 export type NewPortfolioView = typeof portfolioViews.$inferInsert;
+export type Invite = typeof invites.$inferSelect;
+export type NewInvite = typeof invites.$inferInsert;
