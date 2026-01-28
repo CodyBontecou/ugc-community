@@ -397,7 +397,8 @@ export function InteractiveHtmlEditor({
           <button
             onClick={handleSave}
             disabled={isSaving || !hasUnsavedChanges}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white font-medium text-sm rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:shadow-none transition-shadow"
+            className="flex items-center gap-2 px-4 py-2 bg-warm-gray-900 font-medium text-sm rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 transition-colors"
+            style={{ color: '#FFFFFF' }}
           >
             {isSaving ? (
               <>

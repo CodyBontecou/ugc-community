@@ -153,6 +153,11 @@ img {
   background-clip: text;
 }
 
+/* Force white text for buttons with dark backgrounds */
+.btn-primary {
+  color: #FFFFFF !important;
+}
+
 /* Container */
 .container {
   max-width: 1200px;

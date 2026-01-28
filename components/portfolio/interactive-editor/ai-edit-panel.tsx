@@ -250,14 +250,15 @@ export function AIEditPanel({
               <div className="flex items-center gap-2 mt-3">
                 <button
                   onClick={handleAccept}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-br from-coral to-rose text-white text-sm font-medium rounded-[--radius-md] hover:shadow-lg transition-shadow"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-900 text-sm font-medium rounded-[--radius-md] hover:bg-warm-gray-800 transition-colors"
+                  style={{ color: '#FFFFFF' }}
                 >
                   <Check size={16} />
                   Accept
                 </button>
                 <button
                   onClick={handleReject}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-100 text-warm-gray-700 text-sm font-medium rounded-[--radius-md] hover:bg-warm-gray-200 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-200 text-warm-gray-900 text-sm font-medium rounded-[--radius-md] hover:bg-warm-gray-300 transition-colors"
                 >
                   <X size={16} />
                   Reject
@@ -336,7 +337,8 @@ export function AIEditPanel({
           <button
             type="submit"
             disabled={!instruction.trim() || isStreaming}
-            className="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:shadow-none transition-shadow"
+            className="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 bg-warm-gray-900 font-medium rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 transition-colors"
+            style={{ color: '#FFFFFF' }}
           >
             {isStreaming ? (
               <>

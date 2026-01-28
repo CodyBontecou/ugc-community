@@ -231,7 +231,8 @@ export function SignUpForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-gradient-to-br from-coral to-rose text-white font-medium rounded-[--radius-md] shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] disabled:opacity-50 disabled:cursor-not-allowed transition-shadow flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-warm-gray-900 font-medium rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            style={{ color: '#FFFFFF' }}
             whileHover={{ scale: isLoading ? 1 : 1.01 }}
             whileTap={{ scale: isLoading ? 1 : 0.99 }}
           >

@@ -53,7 +53,8 @@ export function Navbar() {
           </Link>
           <motion.a
             href="#pricing"
-            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-gradient-to-br from-coral to-rose text-white shadow-[0_4px_20px_rgba(255,107,149,0.25)] hover:shadow-[0_8px_30px_rgba(255,107,149,0.35)] transition-shadow"
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
+            style={{ color: '#FFFFFF' }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >

@@ -128,17 +128,11 @@ export function Pricing() {
               <motion.button
                 className={`w-full py-4 px-8 rounded-full font-medium text-base transition-all ${
                   plan.featured
-                    ? "bg-gradient-to-br from-coral to-rose text-white shadow-[0_4px_20px_rgba(255,107,149,0.25)]"
+                    ? "bg-warm-gray-900 hover:bg-warm-gray-800"
                     : "bg-white text-warm-gray-800 border border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
                 }`}
-                whileHover={
-                  plan.featured
-                    ? {
-                        scale: 1.02,
-                        boxShadow: "0 20px 40px rgba(255, 107, 149, 0.3)",
-                      }
-                    : { scale: 1.02 }
-                }
+                style={plan.featured ? { color: '#FFFFFF' } : undefined}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {plan.cta}

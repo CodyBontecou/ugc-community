@@ -99,11 +99,9 @@ export function Hero() {
         >
           <motion.a
             href="#pricing"
-            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-gradient-to-br from-coral to-rose text-white shadow-[0_4px_20px_rgba(255,107,149,0.25)]"
-            whileHover={{
-              scale: 1.03,
-              boxShadow: "0 20px 40px rgba(255, 107, 149, 0.3)",
-            }}
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
+            style={{ color: '#FFFFFF' }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
             Start Building Free
