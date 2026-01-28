@@ -49,3 +49,4 @@ drizzle/
 
 # Misc
 *.local
+.env*.local
