@@ -50,6 +50,50 @@ Create visually striking, memorable portfolios that avoid generic "AI-generated"
 - Predictable header-content-footer layouts
 - "Clean minimalism" that's actually just boring
 - Cookie-cutter SaaS landing page vibes
+- Placeholder images without data-placeholder and data-media-type attributes
+- Generic alt text like "placeholder" or "image"
+
+## Placeholder Images
+
+All images in generated portfolios are placeholders that creators will replace with their own content. Mark them properly for the editor to identify and suggest replacements.
+
+### Placeholder Image Requirements
+1. **Data Attributes**: Every placeholder image MUST include:
+   - \`data-placeholder="true"\` - marks the image as a placeholder
+   - \`data-media-type="<type>"\` - indicates the intended image type
+
+2. **Media Types**: Use these values for \`data-media-type\`:
+   - \`hero\` - Large hero/banner images (16:9 or wider, e.g., 1920x1080, 1600x900)
+   - \`profile\` - Profile photos or headshots (1:1 square, e.g., 400x400, 500x500)
+   - \`gallery\` - Portfolio/work gallery images (4:3 or 3:2, e.g., 800x600, 900x600)
+   - \`image\` - General purpose images (varies based on context)
+
+3. **Placeholder Service**: Use \`https://placehold.co\` with appropriate dimensions:
+   - Format: \`https://placehold.co/{width}x{height}/{bg-color}/{text-color}\`
+   - Example: \`https://placehold.co/1920x1080/2a2a2a/666666\`
+   - Use dark, neutral colors that fit the design (avoid bright/clashing colors)
+
+4. **Alt Text**: Write descriptive alt text that explains what type of image should replace the placeholder:
+   - Good: \`alt="Hero image showcasing your best UGC work"\`
+   - Good: \`alt="Profile photo - your professional headshot"\`
+   - Good: \`alt="Gallery image - example of brand collaboration content"\`
+   - Bad: \`alt="placeholder"\` or \`alt="image"\`
+
+5. **Dimensions**: Match placeholder dimensions to intended aspect ratios:
+   - Hero images: 1920x1080 or 1600x900 (widescreen)
+   - Profile images: 400x400 or 500x500 (square)
+   - Gallery images: 800x600 or 600x400 (landscape)
+   - Thumbnails: 300x300 or 400x300
+
+### Example Placeholder Image
+\`\`\`html
+<img
+  src="https://placehold.co/1920x1080/1a1a2e/4a4a6a"
+  alt="Hero image showcasing your best UGC content"
+  data-placeholder="true"
+  data-media-type="hero"
+/>
+\`\`\`
 
 ## Technical Requirements
 
@@ -72,10 +116,10 @@ export const HTML_GENERATION_PROMPT = `Based on the creator's description, gener
 The creator will describe themselves, their niche, experience, and what makes them unique.
 
 ## Required Sections
-1. **Hero Section**: Full-viewport dramatic introduction with name, tagline, and visual impact
-2. **About Section**: Personal story and what makes them unique
+1. **Hero Section**: Full-viewport dramatic introduction with name, tagline, and visual impact. Include a hero placeholder image with \`data-placeholder="true" data-media-type="hero"\`
+2. **About Section**: Personal story and what makes them unique. Include a profile placeholder image with \`data-placeholder="true" data-media-type="profile"\`
 3. **Services Section**: 2-4 service offerings with descriptions
-4. **Work/Portfolio Section**: Placeholder grid for future content (use decorative placeholders)
+4. **Work/Portfolio Section**: Grid of 3-6 gallery placeholder images, each with \`data-placeholder="true" data-media-type="gallery"\`
 5. **Contact Section**: CTA and contact information/form placeholder
 
 ## Content Guidelines
@@ -90,6 +134,8 @@ The creator will describe themselves, their niche, experience, and what makes th
 - Create a distinctive layout that stands out
 - Include decorative elements that enhance without overwhelming
 - Ensure the design feels premium and professional
+- Use placehold.co colors that complement the site design
+- All placeholder images MUST have data-placeholder="true" and data-media-type attributes
 
 ## Output
 Return ONLY the complete HTML document starting with \`<!DOCTYPE html>\`.
@@ -101,6 +147,7 @@ The user wants to adjust the previously generated portfolio. Make the requested 
 - Maintaining the overall design quality and consistency
 - Preserving the HTML structure and embedded CSS approach
 - Keeping all technical requirements (Google Fonts only, self-contained, responsive)
+- Preserving all data-placeholder and data-media-type attributes on placeholder images
 
 Only modify elements specifically mentioned. Keep everything else the same.
 
