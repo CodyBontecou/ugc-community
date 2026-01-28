@@ -15,10 +15,10 @@ export function FinalCTA() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-[clamp(2rem,4vw,2.75rem)] text-white mb-4">
-            Ready to level up your creator game?
+            Ready for a portfolio that works for you?
           </h2>
           <p className="text-lg text-white/90 mb-12">
-            Join thousands of UGC creators who've already made the switch.
+            Let's build something beautiful together.
           </p>
           <motion.a
             href="#pricing"
@@ -26,7 +26,7 @@ export function FinalCTA() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Create Your Portfolio
+            Book a Free Consultation
             <ArrowRight size={18} />
           </motion.a>
         </motion.div>

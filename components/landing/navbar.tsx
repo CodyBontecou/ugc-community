@@ -45,12 +45,6 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-6">
-          <Link
-            href="/sign-in"
-            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            Sign in
-          </Link>
           <motion.a
             href="#pricing"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
@@ -58,7 +52,7 @@ export function Navbar() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            Get Started
+            Book a Call
           </motion.a>
         </div>
       </div>

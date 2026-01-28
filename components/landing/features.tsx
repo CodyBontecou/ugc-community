@@ -14,9 +14,9 @@ import type { ReactNode } from "react";
 const features = [
   {
     icon: <Palette size={24} />,
-    title: "Beautiful Templates",
+    title: "Custom Design",
     description:
-      "Stunning, mobile-first designs crafted specifically for showcasing UGC content and video portfolios.",
+      "Every portfolio is uniquely crafted to match your brand and showcase your best work beautifully.",
   },
   {
     icon: <Globe size={24} />,
@@ -26,9 +26,9 @@ const features = [
   },
   {
     icon: <Zap size={24} />,
-    title: "Lightning Fast",
+    title: "We Handle Everything",
     description:
-      "Optimized for speed so brands never wait. Your portfolio loads instantly on any device.",
+      "From design to launch, we take care of all the technical details so you can focus on creating.",
   },
   {
     icon: <MessageCircle size={24} />,
@@ -44,9 +44,9 @@ const features = [
   },
   {
     icon: <Heart size={24} />,
-    title: "Made for Creators",
+    title: "1:1 Collaboration",
     description:
-      "Every feature designed with UGC creators in mind. We understand your workflow.",
+      "Work directly with our team. Your input shapes every detail of your portfolio.",
   },
 ];
 
@@ -103,7 +103,7 @@ export function Features() {
             <span className="gradient-text">stand out</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[500px] mx-auto">
-            Built specifically for UGC creators. No coding required.
+            Built specifically for UGC creators. We handle the technical work.
           </p>
         </motion.div>
 

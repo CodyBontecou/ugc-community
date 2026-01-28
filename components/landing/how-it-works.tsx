@@ -5,21 +5,21 @@ import { motion } from "framer-motion";
 const steps = [
   {
     step: "01",
-    title: "Choose Your Style",
+    title: "Discovery Call",
     description:
-      "Pick from our collection of stunning templates designed for UGC creators.",
+      "We learn about your brand, your style, and what makes you unique as a creator.",
   },
   {
     step: "02",
-    title: "Add Your Content",
+    title: "We Build It",
     description:
-      "Upload your best UGC videos and photos. Connect your socials for auto-sync.",
+      "Our team crafts your portfolio from scratch, handling design, content, and all the details.",
   },
   {
     step: "03",
-    title: "Go Live",
+    title: "Review & Launch",
     description:
-      "Publish to your custom subdomain and start sharing with brands.",
+      "You review, we refine, and together we launch your professional portfolio to the world.",
   },
 ];
 
@@ -38,9 +38,9 @@ export function HowItWorks() {
             How It Works
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)]">
-            Live in minutes,
+            Crafted with care,
             <br />
-            <span className="gradient-text">not days</span>
+            <span className="gradient-text">built for you</span>
           </h2>
         </motion.div>
 
