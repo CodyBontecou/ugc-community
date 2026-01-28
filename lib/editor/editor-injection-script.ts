@@ -13,7 +13,11 @@ export const EDITOR_INJECTION_SCRIPT = `
   const SELECTED_COLOR = 'rgba(255, 107, 149, 0.5)';
   const BORDER_COLOR = '#ff6b95';
 
-  // Elements that can be edited
+  // Media-specific colors (purple)
+  const MEDIA_HIGHLIGHT_COLOR = 'rgba(147, 51, 234, 0.3)';
+  const MEDIA_BORDER_COLOR = '#9333ea';
+
+  // Elements that can be edited (text)
   const EDITABLE_TAGS = [
     'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
     'P', 'SPAN', 'A', 'LI', 'TD', 'TH',
@@ -23,6 +27,9 @@ export const EDITOR_INJECTION_SCRIPT = `
     'SMALL', 'MARK', 'DEL', 'INS',
     'DIV', 'TIME', 'ADDRESS', 'DD', 'DT', 'CAPTION', 'LEGEND'
   ];
+
+  // Media elements that can be edited
+  const MEDIA_TAGS = ['IMG', 'VIDEO', 'PICTURE', 'FIGURE'];
 
   let selectedElement = null;
   let highlightOverlay = null;
@@ -249,11 +256,88 @@ export const EDITOR_INJECTION_SCRIPT = `
     return false;
   }
 
-  // Check if element is editable
+  // Check if element is a media element
+  function isMediaEditable(element) {
+    if (!element || element === document.body) return false;
+    return MEDIA_TAGS.includes(element.tagName);
+  }
+
+  // Extract media data from an element
+  function extractMediaData(element) {
+    const tagName = element.tagName.toUpperCase();
+    const data = {
+      type: tagName === 'VIDEO' ? 'video' : 'image',
+      src: '',
+      alt: undefined,
+      width: undefined,
+      height: undefined,
+      poster: undefined,
+      duration: undefined,
+      autoplay: undefined,
+      loop: undefined,
+      muted: undefined,
+      srcset: undefined,
+      sizes: undefined
+    };
+
+    if (tagName === 'IMG') {
+      data.src = element.src || '';
+      data.alt = element.alt || '';
+      data.width = element.naturalWidth || element.width || undefined;
+      data.height = element.naturalHeight || element.height || undefined;
+      data.srcset = element.srcset || undefined;
+      data.sizes = element.sizes || undefined;
+    } else if (tagName === 'VIDEO') {
+      data.type = 'video';
+      data.src = element.src || element.querySelector('source')?.src || '';
+      data.poster = element.poster || undefined;
+      data.width = element.videoWidth || element.width || undefined;
+      data.height = element.videoHeight || element.height || undefined;
+      data.duration = element.duration || undefined;
+      data.autoplay = element.autoplay;
+      data.loop = element.loop;
+      data.muted = element.muted;
+    } else if (tagName === 'PICTURE') {
+      const img = element.querySelector('img');
+      if (img) {
+        data.src = img.src || '';
+        data.alt = img.alt || '';
+        data.width = img.naturalWidth || img.width || undefined;
+        data.height = img.naturalHeight || img.height || undefined;
+      }
+    } else if (tagName === 'FIGURE') {
+      const img = element.querySelector('img');
+      const video = element.querySelector('video');
+      if (img) {
+        data.src = img.src || '';
+        data.alt = img.alt || '';
+        data.width = img.naturalWidth || img.width || undefined;
+        data.height = img.naturalHeight || img.height || undefined;
+      } else if (video) {
+        data.type = 'video';
+        data.src = video.src || video.querySelector('source')?.src || '';
+        data.poster = video.poster || undefined;
+        data.width = video.videoWidth || video.width || undefined;
+        data.height = video.videoHeight || video.height || undefined;
+        data.autoplay = video.autoplay;
+        data.loop = video.loop;
+        data.muted = video.muted;
+      }
+    }
+
+    return data;
+  }
+
+  // Check if element is editable (text or media)
   function isEditable(element) {
     if (!element || element === document.body) return false;
 
-    // Check if it's an editable tag
+    // Check if it's a media element
+    if (MEDIA_TAGS.includes(element.tagName)) {
+      return true;
+    }
+
+    // Check if it's an editable text tag
     if (EDITABLE_TAGS.includes(element.tagName)) {
       // Make sure it has meaningful content
       const text = element.textContent?.trim();
@@ -327,17 +411,31 @@ export const EDITOR_INJECTION_SCRIPT = `
 
     if (editableElement && editableElement !== selectedElement) {
       currentHoveredElement = editableElement;
-      positionOverlay(highlightOverlay, editableElement, HIGHLIGHT_COLOR);
-      positionRefreshButton(editableElement);
+      const isMedia = isMediaEditable(editableElement);
+      const hoverColor = isMedia ? MEDIA_HIGHLIGHT_COLOR : HIGHLIGHT_COLOR;
+      positionOverlay(highlightOverlay, editableElement, hoverColor);
+      // Only show refresh button for text elements, not media
+      if (!isMedia) {
+        positionRefreshButton(editableElement);
+      } else {
+        positionRefreshButton(null);
+      }
       document.body.style.cursor = 'pointer';
 
-      postToParent('element-hover', {
+      const payload = {
         selector: generateSelector(editableElement),
         content: editableElement.innerHTML,
         tagName: editableElement.tagName,
         outerHtml: editableElement.outerHTML,
         rect: editableElement.getBoundingClientRect()
-      });
+      };
+
+      // Add media data for media elements
+      if (isMedia) {
+        payload.mediaData = extractMediaData(editableElement);
+      }
+
+      postToParent('element-hover', payload);
     } else if (!editableElement) {
       currentHoveredElement = null;
       highlightOverlay.style.display = 'none';
@@ -362,10 +460,21 @@ export const EDITOR_INJECTION_SCRIPT = `
     if (editableElement) {
       selectedElement = editableElement;
       highlightOverlay.style.display = 'none';
+      const isMedia = isMediaEditable(editableElement);
+
+      // Update selection overlay border color for media
+      if (isMedia) {
+        selectionOverlay.style.border = '2px solid ' + MEDIA_BORDER_COLOR;
+        selectionOverlay.style.boxShadow = '0 0 0 2px rgba(147, 51, 234, 0.2)';
+      } else {
+        selectionOverlay.style.border = '2px solid ' + BORDER_COLOR;
+        selectionOverlay.style.boxShadow = '0 0 0 2px rgba(255, 107, 149, 0.2)';
+      }
+
       positionOverlay(selectionOverlay, editableElement, 'transparent');
 
       const rect = editableElement.getBoundingClientRect();
-      postToParent('element-selected', {
+      const payload = {
         selector: generateSelector(editableElement),
         content: editableElement.innerHTML,
         tagName: editableElement.tagName,
@@ -376,7 +485,14 @@ export const EDITOR_INJECTION_SCRIPT = `
           width: rect.width,
           height: rect.height
         }
-      });
+      };
+
+      // Add media data for media elements
+      if (isMedia) {
+        payload.mediaData = extractMediaData(editableElement);
+      }
+
+      postToParent(isMedia ? 'media-selected' : 'element-selected', payload);
     }
   }, true);
 

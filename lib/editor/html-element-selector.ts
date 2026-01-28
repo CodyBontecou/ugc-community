@@ -257,6 +257,293 @@ export function getElementTypeName(tagName: string): string {
     BLOCKQUOTE: "Quote",
     TD: "Table Cell",
     TH: "Table Header",
+    IMG: "Image",
+    VIDEO: "Video",
+    PICTURE: "Picture",
+    FIGURE: "Figure",
   };
   return names[tagName.toUpperCase()] || tagName;
+}
+
+// =====================================================
+// Media Element Utilities
+// =====================================================
+
+/**
+ * Media element tag names
+ */
+export const MEDIA_TAGS = ["IMG", "VIDEO", "PICTURE", "FIGURE"];
+
+/**
+ * Check if a tag is a media element
+ */
+export function isMediaElement(tagName: string): boolean {
+  return MEDIA_TAGS.includes(tagName.toUpperCase());
+}
+
+/**
+ * Replace the src attribute of an image or video element
+ */
+export function replaceMediaSrc(
+  html: string,
+  selector: string,
+  newSrc: string,
+  newAlt?: string
+): string {
+  if (typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const element = doc.querySelector(selector);
+
+  if (!element) return html;
+
+  const originalOuter = element.outerHTML;
+  const tagName = element.tagName.toUpperCase();
+
+  if (tagName === "IMG") {
+    element.setAttribute("src", newSrc);
+    // Remove srcset when replacing src to avoid conflicts
+    element.removeAttribute("srcset");
+    if (newAlt !== undefined) {
+      element.setAttribute("alt", newAlt);
+    }
+  } else if (tagName === "VIDEO") {
+    // Update poster or first source
+    if (element.hasAttribute("src")) {
+      element.setAttribute("src", newSrc);
+    } else {
+      // Update first source element
+      const source = element.querySelector("source");
+      if (source) {
+        source.setAttribute("src", newSrc);
+      } else {
+        element.setAttribute("src", newSrc);
+      }
+    }
+  } else if (tagName === "PICTURE") {
+    // Update the img inside picture
+    const img = element.querySelector("img");
+    if (img) {
+      img.setAttribute("src", newSrc);
+      img.removeAttribute("srcset");
+      if (newAlt !== undefined) {
+        img.setAttribute("alt", newAlt);
+      }
+    }
+  } else if (tagName === "FIGURE") {
+    // Update the img or video inside figure
+    const media = element.querySelector("img, video");
+    if (media) {
+      if (media.tagName === "IMG") {
+        media.setAttribute("src", newSrc);
+        (media as Element).removeAttribute("srcset");
+        if (newAlt !== undefined) {
+          media.setAttribute("alt", newAlt);
+        }
+      } else {
+        media.setAttribute("src", newSrc);
+      }
+    }
+  }
+
+  const newOuter = element.outerHTML;
+  return html.replace(originalOuter, newOuter);
+}
+
+/**
+ * Update media element attributes
+ */
+export function updateMediaAttributes(
+  html: string,
+  selector: string,
+  attributes: Record<string, string | boolean | null>
+): string {
+  if (typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const element = doc.querySelector(selector);
+
+  if (!element) return html;
+
+  const originalOuter = element.outerHTML;
+
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value === null) {
+      element.removeAttribute(key);
+    } else if (typeof value === "boolean") {
+      if (value) {
+        element.setAttribute(key, "");
+      } else {
+        element.removeAttribute(key);
+      }
+    } else {
+      element.setAttribute(key, value);
+    }
+  }
+
+  const newOuter = element.outerHTML;
+  return html.replace(originalOuter, newOuter);
+}
+
+/**
+ * Wrap a media element with a figure and optional caption
+ */
+export function wrapMediaWithFigure(
+  html: string,
+  selector: string,
+  caption?: string
+): string {
+  if (typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const element = doc.querySelector(selector);
+
+  if (!element) return html;
+
+  // Don't wrap if already in a figure
+  if (element.parentElement?.tagName === "FIGURE") {
+    // Just update the caption if provided
+    if (caption !== undefined) {
+      let figcaption = element.parentElement.querySelector("figcaption");
+      if (!figcaption) {
+        figcaption = doc.createElement("figcaption");
+        element.parentElement.appendChild(figcaption);
+      }
+      figcaption.textContent = caption;
+    }
+    return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
+  }
+
+  const originalOuter = element.outerHTML;
+
+  // Create figure wrapper
+  const figure = doc.createElement("figure");
+  figure.innerHTML = originalOuter;
+
+  if (caption) {
+    const figcaption = doc.createElement("figcaption");
+    figcaption.textContent = caption;
+    figure.appendChild(figcaption);
+  }
+
+  return html.replace(originalOuter, figure.outerHTML);
+}
+
+/**
+ * Remove a media element from the HTML
+ */
+export function removeMediaElement(html: string, selector: string): string {
+  if (typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const element = doc.querySelector(selector);
+
+  if (!element) return html;
+
+  // If element is inside a figure, remove the whole figure
+  const figure = element.closest("figure");
+  const toRemove = figure || element;
+  const originalOuter = toRemove.outerHTML;
+
+  toRemove.remove();
+
+  return html.replace(originalOuter, "");
+}
+
+/**
+ * Insert a media element after another element
+ */
+export function insertMediaAfter(
+  html: string,
+  selector: string,
+  mediaHtml: string
+): string {
+  if (typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const element = doc.querySelector(selector);
+
+  if (!element) return html;
+
+  const originalOuter = element.outerHTML;
+
+  // Parse the media HTML to insert
+  const mediaDoc = parser.parseFromString(mediaHtml, "text/html");
+  const mediaElement = mediaDoc.body.firstElementChild;
+
+  if (!mediaElement) return html;
+
+  // Insert after the element
+  element.insertAdjacentHTML("afterend", mediaHtml);
+
+  // Return updated HTML
+  return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
+}
+
+/**
+ * Create an image element HTML string
+ */
+export function createImageHtml(
+  src: string,
+  alt: string = "",
+  options?: {
+    width?: number;
+    height?: number;
+    className?: string;
+    loading?: "lazy" | "eager";
+  }
+): string {
+  const attrs: string[] = [`src="${src}"`, `alt="${alt}"`];
+
+  if (options?.width) attrs.push(`width="${options.width}"`);
+  if (options?.height) attrs.push(`height="${options.height}"`);
+  if (options?.className) attrs.push(`class="${options.className}"`);
+  if (options?.loading) attrs.push(`loading="${options.loading}"`);
+
+  return `<img ${attrs.join(" ")} />`;
+}
+
+/**
+ * Create a video element HTML string
+ */
+export function createVideoHtml(
+  src: string,
+  options?: {
+    poster?: string;
+    controls?: boolean;
+    autoplay?: boolean;
+    loop?: boolean;
+    muted?: boolean;
+    width?: number;
+    height?: number;
+    className?: string;
+  }
+): string {
+  const attrs: string[] = [`src="${src}"`];
+
+  if (options?.poster) attrs.push(`poster="${options.poster}"`);
+  if (options?.controls !== false) attrs.push("controls");
+  if (options?.autoplay) attrs.push("autoplay");
+  if (options?.loop) attrs.push("loop");
+  if (options?.muted) attrs.push("muted");
+  if (options?.width) attrs.push(`width="${options.width}"`);
+  if (options?.height) attrs.push(`height="${options.height}"`);
+  if (options?.className) attrs.push(`class="${options.className}"`);
+
+  return `<video ${attrs.join(" ")}></video>`;
 }

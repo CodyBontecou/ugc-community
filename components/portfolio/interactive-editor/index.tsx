@@ -12,14 +12,25 @@ import {
   Smartphone,
   Eye,
   Check,
+  Image as ImageIcon,
+  Video,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
 import { AIEditPanel } from "./ai-edit-panel";
+import { MediaEditPanel } from "./media-edit-panel";
 import { HistoryControls } from "./history-controls";
 import { SectionReorderer } from "./section-reorderer";
-import { replaceElementContent, replaceElementOuter } from "@/lib/editor/html-element-selector";
+import { MediaLibrary } from "@/components/media/media-library";
+import {
+  replaceElementContent,
+  replaceElementOuter,
+  insertMediaAfter,
+  createImageHtml,
+  createVideoHtml,
+} from "@/lib/editor/html-element-selector";
 import type { SelectedElement, HistoryState } from "@/lib/editor/types";
 import { MAX_HISTORY_SIZE } from "@/lib/editor/types";
+import type { Media } from "@/lib/db/schema";
 
 interface InteractiveHtmlEditorProps {
   portfolioId: string;
@@ -55,6 +66,7 @@ export function InteractiveHtmlEditor({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isRefreshLoading, setIsRefreshLoading] = useState(false);
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
+  const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
 
   // History state
   const [history, setHistory] = useState<HistoryState>({
@@ -141,6 +153,47 @@ export function InteractiveHtmlEditor({
       setSelectedElement(null);
     },
     [updateHtml]
+  );
+
+  // Handle inserting media from library
+  const handleInsertMedia = useCallback(
+    (media: Media) => {
+      // Find the last section to insert after
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const sections = doc.querySelectorAll("body > section, body > div, body > main");
+      const lastSection = sections[sections.length - 1];
+
+      if (lastSection) {
+        // Create media HTML
+        const mediaHtml =
+          media.type === "video"
+            ? createVideoHtml(media.url, {
+                controls: true,
+                className: "w-full max-w-2xl mx-auto my-8",
+              })
+            : createImageHtml(media.url, media.metadata?.alt || "", {
+                className: "w-full max-w-2xl mx-auto my-8",
+                loading: "lazy",
+              });
+
+        // Find a selector for the last section
+        const siblings = Array.from(lastSection.parentElement?.children || []).filter(
+          (child) => child.tagName === lastSection.tagName
+        );
+        const index = siblings.indexOf(lastSection) + 1;
+        const selector = `body > ${lastSection.tagName.toLowerCase()}:nth-of-type(${index})`;
+
+        // Insert after the last section
+        const newHtml = insertMediaAfter(html, selector, mediaHtml);
+        if (newHtml !== html) {
+          updateHtml(newHtml);
+        }
+      }
+
+      setShowMediaLibrary(null);
+    },
+    [html, updateHtml]
   );
 
   // Handle element refresh (regenerate with AI) - calls API directly and auto-applies
@@ -311,6 +364,26 @@ export function InteractiveHtmlEditor({
             onRedo={handleRedo}
           />
 
+          {/* Media buttons */}
+          <div className="flex items-center gap-1 p-1 bg-warm-gray-100 rounded-[--radius-md]">
+            <button
+              onClick={() => setShowMediaLibrary("image")}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-warm-gray-600 hover:text-warm-gray-900 hover:bg-white rounded-[--radius-sm] transition-colors"
+              title="Add Image"
+            >
+              <ImageIcon size={16} />
+              <span className="hidden sm:inline">Image</span>
+            </button>
+            <button
+              onClick={() => setShowMediaLibrary("video")}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-warm-gray-600 hover:text-warm-gray-900 hover:bg-white rounded-[--radius-sm] transition-colors"
+              title="Add Video"
+            >
+              <Video size={16} />
+              <span className="hidden sm:inline">Video</span>
+            </button>
+          </div>
+
           <a
             href={`/p/${portfolioSlug}`}
             target="_blank"
@@ -392,15 +465,25 @@ export function InteractiveHtmlEditor({
         {/* Side panel */}
         <div className="w-80 bg-white border-l border-warm-gray-200 flex flex-col shrink-0">
           <div className="flex-1 overflow-y-auto">
-            <AIEditPanel
-              selectedElement={selectedElement}
-              portfolioId={portfolioId}
-              fullHtml={html}
-              onApplyEdit={handleApplyEdit}
-              onDeselect={() => setSelectedElement(null)}
-              isStreaming={isStreaming}
-              onStreamingChange={setIsStreaming}
-            />
+            {selectedElement?.mediaData ? (
+              <MediaEditPanel
+                selectedElement={selectedElement}
+                mediaData={selectedElement.mediaData}
+                fullHtml={html}
+                onApplyEdit={handleApplyEdit}
+                onDeselect={() => setSelectedElement(null)}
+              />
+            ) : (
+              <AIEditPanel
+                selectedElement={selectedElement}
+                portfolioId={portfolioId}
+                fullHtml={html}
+                onApplyEdit={handleApplyEdit}
+                onDeselect={() => setSelectedElement(null)}
+                isStreaming={isStreaming}
+                onStreamingChange={setIsStreaming}
+              />
+            )}
           </div>
 
           <SectionReorderer
@@ -410,6 +493,32 @@ export function InteractiveHtmlEditor({
           />
         </div>
       </div>
+
+      {/* Media Library Modal */}
+      <AnimatePresence>
+        {showMediaLibrary && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-2xl h-[80vh] relative"
+            >
+              <MediaLibrary
+                onSelect={handleInsertMedia}
+                selectionMode={true}
+                filterType={showMediaLibrary}
+                onClose={() => setShowMediaLibrary(null)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

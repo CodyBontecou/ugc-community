@@ -36,6 +36,7 @@ export function EditableIframe({
 
       switch (message.type) {
         case "element-selected":
+        case "media-selected":
           if (message.payload) {
             onElementSelect(message.payload);
           }

@@ -2,6 +2,24 @@
  * Types for the Interactive HTML Portfolio Editor
  */
 
+// Media element data extracted from img/video elements
+export interface MediaElementData {
+  type: "image" | "video";
+  src: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  // Video-specific
+  poster?: string;
+  duration?: number;
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  // Image-specific
+  srcset?: string;
+  sizes?: string;
+}
+
 // Message types for iframe communication
 export interface SelectedElement {
   selector: string; // CSS selector path like "section:nth-child(2) > div > h2"
@@ -14,10 +32,12 @@ export interface SelectedElement {
     width: number;
     height: number;
   };
+  // Optional media data for img/video elements
+  mediaData?: MediaElementData;
 }
 
 export interface IframeMessage {
-  type: "element-selected" | "element-hover" | "element-unhover" | "refresh-element" | "ready";
+  type: "element-selected" | "element-hover" | "element-unhover" | "refresh-element" | "ready" | "media-selected";
   payload?: SelectedElement | null;
 }
 
