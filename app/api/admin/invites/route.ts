@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
+import { isAdmin } from "@/lib/admin";
 import { createInvite, listAllInvites, getInviteUrl } from "@/lib/invites";
 import { z } from "zod";
-
-// Admin check using environment variable
-// Set ADMIN_EMAILS="email1@example.com,email2@example.com" in your .env
-function isAdmin(email: string): boolean {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || [];
-  return adminEmails.includes(email.toLowerCase());
-}
 
 const createInviteSchema = z.object({
   email: z.string().email().optional(),
@@ -76,12 +70,14 @@ export async function GET() {
         email: invite.email,
         expiresAt: invite.expiresAt,
         usedAt: invite.usedAt,
+        revokedAt: invite.revokedAt,
         createdAt: invite.createdAt,
         url: getInviteUrl(invite.token),
         creator: invite.creator,
         usedBy: invite.usedByUser,
         isExpired: new Date(invite.expiresAt) < new Date(),
         isUsed: !!invite.usedAt,
+        isRevoked: !!invite.revokedAt,
       })),
     });
   } catch (error) {

@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronDown,
   User,
+  Shield,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 
@@ -22,6 +23,7 @@ interface DashboardNavProps {
     email: string;
     image?: string | null;
   };
+  isAdmin?: boolean;
 }
 
 const navItems = [
@@ -31,9 +33,13 @@ const navItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-export function DashboardNav({ user }: DashboardNavProps) {
+export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+
+  const allNavItems = isAdmin
+    ? [...navItems, { href: "/dashboard/admin", label: "Admin", icon: Shield }]
+    : navItems;
 
   const handleSignOut = async () => {
     await signOut();
@@ -45,7 +51,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
     <div className="flex items-center gap-6">
       {/* Navigation Links */}
       <nav className="hidden md:flex items-center gap-1">
-        {navItems.map((item) => (
+        {allNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -104,7 +110,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
                 {/* Mobile nav items */}
                 <div className="md:hidden py-2 border-b border-warm-gray-100">
-                  {navItems.map((item) => (
+                  {allNavItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}

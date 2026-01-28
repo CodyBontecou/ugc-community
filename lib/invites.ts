@@ -43,14 +43,15 @@ export async function createInvite({
 
 /**
  * Validates an invite token and returns the invite if valid
- * Returns null if invalid, expired, or already used
+ * Returns null if invalid, expired, already used, or revoked
  */
 export async function validateInviteToken(token: string) {
   const invite = await db.query.invites.findFirst({
     where: and(
       eq(invites.token, token),
       gt(invites.expiresAt, new Date()),
-      isNull(invites.usedAt)
+      isNull(invites.usedAt),
+      isNull(invites.revokedAt)
     ),
   });
 

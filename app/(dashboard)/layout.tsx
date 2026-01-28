@@ -3,6 +3,10 @@ import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { PendingInviteHandler } from "@/components/dashboard/pending-invite-handler";
+import { isAdmin, canAccessDashboard, type UserStatus } from "@/lib/admin";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export default async function DashboardLayout({
   children,
@@ -15,6 +19,21 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
+  // Check user status to block suspended/banned users
+  const user = await db
+    .select({ status: users.status })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  const userStatus = (user[0]?.status || "active") as UserStatus;
+
+  if (!canAccessDashboard(userStatus)) {
+    redirect(`/account-suspended?status=${userStatus}`);
+  }
+
+  const userIsAdmin = isAdmin(session.user.email);
+
   return (
     <div className="min-h-screen bg-warm-gray-50">
       <PendingInviteHandler />
@@ -26,7 +45,7 @@ export default async function DashboardLayout({
               ugc.community
             </Link>
 
-            <DashboardNav user={session.user} />
+            <DashboardNav user={session.user} isAdmin={userIsAdmin} />
           </div>
         </div>
       </header>

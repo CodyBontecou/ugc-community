@@ -37,6 +37,10 @@ export const users = pgTable(
     // Subdomain for custom portfolio URL (e.g., johndoe.mysite.com)
     // Stored as lowercase for consistent matching
     subdomain: text("subdomain").unique(),
+    // Admin fields for user status management
+    status: text("status").notNull().default("active"), // "active" | "suspended" | "banned"
+    statusChangedAt: timestamp("status_changed_at"),
+    statusChangedBy: text("status_changed_by"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -101,6 +105,9 @@ export const invites = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    // Admin fields for invite revocation
+    revokedAt: timestamp("revoked_at"),
+    revokedBy: text("revoked_by").references(() => users.id, { onDelete: "set null" }),
   },
   (table) => [
     index("invites_token_idx").on(table.token),
