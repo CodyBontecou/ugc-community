@@ -65,7 +65,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Sparkles size={14} className="text-coral" />
-          <span>Trusted by 2,000+ creators</span>
+          <span>Trusted by creators</span>
         </motion.div>
 
         <motion.h1

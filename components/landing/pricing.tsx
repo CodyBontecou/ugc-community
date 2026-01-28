@@ -37,22 +37,6 @@ const plans = [
     ],
     cta: "Subscribe",
   },
-  {
-    name: "Agency",
-    description: "For teams & managers",
-    price: "$49",
-    period: "/month",
-    featured: false,
-    features: [
-      "Everything in Pro",
-      "Up to 10 creator profiles",
-      "Team collaboration",
-      "White-label option",
-      "API access",
-      "Dedicated support",
-    ],
-    cta: "Contact Sales",
-  },
 ];
 
 export function Pricing() {
@@ -80,7 +64,7 @@ export function Pricing() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-3xl mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
