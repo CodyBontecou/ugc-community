@@ -17,7 +17,7 @@ import { EditableIframe } from "./editable-iframe";
 import { AIEditPanel } from "./ai-edit-panel";
 import { HistoryControls } from "./history-controls";
 import { SectionReorderer } from "./section-reorderer";
-import { replaceElementContent } from "@/lib/editor/html-element-selector";
+import { replaceElementContent, replaceElementOuter } from "@/lib/editor/html-element-selector";
 import type { SelectedElement, HistoryState } from "@/lib/editor/types";
 import { MAX_HISTORY_SIZE } from "@/lib/editor/types";
 
@@ -111,21 +111,22 @@ export function InteractiveHtmlEditor({
 
   // Apply AI edit
   const handleApplyEdit = useCallback(
-    (newContent: string) => {
+    (newContent: string, isOuterHtml: boolean = false) => {
       if (!selectedElement) return;
 
-      const newHtml = replaceElementContent(
-        html,
-        selectedElement.selector,
-        newContent
-      );
+      let newHtml: string;
+      if (isOuterHtml) {
+        // Replace the entire element (including tag and styles)
+        newHtml = replaceElementOuter(html, selectedElement.selector, newContent);
+      } else {
+        // Replace just the inner content
+        newHtml = replaceElementContent(html, selectedElement.selector, newContent);
+      }
 
       if (newHtml !== html) {
         updateHtml(newHtml);
-        // Update selected element with new content
-        setSelectedElement((prev) =>
-          prev ? { ...prev, content: newContent } : null
-        );
+        // Clear selection after applying edit so user can see the result
+        setSelectedElement(null);
       }
     },
     [html, selectedElement, updateHtml]

@@ -21,8 +21,8 @@ export interface IframeMessage {
   payload?: SelectedElement | null;
 }
 
-// Quick actions for AI editing
-export type QuickAction =
+// Quick actions for AI editing - Text
+export type TextQuickAction =
   | "rewrite"
   | "shorten"
   | "expand"
@@ -30,22 +30,67 @@ export type QuickAction =
   | "casual"
   | "energetic";
 
+// Quick actions for AI editing - Style
+export type StyleQuickAction =
+  | "bolder"
+  | "larger"
+  | "smaller"
+  | "colorful"
+  | "subtle"
+  | "uppercase";
+
+export type QuickAction = TextQuickAction | StyleQuickAction;
+
+export const TEXT_QUICK_ACTIONS: TextQuickAction[] = [
+  "rewrite",
+  "shorten",
+  "expand",
+  "professional",
+  "casual",
+  "energetic",
+];
+
+export const STYLE_QUICK_ACTIONS: StyleQuickAction[] = [
+  "bolder",
+  "larger",
+  "smaller",
+  "colorful",
+  "subtle",
+  "uppercase",
+];
+
 export const QUICK_ACTION_LABELS: Record<QuickAction, string> = {
+  // Text actions
   rewrite: "Rewrite",
   shorten: "Shorten",
   expand: "Expand",
   professional: "Professional",
   casual: "Casual",
   energetic: "Energetic",
+  // Style actions
+  bolder: "Bolder",
+  larger: "Larger",
+  smaller: "Smaller",
+  colorful: "Colorful",
+  subtle: "Subtle",
+  uppercase: "Uppercase",
 };
 
 export const QUICK_ACTION_DESCRIPTIONS: Record<QuickAction, string> = {
+  // Text actions
   rewrite: "Fresh wording, same meaning",
   shorten: "Make it more concise",
   expand: "Add more detail",
   professional: "Polished, formal tone",
   casual: "Friendly, conversational",
   energetic: "More excitement and energy",
+  // Style actions
+  bolder: "Increase font weight",
+  larger: "Increase font size",
+  smaller: "Decrease font size",
+  colorful: "Add vibrant color",
+  subtle: "Softer, muted styling",
+  uppercase: "Transform to uppercase",
 };
 
 // AI Edit Request

@@ -75,7 +75,7 @@ export function EditableIframe({
 
   // Send deselection message when selector is cleared
   useEffect(() => {
-    if (selectedSelector === null && iframeRef.current?.contentWindow) {
+    if (!selectedSelector && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage({ type: "deselect" }, "*");
     }
   }, [selectedSelector]);

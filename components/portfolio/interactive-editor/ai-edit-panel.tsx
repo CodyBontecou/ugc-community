@@ -14,11 +14,19 @@ import {
   Briefcase,
   MessageCircle,
   Zap,
+  Bold,
+  ArrowUp,
+  ArrowDown,
+  Palette,
+  CircleDot,
+  Type,
 } from "lucide-react";
-import type { SelectedElement, QuickAction } from "@/lib/editor/types";
+import type { SelectedElement, QuickAction, TextQuickAction, StyleQuickAction } from "@/lib/editor/types";
 import {
   QUICK_ACTION_LABELS,
   QUICK_ACTION_DESCRIPTIONS,
+  TEXT_QUICK_ACTIONS,
+  STYLE_QUICK_ACTIONS,
 } from "@/lib/editor/types";
 import { getElementTypeName } from "@/lib/editor/html-element-selector";
 
@@ -26,20 +34,29 @@ interface AIEditPanelProps {
   selectedElement: SelectedElement | null;
   portfolioId: string;
   fullHtml: string;
-  onApplyEdit: (newContent: string) => void;
+  onApplyEdit: (newContent: string, isOuterHtml: boolean) => void;
   onDeselect: () => void;
   isStreaming: boolean;
   onStreamingChange: (streaming: boolean) => void;
 }
 
-const QUICK_ACTIONS: { action: QuickAction; icon: React.ReactNode }[] = [
-  { action: "rewrite", icon: <RefreshCw size={14} /> },
-  { action: "shorten", icon: <Minus size={14} /> },
-  { action: "expand", icon: <Plus size={14} /> },
-  { action: "professional", icon: <Briefcase size={14} /> },
-  { action: "casual", icon: <MessageCircle size={14} /> },
-  { action: "energetic", icon: <Zap size={14} /> },
-];
+const TEXT_QUICK_ACTION_ICONS: Record<TextQuickAction, React.ReactNode> = {
+  rewrite: <RefreshCw size={14} />,
+  shorten: <Minus size={14} />,
+  expand: <Plus size={14} />,
+  professional: <Briefcase size={14} />,
+  casual: <MessageCircle size={14} />,
+  energetic: <Zap size={14} />,
+};
+
+const STYLE_QUICK_ACTION_ICONS: Record<StyleQuickAction, React.ReactNode> = {
+  bolder: <Bold size={14} />,
+  larger: <ArrowUp size={14} />,
+  smaller: <ArrowDown size={14} />,
+  colorful: <Palette size={14} />,
+  subtle: <CircleDot size={14} />,
+  uppercase: <Type size={14} />,
+};
 
 export function AIEditPanel({
   selectedElement,
@@ -74,6 +91,7 @@ export function AIEditPanel({
             portfolioId,
             selector: selectedElement.selector,
             currentContent: selectedElement.content,
+            outerHtml: selectedElement.outerHtml,
             instruction: quickAction ? undefined : instruction,
             quickAction,
             fullHtml,
@@ -127,8 +145,12 @@ export function AIEditPanel({
   };
 
   const handleAccept = () => {
-    if (streamedContent) {
-      onApplyEdit(streamedContent);
+    if (streamedContent && selectedElement) {
+      // Check if the response is full outer HTML (starts with the same tag)
+      const trimmed = streamedContent.trim();
+      const tagName = selectedElement.tagName.toLowerCase();
+      const isOuterHtml = trimmed.startsWith(`<${tagName}`) || trimmed.startsWith(`<${tagName.toUpperCase()}`);
+      onApplyEdit(trimmed, isOuterHtml);
       setStreamedContent("");
       setInstruction("");
     }
@@ -190,7 +212,14 @@ export function AIEditPanel({
           Current
         </label>
         <div className="p-3 bg-warm-gray-50 rounded-[--radius-md] text-sm text-warm-gray-700 max-h-24 overflow-y-auto">
-          {selectedElement.content || "(empty)"}
+          {selectedElement.content ? (
+            <div
+              dangerouslySetInnerHTML={{ __html: selectedElement.outerHtml }}
+              className="preview-content [&>*]:!static [&>*]:!m-0"
+            />
+          ) : (
+            "(empty)"
+          )}
         </div>
       </div>
 
@@ -206,9 +235,14 @@ export function AIEditPanel({
             <label className="block text-xs font-medium text-rose mb-2 uppercase tracking-wide">
               {isStreaming ? "Generating..." : "Preview"}
             </label>
-            <div className="p-3 bg-white rounded-[--radius-md] text-sm text-warm-gray-900 max-h-32 overflow-y-auto border border-rose/20">
-              {streamedContent || (
-                <span className="text-warm-gray-400 animate-pulse">...</span>
+            <div className="rounded-[--radius-md] overflow-hidden border border-rose/20 shadow-sm">
+              {streamedContent ? (
+                <div
+                  dangerouslySetInnerHTML={{ __html: streamedContent }}
+                  className="preview-rendered"
+                />
+              ) : (
+                <div className="p-3 bg-white text-warm-gray-400 animate-pulse">...</div>
               )}
             </div>
 
@@ -243,13 +277,13 @@ export function AIEditPanel({
         </div>
       )}
 
-      {/* Quick actions */}
+      {/* Text Quick Actions */}
       <div className="p-4 border-b border-warm-gray-200">
         <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
-          Quick Actions
+          Text
         </label>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_ACTIONS.map(({ action, icon }) => (
+          {TEXT_QUICK_ACTIONS.map((action) => (
             <button
               key={action}
               onClick={() => handleQuickAction(action)}
@@ -257,7 +291,28 @@ export function AIEditPanel({
               className="flex items-center gap-2 px-3 py-2 text-sm text-warm-gray-700 bg-warm-gray-50 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors disabled:opacity-50"
               title={QUICK_ACTION_DESCRIPTIONS[action]}
             >
-              {icon}
+              {TEXT_QUICK_ACTION_ICONS[action]}
+              {QUICK_ACTION_LABELS[action]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Style Quick Actions */}
+      <div className="p-4 border-b border-warm-gray-200">
+        <label className="block text-xs font-medium text-warm-gray-500 mb-2 uppercase tracking-wide">
+          Style
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {STYLE_QUICK_ACTIONS.map((action) => (
+            <button
+              key={action}
+              onClick={() => handleQuickAction(action)}
+              disabled={isStreaming}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-warm-gray-700 bg-warm-gray-50 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors disabled:opacity-50"
+              title={QUICK_ACTION_DESCRIPTIONS[action]}
+            >
+              {STYLE_QUICK_ACTION_ICONS[action]}
               {QUICK_ACTION_LABELS[action]}
             </button>
           ))}
@@ -273,7 +328,7 @@ export function AIEditPanel({
           <textarea
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
-            placeholder="Describe how you want to change this text..."
+            placeholder="Describe how you want to change this element (text, color, size, font...)..."
             className="flex-1 w-full px-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors resize-none text-sm"
             disabled={isStreaming}
             rows={3}

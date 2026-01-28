@@ -165,3 +165,38 @@ img {
     padding: 0 1rem;
   }
 }
+
+/* =====================================================
+   Editor Preview Styles
+   ===================================================== */
+
+/* Preview container for rendered HTML in AI editor */
+.preview-rendered {
+  /* Container styling */
+  background: white;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  /* Reset child element constraints - let inline styles work */
+  & > * {
+    margin: 0 !important;
+    position: static !important;
+    max-width: 100%;
+    /* Ensure element fills container and displays properly */
+    display: block;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Ensure inline styles on the element take full precedence */
+  & > [style] {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Current content preview */
+.preview-content {
+  & > * {
+    margin: 0;
+    position: static !important;
+  }
+}

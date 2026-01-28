@@ -20,7 +20,8 @@ export const EDITOR_INJECTION_SCRIPT = `
     'LABEL', 'BUTTON', 'FIGCAPTION',
     'BLOCKQUOTE', 'CITE', 'Q',
     'STRONG', 'EM', 'B', 'I', 'U',
-    'SMALL', 'MARK', 'DEL', 'INS'
+    'SMALL', 'MARK', 'DEL', 'INS',
+    'DIV', 'TIME', 'ADDRESS', 'DD', 'DT', 'CAPTION', 'LEGEND'
   ];
 
   let selectedElement = null;
@@ -72,6 +73,16 @@ export const EDITOR_INJECTION_SCRIPT = `
     return 'body > ' + path.join(' > ');
   }
 
+  // Check if element has direct text content (not just text in children)
+  function hasDirectTextContent(element) {
+    for (const node of element.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim().length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Check if element is editable
   function isEditable(element) {
     if (!element || element === document.body) return false;
@@ -80,7 +91,24 @@ export const EDITOR_INJECTION_SCRIPT = `
     if (EDITABLE_TAGS.includes(element.tagName)) {
       // Make sure it has meaningful content
       const text = element.textContent?.trim();
-      return text && text.length > 0;
+      if (!text || text.length === 0) return false;
+
+      // For container elements like DIV, only consider editable if:
+      // 1. It has direct text content, OR
+      // 2. It has no editable child elements (it's a leaf)
+      if (element.tagName === 'DIV') {
+        if (hasDirectTextContent(element)) return true;
+        // Check if any children are editable - if so, prefer those
+        const children = element.querySelectorAll(EDITABLE_TAGS.join(','));
+        for (const child of children) {
+          if (child.textContent?.trim().length > 0) {
+            return false; // Has editable children, so don't select this div
+          }
+        }
+        return true; // No editable children, this div can be selected
+      }
+
+      return true;
     }
 
     return false;

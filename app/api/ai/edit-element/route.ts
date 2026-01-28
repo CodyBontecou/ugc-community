@@ -9,9 +9,15 @@ const editElementSchema = z.object({
   portfolioId: z.string().uuid(),
   selector: z.string().min(1),
   currentContent: z.string(),
+  outerHtml: z.string().min(1),
   instruction: z.string().max(500).optional(),
   quickAction: z
-    .enum(["rewrite", "shorten", "expand", "professional", "casual", "energetic"])
+    .enum([
+      // Text actions
+      "rewrite", "shorten", "expand", "professional", "casual", "energetic",
+      // Style actions
+      "bolder", "larger", "smaller", "colorful", "subtle", "uppercase"
+    ])
     .optional(),
   fullHtml: z.string().min(1),
   tagName: z.string().min(1),
@@ -50,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     const { systemPrompt, userPrompt } = buildElementEditPrompt({
       currentContent: data.currentContent,
+      outerHtml: data.outerHtml,
       instruction: data.instruction || "",
       tagName: data.tagName,
       quickAction: data.quickAction as QuickAction | undefined,
