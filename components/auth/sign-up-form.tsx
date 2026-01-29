@@ -44,12 +44,19 @@ export function SignUpForm({ inviteToken, prefilledEmail }: SignUpFormProps) {
     }
 
     try {
-      // Create account first
-      const result = await signUp.email({
-        email,
-        password,
-        name,
-      });
+      // Create account first, passing invite token via header for server-side validation
+      const result = await signUp.email(
+        {
+          email,
+          password,
+          name,
+        },
+        {
+          headers: {
+            "X-Invite-Token": inviteToken,
+          },
+        }
+      );
 
       if (result.error) {
         setError(result.error.message || "Failed to create account");

@@ -158,3 +158,20 @@ export function getInviteUrl(token: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   return `${baseUrl}/sign-up?invite=${token}`;
 }
+
+/**
+ * Checks if an email has a valid (unused, unexpired, unrevoked) invite
+ * Used for OAuth sign-ups where we can't pass an invite token
+ */
+export async function hasValidInviteForEmail(email: string) {
+  const invite = await db.query.invites.findFirst({
+    where: and(
+      eq(invites.email, email.toLowerCase()),
+      gt(invites.expiresAt, new Date()),
+      isNull(invites.usedAt),
+      isNull(invites.revokedAt)
+    ),
+  });
+
+  return invite;
+}
