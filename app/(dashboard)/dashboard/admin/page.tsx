@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { UnifiedTable } from "@/components/admin/unified-table";
 
 export default function AdminPage() {
-  redirect("/dashboard/admin/users");
+  return <UnifiedTable />;
 }

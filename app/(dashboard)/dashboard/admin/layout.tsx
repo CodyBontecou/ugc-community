@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
-import { AdminNav } from "@/components/admin/admin-nav";
 
 export default async function AdminLayout({
   children,
@@ -21,11 +20,9 @@ export default async function AdminLayout({
           Admin Panel
         </h1>
         <p className="mt-1 text-warm-gray-500">
-          Manage users, invites, and access control
+          Manage users, invites, and waitlist in one place
         </p>
       </div>
-
-      <AdminNav />
 
       {children}
     </div>
