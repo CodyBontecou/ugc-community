@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { isNotNull } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import {
   Navbar,
   BackgroundBlobs,
@@ -41,14 +41,24 @@ async function getLandingPageData() {
       image: c.image,
     }));
 
+  // Get Daniela's profile image for the testimonial
+  const [daniela] = await db
+    .select({ image: users.image })
+    .from(users)
+    .where(eq(users.subdomain, "daniela"))
+    .limit(1);
+
+  const testimonialImage = daniela?.image || null;
+
   return {
     creatorCount,
     socialProofCreators,
+    testimonialImage,
   };
 }
 
 export default async function HomePage() {
-  const { creatorCount, socialProofCreators } = await getLandingPageData();
+  const { creatorCount, socialProofCreators, testimonialImage } = await getLandingPageData();
 
   return (
     <div className="relative overflow-hidden">
@@ -59,7 +69,7 @@ export default async function HomePage() {
       <Features />
       <HowItWorks />
       <Examples />
-      <Testimonials />
+      <Testimonials authorImage={testimonialImage} />
       <Pricing />
       <FinalCTA />
       <Footer />

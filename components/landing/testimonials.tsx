@@ -2,8 +2,13 @@
 
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
+import Image from "next/image";
 
-export function Testimonials() {
+interface TestimonialsProps {
+  authorImage?: string | null;
+}
+
+export function Testimonials({ authorImage }: TestimonialsProps) {
   return (
     <section className="relative z-[1] py-32 bg-warm-gray-50">
       <div className="container">
@@ -55,13 +60,23 @@ export function Testimonials() {
 
             {/* Author */}
             <div className="flex items-center gap-4">
-              <div
-                className="w-14 h-14 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsl(340, 70%, 70%), hsl(20, 60%, 60%))",
-                }}
-              />
+              {authorImage ? (
+                <Image
+                  src={authorImage}
+                  alt="Daniela"
+                  width={56}
+                  height={56}
+                  className="w-14 h-14 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-14 h-14 rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, hsl(340, 70%, 70%), hsl(20, 60%, 60%))",
+                  }}
+                />
+              )}
               <div>
                 <span className="block font-semibold text-lg text-warm-gray-900">
                   Daniela
