@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
       })
       .returning({ id: contactSubmissions.id });
 
+    console.log(`Contact submission ${submission.id} created for creator ${creator.id}`);
+
     let emailSentToCreator = false;
     let emailSentToSender = false;
 
