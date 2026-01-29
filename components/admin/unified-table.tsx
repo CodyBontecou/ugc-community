@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
   Plus,
@@ -68,8 +68,10 @@ export function UnifiedTable() {
   // UI state
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [actionMenuFlip, setActionMenuFlip] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // Subdomain editor state
   const [editingSubdomain, setEditingSubdomain] = useState<UnifiedRecord | null>(null);
@@ -434,6 +436,24 @@ export function UnifiedTable() {
     return null;
   }
 
+  function handleActionMenuToggle(recordId: string) {
+    if (actionMenuOpen === recordId) {
+      setActionMenuOpen(null);
+      return;
+    }
+
+    // Check if button is near bottom of viewport and should flip menu upward
+    const buttonEl = actionButtonRefs.current.get(recordId);
+    if (buttonEl) {
+      const rect = buttonEl.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If less than 150px below (menu height ~120px + margin), flip upward
+      setActionMenuFlip(spaceBelow < 150);
+    }
+
+    setActionMenuOpen(recordId);
+  }
+
   function renderActionsCell(record: UnifiedRecord) {
     const isUpdating = updating === record.id;
 
@@ -441,7 +461,10 @@ export function UnifiedTable() {
       return (
         <div className="relative">
           <button
-            onClick={() => setActionMenuOpen(actionMenuOpen === record.id ? null : record.id)}
+            ref={(el) => {
+              if (el) actionButtonRefs.current.set(record.id, el);
+            }}
+            onClick={() => handleActionMenuToggle(record.id)}
             disabled={isUpdating}
             className="p-1 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors disabled:opacity-50"
           >
@@ -455,7 +478,11 @@ export function UnifiedTable() {
           {actionMenuOpen === record.id && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setActionMenuOpen(null)} />
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50">
+              <div
+                className={`absolute right-0 w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50 ${
+                  actionMenuFlip ? "bottom-full mb-1" : "top-full mt-1"
+                }`}
+              >
                 {record.status !== "active" && (
                   <button
                     onClick={() => updateUserStatus(record.id, "active")}
