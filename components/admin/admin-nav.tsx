@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, Mail } from "lucide-react";
+import { Users, Mail, ClipboardList } from "lucide-react";
 
 const tabs = [
   { href: "/dashboard/admin/users", label: "Users", icon: Users },
   { href: "/dashboard/admin/invites", label: "Invites", icon: Mail },
+  { href: "/dashboard/admin/waitlist", label: "Waitlist", icon: ClipboardList },
 ];
 
 export function AdminNav() {
