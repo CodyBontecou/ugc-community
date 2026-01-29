@@ -43,6 +43,9 @@ export const users = pgTable(
     statusChangedBy: text("status_changed_by"),
     // Profile analytics
     profileViewCount: integer("profile_view_count").notNull().default(0),
+    // Vercel subdomain integration
+    vercelProjectId: text("vercel_project_id"),
+    siteEnabled: boolean("site_enabled").notNull().default(false),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
