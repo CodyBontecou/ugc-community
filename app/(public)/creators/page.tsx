@@ -186,17 +186,6 @@ function DirectoryContent() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-warm-gray-200 py-8 relative z-10">
-        <div className="container text-center">
-          <Link
-            href="/"
-            className="text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            ugc.community
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }
