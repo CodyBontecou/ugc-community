@@ -87,8 +87,8 @@ export function Hero() {
         >
           Build your brand. Share your journey. Never pay a dime.
           <br />
-          <span className="text-rose font-medium">10 posts/month = unlimited features.</span>
-          {" "}Your content is your subscription.
+          Your content is your subscription.{" "}
+          <span className="text-rose font-medium">30 posts/month = unlimited edits.</span>
         </motion.p>
 
         <motion.div
