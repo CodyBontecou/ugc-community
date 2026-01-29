@@ -10,10 +10,11 @@ export async function GET() {
     const session = await requireAuth();
     const userId = session.user.id;
 
-    // Get user profile view count
+    // Get user profile and portfolio view counts
     const [userResult] = await db
       .select({
         profileViewCount: users.profileViewCount,
+        portfolioViewCount: users.portfolioViewCount,
         subdomain: users.subdomain,
       })
       .from(users)
@@ -52,6 +53,7 @@ export async function GET() {
 
     return NextResponse.json({
       profileViewCount: userResult.profileViewCount,
+      portfolioViewCount: userResult.portfolioViewCount,
       hasSubdomain: !!userResult.subdomain,
       contactSubmissions: {
         total: Number(totalCount?.count || 0),

@@ -60,6 +60,7 @@ export async function GET(
         statusChangedAt: users.statusChangedAt,
         statusChangedBy: users.statusChangedBy,
         profileViewCount: users.profileViewCount,
+        portfolioViewCount: users.portfolioViewCount,
         vercelProjectId: users.vercelProjectId,
         siteEnabled: users.siteEnabled,
         githubRepoFullName: users.githubRepoFullName,

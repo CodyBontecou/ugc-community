@@ -21,6 +21,7 @@ import {
   XCircle,
   Send,
   Eye,
+  Briefcase,
   Server,
   Power,
   PowerOff,
@@ -58,6 +59,7 @@ interface UserDetails {
   statusChangedAt: string | null;
   statusChangedBy: string | null;
   profileViewCount: number;
+  portfolioViewCount: number;
   contactSubmissionCount: number;
   contactSubmissionCountLast30Days: number;
   contactSubmissionCountLast7Days: number;
@@ -949,15 +951,28 @@ export default function UserDetailPage() {
             <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
               Profile Stats
             </h3>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center">
-                <Eye size={24} className="text-lavender" />
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center">
+                  <Eye size={24} className="text-lavender" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-warm-gray-900">
+                    {user.profileViewCount.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-warm-gray-500">Profile Views</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-warm-gray-900">
-                  {user.profileViewCount.toLocaleString()}
-                </p>
-                <p className="text-sm text-warm-gray-500">Profile Views</p>
+              <div className="flex items-center gap-4 pt-4 border-t border-warm-gray-100">
+                <div className="w-12 h-12 rounded-full bg-mint-soft/30 flex items-center justify-center">
+                  <Briefcase size={24} className="text-mint" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-warm-gray-900">
+                    {(user.portfolioViewCount || 0).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-warm-gray-500">Portfolio Views</p>
+                </div>
               </div>
             </div>
           </div>

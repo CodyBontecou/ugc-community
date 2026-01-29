@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, Mail, TrendingUp } from "lucide-react";
+import { Eye, Mail, TrendingUp, Briefcase } from "lucide-react";
 
 interface Stats {
   profileViewCount: number;
+  portfolioViewCount: number;
   hasSubdomain: boolean;
   contactSubmissions: {
     total: number;
@@ -65,7 +66,7 @@ export function CreatorStatsCard() {
         Your Stats
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Profile Views */}
         <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
           <div className="flex items-center gap-3">
@@ -77,6 +78,21 @@ export function CreatorStatsCard() {
                 {stats.profileViewCount.toLocaleString()}
               </p>
               <p className="text-sm text-warm-gray-500">Profile Views</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Portfolio Views */}
+        <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-mint-soft/30 flex items-center justify-center">
+              <Briefcase size={20} className="text-mint" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-warm-gray-900">
+                {(stats.portfolioViewCount || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-warm-gray-500">Portfolio Views</p>
             </div>
           </div>
         </div>
