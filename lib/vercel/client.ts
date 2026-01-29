@@ -275,3 +275,127 @@ export async function createProject(
 
   return handleResponse<VercelProject>(response);
 }
+
+// =====================================================
+// Deployment Management
+// =====================================================
+
+export interface Deployment {
+  uid: string;
+  name: string;
+  url: string;
+  created: number;
+  state: "BUILDING" | "ERROR" | "INITIALIZING" | "QUEUED" | "READY" | "CANCELED";
+  readyState: "BUILDING" | "ERROR" | "INITIALIZING" | "QUEUED" | "READY" | "CANCELED";
+  target: "production" | "preview" | null;
+  meta?: {
+    githubCommitRef?: string;
+    githubCommitSha?: string;
+    githubCommitMessage?: string;
+    githubCommitAuthorName?: string;
+  };
+  inspectorUrl?: string;
+}
+
+export interface DeploymentListResponse {
+  deployments: Deployment[];
+  pagination?: {
+    count: number;
+    next: number | null;
+    prev: number | null;
+  };
+}
+
+/**
+ * List deployments for a Vercel project
+ * GET /v6/deployments
+ */
+export async function listDeployments(
+  projectId: string,
+  options?: { limit?: number; target?: "production" | "preview" }
+): Promise<DeploymentListResponse> {
+  const url = new URL("/v6/deployments", VERCEL_API_BASE);
+  url.searchParams.set("projectId", projectId);
+  if (options?.limit) {
+    url.searchParams.set("limit", options.limit.toString());
+  }
+  if (options?.target) {
+    url.searchParams.set("target", options.target);
+  }
+  if (VERCEL_TEAM_ID) {
+    url.searchParams.set("teamId", VERCEL_TEAM_ID);
+  }
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  return handleResponse<DeploymentListResponse>(response);
+}
+
+/**
+ * Get a single deployment by ID
+ * GET /v13/deployments/{deploymentId}
+ */
+export async function getDeployment(deploymentId: string): Promise<Deployment> {
+  const response = await fetch(
+    buildUrl(`/v13/deployments/${deploymentId}`),
+    {
+      method: "GET",
+      headers: getHeaders(),
+    }
+  );
+
+  return handleResponse<Deployment>(response);
+}
+
+/**
+ * Create a new deployment (redeploy)
+ * POST /v13/deployments
+ */
+export async function createDeployment(
+  projectId: string,
+  options?: {
+    target?: "production" | "preview";
+    gitSource?: {
+      type: "github";
+      ref: string;
+      repoId: string;
+    };
+  }
+): Promise<Deployment> {
+  const body: Record<string, unknown> = {
+    name: projectId,
+    project: projectId,
+    target: options?.target || "production",
+  };
+
+  if (options?.gitSource) {
+    body.gitSource = options.gitSource;
+  }
+
+  const response = await fetch(buildUrl("/v13/deployments"), {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  return handleResponse<Deployment>(response);
+}
+
+/**
+ * Cancel a deployment
+ * PATCH /v12/deployments/{deploymentId}/cancel
+ */
+export async function cancelDeployment(deploymentId: string): Promise<Deployment> {
+  const response = await fetch(
+    buildUrl(`/v12/deployments/${deploymentId}/cancel`),
+    {
+      method: "PATCH",
+      headers: getHeaders(),
+    }
+  );
+
+  return handleResponse<Deployment>(response);
+}

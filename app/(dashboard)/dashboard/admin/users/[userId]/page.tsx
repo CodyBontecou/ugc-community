@@ -34,6 +34,9 @@ import {
   ChevronDown,
   Link2,
   AlertCircle,
+  Rocket,
+  RefreshCw,
+  Activity,
 } from "lucide-react";
 
 interface UserDetails {
@@ -89,6 +92,23 @@ interface RepoLinkStatus {
   linkedRepo: string | null;
   isLinked: boolean;
   needsLinking?: boolean;
+}
+
+interface Deployment {
+  uid: string;
+  name: string;
+  url: string;
+  created: number;
+  state: "BUILDING" | "ERROR" | "INITIALIZING" | "QUEUED" | "READY" | "CANCELED";
+  readyState: "BUILDING" | "ERROR" | "INITIALIZING" | "QUEUED" | "READY" | "CANCELED";
+  target: "production" | "preview" | null;
+  meta?: {
+    githubCommitRef?: string;
+    githubCommitSha?: string;
+    githubCommitMessage?: string;
+    githubCommitAuthorName?: string;
+  };
+  inspectorUrl?: string;
 }
 
 interface InviteDetails {
@@ -218,6 +238,36 @@ function InviteStatusBadge({ invite }: { invite: InviteDetails }) {
   );
 }
 
+function DeploymentStatusBadge({ state }: { state: Deployment["state"] }) {
+  const config: Record<
+    Deployment["state"],
+    { bg: string; text: string; label: string; animate?: boolean }
+  > = {
+    READY: { bg: "bg-green-100", text: "text-green-700", label: "Ready" },
+    BUILDING: { bg: "bg-blue-100", text: "text-blue-700", label: "Building", animate: true },
+    QUEUED: { bg: "bg-amber-100", text: "text-amber-700", label: "Queued" },
+    INITIALIZING: { bg: "bg-purple-100", text: "text-purple-700", label: "Initializing", animate: true },
+    ERROR: { bg: "bg-red-100", text: "text-red-700", label: "Error" },
+    CANCELED: { bg: "bg-warm-gray-100", text: "text-warm-gray-600", label: "Canceled" },
+  };
+
+  const { bg, text, label, animate } = config[state];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}
+    >
+      {animate && (
+        <span className="relative flex h-2 w-2">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${bg} opacity-75`} />
+          <span className={`relative inline-flex rounded-full h-2 w-2 ${bg}`} />
+        </span>
+      )}
+      {label}
+    </span>
+  );
+}
+
 export default function UserDetailPage() {
   const params = useParams();
   const userId = params.userId as string;
@@ -266,6 +316,13 @@ export default function UserDetailPage() {
   const [linkingRepo, setLinkingRepo] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [linkSuccess, setLinkSuccess] = useState(false);
+
+  // Deployment management state
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [loadingDeployments, setLoadingDeployments] = useState(false);
+  const [deploymentsError, setDeploymentsError] = useState<string | null>(null);
+  const [triggeringDeployment, setTriggeringDeployment] = useState(false);
+  const [deploymentSuccess, setDeploymentSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -458,6 +515,67 @@ export default function UserDetailPage() {
       setLinkError(err instanceof Error ? err.message : "Failed to link repository");
     } finally {
       setLinkingRepo(false);
+    }
+  };
+
+  // Fetch deployments
+  const fetchDeployments = async () => {
+    if (!user?.vercelProjectId) return;
+
+    setLoadingDeployments(true);
+    setDeploymentsError(null);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/deployments?limit=10`);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to fetch deployments");
+      }
+
+      const data = await response.json();
+      setDeployments(data.deployments);
+    } catch (err) {
+      setDeploymentsError(err instanceof Error ? err.message : "Failed to fetch deployments");
+    } finally {
+      setLoadingDeployments(false);
+    }
+  };
+
+  // Fetch deployments when user data is available and has Vercel project
+  useEffect(() => {
+    if (user?.vercelProjectId) {
+      fetchDeployments();
+    }
+  }, [user?.vercelProjectId, userId]);
+
+  // Trigger a new deployment
+  const handleTriggerDeployment = async () => {
+    setTriggeringDeployment(true);
+    setDeploymentsError(null);
+    setDeploymentSuccess(null);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/deployments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target: "production" }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to trigger deployment");
+      }
+
+      const data = await response.json();
+      setDeploymentSuccess(`Deployment started: ${data.deployment.url}`);
+      setTimeout(() => setDeploymentSuccess(null), 5000);
+
+      // Refresh deployments list
+      fetchDeployments();
+    } catch (err) {
+      setDeploymentsError(err instanceof Error ? err.message : "Failed to trigger deployment");
+    } finally {
+      setTriggeringDeployment(false);
     }
   };
 
@@ -1497,6 +1615,144 @@ export default function UserDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Deployments */}
+      {user.vercelProjectId && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Rocket size={20} className="text-warm-gray-600" />
+              <h3 className="text-lg font-semibold text-warm-gray-900">
+                Deployments
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={fetchDeployments}
+                disabled={loadingDeployments}
+                className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                title="Refresh deployments"
+              >
+                <RefreshCw size={16} className={loadingDeployments ? "animate-spin" : ""} />
+              </button>
+              <button
+                onClick={handleTriggerDeployment}
+                disabled={triggeringDeployment || !repoLinkStatus?.isLinked}
+                className="flex items-center gap-2 px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={!repoLinkStatus?.isLinked ? "Link a repository first" : "Trigger new deployment"}
+              >
+                {triggeringDeployment ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Deploying...
+                  </>
+                ) : (
+                  <>
+                    <Rocket size={16} />
+                    Deploy
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {deploymentSuccess && (
+            <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-sm text-green-700">{deploymentSuccess}</p>
+            </div>
+          )}
+
+          {deploymentsError && (
+            <div className="mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-sm text-red-700">{deploymentsError}</p>
+            </div>
+          )}
+
+          {!repoLinkStatus?.isLinked && (
+            <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-sm text-amber-700">
+                Link a GitHub repository to enable manual deployments.
+              </p>
+            </div>
+          )}
+
+          {loadingDeployments && deployments.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-warm-gray-400" />
+              <span className="ml-2 text-warm-gray-500">Loading deployments...</span>
+            </div>
+          ) : deployments.length === 0 ? (
+            <div className="text-center py-8 text-warm-gray-500">
+              <Activity size={32} className="mx-auto mb-2 text-warm-gray-300" />
+              <p>No deployments yet</p>
+              <p className="text-sm mt-1">
+                Deployments will appear here after the site is deployed.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {deployments.map((deployment) => (
+                <div
+                  key={deployment.uid}
+                  className="flex items-center justify-between p-3 bg-warm-gray-50 rounded-lg border border-warm-gray-200"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <DeploymentStatusBadge state={deployment.state} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://${deployment.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-warm-gray-900 hover:text-coral truncate"
+                        >
+                          {deployment.url}
+                        </a>
+                        {deployment.target === "production" && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                            Production
+                          </span>
+                        )}
+                      </div>
+                      {deployment.meta?.githubCommitMessage && (
+                        <p className="text-xs text-warm-gray-500 truncate mt-0.5">
+                          {deployment.meta.githubCommitMessage}
+                        </p>
+                      )}
+                      {deployment.meta?.githubCommitRef && (
+                        <p className="text-xs text-warm-gray-400 mt-0.5">
+                          Branch: {deployment.meta.githubCommitRef}
+                          {deployment.meta.githubCommitSha && (
+                            <span className="ml-2 font-mono">
+                              ({deployment.meta.githubCommitSha.slice(0, 7)})
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs text-warm-gray-500">
+                      {formatRelativeTime(new Date(deployment.created).toISOString())}
+                    </span>
+                    {deployment.inspectorUrl && (
+                      <a
+                        href={deployment.inspectorUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded transition-colors"
+                        title="View in Vercel"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Timeline */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
