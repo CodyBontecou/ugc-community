@@ -6,7 +6,7 @@ import Link from "next/link";
 export function Navbar() {
   return (
     <motion.nav
-      className="fixed top-0 left-0 right-0 z-[100] py-4 backdrop-blur-[20px] bg-cream/80 border-b border-warm-gray-100"
+      className="fixed top-0 left-0 right-0 z-[100] pt-[calc(env(safe-area-inset-top)+1rem)] pb-4 backdrop-blur-[12px]"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
