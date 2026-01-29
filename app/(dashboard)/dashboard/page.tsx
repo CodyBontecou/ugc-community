@@ -3,6 +3,7 @@ import { getServerSession } from "@/lib/auth/session";
 import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
+import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -34,6 +35,9 @@ async function DashboardContent() {
 
       {/* Schedule Call CTA */}
       <ScheduleCallCard />
+
+      {/* Creator Stats */}
+      <CreatorStatsCard />
 
       {/* Account Section */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
