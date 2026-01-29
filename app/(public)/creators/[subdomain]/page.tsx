@@ -3,6 +3,24 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ExternalLink, MapPin, Instagram, User, ArrowLeft } from "lucide-react";
 import { getCreatorBySubdomain } from "@/lib/directory/queries";
+
+// TikTok icon (not in Lucide)
+function TikTokIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+    </svg>
+  );
+}
 import { NicheBadges } from "@/components/directory/niche-badges";
 import { VerifiedBadge } from "@/components/directory/verified-badge";
 import { RATE_RANGE_LABELS, type RateRange } from "@/lib/directory/constants";
@@ -211,7 +229,7 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 hover:bg-white rounded-full text-sm text-warm-gray-700 transition-colors shadow-sm"
                       >
-                        @{creator.tiktokHandle}
+                        <TikTokIcon size={14} />@{creator.tiktokHandle}
                       </a>
                     )}
                     {creator.youtubeHandle && (
