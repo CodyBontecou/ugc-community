@@ -149,22 +149,9 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
-      instagramHandle: {
-        type: "string",
-        required: false,
-      },
-      tiktokHandle: {
-        type: "string",
-        required: false,
-      },
-      youtubeHandle: {
-        type: "string",
-        required: false,
-      },
-      twitterHandle: {
-        type: "string",
-        required: false,
-      },
+      // Note: Social handles (instagramHandles, tiktokHandles, youtubeHandles, twitterHandles)
+      // are stored as arrays in the database and managed via the admin API.
+      // Better Auth doesn't support array types in additionalFields.
     },
   },
   session: {

@@ -19,6 +19,22 @@ function isValidToken(request: NextRequest): boolean {
   return token === secret;
 }
 
+// Helper to normalize handles input - accepts string or array, returns array
+function normalizeHandles(input: string | string[] | undefined): string[] | null {
+  if (!input) return null;
+  const arr = Array.isArray(input) ? input : [input];
+  const cleaned = arr
+    .map(h => h.trim().replace(/^@/, ''))
+    .filter(h => h.length > 0)
+    .slice(0, 5); // Max 5 handles
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+const handleSchema = z.union([
+  z.string().max(255),
+  z.array(z.string().max(255)).max(5),
+]).optional();
+
 const registerCreatorSchema = z.object({
   subdomain: z
     .string()
@@ -34,10 +50,15 @@ const registerCreatorSchema = z.object({
   displayName: z.string().max(255).optional(),
   bio: z.string().max(1000).optional(),
   websiteUrl: z.string().url().optional().or(z.literal("")),
-  instagramHandle: z.string().max(255).optional(),
-  tiktokHandle: z.string().max(255).optional(),
-  youtubeHandle: z.string().max(255).optional(),
-  twitterHandle: z.string().max(255).optional(),
+  // Accept either single string or array for backwards compatibility
+  instagramHandle: handleSchema,
+  instagramHandles: handleSchema,
+  tiktokHandle: handleSchema,
+  tiktokHandles: handleSchema,
+  youtubeHandle: handleSchema,
+  youtubeHandles: handleSchema,
+  twitterHandle: handleSchema,
+  twitterHandles: handleSchema,
 });
 
 export type RegisterCreatorInput = z.infer<typeof registerCreatorSchema>;
@@ -71,10 +92,10 @@ export async function POST(request: NextRequest) {
           displayName: data.displayName || data.name,
           bio: data.bio,
           websiteUrl: data.websiteUrl || null,
-          instagramHandle: data.instagramHandle,
-          tiktokHandle: data.tiktokHandle,
-          youtubeHandle: data.youtubeHandle,
-          twitterHandle: data.twitterHandle,
+          instagramHandles: normalizeHandles(data.instagramHandles || data.instagramHandle),
+          tiktokHandles: normalizeHandles(data.tiktokHandles || data.tiktokHandle),
+          youtubeHandles: normalizeHandles(data.youtubeHandles || data.youtubeHandle),
+          twitterHandles: normalizeHandles(data.twitterHandles || data.twitterHandle),
           updatedAt: new Date(),
         })
         .where(eq(users.subdomain, data.subdomain))
@@ -110,10 +131,10 @@ export async function POST(request: NextRequest) {
           displayName: data.displayName || data.name,
           bio: data.bio,
           websiteUrl: data.websiteUrl || null,
-          instagramHandle: data.instagramHandle,
-          tiktokHandle: data.tiktokHandle,
-          youtubeHandle: data.youtubeHandle,
-          twitterHandle: data.twitterHandle,
+          instagramHandles: normalizeHandles(data.instagramHandles || data.instagramHandle),
+          tiktokHandles: normalizeHandles(data.tiktokHandles || data.tiktokHandle),
+          youtubeHandles: normalizeHandles(data.youtubeHandles || data.youtubeHandle),
+          twitterHandles: normalizeHandles(data.twitterHandles || data.twitterHandle),
           updatedAt: new Date(),
         })
         .where(eq(users.email, data.email))
@@ -143,10 +164,10 @@ export async function POST(request: NextRequest) {
         displayName: data.displayName || data.name,
         bio: data.bio,
         websiteUrl: data.websiteUrl || null,
-        instagramHandle: data.instagramHandle,
-        tiktokHandle: data.tiktokHandle,
-        youtubeHandle: data.youtubeHandle,
-        twitterHandle: data.twitterHandle,
+        instagramHandles: normalizeHandles(data.instagramHandles || data.instagramHandle),
+        tiktokHandles: normalizeHandles(data.tiktokHandles || data.tiktokHandle),
+        youtubeHandles: normalizeHandles(data.youtubeHandles || data.youtubeHandle),
+        twitterHandles: normalizeHandles(data.twitterHandles || data.twitterHandle),
         emailVerified: true, // External creators are pre-verified
       })
       .returning();
@@ -188,10 +209,10 @@ export async function GET() {
         subdomain: users.subdomain,
         bio: users.bio,
         image: users.image,
-        instagramHandle: users.instagramHandle,
-        tiktokHandle: users.tiktokHandle,
-        youtubeHandle: users.youtubeHandle,
-        twitterHandle: users.twitterHandle,
+        instagramHandles: users.instagramHandles,
+        tiktokHandles: users.tiktokHandles,
+        youtubeHandles: users.youtubeHandles,
+        twitterHandles: users.twitterHandles,
         createdAt: users.createdAt,
       })
       .from(users)

@@ -130,11 +130,19 @@ export function UnifiedTable() {
         if (r.displayName?.toLowerCase().includes(searchLower)) return true;
         if (r.socials) {
           const socials = r.socials;
-          if (socials.instagram?.toLowerCase().includes(searchLower)) return true;
-          if (socials.tiktok?.toLowerCase().includes(searchLower)) return true;
-          if (socials.youtube?.toLowerCase().includes(searchLower)) return true;
+          // Helper to check if any handle in an array or single string matches
+          const matchHandle = (handle: string | string[] | null | undefined): boolean => {
+            if (!handle) return false;
+            if (Array.isArray(handle)) {
+              return handle.some(h => h.toLowerCase().includes(searchLower));
+            }
+            return handle.toLowerCase().includes(searchLower);
+          };
+          if (matchHandle(socials.instagram)) return true;
+          if (matchHandle(socials.tiktok)) return true;
+          if (matchHandle(socials.youtube)) return true;
           if (socials.facebook?.toLowerCase().includes(searchLower)) return true;
-          if (socials.twitter?.toLowerCase().includes(searchLower)) return true;
+          if (matchHandle(socials.twitter)) return true;
         }
         return false;
       });

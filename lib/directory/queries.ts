@@ -41,9 +41,9 @@ export interface DirectoryCreator {
   isVerified: boolean;
   portfolioViewCount: number;
   directoryJoinedAt: Date | null;
-  instagramHandle: string | null;
-  tiktokHandle: string | null;
-  youtubeHandle: string | null;
+  instagramHandles: string[] | null;
+  tiktokHandles: string[] | null;
+  youtubeHandles: string[] | null;
 }
 
 export async function getDirectoryCreators(
@@ -126,9 +126,9 @@ export async function getDirectoryCreators(
       isVerified: users.isVerified,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
-      instagramHandle: users.instagramHandle,
-      tiktokHandle: users.tiktokHandle,
-      youtubeHandle: users.youtubeHandle,
+      instagramHandles: users.instagramHandles,
+      tiktokHandles: users.tiktokHandles,
+      youtubeHandles: users.youtubeHandles,
     })
     .from(users)
     .where(and(...conditions))
@@ -168,9 +168,9 @@ export async function getCreatorBySubdomain(
       isVerified: users.isVerified,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
-      instagramHandle: users.instagramHandle,
-      tiktokHandle: users.tiktokHandle,
-      youtubeHandle: users.youtubeHandle,
+      instagramHandles: users.instagramHandles,
+      tiktokHandles: users.tiktokHandles,
+      youtubeHandles: users.youtubeHandles,
     })
     .from(users)
     .where(

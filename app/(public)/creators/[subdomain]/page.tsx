@@ -77,12 +77,18 @@ function PersonJsonLd({
   image: string | null;
   description: string | null;
   subdomain: string;
-  socials: { instagram?: string; tiktok?: string; youtube?: string };
+  socials: { instagram?: string[]; tiktok?: string[]; youtube?: string[] };
 }) {
   const sameAs: string[] = [];
-  if (socials.instagram) sameAs.push(`https://instagram.com/${socials.instagram}`);
-  if (socials.tiktok) sameAs.push(`https://tiktok.com/@${socials.tiktok}`);
-  if (socials.youtube) sameAs.push(`https://youtube.com/@${socials.youtube}`);
+  if (socials.instagram) {
+    socials.instagram.forEach(handle => sameAs.push(`https://instagram.com/${handle}`));
+  }
+  if (socials.tiktok) {
+    socials.tiktok.forEach(handle => sameAs.push(`https://tiktok.com/@${handle}`));
+  }
+  if (socials.youtube) {
+    socials.youtube.forEach(handle => sameAs.push(`https://youtube.com/@${handle}`));
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -124,9 +130,9 @@ export default async function CreatorProfilePage({ params }: PageProps) {
         description={creator.tagline || creator.bio}
         subdomain={creator.subdomain}
         socials={{
-          instagram: creator.instagramHandle || undefined,
-          tiktok: creator.tiktokHandle || undefined,
-          youtube: creator.youtubeHandle || undefined,
+          instagram: creator.instagramHandles || undefined,
+          tiktok: creator.tiktokHandles || undefined,
+          youtube: creator.youtubeHandles || undefined,
         }}
       />
 
@@ -208,40 +214,43 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                 </div>
 
                 {/* Social Links */}
-                {(creator.instagramHandle ||
-                  creator.tiktokHandle ||
-                  creator.youtubeHandle) && (
+                {((creator.instagramHandles && creator.instagramHandles.length > 0) ||
+                  (creator.tiktokHandles && creator.tiktokHandles.length > 0) ||
+                  (creator.youtubeHandles && creator.youtubeHandles.length > 0)) && (
                   <div className="flex flex-wrap gap-3">
-                    {creator.instagramHandle && (
+                    {creator.instagramHandles?.map((handle, idx) => (
                       <a
-                        href={`https://instagram.com/${creator.instagramHandle}`}
+                        key={`ig-${idx}`}
+                        href={`https://instagram.com/${handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 hover:bg-white rounded-full text-sm text-warm-gray-700 transition-colors shadow-sm"
                       >
-                        <Instagram size={14} />@{creator.instagramHandle}
+                        <Instagram size={14} />@{handle}
                       </a>
-                    )}
-                    {creator.tiktokHandle && (
+                    ))}
+                    {creator.tiktokHandles?.map((handle, idx) => (
                       <a
-                        href={`https://tiktok.com/@${creator.tiktokHandle}`}
+                        key={`tt-${idx}`}
+                        href={`https://tiktok.com/@${handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 hover:bg-white rounded-full text-sm text-warm-gray-700 transition-colors shadow-sm"
                       >
-                        <TikTokIcon size={14} />@{creator.tiktokHandle}
+                        <TikTokIcon size={14} />@{handle}
                       </a>
-                    )}
-                    {creator.youtubeHandle && (
+                    ))}
+                    {creator.youtubeHandles?.map((handle, idx) => (
                       <a
-                        href={`https://youtube.com/@${creator.youtubeHandle}`}
+                        key={`yt-${idx}`}
+                        href={`https://youtube.com/@${handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 hover:bg-white rounded-full text-sm text-warm-gray-700 transition-colors shadow-sm"
                       >
-                        @{creator.youtubeHandle}
+                        @{handle}
                       </a>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>

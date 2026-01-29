@@ -9,11 +9,13 @@ import { desc, eq } from "drizzle-orm";
 export type RecordType = "user" | "invite" | "waitlist";
 
 export interface SocialHandles {
-  instagram?: string | null;
-  tiktok?: string | null;
-  youtube?: string | null;
+  // User handles are arrays (up to 5 per platform)
+  instagram?: string[] | string | null;
+  tiktok?: string[] | string | null;
+  youtube?: string[] | string | null;
+  // Waitlist uses single strings
   facebook?: string | null;
-  twitter?: string | null;
+  twitter?: string[] | string | null;
 }
 
 export interface UnifiedRecord {

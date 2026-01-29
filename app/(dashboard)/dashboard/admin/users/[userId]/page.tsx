@@ -39,6 +39,8 @@ import {
   RefreshCw,
   Activity,
   FileText,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 interface UserDetails {
@@ -51,10 +53,10 @@ interface UserDetails {
   displayName: string | null;
   bio: string | null;
   websiteUrl: string | null;
-  instagramHandle: string | null;
-  tiktokHandle: string | null;
-  youtubeHandle: string | null;
-  twitterHandle: string | null;
+  instagramHandles: string[] | null;
+  tiktokHandles: string[] | null;
+  youtubeHandles: string[] | null;
+  twitterHandles: string[] | null;
   subdomain: string | null;
   status: string;
   statusChangedAt: string | null;
@@ -327,14 +329,15 @@ export default function UserDetailPage() {
   const [triggeringDeployment, setTriggeringDeployment] = useState(false);
   const [deploymentSuccess, setDeploymentSuccess] = useState<string | null>(null);
 
-  // Social handles editing state
-  const [instagramHandleInput, setInstagramHandleInput] = useState("");
-  const [tiktokHandleInput, setTiktokHandleInput] = useState("");
-  const [youtubeHandleInput, setYoutubeHandleInput] = useState("");
-  const [twitterHandleInput, setTwitterHandleInput] = useState("");
+  // Social handles editing state - now arrays with max 5 per platform
+  const [instagramHandles, setInstagramHandles] = useState<string[]>([]);
+  const [tiktokHandles, setTiktokHandles] = useState<string[]>([]);
+  const [youtubeHandles, setYoutubeHandles] = useState<string[]>([]);
+  const [twitterHandles, setTwitterHandles] = useState<string[]>([]);
   const [savingSocialHandles, setSavingSocialHandles] = useState(false);
   const [socialHandlesError, setSocialHandlesError] = useState<string | null>(null);
   const [socialHandlesSuccess, setSocialHandlesSuccess] = useState(false);
+  const MAX_HANDLES_PER_PLATFORM = 5;
 
   // Bio editing state
   const [bioInput, setBioInput] = useState("");
@@ -361,10 +364,10 @@ export default function UserDetailPage() {
         setStatusChangedByUser(data.statusChangedByUser);
         setVercelProjectId(data.user.vercelProjectId || "");
         setSubdomainInput(data.user.subdomain || "");
-        setInstagramHandleInput(data.user.instagramHandle || "");
-        setTiktokHandleInput(data.user.tiktokHandle || "");
-        setYoutubeHandleInput(data.user.youtubeHandle || "");
-        setTwitterHandleInput(data.user.twitterHandle || "");
+        setInstagramHandles(data.user.instagramHandles || []);
+        setTiktokHandles(data.user.tiktokHandles || []);
+        setYoutubeHandles(data.user.youtubeHandles || []);
+        setTwitterHandles(data.user.twitterHandles || []);
         setBioInput(data.user.bio || "");
       } catch {
         setError("Failed to load user details");
@@ -818,14 +821,18 @@ export default function UserDetailPage() {
     setSocialHandlesSuccess(false);
 
     try {
+      // Filter out empty handles before sending
+      const cleanHandles = (handles: string[]) =>
+        handles.map(h => h.trim().replace(/^@/, '')).filter(h => h.length > 0);
+
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          instagramHandle: instagramHandleInput.trim() || null,
-          tiktokHandle: tiktokHandleInput.trim() || null,
-          youtubeHandle: youtubeHandleInput.trim() || null,
-          twitterHandle: twitterHandleInput.trim() || null,
+          instagramHandles: cleanHandles(instagramHandles),
+          tiktokHandles: cleanHandles(tiktokHandles),
+          youtubeHandles: cleanHandles(youtubeHandles),
+          twitterHandles: cleanHandles(twitterHandles),
         }),
       });
 
@@ -839,13 +846,18 @@ export default function UserDetailPage() {
         prev
           ? {
               ...prev,
-              instagramHandle: data.user.instagramHandle,
-              tiktokHandle: data.user.tiktokHandle,
-              youtubeHandle: data.user.youtubeHandle,
-              twitterHandle: data.user.twitterHandle,
+              instagramHandles: data.user.instagramHandles,
+              tiktokHandles: data.user.tiktokHandles,
+              youtubeHandles: data.user.youtubeHandles,
+              twitterHandles: data.user.twitterHandles,
             }
           : prev
       );
+      // Update local state with saved values
+      setInstagramHandles(data.user.instagramHandles || []);
+      setTiktokHandles(data.user.tiktokHandles || []);
+      setYoutubeHandles(data.user.youtubeHandles || []);
+      setTwitterHandles(data.user.twitterHandles || []);
       setSocialHandlesSuccess(true);
       setTimeout(() => setSocialHandlesSuccess(false), 3000);
     } catch (err) {
@@ -855,12 +867,19 @@ export default function UserDetailPage() {
     }
   };
 
+  // Helper to compare arrays
+  const arraysEqual = (a: string[], b: string[] | null | undefined) => {
+    const bArr = b ?? [];
+    if (a.length !== bArr.length) return false;
+    return a.every((val, idx) => val === bArr[idx]);
+  };
+
   // Check if social handles have changed
   const socialHandlesChanged =
-    instagramHandleInput !== (user?.instagramHandle || "") ||
-    tiktokHandleInput !== (user?.tiktokHandle || "") ||
-    youtubeHandleInput !== (user?.youtubeHandle || "") ||
-    twitterHandleInput !== (user?.twitterHandle || "");
+    !arraysEqual(instagramHandles, user?.instagramHandles) ||
+    !arraysEqual(tiktokHandles, user?.tiktokHandles) ||
+    !arraysEqual(youtubeHandles, user?.youtubeHandles) ||
+    !arraysEqual(twitterHandles, user?.twitterHandles);
 
   // Save bio
   const handleSaveBio = async () => {
@@ -986,25 +1005,27 @@ export default function UserDetailPage() {
         </div>
 
         {/* Social Links */}
-        {(user.instagramHandle ||
-          user.tiktokHandle ||
-          user.youtubeHandle ||
-          user.twitterHandle) && (
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-warm-gray-100">
-            {user.instagramHandle && (
+        {((user.instagramHandles && user.instagramHandles.length > 0) ||
+          (user.tiktokHandles && user.tiktokHandles.length > 0) ||
+          (user.youtubeHandles && user.youtubeHandles.length > 0) ||
+          (user.twitterHandles && user.twitterHandles.length > 0)) && (
+          <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-warm-gray-100">
+            {user.instagramHandles?.map((handle, idx) => (
               <a
-                href={`https://instagram.com/${user.instagramHandle}`}
+                key={`ig-${idx}`}
+                href={`https://instagram.com/${handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-pink-600"
               >
                 <Instagram size={18} />
-                @{user.instagramHandle}
+                @{handle}
               </a>
-            )}
-            {user.tiktokHandle && (
+            ))}
+            {user.tiktokHandles?.map((handle, idx) => (
               <a
-                href={`https://tiktok.com/@${user.tiktokHandle}`}
+                key={`tt-${idx}`}
+                href={`https://tiktok.com/@${handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-black"
@@ -1015,23 +1036,25 @@ export default function UserDetailPage() {
                 >
                   <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                 </svg>
-                @{user.tiktokHandle}
+                @{handle}
               </a>
-            )}
-            {user.youtubeHandle && (
+            ))}
+            {user.youtubeHandles?.map((handle, idx) => (
               <a
-                href={`https://youtube.com/@${user.youtubeHandle}`}
+                key={`yt-${idx}`}
+                href={`https://youtube.com/@${handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-red-600"
               >
                 <Youtube size={18} />
-                @{user.youtubeHandle}
+                @{handle}
               </a>
-            )}
-            {user.twitterHandle && (
+            ))}
+            {user.twitterHandles?.map((handle, idx) => (
               <a
-                href={`https://twitter.com/${user.twitterHandle}`}
+                key={`tw-${idx}`}
+                href={`https://twitter.com/${handle}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-blue-500"
@@ -1042,9 +1065,9 @@ export default function UserDetailPage() {
                 >
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
-                @{user.twitterHandle}
+                @{handle}
               </a>
-            )}
+            ))}
           </div>
         )}
 
@@ -1365,94 +1388,207 @@ export default function UserDetailPage() {
           <h3 className="text-lg font-semibold text-warm-gray-900">
             Social Media Handles
           </h3>
+          <span className="text-xs text-warm-gray-400 ml-auto">Up to 5 per platform</span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Instagram */}
           <div>
-            <label
-              htmlFor="instagramHandle"
-              className="block text-sm font-medium text-warm-gray-700 mb-1"
-            >
-              Instagram
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-warm-gray-500 text-sm">@</span>
-              <input
-                id="instagramHandle"
-                type="text"
-                value={instagramHandleInput}
-                onChange={(e) => setInstagramHandleInput(e.target.value.replace(/^@/, ""))}
-                placeholder="username"
-                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                disabled={savingSocialHandles}
-              />
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-warm-gray-700">
+                Instagram
+              </label>
+              <span className="text-xs text-warm-gray-400">
+                {instagramHandles.length}/{MAX_HANDLES_PER_PLATFORM}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {instagramHandles.map((handle, idx) => (
+                <div key={`ig-input-${idx}`} className="flex items-center gap-2">
+                  <span className="text-warm-gray-500 text-sm">@</span>
+                  <input
+                    type="text"
+                    value={handle}
+                    onChange={(e) => {
+                      const newHandles = [...instagramHandles];
+                      newHandles[idx] = e.target.value.replace(/^@/, "");
+                      setInstagramHandles(newHandles);
+                    }}
+                    placeholder="username"
+                    className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                    disabled={savingSocialHandles}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setInstagramHandles(instagramHandles.filter((_, i) => i !== idx))}
+                    className="p-2 text-warm-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={savingSocialHandles}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {instagramHandles.length < MAX_HANDLES_PER_PLATFORM && (
+                <button
+                  type="button"
+                  onClick={() => setInstagramHandles([...instagramHandles, ""])}
+                  className="flex items-center gap-1 text-sm text-coral hover:text-coral/80 transition-colors"
+                  disabled={savingSocialHandles}
+                >
+                  <Plus size={14} />
+                  Add Instagram handle
+                </button>
+              )}
             </div>
           </div>
 
           {/* TikTok */}
           <div>
-            <label
-              htmlFor="tiktokHandle"
-              className="block text-sm font-medium text-warm-gray-700 mb-1"
-            >
-              TikTok
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-warm-gray-500 text-sm">@</span>
-              <input
-                id="tiktokHandle"
-                type="text"
-                value={tiktokHandleInput}
-                onChange={(e) => setTiktokHandleInput(e.target.value.replace(/^@/, ""))}
-                placeholder="username"
-                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                disabled={savingSocialHandles}
-              />
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-warm-gray-700">
+                TikTok
+              </label>
+              <span className="text-xs text-warm-gray-400">
+                {tiktokHandles.length}/{MAX_HANDLES_PER_PLATFORM}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {tiktokHandles.map((handle, idx) => (
+                <div key={`tt-input-${idx}`} className="flex items-center gap-2">
+                  <span className="text-warm-gray-500 text-sm">@</span>
+                  <input
+                    type="text"
+                    value={handle}
+                    onChange={(e) => {
+                      const newHandles = [...tiktokHandles];
+                      newHandles[idx] = e.target.value.replace(/^@/, "");
+                      setTiktokHandles(newHandles);
+                    }}
+                    placeholder="username"
+                    className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                    disabled={savingSocialHandles}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setTiktokHandles(tiktokHandles.filter((_, i) => i !== idx))}
+                    className="p-2 text-warm-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={savingSocialHandles}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {tiktokHandles.length < MAX_HANDLES_PER_PLATFORM && (
+                <button
+                  type="button"
+                  onClick={() => setTiktokHandles([...tiktokHandles, ""])}
+                  className="flex items-center gap-1 text-sm text-coral hover:text-coral/80 transition-colors"
+                  disabled={savingSocialHandles}
+                >
+                  <Plus size={14} />
+                  Add TikTok handle
+                </button>
+              )}
             </div>
           </div>
 
           {/* YouTube */}
           <div>
-            <label
-              htmlFor="youtubeHandle"
-              className="block text-sm font-medium text-warm-gray-700 mb-1"
-            >
-              YouTube
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-warm-gray-500 text-sm">@</span>
-              <input
-                id="youtubeHandle"
-                type="text"
-                value={youtubeHandleInput}
-                onChange={(e) => setYoutubeHandleInput(e.target.value.replace(/^@/, ""))}
-                placeholder="username"
-                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                disabled={savingSocialHandles}
-              />
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-warm-gray-700">
+                YouTube
+              </label>
+              <span className="text-xs text-warm-gray-400">
+                {youtubeHandles.length}/{MAX_HANDLES_PER_PLATFORM}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {youtubeHandles.map((handle, idx) => (
+                <div key={`yt-input-${idx}`} className="flex items-center gap-2">
+                  <span className="text-warm-gray-500 text-sm">@</span>
+                  <input
+                    type="text"
+                    value={handle}
+                    onChange={(e) => {
+                      const newHandles = [...youtubeHandles];
+                      newHandles[idx] = e.target.value.replace(/^@/, "");
+                      setYoutubeHandles(newHandles);
+                    }}
+                    placeholder="username"
+                    className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                    disabled={savingSocialHandles}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setYoutubeHandles(youtubeHandles.filter((_, i) => i !== idx))}
+                    className="p-2 text-warm-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={savingSocialHandles}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {youtubeHandles.length < MAX_HANDLES_PER_PLATFORM && (
+                <button
+                  type="button"
+                  onClick={() => setYoutubeHandles([...youtubeHandles, ""])}
+                  className="flex items-center gap-1 text-sm text-coral hover:text-coral/80 transition-colors"
+                  disabled={savingSocialHandles}
+                >
+                  <Plus size={14} />
+                  Add YouTube handle
+                </button>
+              )}
             </div>
           </div>
 
           {/* Twitter/X */}
           <div>
-            <label
-              htmlFor="twitterHandle"
-              className="block text-sm font-medium text-warm-gray-700 mb-1"
-            >
-              X (Twitter)
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-warm-gray-500 text-sm">@</span>
-              <input
-                id="twitterHandle"
-                type="text"
-                value={twitterHandleInput}
-                onChange={(e) => setTwitterHandleInput(e.target.value.replace(/^@/, ""))}
-                placeholder="username"
-                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                disabled={savingSocialHandles}
-              />
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-warm-gray-700">
+                X (Twitter)
+              </label>
+              <span className="text-xs text-warm-gray-400">
+                {twitterHandles.length}/{MAX_HANDLES_PER_PLATFORM}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {twitterHandles.map((handle, idx) => (
+                <div key={`tw-input-${idx}`} className="flex items-center gap-2">
+                  <span className="text-warm-gray-500 text-sm">@</span>
+                  <input
+                    type="text"
+                    value={handle}
+                    onChange={(e) => {
+                      const newHandles = [...twitterHandles];
+                      newHandles[idx] = e.target.value.replace(/^@/, "");
+                      setTwitterHandles(newHandles);
+                    }}
+                    placeholder="username"
+                    className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                    disabled={savingSocialHandles}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setTwitterHandles(twitterHandles.filter((_, i) => i !== idx))}
+                    className="p-2 text-warm-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    disabled={savingSocialHandles}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {twitterHandles.length < MAX_HANDLES_PER_PLATFORM && (
+                <button
+                  type="button"
+                  onClick={() => setTwitterHandles([...twitterHandles, ""])}
+                  className="flex items-center gap-1 text-sm text-coral hover:text-coral/80 transition-colors"
+                  disabled={savingSocialHandles}
+                >
+                  <Plus size={14} />
+                  Add X handle
+                </button>
+              )}
             </div>
           </div>
 

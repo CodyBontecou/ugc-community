@@ -31,10 +31,10 @@ export const users = pgTable(
     displayName: text("display_name"),
     bio: text("bio"),
     websiteUrl: text("website_url"),
-    instagramHandle: text("instagram_handle"),
-    tiktokHandle: text("tiktok_handle"),
-    youtubeHandle: text("youtube_handle"),
-    twitterHandle: text("twitter_handle"),
+    instagramHandles: text("instagram_handles").array(),
+    tiktokHandles: text("tiktok_handles").array(),
+    youtubeHandles: text("youtube_handles").array(),
+    twitterHandles: text("twitter_handles").array(),
     // Subdomain for custom URL (e.g., johndoe.mysite.com)
     // Stored as lowercase for consistent matching
     subdomain: text("subdomain").unique(),

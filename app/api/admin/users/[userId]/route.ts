@@ -25,11 +25,27 @@ const updateUserGitHubRepoSchema = z.object({
   githubRepoId: z.string().nullable(),
 });
 
+// Helper to clean social handles: trim, remove @ prefix, filter empty strings
+function cleanHandles(handles: (string | null)[] | null | undefined): string[] | null {
+  if (!handles || handles.length === 0) return null;
+  const cleaned = handles
+    .filter((h): h is string => h !== null && h !== undefined)
+    .map(h => h.trim().replace(/^@/, ''))
+    .filter(h => h.length > 0);
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+const socialHandleArraySchema = z
+  .array(z.string().nullable())
+  .max(5, "Maximum 5 handles per platform")
+  .nullable()
+  .optional();
+
 const updateUserSocialHandlesSchema = z.object({
-  instagramHandle: z.string().nullable().optional(),
-  tiktokHandle: z.string().nullable().optional(),
-  youtubeHandle: z.string().nullable().optional(),
-  twitterHandle: z.string().nullable().optional(),
+  instagramHandles: socialHandleArraySchema,
+  tiktokHandles: socialHandleArraySchema,
+  youtubeHandles: socialHandleArraySchema,
+  twitterHandles: socialHandleArraySchema,
 });
 
 const updateUserBioSchema = z.object({
@@ -62,10 +78,10 @@ export async function GET(
         displayName: users.displayName,
         bio: users.bio,
         websiteUrl: users.websiteUrl,
-        instagramHandle: users.instagramHandle,
-        tiktokHandle: users.tiktokHandle,
-        youtubeHandle: users.youtubeHandle,
-        twitterHandle: users.twitterHandle,
+        instagramHandles: users.instagramHandles,
+        tiktokHandles: users.tiktokHandles,
+        youtubeHandles: users.youtubeHandles,
+        twitterHandles: users.twitterHandles,
         subdomain: users.subdomain,
         status: users.status,
         statusChangedAt: users.statusChangedAt,
@@ -444,25 +460,25 @@ export async function PATCH(
     }
 
     // Handle social handles update
-    if ("instagramHandle" in body || "tiktokHandle" in body || "youtubeHandle" in body || "twitterHandle" in body) {
+    if ("instagramHandles" in body || "tiktokHandles" in body || "youtubeHandles" in body || "twitterHandles" in body) {
       const socialHandles = updateUserSocialHandlesSchema.parse(body);
 
-      const updateData: Record<string, string | null | Date> = {
+      const updateData: Record<string, string[] | null | Date> = {
         updatedAt: new Date(),
       };
 
-      // Only include fields that were explicitly provided
-      if ("instagramHandle" in body) {
-        updateData.instagramHandle = socialHandles.instagramHandle === "" ? null : socialHandles.instagramHandle ?? null;
+      // Only include fields that were explicitly provided, clean handles
+      if ("instagramHandles" in body) {
+        updateData.instagramHandles = cleanHandles(socialHandles.instagramHandles);
       }
-      if ("tiktokHandle" in body) {
-        updateData.tiktokHandle = socialHandles.tiktokHandle === "" ? null : socialHandles.tiktokHandle ?? null;
+      if ("tiktokHandles" in body) {
+        updateData.tiktokHandles = cleanHandles(socialHandles.tiktokHandles);
       }
-      if ("youtubeHandle" in body) {
-        updateData.youtubeHandle = socialHandles.youtubeHandle === "" ? null : socialHandles.youtubeHandle ?? null;
+      if ("youtubeHandles" in body) {
+        updateData.youtubeHandles = cleanHandles(socialHandles.youtubeHandles);
       }
-      if ("twitterHandle" in body) {
-        updateData.twitterHandle = socialHandles.twitterHandle === "" ? null : socialHandles.twitterHandle ?? null;
+      if ("twitterHandles" in body) {
+        updateData.twitterHandles = cleanHandles(socialHandles.twitterHandles);
       }
 
       const [updated] = await db
@@ -471,10 +487,10 @@ export async function PATCH(
         .where(eq(users.id, userId))
         .returning({
           id: users.id,
-          instagramHandle: users.instagramHandle,
-          tiktokHandle: users.tiktokHandle,
-          youtubeHandle: users.youtubeHandle,
-          twitterHandle: users.twitterHandle,
+          instagramHandles: users.instagramHandles,
+          tiktokHandles: users.tiktokHandles,
+          youtubeHandles: users.youtubeHandles,
+          twitterHandles: users.twitterHandles,
         });
 
       return NextResponse.json({ user: updated });
