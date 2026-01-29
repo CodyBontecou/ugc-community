@@ -19,6 +19,11 @@ const updateUserVercelProjectIdSchema = z.object({
   vercelProjectId: z.string().nullable(),
 });
 
+const updateUserGitHubRepoSchema = z.object({
+  githubRepoFullName: z.string().nullable(),
+  githubRepoId: z.string().nullable(),
+});
+
 // GET /api/admin/users/[userId] - Get user details with invite history
 export async function GET(
   request: NextRequest,
@@ -56,6 +61,8 @@ export async function GET(
         profileViewCount: users.profileViewCount,
         vercelProjectId: users.vercelProjectId,
         siteEnabled: users.siteEnabled,
+        githubRepoFullName: users.githubRepoFullName,
+        githubRepoId: users.githubRepoId,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -285,6 +292,29 @@ export async function PATCH(
           name: users.name,
           email: users.email,
           vercelProjectId: users.vercelProjectId,
+        });
+
+      return NextResponse.json({ user: updated });
+    }
+
+    // Handle GitHub repo update
+    if ("githubRepoFullName" in body || "githubRepoId" in body) {
+      const { githubRepoFullName, githubRepoId } = updateUserGitHubRepoSchema.parse(body);
+
+      const [updated] = await db
+        .update(users)
+        .set({
+          githubRepoFullName: githubRepoFullName === "" ? null : githubRepoFullName,
+          githubRepoId: githubRepoId === "" ? null : githubRepoId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          githubRepoFullName: users.githubRepoFullName,
+          githubRepoId: users.githubRepoId,
         });
 
       return NextResponse.json({ user: updated });

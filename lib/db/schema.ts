@@ -51,6 +51,9 @@ export const users = pgTable(
     githubRefreshToken: text("github_refresh_token"),
     githubUsername: text("github_username"),
     githubConnectedAt: timestamp("github_connected_at"),
+    // GitHub repository assigned to user for deployment
+    githubRepoFullName: text("github_repo_full_name"),
+    githubRepoId: text("github_repo_id"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)

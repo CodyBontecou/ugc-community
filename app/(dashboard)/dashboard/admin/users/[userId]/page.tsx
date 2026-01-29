@@ -26,6 +26,12 @@ import {
   PowerOff,
   Loader2,
   HelpCircle,
+  Github,
+  Search,
+  Lock,
+  Unlock,
+  X,
+  ChevronDown,
 } from "lucide-react";
 
 interface UserDetails {
@@ -49,8 +55,23 @@ interface UserDetails {
   profileViewCount: number;
   vercelProjectId: string | null;
   siteEnabled: boolean;
+  githubRepoFullName: string | null;
+  githubRepoId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface GitHubRepo {
+  id: number;
+  full_name: string;
+  name: string;
+  private: boolean;
+  updated_at: string;
+}
+
+interface AdminGitHubStatus {
+  connected: boolean;
+  username: string | null;
 }
 
 interface InviteDetails {
@@ -201,6 +222,16 @@ export default function UserDetailPage() {
   const [togglingSite, setTogglingSite] = useState(false);
   const [siteToggleError, setSiteToggleError] = useState<string | null>(null);
 
+  // GitHub repository selector state
+  const [adminGitHubStatus, setAdminGitHubStatus] = useState<AdminGitHubStatus | null>(null);
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [repoSearch, setRepoSearch] = useState("");
+  const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
+  const [loadingRepos, setLoadingRepos] = useState(false);
+  const [savingRepo, setSavingRepo] = useState(false);
+  const [repoError, setRepoError] = useState<string | null>(null);
+  const [repoSuccess, setRepoSuccess] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -228,6 +259,106 @@ export default function UserDetailPage() {
 
     fetchUser();
   }, [userId]);
+
+  // Fetch admin's GitHub connection status
+  useEffect(() => {
+    async function fetchAdminGitHubStatus() {
+      try {
+        const response = await fetch("/api/admin/github/status");
+        if (response.ok) {
+          const data = await response.json();
+          setAdminGitHubStatus({
+            connected: data.connected,
+            username: data.username,
+          });
+        }
+      } catch {
+        // Silently fail - GitHub features just won't be available
+      }
+    }
+
+    fetchAdminGitHubStatus();
+  }, []);
+
+  // Fetch repositories when dropdown opens
+  const fetchRepos = async (search = "") => {
+    if (!adminGitHubStatus?.connected) return;
+
+    setLoadingRepos(true);
+    setRepoError(null);
+
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      params.set("per_page", "50");
+
+      const response = await fetch(`/api/admin/github/repos?${params}`);
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to fetch repositories");
+      }
+
+      const data = await response.json();
+      setRepos(data.repos);
+    } catch (err) {
+      setRepoError(err instanceof Error ? err.message : "Failed to fetch repositories");
+    } finally {
+      setLoadingRepos(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    if (!repoDropdownOpen) return;
+
+    const timer = setTimeout(() => {
+      fetchRepos(repoSearch);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [repoSearch, repoDropdownOpen, adminGitHubStatus?.connected]);
+
+  // Save GitHub repo selection
+  const handleSaveRepo = async (repo: GitHubRepo | null) => {
+    setSavingRepo(true);
+    setRepoError(null);
+    setRepoSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          githubRepoFullName: repo?.full_name || null,
+          githubRepoId: repo?.id?.toString() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              githubRepoFullName: data.user.githubRepoFullName,
+              githubRepoId: data.user.githubRepoId,
+            }
+          : prev
+      );
+      setRepoDropdownOpen(false);
+      setRepoSearch("");
+      setRepoSuccess(true);
+      setTimeout(() => setRepoSuccess(false), 3000);
+    } catch (err) {
+      setRepoError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingRepo(false);
+    }
+  };
 
   // Build timeline events sorted by date (newest first)
   const timelineEvents = useMemo(() => {
@@ -570,6 +701,182 @@ export default function UserDetailPage() {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* GitHub Repository */}
+      {adminGitHubStatus?.connected && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Github size={20} className="text-warm-gray-600" />
+            <h3 className="text-lg font-semibold text-warm-gray-900">
+              GitHub Repository
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            {/* Current Selection */}
+            {user.githubRepoFullName && !repoDropdownOpen && (
+              <div className="flex items-center justify-between p-3 bg-warm-gray-50 rounded-lg border border-warm-gray-200">
+                <div className="flex items-center gap-3">
+                  <Github size={18} className="text-warm-gray-600" />
+                  <div>
+                    <p className="font-medium text-warm-gray-900">
+                      {user.githubRepoFullName}
+                    </p>
+                    <a
+                      href={`https://github.com/${user.githubRepoFullName}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-coral hover:text-coral/80 flex items-center gap-1"
+                    >
+                      View on GitHub
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleSaveRepo(null)}
+                  disabled={savingRepo}
+                  className="p-2 text-warm-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                  title="Remove repository"
+                >
+                  {savingRepo ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <X size={16} />
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Repository Selector */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-warm-gray-700 mb-1">
+                {user.githubRepoFullName ? "Change Repository" : "Select Repository"}
+              </label>
+
+              {/* Search Input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={16} className="text-warm-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={repoSearch}
+                  onChange={(e) => setRepoSearch(e.target.value)}
+                  onFocus={() => {
+                    setRepoDropdownOpen(true);
+                    if (repos.length === 0) fetchRepos();
+                  }}
+                  placeholder="Search repositories..."
+                  className="w-full pl-10 pr-10 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                />
+                <button
+                  onClick={() => setRepoDropdownOpen(!repoDropdownOpen)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <ChevronDown
+                    size={16}
+                    className={`text-warm-gray-400 transition-transform ${
+                      repoDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Dropdown */}
+              {repoDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-warm-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {loadingRepos ? (
+                    <div className="p-4 flex items-center justify-center">
+                      <Loader2 size={20} className="animate-spin text-warm-gray-400" />
+                      <span className="ml-2 text-sm text-warm-gray-500">
+                        Loading repositories...
+                      </span>
+                    </div>
+                  ) : repoError ? (
+                    <div className="p-4 text-sm text-red-600">{repoError}</div>
+                  ) : repos.length === 0 ? (
+                    <div className="p-4 text-sm text-warm-gray-500">
+                      {repoSearch
+                        ? "No repositories found matching your search"
+                        : "No repositories found"}
+                    </div>
+                  ) : (
+                    <ul className="py-1">
+                      {repos.map((repo) => (
+                        <li key={repo.id}>
+                          <button
+                            onClick={() => handleSaveRepo(repo)}
+                            disabled={savingRepo}
+                            className="w-full px-4 py-2 text-left hover:bg-warm-gray-50 flex items-center justify-between gap-2 disabled:opacity-50"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Github size={16} className="text-warm-gray-400 flex-shrink-0" />
+                              <span className="text-sm font-medium text-warm-gray-900 truncate">
+                                {repo.full_name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {repo.private ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                                  <Lock size={10} />
+                                  Private
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                  <Unlock size={10} />
+                                  Public
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Close dropdown when clicking outside */}
+            {repoDropdownOpen && (
+              <div
+                className="fixed inset-0 z-0"
+                onClick={() => {
+                  setRepoDropdownOpen(false);
+                  setRepoSearch("");
+                }}
+              />
+            )}
+
+            {repoSuccess && (
+              <p className="text-sm text-green-600">Repository saved successfully!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GitHub Not Connected Notice */}
+      {adminGitHubStatus !== null && !adminGitHubStatus.connected && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Github size={20} className="text-warm-gray-400" />
+            <h3 className="text-lg font-semibold text-warm-gray-500">
+              GitHub Repository
+            </h3>
+          </div>
+          <p className="text-sm text-warm-gray-500">
+            Connect your GitHub account in{" "}
+            <a
+              href="/dashboard/admin"
+              className="text-coral hover:text-coral/80 underline"
+            >
+              Admin Settings
+            </a>{" "}
+            to assign repositories to users.
+          </p>
         </div>
       )}
 
