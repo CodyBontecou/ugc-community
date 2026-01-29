@@ -97,7 +97,7 @@ export function WaitlistForm() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center w-full py-3 px-4 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center w-full py-3 px-4 bg-gradient-to-r from-coral-dark to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity"
           >
             Back to Homepage
           </Link>
@@ -270,7 +270,7 @@ export function WaitlistForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full py-3 px-4 bg-gradient-to-r from-coral-dark to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             whileHover={{ scale: isLoading ? 1 : 1.01 }}
             whileTap={{ scale: isLoading ? 1 : 0.99 }}
           >
