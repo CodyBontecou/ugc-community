@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { CreatorGrid } from "@/components/directory/creator-grid";
 import { DirectoryFilters } from "@/components/directory/directory-filters";
 import { Pagination } from "@/components/directory/pagination";
+import { Navbar } from "@/components/landing/navbar";
+import { BackgroundBlobs } from "@/components/landing/background-blobs";
 import type { DirectoryCreator } from "@/lib/directory/queries";
 import type { Niche, RateRange, SortOption } from "@/lib/directory/constants";
 
@@ -127,45 +128,42 @@ function DirectoryContent() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Header */}
-      <header className="bg-white border-b border-warm-gray-200">
-        <div className="container py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <Link
-              href="/"
-              className="w-10 h-10 rounded-full bg-warm-gray-100 hover:bg-warm-gray-200 flex items-center justify-center text-warm-gray-600 transition-colors"
-            >
-              <ArrowLeft size={18} />
-            </Link>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900">
-                Creator Directory
-              </h1>
-              <p className="mt-1 text-warm-gray-500">
-                Discover talented UGC creators for your next campaign
-              </p>
-            </div>
+    <div className="min-h-screen bg-cream relative">
+      <BackgroundBlobs />
+      <Navbar />
+
+      {/* Header Section */}
+      <header className="pt-32 pb-12 relative z-10">
+        <div className="container">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-4">
+              Creator Directory
+            </h1>
+            <p className="text-lg text-warm-gray-600 max-w-2xl mx-auto">
+              Discover talented UGC creators for your next campaign
+            </p>
           </div>
 
           {/* Filters */}
-          <DirectoryFilters
-            selectedNiches={selectedNiches}
-            onNichesChange={handleNichesChange}
-            location={location}
-            onLocationChange={setLocation}
-            rateRange={rateRange}
-            onRateRangeChange={handleRateRangeChange}
-            availableOnly={availableOnly}
-            onAvailableOnlyChange={handleAvailableChange}
-            sort={sort}
-            onSortChange={handleSortChange}
-          />
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-warm-gray-100">
+            <DirectoryFilters
+              selectedNiches={selectedNiches}
+              onNichesChange={handleNichesChange}
+              location={location}
+              onLocationChange={setLocation}
+              rateRange={rateRange}
+              onRateRangeChange={handleRateRangeChange}
+              availableOnly={availableOnly}
+              onAvailableOnlyChange={handleAvailableChange}
+              sort={sort}
+              onSortChange={handleSortChange}
+            />
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container py-8">
+      <main className="container py-8 relative z-10">
         {/* Results count */}
         {!loading && (
           <p className="text-sm text-warm-gray-500 mb-6">
@@ -188,8 +186,8 @@ function DirectoryContent() {
         )}
       </main>
 
-      {/* Simple Footer */}
-      <footer className="border-t border-warm-gray-200 py-8">
+      {/* Footer */}
+      <footer className="border-t border-warm-gray-200 py-8 relative z-10">
         <div className="container text-center">
           <Link
             href="/"
