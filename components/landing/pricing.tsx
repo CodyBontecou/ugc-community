@@ -121,10 +121,9 @@ export function Pricing() {
                 href="/sign-up"
                 className={`block w-full py-4 px-8 rounded-full font-medium text-base text-center transition-all ${
                   plan.featured
-                    ? "bg-warm-gray-900 hover:bg-warm-gray-800"
+                    ? "bg-gradient-to-r from-coral to-rose text-white hover:opacity-90"
                     : "bg-white text-warm-gray-800 border border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
                 }`}
-                style={plan.featured ? { color: '#FFFFFF' } : undefined}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

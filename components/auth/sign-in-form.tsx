@@ -160,17 +160,17 @@ export function SignInForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-warm-gray-900 font-medium rounded-[--radius-md] hover:bg-warm-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-[#FFFFFF] [&>*]:text-[#FFFFFF]"
+            className="w-full py-3 px-4 bg-gradient-to-r from-coral to-rose font-medium rounded-[--radius-md] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
             whileHover={{ scale: isLoading ? 1 : 1.01 }}
             whileTap={{ scale: isLoading ? 1 : 0.99 }}
           >
             {isLoading ? (
               <>
-                <Loader2 size={18} className="animate-spin text-white" />
-                <span className="text-white">Signing in...</span>
+                <Loader2 size={18} className="animate-spin" />
+                Signing in...
               </>
             ) : (
-              <span className="text-white">Sign in</span>
+              "Sign in"
             )}
           </motion.button>
         </form>

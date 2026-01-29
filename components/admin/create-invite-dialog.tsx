@@ -174,7 +174,7 @@ export function CreateInviteDialog({
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2 text-sm font-medium text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-[--radius-md] transition-colors disabled:opacity-50"
+                className="flex-1 py-2 text-sm font-medium text-white bg-gradient-to-r from-coral to-rose hover:opacity-90 rounded-[--radius-md] transition-opacity disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Create Invite"}
               </button>

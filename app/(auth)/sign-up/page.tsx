@@ -75,7 +75,7 @@ function InvalidInvitePage({ reason }: { reason: "invalid" | "expired" | "used" 
         <div className="space-y-3">
           <Link
             href="/"
-            className="block w-full py-3 px-4 bg-warm-gray-900 text-white font-medium rounded-[--radius-md] hover:bg-warm-gray-800 transition-colors"
+            className="block w-full py-3 px-4 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity"
           >
             Return to Homepage
           </Link>

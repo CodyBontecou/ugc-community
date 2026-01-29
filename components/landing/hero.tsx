@@ -99,8 +99,7 @@ export function Hero() {
         >
           <motion.a
             href="/sign-up"
-            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
-            style={{ color: '#FFFFFF' }}
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >

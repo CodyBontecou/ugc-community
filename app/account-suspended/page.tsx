@@ -46,7 +46,7 @@ export default async function AccountSuspendedPage({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
             href="mailto:support@ugc.community"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-full transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-coral to-rose hover:opacity-90 rounded-full transition-opacity"
           >
             <Mail size={16} />
             Contact Support

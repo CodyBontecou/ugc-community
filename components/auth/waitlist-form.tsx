@@ -9,7 +9,6 @@ import {
   Youtube,
   Facebook,
   Twitter,
-  Clock,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
@@ -98,7 +97,7 @@ export function WaitlistForm() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center w-full py-3 px-4 bg-warm-gray-900 text-white font-medium rounded-[--radius-md] hover:bg-warm-gray-800 transition-colors"
+            className="inline-flex items-center justify-center w-full py-3 px-4 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity"
           >
             Back to Homepage
           </Link>
@@ -123,18 +122,6 @@ export function WaitlistForm() {
           <p className="text-warm-gray-500 text-sm">
             We're rolling out slowly and are currently invite-only
           </p>
-        </div>
-
-        {/* Invite-only notice */}
-        <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-[--radius-md] mb-6">
-          <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="font-medium text-amber-800">Invite Only</p>
-            <p className="text-amber-700 mt-1">
-              Sign up below for a chance to receive an invite. We'll notify you
-              when it's your turn.
-            </p>
-          </div>
         </div>
 
         {error && (
@@ -283,7 +270,7 @@ export function WaitlistForm() {
           <motion.button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-warm-gray-900 text-white font-medium rounded-[--radius-md] hover:bg-warm-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full py-3 px-4 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             whileHover={{ scale: isLoading ? 1 : 1.01 }}
             whileTap={{ scale: isLoading ? 1 : 0.99 }}
           >

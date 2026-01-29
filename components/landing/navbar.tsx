@@ -34,8 +34,7 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           <motion.a
             href="/sign-up"
-            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
-            style={{ color: '#FFFFFF' }}
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
