@@ -5,6 +5,44 @@ import { db } from "@/lib/db";
 import { waitlist, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+// DELETE /api/admin/waitlist/[entryId] - Delete a waitlist entry
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ entryId: string }> }
+) {
+  try {
+    const session = await requireAuth();
+
+    if (!isAdmin(session.user.email)) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { entryId } = await params;
+
+    // Check if entry exists
+    const [entry] = await db
+      .select()
+      .from(waitlist)
+      .where(eq(waitlist.id, entryId))
+      .limit(1);
+
+    if (!entry) {
+      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    }
+
+    // Delete the entry
+    await db.delete(waitlist).where(eq(waitlist.id, entryId));
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("Error deleting waitlist entry:", error);
+    return NextResponse.json({ error: "Failed to delete waitlist entry" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ entryId: string }> }

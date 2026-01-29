@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { invites } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
-// DELETE /api/admin/invites/[inviteId] - Revoke an invite
+// DELETE /api/admin/invites/[inviteId] - Revoke or permanently delete an invite
+// Use ?permanent=true to permanently delete instead of revoking
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ inviteId: string }> }
@@ -18,6 +19,8 @@ export async function DELETE(
     }
 
     const { inviteId } = await params;
+    const { searchParams } = new URL(request.url);
+    const permanent = searchParams.get("permanent") === "true";
 
     // Check if invite exists
     const existingInvite = await db
@@ -30,6 +33,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Invite not found" }, { status: 404 });
     }
 
+    // Permanent deletion
+    if (permanent) {
+      await db.delete(invites).where(eq(invites.id, inviteId));
+      return NextResponse.json({ success: true, deleted: true });
+    }
+
+    // Soft delete (revoke) - existing behavior
     if (existingInvite[0].usedAt) {
       return NextResponse.json(
         { error: "Cannot revoke an invite that has already been used" },
@@ -62,7 +72,7 @@ export async function DELETE(
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("Error revoking invite:", error);
-    return NextResponse.json({ error: "Failed to revoke invite" }, { status: 500 });
+    console.error("Error revoking/deleting invite:", error);
+    return NextResponse.json({ error: "Failed to revoke/delete invite" }, { status: 500 });
   }
 }

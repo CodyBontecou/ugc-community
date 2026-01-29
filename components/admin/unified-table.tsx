@@ -270,6 +270,46 @@ export function UnifiedTable() {
     }
   }
 
+  async function deleteWaitlistEntry(entryId: string) {
+    if (!confirm("Are you sure you want to delete this waitlist entry? This cannot be undone.")) return;
+
+    setUpdating(entryId);
+    try {
+      const res = await fetch(`/api/admin/waitlist/${entryId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete waitlist entry");
+      }
+      setRecords((prev) => prev.filter((r) => !(r.id === entryId && r.type === "waitlist")));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete waitlist entry");
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function permanentlyDeleteInvite(inviteId: string) {
+    if (!confirm("Are you sure you want to permanently delete this invite? This cannot be undone.")) return;
+
+    setUpdating(inviteId);
+    try {
+      const res = await fetch(`/api/admin/invites/${inviteId}?permanent=true`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete invite");
+      }
+      setRecords((prev) => prev.filter((r) => !(r.id === inviteId && r.type === "invite")));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete invite");
+    } finally {
+      setUpdating(null);
+    }
+  }
+
   function copyLink(record: UnifiedRecord) {
     if (record.inviteUrl) {
       navigator.clipboard.writeText(record.inviteUrl);
@@ -510,7 +550,7 @@ export function UnifiedTable() {
       const hasEmail = !!record.email;
       return (
         <div className="flex items-center justify-end gap-1">
-          {isActive && (
+          {isActive ? (
             <>
               {hasEmail && (
                 <button
@@ -546,27 +586,56 @@ export function UnifiedTable() {
                 )}
               </button>
             </>
+          ) : (
+            <button
+              onClick={() => permanentlyDeleteInvite(record.id)}
+              disabled={isUpdating}
+              className="p-2 text-warm-gray-400 hover:text-red-600 rounded transition-colors disabled:opacity-50"
+              title="Delete permanently"
+            >
+              {isUpdating ? (
+                <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-red-600 rounded-full animate-spin" />
+              ) : (
+                <Trash2 size={16} />
+              )}
+            </button>
           )}
         </div>
       );
     }
 
-    if (record.type === "waitlist" && record.status === "pending") {
+    if (record.type === "waitlist") {
       return (
-        <button
-          onClick={() => sendWaitlistInvite(record)}
-          disabled={isUpdating}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors disabled:opacity-50"
-          style={{ backgroundColor: "#1A1614", color: "#FFFFFF" }}
-          title="Send invite"
-        >
-          {isUpdating ? (
-            <span className="w-4 h-4 block border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <Send size={14} />
+        <div className="flex items-center justify-end gap-2">
+          {record.status === "pending" && (
+            <button
+              onClick={() => sendWaitlistInvite(record)}
+              disabled={isUpdating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors disabled:opacity-50"
+              style={{ backgroundColor: "#1A1614", color: "#FFFFFF" }}
+              title="Send invite"
+            >
+              {isUpdating ? (
+                <span className="w-4 h-4 block border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Send size={14} />
+              )}
+              Invite
+            </button>
           )}
-          Invite
-        </button>
+          <button
+            onClick={() => deleteWaitlistEntry(record.id)}
+            disabled={isUpdating}
+            className="p-2 text-warm-gray-400 hover:text-red-600 rounded transition-colors disabled:opacity-50"
+            title="Delete"
+          >
+            {isUpdating ? (
+              <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-red-600 rounded-full animate-spin" />
+            ) : (
+              <Trash2 size={16} />
+            )}
+          </button>
+        </div>
       );
     }
 
