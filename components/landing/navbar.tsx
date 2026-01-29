@@ -15,9 +15,11 @@ export function Navbar() {
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="container flex items-center justify-between">
-        <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900">
-          ugc.community
-        </Link>
+        <div className="flex-1">
+          <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900">
+            ugc.community
+          </Link>
+        </div>
 
         <div className="hidden md:flex gap-12">
           <Link
@@ -40,7 +42,7 @@ export function Navbar() {
           </a>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex-1 flex items-center justify-end gap-6">
           {isPending ? (
             <div className="w-8 h-8 rounded-full bg-warm-gray-200 animate-pulse" />
           ) : session?.user ? (
