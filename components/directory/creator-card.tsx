@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { MapPin, User } from "lucide-react";
 import { NicheBadges } from "./niche-badges";
@@ -33,6 +36,7 @@ export function CreatorCard({
   isFeatured,
   isVerified,
 }: CreatorCardProps) {
+  const [imageError, setImageError] = useState(false);
   const displayNameFinal = displayName || name;
   const location = [locationCity, locationCountry].filter(Boolean).join(", ");
 
@@ -43,11 +47,12 @@ export function CreatorCard({
     >
       {/* Header with image */}
       <div className="relative aspect-[4/3] bg-warm-gray-100">
-        {image ? (
+        {image && !imageError ? (
           <img
             src={image}
             alt={displayNameFinal}
             className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-lavender-soft to-coral/20">
