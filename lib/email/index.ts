@@ -157,8 +157,6 @@ export async function sendWaitlistConfirmation(email: string) {
 }
 
 export async function sendInvitationEmail(email: string, inviteUrl: string) {
-  const calendlyUrl = "https://calendly.com/cody-isolated/30min";
-
   const { error } = await getResend().emails.send({
     from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
@@ -219,7 +217,7 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
           <tr>
             <td style="padding: 24px 40px 0 40px;">
               <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
-                Your portfolio is ready. Claim your spot at <strong style="color: #1A1614;">yourname.ugc.community</strong> and start sharing your work with brands.
+                Your portfolio is ready. Claim your spot at <strong style="color: #1A1614;">yourname.ugc.community</strong> and schedule a quick call so we can set everything up together.
               </p>
             </td>
           </tr>
@@ -279,27 +277,6 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
                   <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
                     <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF6B95, #A855F7); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
                     <strong style="color: #1A1614;">Free forever</strong> with 30 posts/month
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Calendly section -->
-          <tr>
-            <td style="padding: 36px 40px 0 40px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FAF7F5; border-radius: 16px; border: 1px solid #E8E2DD;">
-                <tr>
-                  <td style="padding: 24px;">
-                    <p style="margin: 0 0 8px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 400; color: #1A1614;">
-                      Need help getting started?
-                    </p>
-                    <p style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #625850;">
-                      Book a 30-minute call and I'll walk you through everything.
-                    </p>
-                    <a href="${calendlyUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #453D37; text-decoration: none; border: 1px solid #D4CBC4; border-radius: 50px; background-color: #FFFFFF;">
-                      Schedule a call
-                    </a>
                   </td>
                 </tr>
               </table>

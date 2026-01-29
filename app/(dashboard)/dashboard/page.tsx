@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { SubdomainSettings } from "@/components/dashboard/subdomain-settings";
 import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
+import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -40,6 +41,9 @@ async function DashboardContent() {
           Welcome to your dashboard
         </p>
       </div>
+
+      {/* Schedule Call CTA */}
+      <ScheduleCallCard />
 
       {/* Account Section */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
