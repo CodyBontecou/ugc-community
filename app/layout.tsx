@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -14,6 +14,13 @@ const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#FFF5F3",
+};
 
 export const metadata: Metadata = {
   title: "ugc.community - For UGC Creators",
