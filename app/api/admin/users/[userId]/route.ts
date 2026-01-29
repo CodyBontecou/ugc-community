@@ -49,6 +49,7 @@ export async function GET(
         status: users.status,
         statusChangedAt: users.statusChangedAt,
         statusChangedBy: users.statusChangedBy,
+        profileViewCount: users.profileViewCount,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })

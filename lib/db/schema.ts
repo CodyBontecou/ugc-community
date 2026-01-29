@@ -41,6 +41,8 @@ export const users = pgTable(
     status: text("status").notNull().default("active"), // "active" | "suspended" | "banned"
     statusChangedAt: timestamp("status_changed_at"),
     statusChangedBy: text("status_changed_by"),
+    // Profile analytics
+    profileViewCount: integer("profile_view_count").notNull().default(0),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)

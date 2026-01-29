@@ -20,6 +20,7 @@ import {
   Users,
   XCircle,
   Send,
+  Eye,
 } from "lucide-react";
 
 interface UserDetails {
@@ -40,6 +41,7 @@ interface UserDetails {
   status: string;
   statusChangedAt: string | null;
   statusChangedBy: string | null;
+  profileViewCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -442,6 +444,55 @@ export default function UserDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Profile Stats & Site Preview */}
+      {user.subdomain && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Stats */}
+          <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
+              Profile Stats
+            </h3>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center">
+                <Eye size={24} className="text-lavender" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-warm-gray-900">
+                  {user.profileViewCount.toLocaleString()}
+                </p>
+                <p className="text-sm text-warm-gray-500">Profile Views</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Site Preview */}
+          <div className="lg:col-span-2 bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-warm-gray-900">
+                Site Preview
+              </h3>
+              <a
+                href={`https://${user.subdomain}.ugc.community`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-coral hover:text-coral/80 flex items-center gap-1"
+              >
+                Open full site
+                <ExternalLink size={14} />
+              </a>
+            </div>
+            <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden border border-warm-gray-200 bg-warm-gray-50">
+              <iframe
+                src={`https://${user.subdomain}.ugc.community`}
+                title={`${user.displayName || user.name}'s site preview`}
+                className="absolute inset-0 w-full h-full"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Timeline */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
