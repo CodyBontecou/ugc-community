@@ -38,9 +38,10 @@ const features = [
   },
   {
     icon: <BarChart3 size={24} />,
-    title: "Analytics Dashboard*",
+    title: "Analytics Dashboard",
     description:
-      "See who's viewing your profile, where they're from, and which content performs best. *Coming soon",
+      "See who's viewing your profile, where they're from, and which content performs best.",
+    comingSoon: true,
   },
   {
     icon: <Heart size={24} />,
@@ -55,11 +56,13 @@ function FeatureCard({
   title,
   description,
   index,
+  comingSoon,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   index: number;
+  comingSoon?: boolean;
 }) {
   return (
     <motion.div
@@ -79,6 +82,9 @@ function FeatureCard({
       <p className="text-[0.95rem] text-warm-gray-500 leading-relaxed">
         {description}
       </p>
+      {comingSoon && (
+        <p className="text-xs text-warm-gray-400 mt-2 italic">*Coming soon</p>
+      )}
     </motion.div>
   );
 }

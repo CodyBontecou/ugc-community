@@ -18,7 +18,7 @@ export function FinalCTA() {
             Ready to level up your creator game?
           </h2>
           <p className="text-lg text-white/90 mb-12">
-            Join thousands of UGC creators who've already made the switch.
+            Join UGC creators who've already made the switch.
           </p>
           <motion.a
             href="/sign-up"
