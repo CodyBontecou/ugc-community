@@ -21,6 +21,11 @@ import {
   XCircle,
   Send,
   Eye,
+  Server,
+  Power,
+  PowerOff,
+  Loader2,
+  HelpCircle,
 } from "lucide-react";
 
 interface UserDetails {
@@ -42,6 +47,8 @@ interface UserDetails {
   statusChangedAt: string | null;
   statusChangedBy: string | null;
   profileViewCount: number;
+  vercelProjectId: string | null;
+  siteEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -184,6 +191,16 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Vercel Project ID editing state
+  const [vercelProjectId, setVercelProjectId] = useState("");
+  const [savingVercelProjectId, setSavingVercelProjectId] = useState(false);
+  const [vercelProjectIdError, setVercelProjectIdError] = useState<string | null>(null);
+  const [vercelProjectIdSuccess, setVercelProjectIdSuccess] = useState(false);
+
+  // Site toggle state
+  const [togglingSite, setTogglingSite] = useState(false);
+  const [siteToggleError, setSiteToggleError] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -201,6 +218,7 @@ export default function UserDetailPage() {
         setAllInvites(data.allInvites || []);
         setWaitlistEntry(data.waitlistEntry);
         setStatusChangedByUser(data.statusChangedByUser);
+        setVercelProjectId(data.user.vercelProjectId || "");
       } catch {
         setError("Failed to load user details");
       } finally {
@@ -291,6 +309,67 @@ export default function UserDetailPage() {
   }, [user, allInvites, waitlistEntry, statusChangedByUser]);
 
   const usedInvite = allInvites.find((i) => i.isUsedByThisUser);
+
+  // Save Vercel Project ID
+  const handleSaveVercelProjectId = async () => {
+    setSavingVercelProjectId(true);
+    setVercelProjectIdError(null);
+    setVercelProjectIdSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vercelProjectId: vercelProjectId || null }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev ? { ...prev, vercelProjectId: data.user.vercelProjectId } : prev
+      );
+      setVercelProjectIdSuccess(true);
+      setTimeout(() => setVercelProjectIdSuccess(false), 3000);
+    } catch (err) {
+      setVercelProjectIdError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingVercelProjectId(false);
+    }
+  };
+
+  // Toggle site enabled/disabled
+  const handleToggleSite = async () => {
+    if (!user) return;
+
+    setTogglingSite(true);
+    setSiteToggleError(null);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/site-toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !user.siteEnabled }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to toggle site");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev ? { ...prev, siteEnabled: data.siteEnabled } : prev
+      );
+    } catch (err) {
+      setSiteToggleError(err instanceof Error ? err.message : "Failed to toggle site");
+    } finally {
+      setTogglingSite(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -493,6 +572,116 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Vercel Integration */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Server size={20} className="text-warm-gray-600" />
+          <h3 className="text-lg font-semibold text-warm-gray-900">
+            Vercel Integration
+          </h3>
+        </div>
+
+        <div className="space-y-6">
+          {/* Vercel Project ID */}
+          <div>
+            <label
+              htmlFor="vercelProjectId"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              Vercel Project ID
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="vercelProjectId"
+                type="text"
+                value={vercelProjectId}
+                onChange={(e) => setVercelProjectId(e.target.value)}
+                placeholder="prj_xxxxxxxxxxxxxxxxxxxx"
+                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+              />
+              <button
+                onClick={handleSaveVercelProjectId}
+                disabled={savingVercelProjectId || vercelProjectId === (user.vercelProjectId || "")}
+                className="px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {savingVercelProjectId ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
+              </button>
+            </div>
+            <div className="flex items-start gap-1.5 mt-2">
+              <HelpCircle size={14} className="text-warm-gray-400 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-warm-gray-500">
+                Find this in Vercel Dashboard → Project → Settings → General
+              </p>
+            </div>
+            {vercelProjectIdError && (
+              <p className="text-sm text-red-600 mt-2">{vercelProjectIdError}</p>
+            )}
+            {vercelProjectIdSuccess && (
+              <p className="text-sm text-green-600 mt-2">Saved successfully!</p>
+            )}
+          </div>
+
+          {/* Site Toggle */}
+          {user.subdomain && (
+            <div className="pt-4 border-t border-warm-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-warm-gray-900">
+                    Subdomain Hosting
+                  </p>
+                  <p className="text-sm text-warm-gray-500 mt-0.5">
+                    {user.siteEnabled
+                      ? `Site is live at ${user.subdomain}.ugc.community`
+                      : "Enable to publish site to subdomain"}
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleSite}
+                  disabled={togglingSite || !user.vercelProjectId}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    user.siteEnabled
+                      ? "bg-red-50 text-red-700 hover:bg-red-100"
+                      : "bg-green-50 text-green-700 hover:bg-green-100"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {togglingSite ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {user.siteEnabled ? "Disabling..." : "Enabling..."}
+                    </>
+                  ) : user.siteEnabled ? (
+                    <>
+                      <PowerOff size={16} />
+                      Disable Site
+                    </>
+                  ) : (
+                    <>
+                      <Power size={16} />
+                      Enable Site
+                    </>
+                  )}
+                </button>
+              </div>
+              {!user.vercelProjectId && (
+                <p className="text-sm text-amber-600 mt-2">
+                  Set a Vercel Project ID above to enable site hosting
+                </p>
+              )}
+              {siteToggleError && (
+                <p className="text-sm text-red-600 mt-2">{siteToggleError}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Timeline */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">

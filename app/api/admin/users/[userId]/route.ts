@@ -15,6 +15,10 @@ const updateUserSubdomainSchema = z.object({
   subdomain: z.string().nullable(),
 });
 
+const updateUserVercelProjectIdSchema = z.object({
+  vercelProjectId: z.string().nullable(),
+});
+
 // GET /api/admin/users/[userId] - Get user details with invite history
 export async function GET(
   request: NextRequest,
@@ -50,6 +54,8 @@ export async function GET(
         statusChangedAt: users.statusChangedAt,
         statusChangedBy: users.statusChangedBy,
         profileViewCount: users.profileViewCount,
+        vercelProjectId: users.vercelProjectId,
+        siteEnabled: users.siteEnabled,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -258,6 +264,27 @@ export async function PATCH(
           name: users.name,
           email: users.email,
           subdomain: users.subdomain,
+        });
+
+      return NextResponse.json({ user: updated });
+    }
+
+    // Handle vercelProjectId update
+    if ("vercelProjectId" in body) {
+      const { vercelProjectId } = updateUserVercelProjectIdSchema.parse(body);
+
+      const [updated] = await db
+        .update(users)
+        .set({
+          vercelProjectId: vercelProjectId === "" ? null : vercelProjectId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          vercelProjectId: users.vercelProjectId,
         });
 
       return NextResponse.json({ user: updated });
