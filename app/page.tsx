@@ -8,6 +8,7 @@ import {
   SocialProof,
   Features,
   HowItWorks,
+  Examples,
   Testimonials,
   Pricing,
   FinalCTA,
@@ -57,6 +58,7 @@ export default async function HomePage() {
       <SocialProof creatorCount={creatorCount} creators={socialProofCreators} />
       <Features />
       <HowItWorks />
+      <Examples />
       <Testimonials />
       <Pricing />
       <FinalCTA />

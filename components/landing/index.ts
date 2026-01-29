@@ -4,6 +4,7 @@ export { Hero } from "./hero";
 export { SocialProof } from "./social-proof";
 export { Features } from "./features";
 export { HowItWorks } from "./how-it-works";
+export { Examples } from "./examples";
 export { Testimonials } from "./testimonials";
 export { Pricing } from "./pricing";
 export { FinalCTA } from "./final-cta";
