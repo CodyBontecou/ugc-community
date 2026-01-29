@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   uuid,
+  varchar,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -181,6 +182,29 @@ export const contactSubmissions = pgTable(
 );
 
 // =====================================================
+// Portfolio View Tracking (for deduplication)
+// =====================================================
+
+export const portfolioViewDedupe = pgTable(
+  "portfolio_view_dedupe",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    ipHash: varchar("ip_hash", { length: 16 }).notNull(),
+    viewedAt: timestamp("viewed_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("portfolio_views_user_ip_time_idx").on(
+      table.userId,
+      table.ipHash,
+      table.viewedAt
+    ),
+  ]
+);
+
+// =====================================================
 // Media Tables
 // =====================================================
 
@@ -223,6 +247,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     relationName: "usedInvite",
   }),
   contactSubmissions: many(contactSubmissions),
+  portfolioViewDedupe: many(portfolioViewDedupe),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -266,6 +291,13 @@ export const contactSubmissionsRelations = relations(contactSubmissions, ({ one 
   }),
 }));
 
+export const portfolioViewDedupeRelations = relations(portfolioViewDedupe, ({ one }) => ({
+  user: one(users, {
+    fields: [portfolioViewDedupe.userId],
+    references: [users.id],
+  }),
+}));
+
 // =====================================================
 // Types
 // =====================================================
@@ -289,3 +321,5 @@ export type Waitlist = typeof waitlist.$inferSelect;
 export type NewWaitlist = typeof waitlist.$inferInsert;
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
+export type PortfolioView = typeof portfolioViewDedupe.$inferSelect;
+export type NewPortfolioView = typeof portfolioViewDedupe.$inferInsert;

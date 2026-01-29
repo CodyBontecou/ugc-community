@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, portfolioViewDedupe } from "@/lib/db/schema";
+import { eq, sql, and, gte } from "drizzle-orm";
 import { createHash } from "crypto";
+
+const DEDUP_WINDOW_HOURS = 24;
 
 function getCorsHeaders(origin: string | null): Record<string, string> {
   // Allow requests from any *.ugc.community subdomain
@@ -60,16 +62,56 @@ export async function POST(
     const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
     const hashedIp = hashIp(ip);
 
-    // Increment the portfolio view count atomically
-    const result = await db
-      .update(users)
-      .set({
-        portfolioViewCount: sql`${users.portfolioViewCount} + 1`,
-      })
-      .where(eq(users.id, id))
-      .returning({ id: users.id });
+    // Calculate dedup window cutoff
+    const windowCutoff = new Date(
+      Date.now() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000
+    );
 
-    if (result.length === 0) {
+    // Check for existing view within dedup window
+    const existingView = await db
+      .select({ id: portfolioViewDedupe.id })
+      .from(portfolioViewDedupe)
+      .where(
+        and(
+          eq(portfolioViewDedupe.userId, id),
+          eq(portfolioViewDedupe.ipHash, hashedIp),
+          gte(portfolioViewDedupe.viewedAt, windowCutoff)
+        )
+      )
+      .limit(1);
+
+    if (existingView.length > 0) {
+      // Already counted this view recently
+      console.log(
+        `Portfolio view deduplicated: user=${id}, ip_hash=${hashedIp}`
+      );
+      return NextResponse.json({ success: true, deduplicated: true }, { headers: corsHeaders });
+    }
+
+    // Increment count and record the view in a transaction
+    const result = await db.transaction(async (tx) => {
+      const updateResult = await tx
+        .update(users)
+        .set({
+          portfolioViewCount: sql`${users.portfolioViewCount} + 1`,
+        })
+        .where(eq(users.id, id))
+        .returning({ id: users.id });
+
+      if (updateResult.length === 0) {
+        return null;
+      }
+
+      // Record this view for deduplication
+      await tx.insert(portfolioViewDedupe).values({
+        userId: id,
+        ipHash: hashedIp,
+      });
+
+      return updateResult;
+    });
+
+    if (!result) {
       // User not found - fail silently for fire-and-forget pattern
       return NextResponse.json(
         { success: false },

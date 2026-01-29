@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { users, portfolioViewDedupe } from "@/lib/db/schema";
+import { eq, sql, and, gte } from "drizzle-orm";
 import { createHash } from "crypto";
+
+const DEDUP_WINDOW_HOURS = 24;
 
 // 1x1 transparent GIF for tracking pixel
 const TRACKING_PIXEL = Buffer.from(
@@ -67,7 +69,7 @@ function extractSubdomain(request: NextRequest): string | null {
   return null;
 }
 
-async function trackView(request: NextRequest): Promise<{ success: boolean; subdomain?: string }> {
+async function trackView(request: NextRequest): Promise<{ success: boolean; subdomain?: string; deduplicated?: boolean }> {
   const subdomain = extractSubdomain(request);
 
   if (!subdomain) {
@@ -81,19 +83,61 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
   const hashedIp = hashIp(ip);
 
   try {
-    // Increment the portfolio view count atomically by subdomain
-    const result = await db
-      .update(users)
-      .set({
-        portfolioViewCount: sql`${users.portfolioViewCount} + 1`,
-      })
+    // First, look up the user ID from subdomain
+    const userResult = await db
+      .select({ id: users.id })
+      .from(users)
       .where(eq(users.subdomain, subdomain))
-      .returning({ id: users.id });
+      .limit(1);
 
-    if (result.length === 0) {
+    if (userResult.length === 0) {
       console.log(`Portfolio view tracking: subdomain not found: ${subdomain}`);
       return { success: false, subdomain };
     }
+
+    const userId = userResult[0].id;
+
+    // Calculate dedup window cutoff
+    const windowCutoff = new Date(
+      Date.now() - DEDUP_WINDOW_HOURS * 60 * 60 * 1000
+    );
+
+    // Check for existing view within dedup window
+    const existingView = await db
+      .select({ id: portfolioViewDedupe.id })
+      .from(portfolioViewDedupe)
+      .where(
+        and(
+          eq(portfolioViewDedupe.userId, userId),
+          eq(portfolioViewDedupe.ipHash, hashedIp),
+          gte(portfolioViewDedupe.viewedAt, windowCutoff)
+        )
+      )
+      .limit(1);
+
+    if (existingView.length > 0) {
+      // Already counted this view recently
+      console.log(
+        `Portfolio view deduplicated: subdomain=${subdomain}, ip_hash=${hashedIp}`
+      );
+      return { success: true, subdomain, deduplicated: true };
+    }
+
+    // Increment count and record the view in a transaction
+    await db.transaction(async (tx) => {
+      await tx
+        .update(users)
+        .set({
+          portfolioViewCount: sql`${users.portfolioViewCount} + 1`,
+        })
+        .where(eq(users.id, userId));
+
+      // Record this view for deduplication
+      await tx.insert(portfolioViewDedupe).values({
+        userId,
+        ipHash: hashedIp,
+      });
+    });
 
     console.log(`Portfolio view tracked: subdomain=${subdomain}, ip_hash=${hashedIp}`);
     return { success: true, subdomain };
