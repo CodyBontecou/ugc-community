@@ -162,7 +162,7 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
   const { error } = await getResend().emails.send({
     from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
-    subject: "You're in! Welcome to ugc.community",
+    subject: "You're in — let's build your portfolio",
     html: `
 <!DOCTYPE html>
 <html>
@@ -181,39 +181,25 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
   <![endif]-->
 </head>
 <body style="margin: 0; padding: 0; background-color: #FFFBF9; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
-  <!-- Outer wrapper for background -->
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBF9;">
     <tr>
       <td align="center" style="padding: 48px 20px;">
 
         <!-- Main content card -->
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 28px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.12);">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.08);">
 
-          <!-- Gradient header bar - thicker for celebration -->
+          <!-- Gradient header bar -->
           <tr>
-            <td style="height: 8px; background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 50%, #A855F7 100%); border-radius: 28px 28px 0 0;"></td>
+            <td style="height: 4px; background: linear-gradient(90deg, #FF9A8B 0%, #FF6B95 50%, #A855F7 100%); border-radius: 24px 24px 0 0;"></td>
           </tr>
 
-          <!-- Logo section -->
+          <!-- Logo -->
           <tr>
-            <td align="center" style="padding: 40px 40px 0 40px;">
+            <td align="center" style="padding: 48px 40px 0 40px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
+                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
                     ugc.community
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Celebration emoji row -->
-          <tr>
-            <td align="center" style="padding: 28px 40px 0 40px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td style="font-size: 40px; letter-spacing: 8px;">
-                    &#127881;&#10024;&#127881;
                   </td>
                 </tr>
               </table>
@@ -222,53 +208,30 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
 
           <!-- Main heading -->
           <tr>
-            <td align="center" style="padding: 20px 40px 0 40px;">
-              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 400; line-height: 1.15; color: #1A1614;">
-                You're in!
+            <td align="center" style="padding: 40px 40px 0 40px;">
+              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 400; line-height: 1.2; color: #1A1614;">
+                You're in.
               </h1>
-            </td>
-          </tr>
-
-          <!-- Gradient subheading -->
-          <tr>
-            <td align="center" style="padding: 8px 40px 0 40px;">
-              <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; background: linear-gradient(135deg, #FF9A8B, #FF6B95, #A855F7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                Welcome to ugc.community
-              </p>
-            </td>
-          </tr>
-
-          <!-- Decorative sparkle accent -->
-          <tr>
-            <td align="center" style="padding: 24px 40px 0 40px;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td style="width: 80px; height: 3px; background: linear-gradient(90deg, transparent, #FF9A8B, #FF6B95, #A855F7, transparent); border-radius: 2px;"></td>
-                </tr>
-              </table>
             </td>
           </tr>
 
           <!-- Body copy -->
           <tr>
-            <td style="padding: 28px 40px 0 40px;">
-              <p style="margin: 0 0 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #453D37;">
-                The wait is over. Your spot is ready, and we couldn't be more excited to have you join our community of incredible UGC creators.
-              </p>
-              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #453D37;">
-                Click below to claim your personal creator portfolio and start building your brand today.
+            <td style="padding: 24px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Your portfolio is ready. Claim your spot at <strong style="color: #1A1614;">yourname.ugc.community</strong> and start sharing your work with brands.
               </p>
             </td>
           </tr>
 
           <!-- CTA Button -->
           <tr>
-            <td align="center" style="padding: 32px 40px 0 40px;">
+            <td align="center" style="padding: 36px 40px 0 40px;">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td style="border-radius: 50px; background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%); box-shadow: 0 4px 20px rgba(255, 107, 149, 0.35);">
-                    <a href="${inviteUrl}" target="_blank" style="display: inline-block; padding: 18px 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #FFFFFF; text-decoration: none; letter-spacing: 0.02em;">
-                      Claim Your Spot &#8594;
+                  <td style="border-radius: 50px; background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%); box-shadow: 0 4px 16px rgba(255, 107, 149, 0.3);">
+                    <a href="${inviteUrl}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;">
+                      Get Started
                     </a>
                   </td>
                 </tr>
@@ -276,37 +239,46 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
             </td>
           </tr>
 
-          <!-- What's included box -->
+          <!-- Divider -->
           <tr>
-            <td style="padding: 36px 40px 0 40px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #FFF5F3 0%, #FFE8E3 100%); border-radius: 20px; border: 1px solid rgba(255, 107, 149, 0.15);">
+            <td style="padding: 40px 40px 0 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
-                  <td style="padding: 28px;">
-                    <p style="margin: 0 0 16px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; font-weight: 400; color: #1A1614;">
-                      What you're getting:
-                    </p>
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                      <tr>
-                        <td style="padding: 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
-                          <span style="color: #FF6B95; margin-right: 10px;">&#10003;</span> Your own portfolio at <strong>yourname.ugc.community</strong>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
-                          <span style="color: #FF6B95; margin-right: 10px;">&#10003;</span> Unlimited uploads & premium templates
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
-                          <span style="color: #FF6B95; margin-right: 10px;">&#10003;</span> Analytics dashboard & custom branding
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
-                          <span style="color: #FF6B95; margin-right: 10px;">&#10003;</span> <strong style="color: #FF6B95;">Free forever</strong> with 30 posts/month
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="height: 1px; background-color: #E8E2DD;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- What's included -->
+          <tr>
+            <td style="padding: 32px 40px 0 40px;">
+              <p style="margin: 0 0 20px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 400; color: #1A1614;">
+                What you get
+              </p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
+                    <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF9A8B, #FF6B95); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
+                    Your own portfolio at yourname.ugc.community
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
+                    <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF9A8B, #FF6B95); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
+                    Unlimited video uploads
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
+                    <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF9A8B, #FF6B95); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
+                    Analytics and custom branding
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
+                    <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF6B95, #A855F7); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
+                    <strong style="color: #1A1614;">Free forever</strong> with 30 posts/month
                   </td>
                 </tr>
               </table>
@@ -315,45 +287,33 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
 
           <!-- Calendly section -->
           <tr>
-            <td style="padding: 32px 40px 0 40px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #F8F4FF 0%, #EDE9FE 100%); border-radius: 20px; border: 1px solid rgba(168, 85, 247, 0.15);">
+            <td style="padding: 36px 40px 0 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FAF7F5; border-radius: 16px; border: 1px solid #E8E2DD;">
                 <tr>
-                  <td style="padding: 24px 28px;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                      <tr>
-                        <td>
-                          <p style="margin: 0 0 4px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 400; color: #1A1614;">
-                            &#128197; Let's chat!
-                          </p>
-                          <p style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #625850;">
-                            Want a personal walkthrough? Book a quick 30-minute call to get you set up and answer any questions.
-                          </p>
-                          <a href="${calendlyUrl}" target="_blank" style="display: inline-block; padding: 12px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #A855F7; text-decoration: none; border: 2px solid #A855F7; border-radius: 50px; transition: all 0.2s;">
-                            Schedule a Call &#8594;
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0 0 8px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 400; color: #1A1614;">
+                      Need help getting started?
+                    </p>
+                    <p style="margin: 0 0 16px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #625850;">
+                      Book a 30-minute call and I'll walk you through everything.
+                    </p>
+                    <a href="${calendlyUrl}" target="_blank" style="display: inline-block; padding: 10px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #453D37; text-decoration: none; border: 1px solid #D4CBC4; border-radius: 50px; background-color: #FFFFFF;">
+                      Schedule a call
+                    </a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Closing -->
-          <tr>
-            <td style="padding: 32px 40px 0 40px;">
-              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #453D37;">
-                We can't wait to see what you create.
-              </p>
-            </td>
-          </tr>
-
           <!-- Signature -->
           <tr>
-            <td style="padding: 24px 40px 40px 40px;">
+            <td style="padding: 40px 40px 48px 40px;">
+              <p style="margin: 0 0 4px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #625850;">
+                Talk soon,
+              </p>
               <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1A1614;">
-                — The ugc.community team
+                Cody
               </p>
             </td>
           </tr>
@@ -363,10 +323,9 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
         <!-- Footer -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px;">
           <tr>
-            <td align="center" style="padding: 32px 40px 0 40px;">
+            <td align="center" style="padding: 28px 40px 0 40px;">
               <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #A69B91;">
-                You're receiving this email because you were on the waitlist at ugc.community.<br>
-                Your invite link expires in 7 days.
+                This link expires in 7 days.
               </p>
             </td>
           </tr>
