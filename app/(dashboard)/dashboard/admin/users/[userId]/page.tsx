@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Calendar,
   Mail,
   User,
   Globe,
@@ -18,6 +17,9 @@ import {
   Clock,
   UserPlus,
   CheckCircle,
+  Users,
+  XCircle,
+  Send,
 } from "lucide-react";
 
 interface UserDetails {
@@ -46,9 +48,31 @@ interface InviteDetails {
   id: string;
   email: string | null;
   createdAt: string;
+  expiresAt: string;
   usedAt: string | null;
+  usedBy: string | null;
   createdBy: string;
+  revokedAt: string | null;
   creator: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  isUsedByThisUser: boolean;
+}
+
+interface WaitlistEntry {
+  id: string;
+  email: string;
+  createdAt: string;
+  invitedAt: string | null;
+  invitedBy: string | null;
+  instagramHandle: string | null;
+  tiktokHandle: string | null;
+  youtubeHandle: string | null;
+  twitterHandle: string | null;
+  facebookHandle: string | null;
+  invitedByUser: {
     id: string;
     name: string;
     email: string;
@@ -59,6 +83,13 @@ interface StatusChangedByUser {
   id: string;
   name: string;
   email: string;
+}
+
+interface TimelineEvent {
+  id: string;
+  type: "waitlist_joined" | "waitlist_invited" | "invite_sent" | "invite_used" | "invite_expired" | "invite_revoked" | "account_created" | "status_changed" | "last_updated";
+  date: Date;
+  data: Record<string, unknown>;
 }
 
 function formatDate(dateString: string | null): string {
@@ -83,9 +114,9 @@ function formatRelativeTime(dateString: string | null): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-  if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-  if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+  if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  if (days < 30) return `${days} day${days !== 1 ? "s" : ""} ago`;
   return formatDate(dateString);
 }
 
@@ -99,20 +130,54 @@ function StatusBadge({ status }: { status: string }) {
   const Icon = config.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text}`}
+    >
       <Icon size={14} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
 
+function InviteStatusBadge({ invite }: { invite: InviteDetails }) {
+  const now = new Date();
+  const expiresAt = new Date(invite.expiresAt);
+
+  if (invite.usedAt) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+        Used
+      </span>
+    );
+  }
+  if (invite.revokedAt) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+        Revoked
+      </span>
+    );
+  }
+  if (expiresAt < now) {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warm-gray-100 text-warm-gray-600">
+        Expired
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+      Active
+    </span>
+  );
+}
+
 export default function UserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const userId = params.userId as string;
 
   const [user, setUser] = useState<UserDetails | null>(null);
-  const [invite, setInvite] = useState<InviteDetails | null>(null);
+  const [allInvites, setAllInvites] = useState<InviteDetails[]>([]);
+  const [waitlistEntry, setWaitlistEntry] = useState<WaitlistEntry | null>(null);
   const [statusChangedByUser, setStatusChangedByUser] = useState<StatusChangedByUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +196,8 @@ export default function UserDetailPage() {
         }
         const data = await response.json();
         setUser(data.user);
-        setInvite(data.invite);
+        setAllInvites(data.allInvites || []);
+        setWaitlistEntry(data.waitlistEntry);
         setStatusChangedByUser(data.statusChangedByUser);
       } catch {
         setError("Failed to load user details");
@@ -142,6 +208,87 @@ export default function UserDetailPage() {
 
     fetchUser();
   }, [userId]);
+
+  // Build timeline events sorted by date (newest first)
+  const timelineEvents = useMemo(() => {
+    if (!user) return [];
+
+    const events: TimelineEvent[] = [];
+
+    // Account created
+    events.push({
+      id: "account_created",
+      type: "account_created",
+      date: new Date(user.createdAt),
+      data: {},
+    });
+
+    // Waitlist joined
+    if (waitlistEntry) {
+      events.push({
+        id: "waitlist_joined",
+        type: "waitlist_joined",
+        date: new Date(waitlistEntry.createdAt),
+        data: { waitlistEntry },
+      });
+
+      // Waitlist invited
+      if (waitlistEntry.invitedAt) {
+        events.push({
+          id: "waitlist_invited",
+          type: "waitlist_invited",
+          date: new Date(waitlistEntry.invitedAt),
+          data: { waitlistEntry },
+        });
+      }
+    }
+
+    // All invites
+    allInvites.forEach((invite) => {
+      // Invite sent
+      events.push({
+        id: `invite_sent_${invite.id}`,
+        type: "invite_sent",
+        date: new Date(invite.createdAt),
+        data: { invite },
+      });
+
+      // Invite used (only for the invite used by this user)
+      if (invite.usedAt && invite.isUsedByThisUser) {
+        events.push({
+          id: `invite_used_${invite.id}`,
+          type: "invite_used",
+          date: new Date(invite.usedAt),
+          data: { invite },
+        });
+      }
+
+      // Invite revoked
+      if (invite.revokedAt) {
+        events.push({
+          id: `invite_revoked_${invite.id}`,
+          type: "invite_revoked",
+          date: new Date(invite.revokedAt),
+          data: { invite },
+        });
+      }
+    });
+
+    // Status changed
+    if (user.statusChangedAt && user.status !== "active") {
+      events.push({
+        id: "status_changed",
+        type: "status_changed",
+        date: new Date(user.statusChangedAt),
+        data: { status: user.status, changedBy: statusChangedByUser },
+      });
+    }
+
+    // Sort by date (newest first)
+    return events.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [user, allInvites, waitlistEntry, statusChangedByUser]);
+
+  const usedInvite = allInvites.find((i) => i.isUsedByThisUser);
 
   if (loading) {
     return (
@@ -226,7 +373,10 @@ export default function UserDetailPage() {
         </div>
 
         {/* Social Links */}
-        {(user.instagramHandle || user.tiktokHandle || user.youtubeHandle || user.twitterHandle) && (
+        {(user.instagramHandle ||
+          user.tiktokHandle ||
+          user.youtubeHandle ||
+          user.twitterHandle) && (
           <div className="flex items-center gap-4 mt-4 pt-4 border-t border-warm-gray-100">
             {user.instagramHandle && (
               <a
@@ -246,7 +396,10 @@ export default function UserDetailPage() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-black"
               >
-                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-current">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-[18px] h-[18px] fill-current"
+                >
                   <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
                 </svg>
                 @{user.tiktokHandle}
@@ -270,7 +423,10 @@ export default function UserDetailPage() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-warm-gray-600 hover:text-blue-500"
               >
-                <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-current">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-[18px] h-[18px] fill-current"
+                >
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
                 @{user.twitterHandle}
@@ -289,78 +445,25 @@ export default function UserDetailPage() {
 
       {/* Timeline */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-warm-gray-900 mb-6">User History</h3>
+        <h3 className="text-lg font-semibold text-warm-gray-900 mb-6">
+          User Journey
+        </h3>
 
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-warm-gray-200" />
 
           <div className="space-y-6">
-            {/* Signed Up */}
-            <div className="relative flex items-start gap-4">
-              <div className="relative z-10 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle size={16} className="text-green-600" />
-              </div>
-              <div className="flex-1 min-w-0 pt-0.5">
-                <p className="font-medium text-warm-gray-900">Account Created</p>
-                <p className="text-warm-gray-500 text-sm mt-0.5">
-                  {formatDate(user.createdAt)}
-                </p>
-                <p className="text-warm-gray-400 text-xs mt-0.5">
-                  {formatRelativeTime(user.createdAt)}
-                </p>
-              </div>
-            </div>
+            {timelineEvents.map((event) => (
+              <TimelineItem
+                key={event.id}
+                event={event}
+                user={user}
+              />
+            ))}
 
-            {/* Invite Accepted (if applicable) */}
-            {invite?.usedAt && (
-              <div className="relative flex items-start gap-4">
-                <div className="relative z-10 w-8 h-8 rounded-full bg-coral/10 flex items-center justify-center">
-                  <UserPlus size={16} className="text-coral" />
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="font-medium text-warm-gray-900">Accepted Invite</p>
-                  <p className="text-warm-gray-500 text-sm mt-0.5">
-                    {formatDate(invite.usedAt)}
-                  </p>
-                  <p className="text-warm-gray-400 text-xs mt-0.5">
-                    {formatRelativeTime(invite.usedAt)}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Invite Created (if applicable) */}
-            {invite && (
-              <div className="relative flex items-start gap-4">
-                <div className="relative z-10 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Mail size={16} className="text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="font-medium text-warm-gray-900">Invite Sent</p>
-                  <p className="text-warm-gray-500 text-sm mt-0.5">
-                    {formatDate(invite.createdAt)}
-                  </p>
-                  <p className="text-warm-gray-400 text-xs mt-0.5">
-                    {formatRelativeTime(invite.createdAt)}
-                  </p>
-                  {invite.creator && (
-                    <p className="text-warm-gray-500 text-sm mt-2">
-                      Invited by <span className="font-medium">{invite.creator.name}</span>
-                      <span className="text-warm-gray-400"> ({invite.creator.email})</span>
-                    </p>
-                  )}
-                  {invite.email && (
-                    <p className="text-warm-gray-400 text-sm">
-                      Sent to: {invite.email}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* No invite - direct signup */}
-            {!invite && (
+            {/* No invites - direct signup */}
+            {allInvites.length === 0 && !waitlistEntry && (
               <div className="relative flex items-start gap-4">
                 <div className="relative z-10 w-8 h-8 rounded-full bg-warm-gray-100 flex items-center justify-center">
                   <User size={16} className="text-warm-gray-600" />
@@ -368,57 +471,7 @@ export default function UserDetailPage() {
                 <div className="flex-1 min-w-0 pt-0.5">
                   <p className="font-medium text-warm-gray-900">Direct Signup</p>
                   <p className="text-warm-gray-500 text-sm mt-0.5">
-                    User signed up without an invite link
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Status Change (if applicable) */}
-            {user.statusChangedAt && user.status !== "active" && (
-              <div className="relative flex items-start gap-4">
-                <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${
-                  user.status === "suspended" ? "bg-amber-100" : "bg-red-100"
-                }`}>
-                  {user.status === "suspended" ? (
-                    <ShieldOff size={16} className="text-amber-600" />
-                  ) : (
-                    <Ban size={16} className="text-red-600" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="font-medium text-warm-gray-900">
-                    Status Changed to {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                  </p>
-                  <p className="text-warm-gray-500 text-sm mt-0.5">
-                    {formatDate(user.statusChangedAt)}
-                  </p>
-                  <p className="text-warm-gray-400 text-xs mt-0.5">
-                    {formatRelativeTime(user.statusChangedAt)}
-                  </p>
-                  {statusChangedByUser && (
-                    <p className="text-warm-gray-500 text-sm mt-2">
-                      Changed by <span className="font-medium">{statusChangedByUser.name}</span>
-                      <span className="text-warm-gray-400"> ({statusChangedByUser.email})</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Last Updated */}
-            {user.updatedAt !== user.createdAt && (
-              <div className="relative flex items-start gap-4">
-                <div className="relative z-10 w-8 h-8 rounded-full bg-warm-gray-100 flex items-center justify-center">
-                  <Clock size={16} className="text-warm-gray-600" />
-                </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="font-medium text-warm-gray-900">Last Updated</p>
-                  <p className="text-warm-gray-500 text-sm mt-0.5">
-                    {formatDate(user.updatedAt)}
-                  </p>
-                  <p className="text-warm-gray-400 text-xs mt-0.5">
-                    {formatRelativeTime(user.updatedAt)}
+                    User signed up without an invite link or waitlist
                   </p>
                 </div>
               </div>
@@ -427,14 +480,127 @@ export default function UserDetailPage() {
         </div>
       </div>
 
+      {/* All Invites Section */}
+      {allInvites.length > 0 && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
+            Related Invites ({allInvites.length})
+          </h3>
+          <div className="space-y-3">
+            {allInvites.map((invite) => (
+              <div
+                key={invite.id}
+                className={`p-4 rounded-lg border ${
+                  invite.isUsedByThisUser
+                    ? "bg-green-50 border-green-200"
+                    : "bg-warm-gray-50 border-warm-gray-200"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <InviteStatusBadge invite={invite} />
+                    {invite.isUsedByThisUser && (
+                      <span className="text-xs text-green-600 font-medium">
+                        Used to sign up
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm text-warm-gray-500">
+                    {formatDate(invite.createdAt)}
+                  </span>
+                </div>
+                <div className="mt-2 text-sm text-warm-gray-600">
+                  {invite.creator && (
+                    <p>
+                      Created by{" "}
+                      <span className="font-medium">{invite.creator.name}</span>
+                    </p>
+                  )}
+                  {invite.email && (
+                    <p className="text-warm-gray-500">Sent to: {invite.email}</p>
+                  )}
+                  <p className="text-warm-gray-400">
+                    Expires: {formatDate(invite.expiresAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Waitlist Entry Section */}
+      {waitlistEntry && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
+            Waitlist Entry
+          </h3>
+          <div className="p-4 rounded-lg bg-warm-gray-50 border border-warm-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                  waitlistEntry.invitedAt
+                    ? "bg-green-100 text-green-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {waitlistEntry.invitedAt ? "Invited" : "Pending"}
+              </span>
+              <span className="text-sm text-warm-gray-500">
+                Joined {formatDate(waitlistEntry.createdAt)}
+              </span>
+            </div>
+            {waitlistEntry.invitedAt && (
+              <p className="text-sm text-warm-gray-600">
+                Invited on {formatDate(waitlistEntry.invitedAt)}
+                {waitlistEntry.invitedByUser && (
+                  <span>
+                    {" "}
+                    by{" "}
+                    <span className="font-medium">
+                      {waitlistEntry.invitedByUser.name}
+                    </span>
+                  </span>
+                )}
+              </p>
+            )}
+            {/* Waitlist social handles */}
+            {(waitlistEntry.instagramHandle ||
+              waitlistEntry.tiktokHandle ||
+              waitlistEntry.youtubeHandle ||
+              waitlistEntry.twitterHandle) && (
+              <div className="flex items-center gap-3 mt-2 text-warm-gray-500">
+                {waitlistEntry.instagramHandle && (
+                  <span className="flex items-center gap-1 text-sm">
+                    <Instagram size={14} /> @{waitlistEntry.instagramHandle}
+                  </span>
+                )}
+                {waitlistEntry.tiktokHandle && (
+                  <span className="text-sm">TikTok: @{waitlistEntry.tiktokHandle}</span>
+                )}
+                {waitlistEntry.youtubeHandle && (
+                  <span className="flex items-center gap-1 text-sm">
+                    <Youtube size={14} /> @{waitlistEntry.youtubeHandle}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Account Details */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">Account Details</h3>
+        <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
+          Account Details
+        </h3>
 
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <dt className="text-sm text-warm-gray-500">User ID</dt>
-            <dd className="text-sm font-mono text-warm-gray-900 mt-0.5">{user.id}</dd>
+            <dd className="text-sm font-mono text-warm-gray-900 mt-0.5">
+              {user.id}
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-warm-gray-500">Email Verified</dt>
@@ -465,6 +631,132 @@ export default function UserDetailPage() {
             </div>
           )}
         </dl>
+      </div>
+    </div>
+  );
+}
+
+function TimelineItem({
+  event,
+  user,
+}: {
+  event: TimelineEvent;
+  user: UserDetails;
+}) {
+  const config: Record<
+    TimelineEvent["type"],
+    {
+      icon: typeof CheckCircle;
+      bgColor: string;
+      iconColor: string;
+      title: string;
+    }
+  > = {
+    account_created: {
+      icon: CheckCircle,
+      bgColor: "bg-green-100",
+      iconColor: "text-green-600",
+      title: "Account Created",
+    },
+    waitlist_joined: {
+      icon: Users,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+      title: "Joined Waitlist",
+    },
+    waitlist_invited: {
+      icon: Send,
+      bgColor: "bg-purple-100",
+      iconColor: "text-purple-600",
+      title: "Invited from Waitlist",
+    },
+    invite_sent: {
+      icon: Mail,
+      bgColor: "bg-blue-100",
+      iconColor: "text-blue-600",
+      title: "Invite Created",
+    },
+    invite_used: {
+      icon: UserPlus,
+      bgColor: "bg-coral/10",
+      iconColor: "text-coral",
+      title: "Used Invite to Sign Up",
+    },
+    invite_expired: {
+      icon: Clock,
+      bgColor: "bg-warm-gray-100",
+      iconColor: "text-warm-gray-600",
+      title: "Invite Expired",
+    },
+    invite_revoked: {
+      icon: XCircle,
+      bgColor: "bg-red-100",
+      iconColor: "text-red-600",
+      title: "Invite Revoked",
+    },
+    status_changed: {
+      icon: user.status === "suspended" ? ShieldOff : Ban,
+      bgColor: user.status === "suspended" ? "bg-amber-100" : "bg-red-100",
+      iconColor:
+        user.status === "suspended" ? "text-amber-600" : "text-red-600",
+      title: `Status Changed to ${user.status.charAt(0).toUpperCase() + user.status.slice(1)}`,
+    },
+    last_updated: {
+      icon: Clock,
+      bgColor: "bg-warm-gray-100",
+      iconColor: "text-warm-gray-600",
+      title: "Last Updated",
+    },
+  };
+
+  const { icon: Icon, bgColor, iconColor, title } = config[event.type];
+  const invite = event.data.invite as InviteDetails | undefined;
+  const waitlistEntryData = event.data.waitlistEntry as WaitlistEntry | undefined;
+  const changedBy = event.data.changedBy as StatusChangedByUser | undefined;
+
+  return (
+    <div className="relative flex items-start gap-4">
+      <div
+        className={`relative z-10 w-8 h-8 rounded-full ${bgColor} flex items-center justify-center`}
+      >
+        <Icon size={16} className={iconColor} />
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <p className="font-medium text-warm-gray-900">{title}</p>
+        <p className="text-warm-gray-500 text-sm mt-0.5">
+          {formatDate(event.date.toISOString())}
+        </p>
+        <p className="text-warm-gray-400 text-xs mt-0.5">
+          {formatRelativeTime(event.date.toISOString())}
+        </p>
+
+        {/* Additional context based on event type */}
+        {event.type === "invite_sent" && invite?.creator && (
+          <p className="text-warm-gray-500 text-sm mt-2">
+            Created by{" "}
+            <span className="font-medium">{invite.creator.name}</span>
+            <span className="text-warm-gray-400">
+              {" "}
+              ({invite.creator.email})
+            </span>
+          </p>
+        )}
+
+        {event.type === "waitlist_invited" && waitlistEntryData?.invitedByUser && (
+          <p className="text-warm-gray-500 text-sm mt-2">
+            Invited by{" "}
+            <span className="font-medium">
+              {waitlistEntryData.invitedByUser.name}
+            </span>
+          </p>
+        )}
+
+        {event.type === "status_changed" && changedBy && (
+          <p className="text-warm-gray-500 text-sm mt-2">
+            Changed by <span className="font-medium">{changedBy.name}</span>
+            <span className="text-warm-gray-400"> ({changedBy.email})</span>
+          </p>
+        )}
       </div>
     </div>
   );
