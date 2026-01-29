@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  Image,
-  Settings,
   LogOut,
   ChevronDown,
   User,
@@ -27,8 +25,6 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/media", label: "Media", icon: Image },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
