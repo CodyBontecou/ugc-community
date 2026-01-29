@@ -975,7 +975,7 @@ export default function UserDetailPage() {
                 checkingSubdomain ||
                 (subdomainInput !== "" && subdomainInput !== user?.subdomain && subdomainAvailable !== true)
               }
-              className="px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {savingSubdomain ? (
                 <>
@@ -1211,7 +1211,7 @@ export default function UserDetailPage() {
                     <button
                       onClick={handleLinkRepo}
                       disabled={linkingRepo}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {linkingRepo ? (
                         <>
@@ -1240,7 +1240,7 @@ export default function UserDetailPage() {
                     <button
                       onClick={handleLinkRepo}
                       disabled={linkingRepo}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {linkingRepo ? (
                         <>
@@ -1334,7 +1334,7 @@ export default function UserDetailPage() {
               <button
                 onClick={handleSaveVercelProjectId}
                 disabled={savingVercelProjectId || vercelProjectId === (user.vercelProjectId || "")}
-                className="px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {savingVercelProjectId ? (
                   <>
