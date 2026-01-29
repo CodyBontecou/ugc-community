@@ -60,7 +60,8 @@ export function Pricing() {
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[560px] mx-auto">
             We'd rather have your content than your money. Create 30 posts/month
-            documenting your creator journey and get Pro features free forever.
+            documenting your creator journey using ugc.community and get Pro
+            features free forever.
           </p>
         </motion.div>
 

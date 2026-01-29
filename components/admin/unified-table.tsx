@@ -8,6 +8,7 @@ import {
   Check,
   Trash2,
   Send,
+  Mail,
   MoreVertical,
   Shield,
   ShieldOff,
@@ -69,7 +70,7 @@ export function UnifiedTable() {
   // UI state
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
-  const [actionMenuFlip, setActionMenuFlip] = useState(false);
+  const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; left: number; flip: boolean } | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
@@ -212,6 +213,24 @@ export function UnifiedTable() {
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to revoke invite");
+    } finally {
+      setUpdating(null);
+    }
+  }
+
+  async function resendInviteEmail(inviteId: string) {
+    setUpdating(inviteId);
+    try {
+      const res = await fetch(`/api/admin/invites/${inviteId}/resend`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to resend email");
+      }
+      alert("Invitation email sent successfully");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to resend email");
     } finally {
       setUpdating(null);
     }
@@ -453,16 +472,24 @@ export function UnifiedTable() {
   function handleActionMenuToggle(recordId: string) {
     if (actionMenuOpen === recordId) {
       setActionMenuOpen(null);
+      setActionMenuPosition(null);
       return;
     }
 
-    // Check if button is near bottom of viewport and should flip menu upward
+    // Calculate fixed position based on button location
     const buttonEl = actionButtonRefs.current.get(recordId);
     if (buttonEl) {
       const rect = buttonEl.getBoundingClientRect();
+      const menuWidth = 192; // w-48 = 12rem = 192px
+      const menuHeight = 180; // approximate menu height
       const spaceBelow = window.innerHeight - rect.bottom;
-      // If less than 150px below (menu height ~120px + margin), flip upward
-      setActionMenuFlip(spaceBelow < 150);
+      const flip = spaceBelow < menuHeight + 8;
+
+      setActionMenuPosition({
+        top: flip ? rect.top - menuHeight - 4 : rect.bottom + 4,
+        left: rect.right - menuWidth,
+        flip,
+      });
     }
 
     setActionMenuOpen(recordId);
@@ -489,13 +516,12 @@ export function UnifiedTable() {
             )}
           </button>
 
-          {actionMenuOpen === record.id && (
+          {actionMenuOpen === record.id && actionMenuPosition && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setActionMenuOpen(null)} />
+              <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setActionMenuPosition(null); }} />
               <div
-                className={`absolute right-0 w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50 ${
-                  actionMenuFlip ? "bottom-full mb-1" : "top-full mt-1"
-                }`}
+                className="fixed w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50"
+                style={{ top: actionMenuPosition.top, left: actionMenuPosition.left }}
               >
                 {record.status !== "active" && (
                   <button
@@ -541,10 +567,25 @@ export function UnifiedTable() {
 
     if (record.type === "invite") {
       const isActive = record.status === "active";
+      const hasEmail = !!record.email;
       return (
         <div className="flex items-center justify-end gap-1">
           {isActive && (
             <>
+              {hasEmail && (
+                <button
+                  onClick={() => resendInviteEmail(record.id)}
+                  disabled={isUpdating}
+                  className="p-2 text-warm-gray-400 hover:text-coral rounded transition-colors disabled:opacity-50"
+                  title="Resend email"
+                >
+                  {isUpdating ? (
+                    <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-coral rounded-full animate-spin" />
+                  ) : (
+                    <Mail size={16} />
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => copyLink(record)}
                 className="p-2 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors"

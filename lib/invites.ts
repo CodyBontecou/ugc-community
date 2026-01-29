@@ -99,6 +99,15 @@ export async function getInviteByToken(token: string) {
 }
 
 /**
+ * Gets an invite by ID
+ */
+export async function getInviteById(id: string) {
+  return db.query.invites.findFirst({
+    where: eq(invites.id, id),
+  });
+}
+
+/**
  * Lists invites created by a user
  */
 export async function listInvites(createdBy: string) {
