@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID?.trim();
 const GITHUB_REDIRECT_URI = `${process.env.BETTER_AUTH_URL}/api/admin/github/callback`;
 
 export async function GET() {

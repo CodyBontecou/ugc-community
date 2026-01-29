@@ -5,8 +5,8 @@ import { eq } from "drizzle-orm";
 import { getServerSession } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID?.trim();
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET?.trim();
 
 export async function GET(request: NextRequest) {
   try {
