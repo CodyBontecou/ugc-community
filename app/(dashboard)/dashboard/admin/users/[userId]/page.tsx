@@ -244,6 +244,7 @@ export default function UserDetailPage() {
   // Site toggle state
   const [togglingSite, setTogglingSite] = useState(false);
   const [siteToggleError, setSiteToggleError] = useState<string | null>(null);
+  const [siteToggleSuccess, setSiteToggleSuccess] = useState(false);
 
   // GitHub repository selector state
   const [adminGitHubStatus, setAdminGitHubStatus] = useState<AdminGitHubStatus | null>(null);
@@ -639,6 +640,7 @@ export default function UserDetailPage() {
 
     setTogglingSite(true);
     setSiteToggleError(null);
+    setSiteToggleSuccess(false);
 
     try {
       const response = await fetch(`/api/admin/creators/${userId}/site-toggle`, {
@@ -656,6 +658,8 @@ export default function UserDetailPage() {
       setUser((prev) =>
         prev ? { ...prev, siteEnabled: data.siteEnabled } : prev
       );
+      setSiteToggleSuccess(true);
+      setTimeout(() => setSiteToggleSuccess(false), 3000);
     } catch (err) {
       setSiteToggleError(err instanceof Error ? err.message : "Failed to toggle site");
     } finally {
@@ -1378,15 +1382,39 @@ export default function UserDetailPage() {
           {user.subdomain && (
             <div className="pt-4 border-t border-warm-gray-100">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-warm-gray-900">
-                    Subdomain Hosting
-                  </p>
-                  <p className="text-sm text-warm-gray-500 mt-0.5">
-                    {user.siteEnabled
-                      ? `Site is live at ${user.subdomain}.ugc.community`
-                      : "Enable to publish site to subdomain"}
-                  </p>
+                <div className="flex items-start gap-3">
+                  {/* Status Indicator */}
+                  <div
+                    className={`mt-1.5 w-3 h-3 rounded-full flex-shrink-0 ${
+                      user.siteEnabled ? "bg-green-500" : "bg-warm-gray-300"
+                    }`}
+                    title={user.siteEnabled ? "Site is live" : "Site is disabled"}
+                  />
+                  <div>
+                    <p className="font-medium text-warm-gray-900">
+                      Subdomain Hosting
+                    </p>
+                    {user.siteEnabled ? (
+                      <a
+                        href={`https://${user.subdomain}.ugc.community`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-coral hover:text-coral/80 flex items-center gap-1 mt-0.5"
+                      >
+                        {user.subdomain}.ugc.community
+                        <ExternalLink size={12} />
+                      </a>
+                    ) : (
+                      <p className="text-sm text-warm-gray-400 mt-0.5">
+                        {user.subdomain}.ugc.community
+                      </p>
+                    )}
+                    {user.vercelProjectId && (
+                      <p className="text-xs text-warm-gray-400 mt-1">
+                        Vercel Project: {user.vercelProjectId}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={handleToggleSite}
@@ -1422,6 +1450,11 @@ export default function UserDetailPage() {
               )}
               {siteToggleError && (
                 <p className="text-sm text-red-600 mt-2">{siteToggleError}</p>
+              )}
+              {siteToggleSuccess && (
+                <p className="text-sm text-green-600 mt-2">
+                  Site {user.siteEnabled ? "enabled" : "disabled"} successfully!
+                </p>
               )}
             </div>
           )}
