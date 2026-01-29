@@ -67,6 +67,9 @@ export const users = pgTable(
     isVerified: boolean("is_verified").notNull().default(false),
     tagline: text("tagline"),
     directoryJoinedAt: timestamp("directory_joined_at"),
+    // Milestone system fields
+    lifetimePostCount: integer("lifetime_post_count").notNull().default(0),
+    trackingHashtag: text("tracking_hashtag"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -244,6 +247,72 @@ export const media = pgTable(
 );
 
 // =====================================================
+// Posts (External Social Media Tracking)
+// =====================================================
+
+export const posts = pgTable(
+  "posts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    platform: text("platform").notNull(), // 'tiktok' | 'instagram' | 'youtube' | 'twitter' | 'facebook'
+    postUrl: text("post_url").notNull(),
+    postId: text("post_id"), // Platform-specific post ID (optional)
+    postedAt: timestamp("posted_at"), // When post was made on platform
+    verified: boolean("verified").notNull().default(false), // For Brand24 verification
+    source: text("source").notNull().default("manual"), // 'manual' | 'brand24'
+    metadata: jsonb("metadata").$type<PostMetadata>().default({}),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("posts_user_id_idx").on(table.userId),
+    index("posts_platform_idx").on(table.platform),
+    index("posts_user_created_at_idx").on(table.userId, table.createdAt),
+  ]
+);
+
+// =====================================================
+// Milestones System
+// =====================================================
+
+export const milestones = pgTable(
+  "milestones",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    type: text("type").notNull(), // 'monthly' | 'lifetime'
+    threshold: integer("threshold").notNull(), // Posts required
+    name: text("name").notNull(),
+    description: text("description"),
+    rewardType: text("reward_type").notNull(), // 'hosting' | 'analytics' | 'edits' | 'directory_boost' | 'badge' | 'custom_domain'
+    rewardConfig: jsonb("reward_config").$type<MilestoneRewardConfig>().default({}),
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  }
+);
+
+export const userMilestones = pgTable(
+  "user_milestones",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    milestoneId: uuid("milestone_id")
+      .notNull()
+      .references(() => milestones.id, { onDelete: "cascade" }),
+    earnedAt: timestamp("earned_at").notNull().defaultNow(),
+    monthYear: text("month_year"), // For monthly: '2026-01', NULL for lifetime
+  },
+  (table) => [
+    index("user_milestones_user_id_idx").on(table.userId),
+    index("user_milestones_milestone_id_idx").on(table.milestoneId),
+  ]
+);
+
+// =====================================================
 // Relations
 // =====================================================
 
@@ -259,6 +328,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   contactSubmissions: many(contactSubmissions),
   portfolioViewDedupe: many(portfolioViewDedupe),
+  posts: many(posts),
+  userMilestones: many(userMilestones),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -309,6 +380,28 @@ export const portfolioViewDedupeRelations = relations(portfolioViewDedupe, ({ on
   }),
 }));
 
+export const postsRelations = relations(posts, ({ one }) => ({
+  user: one(users, {
+    fields: [posts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const milestonesRelations = relations(milestones, ({ many }) => ({
+  userMilestones: many(userMilestones),
+}));
+
+export const userMilestonesRelations = relations(userMilestones, ({ one }) => ({
+  user: one(users, {
+    fields: [userMilestones.userId],
+    references: [users.id],
+  }),
+  milestone: one(milestones, {
+    fields: [userMilestones.milestoneId],
+    references: [milestones.id],
+  }),
+}));
+
 // =====================================================
 // Types
 // =====================================================
@@ -319,6 +412,24 @@ export type MediaMetadata = {
   duration?: number; // seconds, for videos
   alt?: string;
   caption?: string;
+};
+
+export type PostMetadata = {
+  likes?: number;
+  views?: number;
+  comments?: number;
+  shares?: number;
+};
+
+export type MilestoneRewardConfig = {
+  duration_days?: number;
+  tier?: string;
+  unlimited?: boolean;
+  featured?: boolean;
+  badge_type?: string;
+  priority?: boolean;
+  permanent?: boolean;
+  enabled?: boolean;
 };
 
 // Export types for use in application
@@ -334,3 +445,9 @@ export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
 export type PortfolioView = typeof portfolioViewDedupe.$inferSelect;
 export type NewPortfolioView = typeof portfolioViewDedupe.$inferInsert;
+export type Post = typeof posts.$inferSelect;
+export type NewPost = typeof posts.$inferInsert;
+export type Milestone = typeof milestones.$inferSelect;
+export type NewMilestone = typeof milestones.$inferInsert;
+export type UserMilestone = typeof userMilestones.$inferSelect;
+export type NewUserMilestone = typeof userMilestones.$inferInsert;
