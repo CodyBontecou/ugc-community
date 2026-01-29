@@ -120,7 +120,7 @@ export function SignUpForm({ inviteToken, prefilledEmail }: SignUpFormProps) {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-            Create your portfolio
+            Create your account
           </h1>
           <p className="text-warm-gray-500">
             Start showcasing your work to brands
@@ -184,7 +184,7 @@ export function SignUpForm({ inviteToken, prefilledEmail }: SignUpFormProps) {
             </div>
             {username && (
               <p className="mt-1.5 text-xs text-warm-gray-500">
-                Your portfolio will be at{" "}
+                Your profile will be at{" "}
                 <span className="text-rose font-medium">
                   {username}.ugc.community
                 </span>

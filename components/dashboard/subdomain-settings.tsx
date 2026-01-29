@@ -169,7 +169,7 @@ export function SubdomainSettings({
             Custom Subdomain
           </h2>
           <p className="text-sm text-warm-gray-500 mt-1">
-            Claim a custom subdomain for your portfolio. Your portfolio will be
+            Claim a custom subdomain for your profile. Your profile will be
             accessible at{" "}
             <span className="font-medium text-warm-gray-700">
               yourname.{domain}
@@ -277,7 +277,7 @@ export function SubdomainSettings({
             className="p-4 bg-warm-gray-50 rounded-[--radius-md] border border-warm-gray-200"
           >
             <p className="text-sm text-warm-gray-500 mb-1">
-              Your portfolio URL will be:
+              Your profile URL will be:
             </p>
             <p className="font-medium text-warm-gray-900 flex items-center gap-2">
               https://{subdomain}.{domain}

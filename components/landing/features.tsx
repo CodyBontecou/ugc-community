@@ -16,7 +16,7 @@ const features = [
     icon: <Palette size={24} />,
     title: "Custom Design",
     description:
-      "Every portfolio is uniquely crafted to match your brand and showcase your best work beautifully.",
+      "Your profile is uniquely crafted to match your brand and showcase your best work beautifully.",
   },
   {
     icon: <Globe size={24} />,
@@ -40,13 +40,13 @@ const features = [
     icon: <BarChart3 size={24} />,
     title: "Analytics Dashboard",
     description:
-      "See who's viewing your portfolio, where they're from, and which content performs best.",
+      "See who's viewing your profile, where they're from, and which content performs best.",
   },
   {
     icon: <Heart size={24} />,
     title: "1:1 Collaboration",
     description:
-      "Work directly with our team. Your input shapes every detail of your portfolio.",
+      "Work directly with our team. Your input shapes every detail of your profile.",
   },
 ];
 

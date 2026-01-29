@@ -1,13 +1,12 @@
 import { getDb } from "@/lib/db";
-import { users, portfolios } from "@/lib/db/schema";
-import { eq, isNotNull, and } from "drizzle-orm";
+import { users } from "@/lib/db/schema";
+import { isNotNull } from "drizzle-orm";
 import {
   Navbar,
   BackgroundBlobs,
   Hero,
   SocialProof,
   Features,
-  PortfolioExamples,
   HowItWorks,
   Testimonials,
   Pricing,
@@ -15,35 +14,25 @@ import {
   Footer,
 } from "@/components/landing";
 import type { CreatorAvatar } from "@/components/landing/social-proof";
-import type { FeaturedCreator } from "@/components/landing/portfolio-examples";
 
 async function getLandingPageData() {
   const db = getDb();
 
-  // Get users with published portfolios and subdomains
-  const creatorsWithPortfolios = await db
+  // Get users with subdomains (active creators)
+  const activeCreators = await db
     .select({
       id: users.id,
       name: users.name,
       image: users.image,
-      subdomain: users.subdomain,
-      bio: users.bio,
-      instagramHandle: users.instagramHandle,
     })
     .from(users)
-    .innerJoin(portfolios, eq(users.id, portfolios.userId))
-    .where(
-      and(
-        isNotNull(users.subdomain),
-        eq(portfolios.isPublished, true)
-      )
-    )
+    .where(isNotNull(users.subdomain))
     .limit(20);
 
-  const creatorCount = creatorsWithPortfolios.length;
+  const creatorCount = activeCreators.length;
 
   // For social proof avatars
-  const socialProofCreators: CreatorAvatar[] = creatorsWithPortfolios
+  const socialProofCreators: CreatorAvatar[] = activeCreators
     .slice(0, 8)
     .map((c) => ({
       id: c.id,
@@ -51,28 +40,14 @@ async function getLandingPageData() {
       image: c.image,
     }));
 
-  // For featured portfolio examples (first 3)
-  const featuredCreators: FeaturedCreator[] = creatorsWithPortfolios
-    .slice(0, 3)
-    .map((c) => ({
-      id: c.id,
-      name: c.name,
-      subdomain: c.subdomain!,
-      bio: c.bio,
-      image: c.image,
-      instagramHandle: c.instagramHandle,
-    }));
-
   return {
     creatorCount,
     socialProofCreators,
-    featuredCreators,
   };
 }
 
 export default async function HomePage() {
-  const { creatorCount, socialProofCreators, featuredCreators } =
-    await getLandingPageData();
+  const { creatorCount, socialProofCreators } = await getLandingPageData();
 
   return (
     <div className="relative overflow-hidden">
@@ -81,7 +56,6 @@ export default async function HomePage() {
       <Hero />
       <SocialProof creatorCount={creatorCount} creators={socialProofCreators} />
       <Features />
-      <PortfolioExamples creators={featuredCreators} />
       <HowItWorks />
       <Testimonials />
       <Pricing />

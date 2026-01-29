@@ -34,7 +34,7 @@ export const users = pgTable(
     tiktokHandle: text("tiktok_handle"),
     youtubeHandle: text("youtube_handle"),
     twitterHandle: text("twitter_handle"),
-    // Subdomain for custom portfolio URL (e.g., johndoe.mysite.com)
+    // Subdomain for custom URL (e.g., johndoe.mysite.com)
     // Stored as lowercase for consistent matching
     subdomain: text("subdomain").unique(),
     // Admin fields for user status management
@@ -117,57 +117,6 @@ export const invites = pgTable(
 );
 
 // =====================================================
-// Portfolio Tables
-// =====================================================
-
-export const portfolios = pgTable(
-  "portfolios",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    templateId: text("template_id").notNull().default("default"),
-    title: text("title").notNull(),
-    tagline: text("tagline"),
-    theme: jsonb("theme").$type<PortfolioTheme>().default({}),
-    content: jsonb("content").$type<PortfolioContent>().default({}),
-    // AI-generated HTML portfolios
-    htmlContent: text("html_content"),
-    portfolioType: text("portfolio_type").notNull().default("json"), // "json" | "html"
-    isPublished: boolean("is_published").notNull().default(false),
-    publishedAt: timestamp("published_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("portfolios_user_id_idx").on(table.userId),
-    index("portfolios_is_published_idx").on(table.isPublished),
-  ]
-);
-
-export const portfolioSections = pgTable(
-  "portfolio_sections",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    portfolioId: uuid("portfolio_id")
-      .notNull()
-      .references(() => portfolios.id, { onDelete: "cascade" }),
-    type: text("type").notNull(), // hero, about, work, contact, etc.
-    order: integer("order").notNull().default(0),
-    content: jsonb("content").$type<SectionContent>().default({}),
-    styles: jsonb("styles").$type<SectionStyles>().default({}),
-    isVisible: boolean("is_visible").notNull().default(true),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_sections_portfolio_id_idx").on(table.portfolioId),
-    index("portfolio_sections_order_idx").on(table.order),
-  ]
-);
-
-// =====================================================
 // Media Tables
 // =====================================================
 
@@ -178,9 +127,6 @@ export const media = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    portfolioId: uuid("portfolio_id").references(() => portfolios.id, {
-      onDelete: "set null",
-    }),
     type: text("type").notNull(), // image, video
     filename: text("filename").notNull(),
     originalFilename: text("original_filename").notNull(),
@@ -194,94 +140,7 @@ export const media = pgTable(
   },
   (table) => [
     index("media_user_id_idx").on(table.userId),
-    index("media_portfolio_id_idx").on(table.portfolioId),
     index("media_type_idx").on(table.type),
-  ]
-);
-
-// =====================================================
-// Creator Directory Tables
-// =====================================================
-
-export const creatorDirectory = pgTable(
-  "creator_directory",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .unique()
-      .references(() => users.id, { onDelete: "cascade" }),
-    portfolioId: uuid("portfolio_id")
-      .notNull()
-      .references(() => portfolios.id, { onDelete: "cascade" }),
-    isListed: boolean("is_listed").notNull().default(false),
-    categories: text("categories").array().notNull().default([]),
-    tags: text("tags").array().notNull().default([]),
-    priceRangeMin: integer("price_range_min"),
-    priceRangeMax: integer("price_range_max"),
-    location: text("location"),
-    // Denormalized stats for search performance
-    followerCount: integer("follower_count").default(0),
-    portfolioViews: integer("portfolio_views").default(0),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("creator_directory_is_listed_idx").on(table.isListed),
-    index("creator_directory_categories_idx").on(table.categories),
-  ]
-);
-
-// =====================================================
-// Portfolio View Tracking
-// =====================================================
-
-export const portfolioViews = pgTable(
-  "portfolio_views",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    portfolioId: uuid("portfolio_id")
-      .notNull()
-      .references(() => portfolios.id, { onDelete: "cascade" }),
-    // Hashed IP for privacy-preserving deduplication
-    viewerIpHash: text("viewer_ip_hash"),
-    userAgent: text("user_agent"),
-    referrer: text("referrer"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_views_portfolio_id_idx").on(table.portfolioId),
-    index("portfolio_views_created_at_idx").on(table.createdAt),
-    // Composite index for deduplication queries
-    index("portfolio_views_dedup_idx").on(
-      table.portfolioId,
-      table.viewerIpHash,
-      table.createdAt
-    ),
-  ]
-);
-
-// =====================================================
-// Contact Form Submissions
-// =====================================================
-
-export const contactSubmissions = pgTable(
-  "contact_submissions",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    portfolioId: uuid("portfolio_id")
-      .notNull()
-      .references(() => portfolios.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    email: text("email").notNull(),
-    company: text("company"),
-    message: text("message").notNull(),
-    isRead: boolean("is_read").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("contact_submissions_portfolio_id_idx").on(table.portfolioId),
-    index("contact_submissions_is_read_idx").on(table.isRead),
   ]
 );
 
@@ -292,15 +151,7 @@ export const contactSubmissions = pgTable(
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
-  portfolio: one(portfolios, {
-    fields: [users.id],
-    references: [portfolios.userId],
-  }),
   media: many(media),
-  directoryListing: one(creatorDirectory, {
-    fields: [users.id],
-    references: [creatorDirectory.userId],
-  }),
   createdInvites: many(invites, { relationName: "createdInvites" }),
   usedInvite: one(invites, {
     fields: [users.id],
@@ -323,70 +174,10 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   }),
 }));
 
-export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
-  user: one(users, {
-    fields: [portfolios.userId],
-    references: [users.id],
-  }),
-  sections: many(portfolioSections),
-  media: many(media),
-  contactSubmissions: many(contactSubmissions),
-  views: many(portfolioViews),
-  directoryListing: one(creatorDirectory, {
-    fields: [portfolios.id],
-    references: [creatorDirectory.portfolioId],
-  }),
-}));
-
-export const portfolioSectionsRelations = relations(
-  portfolioSections,
-  ({ one }) => ({
-    portfolio: one(portfolios, {
-      fields: [portfolioSections.portfolioId],
-      references: [portfolios.id],
-    }),
-  })
-);
-
 export const mediaRelations = relations(media, ({ one }) => ({
   user: one(users, {
     fields: [media.userId],
     references: [users.id],
-  }),
-  portfolio: one(portfolios, {
-    fields: [media.portfolioId],
-    references: [portfolios.id],
-  }),
-}));
-
-export const creatorDirectoryRelations = relations(
-  creatorDirectory,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [creatorDirectory.userId],
-      references: [users.id],
-    }),
-    portfolio: one(portfolios, {
-      fields: [creatorDirectory.portfolioId],
-      references: [portfolios.id],
-    }),
-  })
-);
-
-export const contactSubmissionsRelations = relations(
-  contactSubmissions,
-  ({ one }) => ({
-    portfolio: one(portfolios, {
-      fields: [contactSubmissions.portfolioId],
-      references: [portfolios.id],
-    }),
-  })
-);
-
-export const portfolioViewsRelations = relations(portfolioViews, ({ one }) => ({
-  portfolio: one(portfolios, {
-    fields: [portfolioViews.portfolioId],
-    references: [portfolios.id],
   }),
 }));
 
@@ -407,43 +198,6 @@ export const invitesRelations = relations(invites, ({ one }) => ({
 // Types
 // =====================================================
 
-export type PortfolioTheme = {
-  primaryColor?: string;
-  secondaryColor?: string;
-  backgroundColor?: string;
-  fontFamily?: string;
-  customCss?: string;
-};
-
-export type PortfolioContent = {
-  headline?: string;
-  subheadline?: string;
-  about?: string;
-  services?: string[];
-  socialLinks?: {
-    platform: string;
-    url: string;
-    followerCount?: number;
-  }[];
-};
-
-export type SectionContent = {
-  title?: string;
-  subtitle?: string;
-  body?: string;
-  items?: unknown[];
-  mediaIds?: string[];
-  ctaText?: string;
-  ctaUrl?: string;
-};
-
-export type SectionStyles = {
-  backgroundColor?: string;
-  textColor?: string;
-  padding?: string;
-  customCss?: string;
-};
-
 export type MediaMetadata = {
   width?: number;
   height?: number;
@@ -455,17 +209,7 @@ export type MediaMetadata = {
 // Export types for use in application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type Portfolio = typeof portfolios.$inferSelect;
-export type NewPortfolio = typeof portfolios.$inferInsert;
-export type PortfolioSection = typeof portfolioSections.$inferSelect;
-export type NewPortfolioSection = typeof portfolioSections.$inferInsert;
 export type Media = typeof media.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;
-export type CreatorDirectoryEntry = typeof creatorDirectory.$inferSelect;
-export type NewCreatorDirectoryEntry = typeof creatorDirectory.$inferInsert;
-export type ContactSubmission = typeof contactSubmissions.$inferSelect;
-export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
-export type PortfolioView = typeof portfolioViews.$inferSelect;
-export type NewPortfolioView = typeof portfolioViews.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;

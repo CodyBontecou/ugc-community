@@ -73,7 +73,7 @@ export function SignInForm() {
             Welcome back
           </h1>
           <p className="text-warm-gray-500">
-            Sign in to continue to your portfolio
+            Sign in to continue to your dashboard
           </p>
         </div>
 

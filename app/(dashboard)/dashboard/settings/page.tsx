@@ -59,7 +59,7 @@ async function SettingsContent() {
 
         <div className="pt-4 border-t border-warm-gray-100">
           <p className="text-xs text-warm-gray-400 mb-4">
-            Your subdomain and portfolio settings can be managed from the dashboard.
+            Your subdomain settings can be managed from the dashboard.
           </p>
           <Link
             href="/dashboard"

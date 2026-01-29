@@ -3,7 +3,6 @@ export { BackgroundBlobs } from "./background-blobs";
 export { Hero } from "./hero";
 export { SocialProof } from "./social-proof";
 export { Features } from "./features";
-export { PortfolioExamples } from "./portfolio-examples";
 export { HowItWorks } from "./how-it-works";
 export { Testimonials } from "./testimonials";
 export { Pricing } from "./pricing";

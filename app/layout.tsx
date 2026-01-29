@@ -16,30 +16,29 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "ugc.community - Beautiful UGC Creator Portfolios",
+  title: "ugc.community - For UGC Creators",
   description:
-    "Create a stunning portfolio that showcases your content and lands you brand deals. Your own corner of the internet at yourname.ugc.community",
+    "The modern way for content creators to showcase their work and land brand deals. Your own corner of the internet at yourname.ugc.community",
   keywords: [
     "UGC",
     "creator",
-    "portfolio",
     "user generated content",
     "brand deals",
     "influencer",
   ],
   openGraph: {
-    title: "ugc.community - Beautiful UGC Creator Portfolios",
+    title: "ugc.community - For UGC Creators",
     description:
-      "Create a stunning portfolio that showcases your content and lands you brand deals.",
+      "The modern way for content creators to showcase their work and land brand deals.",
     type: "website",
     locale: "en_US",
     siteName: "ugc.community",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ugc.community - Beautiful UGC Creator Portfolios",
+    title: "ugc.community - For UGC Creators",
     description:
-      "Create a stunning portfolio that showcases your content and lands you brand deals.",
+      "The modern way for content creators to showcase their work and land brand deals.",
   },
 };
 

@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const portfolioId = formData.get("portfolioId") as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -51,7 +50,6 @@ export async function POST(request: NextRequest) {
       .insert(media)
       .values({
         userId: session.user.id,
-        portfolioId: portfolioId || null,
         type: mediaType,
         filename: key,
         originalFilename: file.name,

@@ -54,22 +54,10 @@ export function Footer() {
                 Features
               </a>
               <a
-                href="#portfolios"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Examples
-              </a>
-              <a
                 href="#pricing"
                 className="text-sm text-warm-gray-400 hover:text-white transition-colors"
               >
                 Pricing
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Templates
               </a>
             </div>
           </div>

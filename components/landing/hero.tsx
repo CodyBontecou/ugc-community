@@ -12,7 +12,7 @@ import {
   Camera,
 } from "lucide-react";
 
-function PortfolioPreview() {
+function CreatorPreview() {
   return (
     <div className="max-w-[600px] mx-auto">
       <div className="flex items-center gap-4 mb-6">
@@ -85,7 +85,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Build your portfolio. Share your journey. Never pay a dime.
+          Build your brand. Share your journey. Never pay a dime.
           <br />
           <span className="text-rose font-medium">10 posts/month = unlimited features.</span>
           {" "}Your content is your subscription.
@@ -108,13 +108,13 @@ export function Hero() {
             <ArrowRight size={18} />
           </motion.a>
           <motion.a
-            href="#portfolios"
+            href="#features"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-transparent text-warm-gray-700 border border-warm-gray-200 hover:bg-white hover:border-warm-gray-300 transition-colors"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <Play size={18} />
-            See Examples
+            Learn More
           </motion.a>
         </motion.div>
 
@@ -138,7 +138,7 @@ export function Hero() {
               </div>
             </div>
             <div className="p-8 min-h-[400px] bg-gradient-to-b from-peach-100 to-cream">
-              <PortfolioPreview />
+              <CreatorPreview />
             </div>
           </div>
 

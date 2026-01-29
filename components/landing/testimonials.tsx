@@ -6,14 +6,14 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "I landed 3 brand deals in my first month after launching my ugc.community portfolio. The design is so professional!",
+      "I landed 3 brand deals in my first month after joining ugc.community. The platform is so professional!",
     author: "Jessica K.",
     role: "Beauty Creator",
     rating: 5,
   },
   {
     quote:
-      "Finally a portfolio builder that actually understands UGC creators. The analytics help me show brands my real impact.",
+      "Finally a platform that actually understands UGC creators. The analytics help me show brands my real impact.",
     author: "Marcus T.",
     role: "Tech Reviewer",
     rating: 5,

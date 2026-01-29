@@ -24,12 +24,6 @@ export function Navbar() {
             Features
           </a>
           <a
-            href="#portfolios"
-            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            Examples
-          </a>
-          <a
             href="#pricing"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >

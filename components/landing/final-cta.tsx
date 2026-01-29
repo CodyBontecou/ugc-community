@@ -26,7 +26,7 @@ export function FinalCTA() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Create Your Portfolio
+            Get Started
             <ArrowRight size={18} />
           </motion.a>
         </motion.div>
