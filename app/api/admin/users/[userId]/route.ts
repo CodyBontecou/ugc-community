@@ -32,6 +32,10 @@ const updateUserSocialHandlesSchema = z.object({
   twitterHandle: z.string().nullable().optional(),
 });
 
+const updateUserBioSchema = z.object({
+  bio: z.string().nullable(),
+});
+
 // GET /api/admin/users/[userId] - Get user details with invite history
 export async function GET(
   request: NextRequest,
@@ -418,6 +422,25 @@ export async function PATCH(
         });
 
       return NextResponse.json({ user: updated, vercelProjectCreated: !currentUser[0]?.vercelProjectId });
+    }
+
+    // Handle bio update
+    if ("bio" in body) {
+      const { bio } = updateUserBioSchema.parse(body);
+
+      const [updated] = await db
+        .update(users)
+        .set({
+          bio: bio === "" ? null : bio,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          bio: users.bio,
+        });
+
+      return NextResponse.json({ user: updated });
     }
 
     // Handle social handles update

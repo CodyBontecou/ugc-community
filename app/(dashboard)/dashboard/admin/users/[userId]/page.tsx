@@ -38,6 +38,7 @@ import {
   Rocket,
   RefreshCw,
   Activity,
+  FileText,
 } from "lucide-react";
 
 interface UserDetails {
@@ -335,6 +336,12 @@ export default function UserDetailPage() {
   const [socialHandlesError, setSocialHandlesError] = useState<string | null>(null);
   const [socialHandlesSuccess, setSocialHandlesSuccess] = useState(false);
 
+  // Bio editing state
+  const [bioInput, setBioInput] = useState("");
+  const [savingBio, setSavingBio] = useState(false);
+  const [bioError, setBioError] = useState<string | null>(null);
+  const [bioSuccess, setBioSuccess] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -358,6 +365,7 @@ export default function UserDetailPage() {
         setTiktokHandleInput(data.user.tiktokHandle || "");
         setYoutubeHandleInput(data.user.youtubeHandle || "");
         setTwitterHandleInput(data.user.twitterHandle || "");
+        setBioInput(data.user.bio || "");
       } catch {
         setError("Failed to load user details");
       } finally {
@@ -854,6 +862,47 @@ export default function UserDetailPage() {
     youtubeHandleInput !== (user?.youtubeHandle || "") ||
     twitterHandleInput !== (user?.twitterHandle || "");
 
+  // Save bio
+  const handleSaveBio = async () => {
+    setSavingBio(true);
+    setBioError(null);
+    setBioSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bio: bioInput.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save bio");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              bio: data.user.bio,
+            }
+          : prev
+      );
+      setBioSuccess(true);
+      setTimeout(() => setBioSuccess(false), 3000);
+    } catch (err) {
+      setBioError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingBio(false);
+    }
+  };
+
+  // Check if bio has changed
+  const bioChanged = bioInput !== (user?.bio || "");
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1254,6 +1303,57 @@ export default function UserDetailPage() {
           )}
           {subdomainSuccess && (
             <p className="text-sm text-green-600">Subdomain saved successfully!</p>
+          )}
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <FileText size={20} className="text-warm-gray-600" />
+          <h3 className="text-lg font-semibold text-warm-gray-900">Bio</h3>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="bio"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              User Bio
+            </label>
+            <textarea
+              id="bio"
+              value={bioInput}
+              onChange={(e) => setBioInput(e.target.value)}
+              placeholder="Enter user bio..."
+              rows={4}
+              className="w-full px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral resize-none"
+              disabled={savingBio}
+            />
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-2">
+            <button
+              onClick={handleSaveBio}
+              disabled={savingBio || !bioChanged}
+              className="px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingBio ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Bio"
+              )}
+            </button>
+          </div>
+
+          {bioError && <p className="text-sm text-red-600">{bioError}</p>}
+          {bioSuccess && (
+            <p className="text-sm text-green-600">Bio saved successfully!</p>
           )}
         </div>
       </div>
