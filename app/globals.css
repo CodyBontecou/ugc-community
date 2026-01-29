@@ -92,7 +92,6 @@ button {
   font-family: var(--font-body);
   cursor: pointer;
   border: none;
-  background: none;
 }
 
 img {
