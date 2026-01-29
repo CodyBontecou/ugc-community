@@ -1,10 +1,11 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
-import { User } from "lucide-react";
+import { User, Users } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -38,6 +39,27 @@ async function DashboardContent() {
 
       {/* Creator Stats */}
       <CreatorStatsCard />
+
+      {/* Directory CTA */}
+      <Link
+        href="/dashboard/directory"
+        className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 hover:border-warm-gray-300 hover:shadow-sm transition-all"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center flex-shrink-0">
+            <Users size={24} className="text-lavender" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
+              Creator Directory
+            </h2>
+            <p className="text-sm text-warm-gray-500">
+              Get discovered by brands. Join the creator directory to make it
+              easy for brands to find and hire you.
+            </p>
+          </div>
+        </div>
+      </Link>
 
       {/* Account Section */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">

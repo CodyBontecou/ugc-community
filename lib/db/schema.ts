@@ -56,6 +56,17 @@ export const users = pgTable(
     // GitHub repository assigned to user for deployment
     githubRepoFullName: text("github_repo_full_name"),
     githubRepoId: text("github_repo_id"),
+    // Directory listing fields
+    directoryListed: boolean("directory_listed").notNull().default(false),
+    availableForHire: boolean("available_for_hire").notNull().default(true),
+    niches: text("niches").array(),
+    locationCity: text("location_city"),
+    locationCountry: text("location_country"),
+    rateRange: text("rate_range"), // 'budget' | 'mid' | 'premium' | null
+    isFeatured: boolean("is_featured").notNull().default(false),
+    isVerified: boolean("is_verified").notNull().default(false),
+    tagline: text("tagline"),
+    directoryJoinedAt: timestamp("directory_joined_at"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)

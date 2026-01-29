@@ -17,6 +17,12 @@ export function Navbar() {
         </Link>
 
         <div className="hidden md:flex gap-12">
+          <Link
+            href="/creators"
+            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+          >
+            Creators
+          </Link>
           <a
             href="#features"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
