@@ -41,7 +41,7 @@ export default async function DashboardLayout({
       <header className="bg-white border-b border-warm-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="font-semibold text-warm-gray-900">
+            <Link href="/" className="font-semibold text-warm-gray-900">
               ugc.community
             </Link>
 
