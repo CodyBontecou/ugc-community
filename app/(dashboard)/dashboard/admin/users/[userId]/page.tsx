@@ -226,6 +226,15 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Subdomain editing state
+  const [subdomainInput, setSubdomainInput] = useState("");
+  const [savingSubdomain, setSavingSubdomain] = useState(false);
+  const [subdomainError, setSubdomainError] = useState<string | null>(null);
+  const [subdomainSuccess, setSubdomainSuccess] = useState(false);
+  const [checkingSubdomain, setCheckingSubdomain] = useState(false);
+  const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null);
+  const [subdomainSuggestions, setSubdomainSuggestions] = useState<string[]>([]);
+
   // Vercel Project ID editing state
   const [vercelProjectId, setVercelProjectId] = useState("");
   const [savingVercelProjectId, setSavingVercelProjectId] = useState(false);
@@ -271,6 +280,7 @@ export default function UserDetailPage() {
         setWaitlistEntry(data.waitlistEntry);
         setStatusChangedByUser(data.statusChangedByUser);
         setVercelProjectId(data.user.vercelProjectId || "");
+        setSubdomainInput(data.user.subdomain || "");
       } catch {
         setError("Failed to load user details");
       } finally {
@@ -435,6 +445,70 @@ export default function UserDetailPage() {
       setLinkError(err instanceof Error ? err.message : "Failed to link repository");
     } finally {
       setLinkingRepo(false);
+    }
+  };
+
+  // Debounced subdomain availability check
+  useEffect(() => {
+    if (!subdomainInput || subdomainInput === user?.subdomain) {
+      setSubdomainAvailable(null);
+      setSubdomainSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setCheckingSubdomain(true);
+      setSubdomainError(null);
+
+      try {
+        const response = await fetch(`/api/user/subdomain?check=${encodeURIComponent(subdomainInput)}`);
+        const data = await response.json();
+        setSubdomainAvailable(data.available);
+        setSubdomainSuggestions(data.suggestions || []);
+        if (!data.available && data.reason) {
+          setSubdomainError(data.reason);
+        }
+      } catch {
+        setSubdomainError("Failed to check availability");
+      } finally {
+        setCheckingSubdomain(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [subdomainInput, user?.subdomain]);
+
+  // Save subdomain
+  const handleSaveSubdomain = async () => {
+    setSavingSubdomain(true);
+    setSubdomainError(null);
+    setSubdomainSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subdomain: subdomainInput.trim() || null }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save subdomain");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev ? { ...prev, subdomain: data.user.subdomain } : prev
+      );
+      setSubdomainInput(data.user.subdomain || "");
+      setSubdomainAvailable(null);
+      setSubdomainSuggestions([]);
+      setSubdomainSuccess(true);
+      setTimeout(() => setSubdomainSuccess(false), 3000);
+    } catch (err) {
+      setSubdomainError(err instanceof Error ? err.message : "Failed to save subdomain");
+    } finally {
+      setSavingSubdomain(false);
     }
   };
 
@@ -781,6 +855,161 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Subdomain Management */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe size={20} className="text-warm-gray-600" />
+          <h3 className="text-lg font-semibold text-warm-gray-900">
+            Subdomain
+          </h3>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="subdomain"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              Custom Subdomain
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="subdomain"
+                  type="text"
+                  value={subdomainInput}
+                  onChange={(e) => {
+                    setSubdomainInput(e.target.value.toLowerCase().trim());
+                    setSubdomainError(null);
+                  }}
+                  placeholder="username"
+                  className={`w-full px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 ${
+                    subdomainAvailable === true
+                      ? "border-green-300 focus:ring-green-500/20 focus:border-green-500"
+                      : subdomainAvailable === false
+                      ? "border-red-300 focus:ring-red-500/20 focus:border-red-500"
+                      : "border-warm-gray-300 focus:ring-coral/20 focus:border-coral"
+                  }`}
+                  disabled={savingSubdomain}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {checkingSubdomain && (
+                    <Loader2 size={16} className="animate-spin text-warm-gray-400" />
+                  )}
+                  {!checkingSubdomain && subdomainAvailable === true && (
+                    <CheckCircle size={16} className="text-green-500" />
+                  )}
+                  {!checkingSubdomain && subdomainAvailable === false && (
+                    <XCircle size={16} className="text-red-500" />
+                  )}
+                </div>
+              </div>
+              <span className="text-warm-gray-500 text-sm font-medium">.ugc.community</span>
+            </div>
+            <p className="text-xs text-warm-gray-500 mt-1">
+              3-63 characters, lowercase letters, numbers, and hyphens only. Leave empty to remove.
+            </p>
+          </div>
+
+          {/* Availability message */}
+          {subdomainInput && subdomainInput !== user?.subdomain && !checkingSubdomain && (
+            <p className={`text-sm ${subdomainAvailable ? "text-green-600" : "text-red-600"}`}>
+              {subdomainAvailable
+                ? "This subdomain is available!"
+                : subdomainError || "This subdomain is not available"}
+            </p>
+          )}
+
+          {/* Suggestions */}
+          {subdomainSuggestions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm text-warm-gray-600">
+                Try one of these available alternatives:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {subdomainSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setSubdomainInput(suggestion);
+                      setSubdomainAvailable(null);
+                      setSubdomainSuggestions([]);
+                      setSubdomainError(null);
+                    }}
+                    className="px-3 py-1.5 text-sm font-medium bg-lavender-soft/30 text-lavender hover:bg-lavender-soft/50 rounded-lg transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* URL Preview */}
+          {subdomainInput && (
+            <div className="p-3 bg-warm-gray-50 rounded-lg border border-warm-gray-200">
+              <p className="text-xs text-warm-gray-500 mb-1">Profile URL:</p>
+              <p className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+                https://{subdomainInput}.ugc.community
+                {user?.subdomain === subdomainInput && (
+                  <a
+                    href={`https://${subdomainInput}.ugc.community`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-coral hover:text-coral/80"
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleSaveSubdomain}
+              disabled={
+                savingSubdomain ||
+                checkingSubdomain ||
+                (subdomainInput !== "" && subdomainInput !== user?.subdomain && subdomainAvailable !== true)
+              }
+              className="px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingSubdomain ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Subdomain"
+              )}
+            </button>
+
+            {user?.subdomain && (
+              <button
+                onClick={() => {
+                  setSubdomainInput("");
+                  setSubdomainAvailable(null);
+                  setSubdomainSuggestions([]);
+                }}
+                disabled={savingSubdomain || subdomainInput === ""}
+                className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Remove Subdomain
+              </button>
+            )}
+          </div>
+
+          {subdomainError && !checkingSubdomain && subdomainInput === user?.subdomain && (
+            <p className="text-sm text-red-600">{subdomainError}</p>
+          )}
+          {subdomainSuccess && (
+            <p className="text-sm text-green-600">Subdomain saved successfully!</p>
+          )}
+        </div>
+      </div>
 
       {/* GitHub Repository */}
       {adminGitHubStatus?.connected && (

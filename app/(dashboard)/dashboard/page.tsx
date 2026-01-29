@@ -1,13 +1,9 @@
 import { Suspense } from "react";
 import { getServerSession } from "@/lib/auth/session";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { SubdomainSettings } from "@/components/dashboard/subdomain-settings";
 import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
-import { User, Eye } from "lucide-react";
+import { User } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,12 +17,6 @@ export const dynamic = "force-dynamic";
 async function DashboardContent() {
   const session = await getServerSession();
   if (!session) return null;
-
-  // Fetch user's subdomain and profile stats from database
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: { subdomain: true, profileViewCount: true },
-  });
 
   const firstName = session.user.name?.split(" ")[0] || "Creator";
 
@@ -73,31 +63,6 @@ async function DashboardContent() {
           <SignOutButton />
         </div>
       </div>
-
-      {/* Subdomain Settings Section */}
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
-        <SubdomainSettings initialSubdomain={user?.subdomain || null} />
-      </div>
-
-      {/* Profile Stats Section - only show if user has a public profile */}
-      {user?.subdomain && (
-        <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-warm-gray-900 mb-4">
-            Profile Stats
-          </h2>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center">
-              <Eye size={24} className="text-lavender" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-warm-gray-900">
-                {(user.profileViewCount ?? 0).toLocaleString()}
-              </p>
-              <p className="text-sm text-warm-gray-500">Profile Views</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Media Library Section */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">

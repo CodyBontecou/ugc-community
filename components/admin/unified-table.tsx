@@ -13,8 +13,6 @@ import {
   Shield,
   ShieldOff,
   Ban,
-  Pencil,
-  X,
   Instagram,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -78,11 +76,6 @@ export function UnifiedTable() {
   const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
   const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
-  // Subdomain editor state
-  const [editingSubdomain, setEditingSubdomain] = useState<UnifiedRecord | null>(null);
-  const [subdomainInput, setSubdomainInput] = useState("");
-  const [subdomainError, setSubdomainError] = useState<string | null>(null);
-  const [savingSubdomain, setSavingSubdomain] = useState(false);
 
   useEffect(() => {
     fetchRecords();
@@ -285,50 +278,6 @@ export function UnifiedTable() {
     }
   }
 
-  function openSubdomainEditor(record: UnifiedRecord) {
-    setEditingSubdomain(record);
-    setSubdomainInput(record.subdomain || "");
-    setSubdomainError(null);
-  }
-
-  function closeSubdomainEditor() {
-    setEditingSubdomain(null);
-    setSubdomainInput("");
-    setSubdomainError(null);
-  }
-
-  async function saveSubdomain() {
-    if (!editingSubdomain) return;
-
-    setSavingSubdomain(true);
-    setSubdomainError(null);
-
-    try {
-      const res = await fetch(`/api/admin/users/${editingSubdomain.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subdomain: subdomainInput.trim() || null }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update subdomain");
-      }
-
-      const data = await res.json();
-      setRecords((prev) =>
-        prev.map((r) =>
-          r.id === editingSubdomain.id && r.type === "user" ? { ...r, subdomain: data.user.subdomain } : r
-        )
-      );
-      closeSubdomainEditor();
-    } catch (err) {
-      setSubdomainError(err instanceof Error ? err.message : "Failed to update subdomain");
-    } finally {
-      setSavingSubdomain(false);
-    }
-  }
-
   // Render helpers
   function renderPersonCell(record: UnifiedRecord) {
     if (record.type === "user") {
@@ -365,21 +314,10 @@ export function UnifiedTable() {
 
   function renderDetailsCell(record: UnifiedRecord) {
     if (record.type === "user") {
-      return (
-        <button
-          onClick={() => openSubdomainEditor(record)}
-          className="group flex items-center gap-1.5 text-sm hover:text-coral transition-colors"
-        >
-          {record.subdomain ? (
-            <span className="text-warm-gray-600 font-mono group-hover:text-coral">{record.subdomain}</span>
-          ) : (
-            <span className="text-warm-gray-400 group-hover:text-coral">—</span>
-          )}
-          <Pencil
-            size={14}
-            className="text-warm-gray-400 group-hover:text-coral opacity-0 group-hover:opacity-100 transition-opacity"
-          />
-        </button>
+      return record.subdomain ? (
+        <span className="text-sm text-warm-gray-600 font-mono">{record.subdomain}</span>
+      ) : (
+        <span className="text-sm text-warm-gray-400">—</span>
       );
     }
 
@@ -789,75 +727,6 @@ export function UnifiedTable() {
           </p>
         </div>
       </div>
-
-      {/* Edit Subdomain Dialog */}
-      {editingSubdomain && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={closeSubdomainEditor} />
-          <div className="relative bg-white rounded-[--radius-xl] shadow-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-4 border-b border-warm-gray-200">
-              <h3 className="text-lg font-semibold text-warm-gray-900">Edit Subdomain</h3>
-              <button
-                onClick={closeSubdomainEditor}
-                className="p-1 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <p className="text-sm text-warm-gray-600 mb-1">
-                  User: <span className="font-medium">{editingSubdomain.displayName || editingSubdomain.name}</span>
-                </p>
-                <p className="text-xs text-warm-gray-500">{editingSubdomain.email}</p>
-              </div>
-              <div>
-                <label htmlFor="subdomain-input" className="block text-sm font-medium text-warm-gray-700 mb-1">
-                  Subdomain
-                </label>
-                <input
-                  id="subdomain-input"
-                  type="text"
-                  value={subdomainInput}
-                  onChange={(e) => {
-                    setSubdomainInput(e.target.value.toLowerCase());
-                    setSubdomainError(null);
-                  }}
-                  placeholder="username"
-                  className="w-full px-3 py-2 border border-warm-gray-200 rounded-[--radius-md] text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral font-mono"
-                />
-                <p className="text-xs text-warm-gray-500 mt-1">
-                  3-63 characters, lowercase letters, numbers, and hyphens only. Leave empty to remove.
-                </p>
-                {subdomainError && <p className="text-xs text-red-600 mt-1">{subdomainError}</p>}
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 p-4 border-t border-warm-gray-200 bg-warm-gray-50 rounded-b-[--radius-xl]">
-              <button
-                onClick={closeSubdomainEditor}
-                disabled={savingSubdomain}
-                className="px-4 py-2 text-sm font-medium text-warm-gray-700 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveSubdomain}
-                disabled={savingSubdomain}
-                className="px-4 py-2 text-sm font-medium text-white bg-coral hover:bg-coral/90 rounded-[--radius-md] transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {savingSubdomain ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <CreateInviteDialog isOpen={showCreateDialog} onClose={() => setShowCreateDialog(false)} onCreated={fetchRecords} />
 
