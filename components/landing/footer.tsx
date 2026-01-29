@@ -6,124 +6,38 @@ export function Footer() {
   return (
     <footer className="relative z-[1] bg-warm-gray-900 py-16 text-warm-gray-300">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12">
-          <div>
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <Image
-                src="/icon.png"
-                alt="ugc.community logo"
-                width={36}
-                height={36}
-                className="rounded-[--radius-md]"
-              />
-              <span className="font-semibold text-[1.1rem] text-white">
-                ugc.community
-              </span>
-            </Link>
-            <p className="text-sm leading-relaxed max-w-[280px] mb-6">
-              The modern way for content creators to showcase their work and
-              land brand deals.
-            </p>
-            <div className="flex gap-4">
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
-              >
-                <Instagram size={20} />
-              </a>
-              <a
-                href="#"
-                aria-label="YouTube"
-                className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
-              >
-                <Youtube size={20} />
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-[family-name:var(--font-body)] font-semibold text-sm text-white mb-6">
-              Product
-            </h4>
-            <div className="flex flex-col gap-2">
-              <a
-                href="#features"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#pricing"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Pricing
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-[family-name:var(--font-body)] font-semibold text-sm text-white mb-6">
-              Resources
-            </h4>
-            <div className="flex flex-col gap-2">
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Help Center
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Blog
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Guides
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                API Docs
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-[family-name:var(--font-body)] font-semibold text-sm text-white mb-6">
-              Company
-            </h4>
-            <div className="flex flex-col gap-2">
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                About
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Careers
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Privacy
-              </a>
-              <a
-                href="#"
-                className="text-sm text-warm-gray-400 hover:text-white transition-colors"
-              >
-                Terms
-              </a>
-            </div>
+        <div className="mb-12">
+          <Link href="/" className="flex items-center gap-2 mb-6">
+            <Image
+              src="/icon.png"
+              alt="ugc.community logo"
+              width={36}
+              height={36}
+              className="rounded-[--radius-md]"
+            />
+            <span className="font-semibold text-[1.1rem] text-white">
+              ugc.community
+            </span>
+          </Link>
+          <p className="text-sm leading-relaxed max-w-[280px] mb-6">
+            The modern way for content creators to showcase their work and
+            land brand deals.
+          </p>
+          <div className="flex gap-4">
+            <a
+              href="#"
+              aria-label="Instagram"
+              className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
+            >
+              <Instagram size={20} />
+            </a>
+            <a
+              href="#"
+              aria-label="YouTube"
+              className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
+            >
+              <Youtube size={20} />
+            </a>
           </div>
         </div>
 
