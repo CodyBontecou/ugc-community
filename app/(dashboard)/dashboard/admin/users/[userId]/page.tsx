@@ -254,6 +254,7 @@ export default function UserDetailPage() {
   const [savingRepo, setSavingRepo] = useState(false);
   const [repoError, setRepoError] = useState<string | null>(null);
   const [repoSuccess, setRepoSuccess] = useState(false);
+  const [vercelProjectCreated, setVercelProjectCreated] = useState(false);
 
   // Repo linking state
   const [repoLinkStatus, setRepoLinkStatus] = useState<RepoLinkStatus | null>(null);
@@ -383,6 +384,7 @@ export default function UserDetailPage() {
     setSavingRepo(true);
     setRepoError(null);
     setRepoSuccess(false);
+    setVercelProjectCreated(false);
 
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -406,13 +408,20 @@ export default function UserDetailPage() {
               ...prev,
               githubRepoFullName: data.user.githubRepoFullName,
               githubRepoId: data.user.githubRepoId,
+              vercelProjectId: data.user.vercelProjectId,
             }
           : prev
       );
       setRepoDropdownOpen(false);
       setRepoSearch("");
       setRepoSuccess(true);
-      setTimeout(() => setRepoSuccess(false), 3000);
+      if (data.vercelProjectCreated) {
+        setVercelProjectCreated(true);
+      }
+      setTimeout(() => {
+        setRepoSuccess(false);
+        setVercelProjectCreated(false);
+      }, 5000);
     } catch (err) {
       setRepoError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -1159,7 +1168,12 @@ export default function UserDetailPage() {
             )}
 
             {repoSuccess && (
-              <p className="text-sm text-green-600">Repository saved successfully!</p>
+              <div className="text-sm text-green-600">
+                <p>Repository saved successfully!</p>
+                {vercelProjectCreated && (
+                  <p className="mt-1 font-medium">Vercel project created and linked automatically.</p>
+                )}
+              </div>
             )}
 
             {/* Repo Link Status & Action */}

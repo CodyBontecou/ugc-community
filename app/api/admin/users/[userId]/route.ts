@@ -6,6 +6,7 @@ import { users, invites, waitlist } from "@/lib/db/schema";
 import { eq, and, ne, or, desc } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
+import { createProject } from "@/lib/vercel/client";
 
 const updateUserStatusSchema = z.object({
   status: z.enum(["active", "suspended", "banned"]),
@@ -301,11 +302,70 @@ export async function PATCH(
     if ("githubRepoFullName" in body || "githubRepoId" in body) {
       const { githubRepoFullName, githubRepoId } = updateUserGitHubRepoSchema.parse(body);
 
+      // If clearing the repo, just update the database
+      if (!githubRepoFullName || githubRepoFullName === "") {
+        const [updated] = await db
+          .update(users)
+          .set({
+            githubRepoFullName: null,
+            githubRepoId: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId))
+          .returning({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            githubRepoFullName: users.githubRepoFullName,
+            githubRepoId: users.githubRepoId,
+            vercelProjectId: users.vercelProjectId,
+          });
+
+        return NextResponse.json({ user: updated });
+      }
+
+      // Check if user already has a Vercel project
+      const currentUser = await db
+        .select({ vercelProjectId: users.vercelProjectId })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      let vercelProjectId = currentUser[0]?.vercelProjectId;
+
+      // If no Vercel project exists, create one with the GitHub repo linked
+      if (!vercelProjectId) {
+        try {
+          // Use the repo name as the project name (e.g., "org/repo-name" -> "repo-name")
+          const repoName = githubRepoFullName.split("/").pop() || githubRepoFullName;
+          // Add a unique suffix to avoid naming conflicts
+          const projectName = `${repoName}-${userId.slice(0, 8)}`;
+
+          const project = await createProject({
+            name: projectName,
+            framework: "nextjs",
+            gitRepository: {
+              type: "github",
+              repo: githubRepoFullName,
+            },
+          });
+
+          vercelProjectId = project.id;
+        } catch (error) {
+          console.error("Failed to create Vercel project:", error);
+          return NextResponse.json(
+            { error: "Failed to create Vercel project. Please try again or set the project ID manually." },
+            { status: 500 }
+          );
+        }
+      }
+
       const [updated] = await db
         .update(users)
         .set({
-          githubRepoFullName: githubRepoFullName === "" ? null : githubRepoFullName,
+          githubRepoFullName,
           githubRepoId: githubRepoId === "" ? null : githubRepoId,
+          vercelProjectId,
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId))
@@ -315,9 +375,10 @@ export async function PATCH(
           email: users.email,
           githubRepoFullName: users.githubRepoFullName,
           githubRepoId: users.githubRepoId,
+          vercelProjectId: users.vercelProjectId,
         });
 
-      return NextResponse.json({ user: updated });
+      return NextResponse.json({ user: updated, vercelProjectCreated: !currentUser[0]?.vercelProjectId });
     }
 
     // Handle status update

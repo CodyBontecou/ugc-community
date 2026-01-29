@@ -236,3 +236,42 @@ export async function getProject(projectId: string): Promise<{
     link?: GitRepository;
   }>(response);
 }
+
+// =====================================================
+// Project Management
+// =====================================================
+
+export interface CreateProjectOptions {
+  name: string;
+  framework?: string;
+  gitRepository?: {
+    type: "github";
+    repo: string;
+  };
+}
+
+export interface VercelProject {
+  id: string;
+  name: string;
+  link?: GitRepository;
+}
+
+/**
+ * Create a new Vercel project
+ * POST /v10/projects
+ */
+export async function createProject(
+  options: CreateProjectOptions
+): Promise<VercelProject> {
+  const response = await fetch(buildUrl("/v10/projects"), {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      name: options.name,
+      framework: options.framework || "nextjs",
+      gitRepository: options.gitRepository,
+    }),
+  });
+
+  return handleResponse<VercelProject>(response);
+}
