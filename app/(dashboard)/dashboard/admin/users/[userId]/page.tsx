@@ -326,6 +326,15 @@ export default function UserDetailPage() {
   const [triggeringDeployment, setTriggeringDeployment] = useState(false);
   const [deploymentSuccess, setDeploymentSuccess] = useState<string | null>(null);
 
+  // Social handles editing state
+  const [instagramHandleInput, setInstagramHandleInput] = useState("");
+  const [tiktokHandleInput, setTiktokHandleInput] = useState("");
+  const [youtubeHandleInput, setYoutubeHandleInput] = useState("");
+  const [twitterHandleInput, setTwitterHandleInput] = useState("");
+  const [savingSocialHandles, setSavingSocialHandles] = useState(false);
+  const [socialHandlesError, setSocialHandlesError] = useState<string | null>(null);
+  const [socialHandlesSuccess, setSocialHandlesSuccess] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -345,6 +354,10 @@ export default function UserDetailPage() {
         setStatusChangedByUser(data.statusChangedByUser);
         setVercelProjectId(data.user.vercelProjectId || "");
         setSubdomainInput(data.user.subdomain || "");
+        setInstagramHandleInput(data.user.instagramHandle || "");
+        setTiktokHandleInput(data.user.tiktokHandle || "");
+        setYoutubeHandleInput(data.user.youtubeHandle || "");
+        setTwitterHandleInput(data.user.twitterHandle || "");
       } catch {
         setError("Failed to load user details");
       } finally {
@@ -790,6 +803,57 @@ export default function UserDetailPage() {
     }
   };
 
+  // Save social handles
+  const handleSaveSocialHandles = async () => {
+    setSavingSocialHandles(true);
+    setSocialHandlesError(null);
+    setSocialHandlesSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          instagramHandle: instagramHandleInput.trim() || null,
+          tiktokHandle: tiktokHandleInput.trim() || null,
+          youtubeHandle: youtubeHandleInput.trim() || null,
+          twitterHandle: twitterHandleInput.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              instagramHandle: data.user.instagramHandle,
+              tiktokHandle: data.user.tiktokHandle,
+              youtubeHandle: data.user.youtubeHandle,
+              twitterHandle: data.user.twitterHandle,
+            }
+          : prev
+      );
+      setSocialHandlesSuccess(true);
+      setTimeout(() => setSocialHandlesSuccess(false), 3000);
+    } catch (err) {
+      setSocialHandlesError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSavingSocialHandles(false);
+    }
+  };
+
+  // Check if social handles have changed
+  const socialHandlesChanged =
+    instagramHandleInput !== (user?.instagramHandle || "") ||
+    tiktokHandleInput !== (user?.tiktokHandle || "") ||
+    youtubeHandleInput !== (user?.youtubeHandle || "") ||
+    twitterHandleInput !== (user?.twitterHandle || "");
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1190,6 +1254,131 @@ export default function UserDetailPage() {
           )}
           {subdomainSuccess && (
             <p className="text-sm text-green-600">Subdomain saved successfully!</p>
+          )}
+        </div>
+      </div>
+
+      {/* Social Media Handles */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Instagram size={20} className="text-warm-gray-600" />
+          <h3 className="text-lg font-semibold text-warm-gray-900">
+            Social Media Handles
+          </h3>
+        </div>
+
+        <div className="space-y-4">
+          {/* Instagram */}
+          <div>
+            <label
+              htmlFor="instagramHandle"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              Instagram
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-warm-gray-500 text-sm">@</span>
+              <input
+                id="instagramHandle"
+                type="text"
+                value={instagramHandleInput}
+                onChange={(e) => setInstagramHandleInput(e.target.value.replace(/^@/, ""))}
+                placeholder="username"
+                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                disabled={savingSocialHandles}
+              />
+            </div>
+          </div>
+
+          {/* TikTok */}
+          <div>
+            <label
+              htmlFor="tiktokHandle"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              TikTok
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-warm-gray-500 text-sm">@</span>
+              <input
+                id="tiktokHandle"
+                type="text"
+                value={tiktokHandleInput}
+                onChange={(e) => setTiktokHandleInput(e.target.value.replace(/^@/, ""))}
+                placeholder="username"
+                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                disabled={savingSocialHandles}
+              />
+            </div>
+          </div>
+
+          {/* YouTube */}
+          <div>
+            <label
+              htmlFor="youtubeHandle"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              YouTube
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-warm-gray-500 text-sm">@</span>
+              <input
+                id="youtubeHandle"
+                type="text"
+                value={youtubeHandleInput}
+                onChange={(e) => setYoutubeHandleInput(e.target.value.replace(/^@/, ""))}
+                placeholder="username"
+                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                disabled={savingSocialHandles}
+              />
+            </div>
+          </div>
+
+          {/* Twitter/X */}
+          <div>
+            <label
+              htmlFor="twitterHandle"
+              className="block text-sm font-medium text-warm-gray-700 mb-1"
+            >
+              X (Twitter)
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-warm-gray-500 text-sm">@</span>
+              <input
+                id="twitterHandle"
+                type="text"
+                value={twitterHandleInput}
+                onChange={(e) => setTwitterHandleInput(e.target.value.replace(/^@/, ""))}
+                placeholder="username"
+                className="flex-1 px-3 py-2 border border-warm-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                disabled={savingSocialHandles}
+              />
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="pt-2">
+            <button
+              onClick={handleSaveSocialHandles}
+              disabled={savingSocialHandles || !socialHandlesChanged}
+              className="px-4 py-2 bg-warm-gray-800 text-white rounded-lg text-sm font-medium hover:bg-warm-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {savingSocialHandles ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Social Handles"
+              )}
+            </button>
+          </div>
+
+          {socialHandlesError && (
+            <p className="text-sm text-red-600">{socialHandlesError}</p>
+          )}
+          {socialHandlesSuccess && (
+            <p className="text-sm text-green-600">Social handles saved successfully!</p>
           )}
         </div>
       </div>

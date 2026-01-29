@@ -25,6 +25,13 @@ const updateUserGitHubRepoSchema = z.object({
   githubRepoId: z.string().nullable(),
 });
 
+const updateUserSocialHandlesSchema = z.object({
+  instagramHandle: z.string().nullable().optional(),
+  tiktokHandle: z.string().nullable().optional(),
+  youtubeHandle: z.string().nullable().optional(),
+  twitterHandle: z.string().nullable().optional(),
+});
+
 // GET /api/admin/users/[userId] - Get user details with invite history
 export async function GET(
   request: NextRequest,
@@ -411,6 +418,43 @@ export async function PATCH(
         });
 
       return NextResponse.json({ user: updated, vercelProjectCreated: !currentUser[0]?.vercelProjectId });
+    }
+
+    // Handle social handles update
+    if ("instagramHandle" in body || "tiktokHandle" in body || "youtubeHandle" in body || "twitterHandle" in body) {
+      const socialHandles = updateUserSocialHandlesSchema.parse(body);
+
+      const updateData: Record<string, string | null | Date> = {
+        updatedAt: new Date(),
+      };
+
+      // Only include fields that were explicitly provided
+      if ("instagramHandle" in body) {
+        updateData.instagramHandle = socialHandles.instagramHandle === "" ? null : socialHandles.instagramHandle ?? null;
+      }
+      if ("tiktokHandle" in body) {
+        updateData.tiktokHandle = socialHandles.tiktokHandle === "" ? null : socialHandles.tiktokHandle ?? null;
+      }
+      if ("youtubeHandle" in body) {
+        updateData.youtubeHandle = socialHandles.youtubeHandle === "" ? null : socialHandles.youtubeHandle ?? null;
+      }
+      if ("twitterHandle" in body) {
+        updateData.twitterHandle = socialHandles.twitterHandle === "" ? null : socialHandles.twitterHandle ?? null;
+      }
+
+      const [updated] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          instagramHandle: users.instagramHandle,
+          tiktokHandle: users.tiktokHandle,
+          youtubeHandle: users.youtubeHandle,
+          twitterHandle: users.twitterHandle,
+        });
+
+      return NextResponse.json({ user: updated });
     }
 
     // Handle status update
