@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Copy, Check } from "lucide-react";
+import { X, Copy, Check, Mail } from "lucide-react";
 
 interface CreateInviteDialogProps {
   isOpen: boolean;
@@ -16,9 +16,11 @@ export function CreateInviteDialog({
 }: CreateInviteDialogProps) {
   const [email, setEmail] = useState("");
   const [expirationDays, setExpirationDays] = useState(7);
+  const [sendEmail, setSendEmail] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -35,6 +37,7 @@ export function CreateInviteDialog({
         body: JSON.stringify({
           email: email || undefined,
           expirationDays,
+          sendEmail: email ? sendEmail : false,
         }),
       });
 
@@ -45,6 +48,7 @@ export function CreateInviteDialog({
 
       const data = await res.json();
       setCreatedUrl(data.invite.url);
+      setEmailSent(data.invite.emailSent);
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -64,8 +68,10 @@ export function CreateInviteDialog({
   function handleClose() {
     setEmail("");
     setExpirationDays(7);
+    setSendEmail(true);
     setError(null);
     setCreatedUrl(null);
+    setEmailSent(false);
     setCopied(false);
     onClose();
   }
@@ -91,9 +97,17 @@ export function CreateInviteDialog({
 
         {createdUrl ? (
           <div className="p-4 space-y-4">
-            <p className="text-sm text-warm-gray-600">
-              Invite created successfully! Share this link:
-            </p>
+            <div className="flex items-center gap-2 text-sm text-warm-gray-600">
+              <Check size={16} className="text-green-600" />
+              <span>Invite created successfully!</span>
+            </div>
+            {emailSent && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <Mail size={16} />
+                <span>Invitation email sent</span>
+              </div>
+            )}
+            <p className="text-sm text-warm-gray-600">Share this link:</p>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -136,6 +150,24 @@ export function CreateInviteDialog({
                 If set, only this email can use the invite
               </p>
             </div>
+
+            {email && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="sendEmail"
+                  type="checkbox"
+                  checked={sendEmail}
+                  onChange={(e) => setSendEmail(e.target.checked)}
+                  className="w-4 h-4 rounded border-warm-gray-300 text-coral focus:ring-coral/20"
+                />
+                <label
+                  htmlFor="sendEmail"
+                  className="text-sm text-warm-gray-700"
+                >
+                  Send invitation email
+                </label>
+              </div>
+            )}
 
             <div>
               <label

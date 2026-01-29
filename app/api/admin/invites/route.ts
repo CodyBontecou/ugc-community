@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 import { createInvite, listAllInvites, getInviteUrl } from "@/lib/invites";
+import { sendInvitationEmail } from "@/lib/email";
 import { z } from "zod";
 
 const createInviteSchema = z.object({
   email: z.string().email().optional(),
   expirationDays: z.number().min(1).max(90).optional(),
+  sendEmail: z.boolean().optional(),
 });
 
 // POST /api/admin/invites - Create a new invite
@@ -19,13 +21,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, expirationDays } = createInviteSchema.parse(body);
+    const { email, expirationDays, sendEmail } = createInviteSchema.parse(body);
 
     const invite = await createInvite({
       createdBy: session.user.id,
       email,
       expirationDays,
     });
+
+    const inviteUrl = getInviteUrl(invite.token);
+
+    // Send invitation email if requested and email is provided
+    let emailSent = false;
+    if (sendEmail && email) {
+      try {
+        await sendInvitationEmail(email, inviteUrl);
+        emailSent = true;
+      } catch (emailError) {
+        console.error("Failed to send invitation email:", emailError);
+        // Don't fail the invite creation if email fails
+      }
+    }
 
     return NextResponse.json({
       invite: {
@@ -34,7 +50,8 @@ export async function POST(request: NextRequest) {
         email: invite.email,
         expiresAt: invite.expiresAt,
         createdAt: invite.createdAt,
-        url: getInviteUrl(invite.token),
+        url: inviteUrl,
+        emailSent,
       },
     });
   } catch (error) {
