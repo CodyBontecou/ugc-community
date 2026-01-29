@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { RecordTypeBadge } from "./record-type-badge";
 import { CreateInviteDialog } from "./create-invite-dialog";
+import { DeleteUserDialog } from "./delete-user-dialog";
 import type { RecordType, UnifiedRecord } from "@/app/api/admin/people/route";
 import type { UserStatus } from "@/lib/admin";
 
@@ -71,6 +72,7 @@ export function UnifiedTable() {
   const [actionMenuFlip, setActionMenuFlip] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
   const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // Subdomain editor state
@@ -178,6 +180,18 @@ export function UnifiedTable() {
     } finally {
       setUpdating(null);
     }
+  }
+
+  function openDeleteDialog(record: UnifiedRecord) {
+    setActionMenuOpen(null);
+    setUserToDelete(record);
+  }
+
+  function handleUserDeleted() {
+    if (userToDelete) {
+      setRecords((prev) => prev.filter((r) => !(r.id === userToDelete.id && r.type === "user")));
+    }
+    setUserToDelete(null);
   }
 
   async function revokeInvite(inviteId: string) {
@@ -510,6 +524,14 @@ export function UnifiedTable() {
                     Ban
                   </button>
                 )}
+                <div className="border-t border-warm-gray-200 my-1" />
+                <button
+                  onClick={() => openDeleteDialog(record)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                  Delete User
+                </button>
               </div>
             </>
           )}
@@ -787,6 +809,13 @@ export function UnifiedTable() {
       )}
 
       <CreateInviteDialog isOpen={showCreateDialog} onClose={() => setShowCreateDialog(false)} onCreated={fetchRecords} />
+
+      <DeleteUserDialog
+        isOpen={userToDelete !== null}
+        onClose={() => setUserToDelete(null)}
+        onDeleted={handleUserDeleted}
+        user={userToDelete ? { id: userToDelete.id, name: userToDelete.name, email: userToDelete.email } : null}
+      />
     </>
   );
 }

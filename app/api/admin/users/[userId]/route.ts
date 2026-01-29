@@ -152,3 +152,59 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/users/[userId] - Permanently delete a user
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await requireAuth();
+
+    if (!isAdmin(session.user.email)) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { userId } = await params;
+
+    // Check if user exists
+    const existingUser = await db
+      .select({ id: users.id, email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (existingUser.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Prevent admin from deleting themselves
+    if (userId === session.user.id) {
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 }
+      );
+    }
+
+    // Prevent deleting other admins
+    if (isAdmin(existingUser[0].email)) {
+      return NextResponse.json(
+        { error: "Cannot delete admin users" },
+        { status: 400 }
+      );
+    }
+
+    // Delete the user - cascades will handle sessions, accounts, media
+    // Invites created by this user will be deleted (cascade)
+    // Invites used by this user will have usedBy set to null (set null)
+    await db.delete(users).where(eq(users.id, userId));
+
+    return NextResponse.json({ success: true, deletedUser: existingUser[0] });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("Error deleting user:", error);
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+  }
+}
