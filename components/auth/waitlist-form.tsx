@@ -110,12 +110,6 @@ export function WaitlistForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white rounded-[--radius-xl] p-8 shadow-lg border border-warm-gray-100">
         <div className="text-center mb-6">
-          <Link
-            href="/"
-            className="inline-block text-xl font-semibold text-warm-gray-900 mb-4"
-          >
-            ugc.community
-          </Link>
           <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
             Join the Waitlist
           </h1>
