@@ -46,6 +46,11 @@ export const users = pgTable(
     // Vercel subdomain integration
     vercelProjectId: text("vercel_project_id"),
     siteEnabled: boolean("site_enabled").notNull().default(false),
+    // Admin GitHub connection for deployment management
+    githubAccessToken: text("github_access_token"),
+    githubRefreshToken: text("github_refresh_token"),
+    githubUsername: text("github_username"),
+    githubConnectedAt: timestamp("github_connected_at"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
