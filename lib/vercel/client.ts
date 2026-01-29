@@ -169,3 +169,70 @@ export async function verifyDomain(
     verification: data.verification,
   };
 }
+
+// =====================================================
+// Git Repository Integration
+// =====================================================
+
+export interface GitRepository {
+  type: "github" | "gitlab" | "bitbucket";
+  repo: string;
+  sourceless?: boolean;
+  productionBranch?: string;
+}
+
+export interface ProjectGitConfig {
+  repo: GitRepository | null;
+}
+
+/**
+ * Link a GitHub repository to a Vercel project
+ * PATCH /v9/projects/{projectId}
+ */
+export async function linkGitHubRepo(
+  projectId: string,
+  repoFullName: string
+): Promise<ProjectGitConfig> {
+  const response = await fetch(
+    buildUrl(`/v9/projects/${projectId}`),
+    {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({
+        gitRepository: {
+          type: "github",
+          repo: repoFullName,
+        },
+      }),
+    }
+  );
+
+  const data = await handleResponse<{ link?: GitRepository }>(response);
+  return {
+    repo: data.link || null,
+  };
+}
+
+/**
+ * Get project details including git repository configuration
+ * GET /v9/projects/{projectId}
+ */
+export async function getProject(projectId: string): Promise<{
+  id: string;
+  name: string;
+  link?: GitRepository;
+}> {
+  const response = await fetch(
+    buildUrl(`/v9/projects/${projectId}`),
+    {
+      method: "GET",
+      headers: getHeaders(),
+    }
+  );
+
+  return handleResponse<{
+    id: string;
+    name: string;
+    link?: GitRepository;
+  }>(response);
+}

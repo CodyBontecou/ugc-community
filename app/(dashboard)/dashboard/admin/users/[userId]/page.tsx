@@ -32,6 +32,8 @@ import {
   Unlock,
   X,
   ChevronDown,
+  Link2,
+  AlertCircle,
 } from "lucide-react";
 
 interface UserDetails {
@@ -72,6 +74,18 @@ interface GitHubRepo {
 interface AdminGitHubStatus {
   connected: boolean;
   username: string | null;
+}
+
+interface RepoLinkStatus {
+  hasVercelProject: boolean;
+  vercelProjectId?: string;
+  vercelProjectName?: string;
+  vercelProjectNotFound?: boolean;
+  hasSelectedRepo: boolean;
+  selectedRepo: string | null;
+  linkedRepo: string | null;
+  isLinked: boolean;
+  needsLinking?: boolean;
 }
 
 interface InviteDetails {
@@ -232,6 +246,13 @@ export default function UserDetailPage() {
   const [repoError, setRepoError] = useState<string | null>(null);
   const [repoSuccess, setRepoSuccess] = useState(false);
 
+  // Repo linking state
+  const [repoLinkStatus, setRepoLinkStatus] = useState<RepoLinkStatus | null>(null);
+  const [loadingRepoStatus, setLoadingRepoStatus] = useState(false);
+  const [linkingRepo, setLinkingRepo] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkSuccess, setLinkSuccess] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -279,6 +300,35 @@ export default function UserDetailPage() {
 
     fetchAdminGitHubStatus();
   }, []);
+
+  // Fetch repo link status when user data changes
+  const fetchRepoLinkStatus = async () => {
+    if (!user?.vercelProjectId && !user?.githubRepoFullName) {
+      setRepoLinkStatus(null);
+      return;
+    }
+
+    setLoadingRepoStatus(true);
+    setLinkError(null);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/repo-status`);
+      if (response.ok) {
+        const data = await response.json();
+        setRepoLinkStatus(data);
+      }
+    } catch {
+      // Silently fail - status will just not be shown
+    } finally {
+      setLoadingRepoStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchRepoLinkStatus();
+    }
+  }, [user?.vercelProjectId, user?.githubRepoFullName, userId]);
 
   // Fetch repositories when dropdown opens
   const fetchRepos = async (search = "") => {
@@ -357,6 +407,34 @@ export default function UserDetailPage() {
       setRepoError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSavingRepo(false);
+    }
+  };
+
+  // Link GitHub repo to Vercel project
+  const handleLinkRepo = async () => {
+    setLinkingRepo(true);
+    setLinkError(null);
+    setLinkSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/link-repo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to link repository");
+      }
+
+      setLinkSuccess(true);
+      setTimeout(() => setLinkSuccess(false), 3000);
+      // Refresh the repo link status
+      fetchRepoLinkStatus();
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : "Failed to link repository");
+    } finally {
+      setLinkingRepo(false);
     }
   };
 
@@ -853,6 +931,123 @@ export default function UserDetailPage() {
 
             {repoSuccess && (
               <p className="text-sm text-green-600">Repository saved successfully!</p>
+            )}
+
+            {/* Repo Link Status & Action */}
+            {user.vercelProjectId && user.githubRepoFullName && (
+              <div className="mt-6 pt-4 border-t border-warm-gray-100">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link2 size={16} className="text-warm-gray-600" />
+                  <span className="text-sm font-medium text-warm-gray-700">
+                    Vercel Deployment Link
+                  </span>
+                </div>
+
+                {loadingRepoStatus ? (
+                  <div className="flex items-center gap-2 text-warm-gray-500 text-sm">
+                    <Loader2 size={14} className="animate-spin" />
+                    Checking link status...
+                  </div>
+                ) : repoLinkStatus?.isLinked ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle size={16} className="text-green-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">Repository linked</p>
+                      <p className="text-xs text-green-600">
+                        Pushes to {user.githubRepoFullName} will trigger Vercel deployments
+                      </p>
+                    </div>
+                  </div>
+                ) : repoLinkStatus?.vercelProjectNotFound ? (
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <AlertCircle size={16} className="text-amber-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-800">Vercel project not found</p>
+                      <p className="text-xs text-amber-600">
+                        Project ID "{user.vercelProjectId}" doesn't exist or is inaccessible
+                      </p>
+                    </div>
+                  </div>
+                ) : repoLinkStatus?.linkedRepo && repoLinkStatus.linkedRepo !== user.githubRepoFullName ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <AlertCircle size={16} className="text-amber-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-800">Different repository linked</p>
+                        <p className="text-xs text-amber-600">
+                          Currently linked to: {repoLinkStatus.linkedRepo}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLinkRepo}
+                      disabled={linkingRepo}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {linkingRepo ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Linking...
+                        </>
+                      ) : (
+                        <>
+                          <Link2 size={16} />
+                          Link {user.githubRepoFullName} Instead
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 p-3 bg-warm-gray-50 rounded-lg border border-warm-gray-200">
+                      <Link2 size={16} className="text-warm-gray-400" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-warm-gray-700">Not linked</p>
+                        <p className="text-xs text-warm-gray-500">
+                          Link the repository to enable automatic deployments
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLinkRepo}
+                      disabled={linkingRepo}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-coral text-white rounded-lg text-sm font-medium hover:bg-coral/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {linkingRepo ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Linking...
+                        </>
+                      ) : (
+                        <>
+                          <Link2 size={16} />
+                          Link Repository to Vercel
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {linkError && (
+                  <p className="text-sm text-red-600 mt-2">{linkError}</p>
+                )}
+                {linkSuccess && (
+                  <p className="text-sm text-green-600 mt-2">Repository linked successfully!</p>
+                )}
+              </div>
+            )}
+
+            {/* Hint when prerequisites are missing */}
+            {(!user.vercelProjectId || !user.githubRepoFullName) && (
+              <div className="mt-4 p-3 bg-warm-gray-50 rounded-lg border border-warm-gray-200">
+                <p className="text-sm text-warm-gray-600">
+                  {!user.vercelProjectId && !user.githubRepoFullName
+                    ? "Select a GitHub repository and configure a Vercel Project ID to enable automatic deployments."
+                    : !user.vercelProjectId
+                    ? "Configure a Vercel Project ID below to enable automatic deployments."
+                    : "Select a GitHub repository above to enable automatic deployments."}
+                </p>
+              </div>
             )}
           </div>
         </div>

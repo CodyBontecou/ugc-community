@@ -3,9 +3,13 @@ export {
   removeDomain,
   getDomains,
   verifyDomain,
+  linkGitHubRepo,
+  getProject,
   VercelApiError,
   type Domain,
   type DomainResponse,
   type DomainVerification,
   type VerificationStatus,
+  type GitRepository,
+  type ProjectGitConfig,
 } from "./client";
