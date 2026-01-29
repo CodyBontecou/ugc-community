@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { waitlist } from "@/lib/db/schema";
 import { sendWaitlistConfirmation } from "@/lib/email";
+import { checkBotId } from "botid/server";
 
 const waitlistSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -14,6 +15,12 @@ const waitlistSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Bot protection via Vercel BotID
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const data = waitlistSchema.parse(body);

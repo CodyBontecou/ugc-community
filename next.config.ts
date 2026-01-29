@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withBotId } from "botid/next/config";
 
 const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
@@ -23,4 +24,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Wrap config with BotID for automatic bot detection
+// See: https://vercel.com/docs/botid
+export default withBotId(nextConfig);

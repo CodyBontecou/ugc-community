@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendContactInquiry, sendContactConfirmation } from "@/lib/email";
+import { checkBotId } from "botid/server";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -45,6 +46,15 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
+
+  // Bot protection via Vercel BotID
+  const verification = await checkBotId();
+  if (verification.isBot) {
+    return NextResponse.json(
+      { error: "Access denied" },
+      { status: 403, headers: corsHeaders }
+    );
+  }
 
   try {
     const body = await request.json();
