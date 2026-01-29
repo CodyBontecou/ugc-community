@@ -81,105 +81,90 @@ export function GitHubConnection() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Github size={20} className="text-warm-gray-600" />
-          <h3 className="text-lg font-semibold text-warm-gray-900">
-            GitHub Integration
-          </h3>
-        </div>
-        <div className="flex items-center justify-center py-4">
-          <Loader2 size={24} className="animate-spin text-warm-gray-400" />
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Github size={16} className="text-warm-gray-400" />
+          <span className="text-sm text-warm-gray-500">Loading GitHub status...</span>
+          <Loader2 size={14} className="animate-spin text-warm-gray-400" />
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Github size={20} className="text-warm-gray-600" />
-        <h3 className="text-lg font-semibold text-warm-gray-900">
-          GitHub Integration
-        </h3>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {status?.connected ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <Github size={20} className="text-green-700" />
+  // Compact connected state
+  if (status?.connected) {
+    return (
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 px-4 py-3">
+        {error && (
+          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+            {error}
+          </div>
+        )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+              <Github size={14} className="text-green-700" />
             </div>
-            <div className="flex-1">
-              <p className="font-medium text-green-900">Connected</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-warm-gray-900">GitHub</span>
+              <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded">Connected</span>
               <a
                 href={`https://github.com/${status.username}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-green-700 hover:text-green-800 flex items-center gap-1"
+                className="text-sm text-warm-gray-600 hover:text-warm-gray-800 flex items-center gap-1"
               >
                 @{status.username}
-                <LinkIcon size={12} />
+                <LinkIcon size={10} />
               </a>
             </div>
           </div>
-
-          {status.connectedAt && (
-            <p className="text-sm text-warm-gray-500">
-              Connected on{" "}
-              {new Date(status.connectedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-          )}
-
           <button
             onClick={handleDisconnect}
             disabled={disconnecting}
-            className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-warm-gray-500 hover:text-red-600 hover:bg-red-50 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {disconnecting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
-                Disconnecting...
+                <Loader2 size={12} className="animate-spin" />
+                <span>Disconnecting...</span>
               </>
             ) : (
               <>
-                <Unlink size={16} />
-                Disconnect GitHub
+                <Unlink size={12} />
+                <span>Disconnect</span>
               </>
             )}
           </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-warm-gray-600 text-sm">
-            Connect your GitHub account to manage creator deployments and
-            repositories.
-          </p>
+      </div>
+    );
+  }
 
-          <button
-            onClick={handleConnect}
-            className="flex items-center gap-2 px-4 py-2 bg-warm-gray-900 text-white hover:bg-warm-gray-800 rounded-lg text-sm font-medium transition-colors shadow-sm"
-          >
-            <Github size={16} />
-            Connect GitHub
-          </button>
-
-          <p className="text-xs text-warm-gray-500">
-            This will request access to your repositories for deployment
-            management.
-          </p>
+  // Not connected state - slightly more prominent
+  return (
+    <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-4">
+      {error && (
+        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+          {error}
         </div>
       )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Github size={18} className="text-warm-gray-400" />
+          <div>
+            <p className="text-sm font-medium text-warm-gray-900">GitHub Integration</p>
+            <p className="text-xs text-warm-gray-500">Connect to manage creator deployments</p>
+          </div>
+        </div>
+        <button
+          onClick={handleConnect}
+          className="flex items-center gap-2 px-3 py-1.5 bg-warm-gray-900 text-white hover:bg-warm-gray-800 rounded text-sm font-medium transition-colors"
+        >
+          <Github size={14} />
+          Connect
+        </button>
+      </div>
     </div>
   );
 }
