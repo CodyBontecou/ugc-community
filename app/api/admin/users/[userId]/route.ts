@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin, type UserStatus } from "@/lib/admin";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, invites } from "@/lib/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
@@ -14,6 +14,115 @@ const updateUserStatusSchema = z.object({
 const updateUserSubdomainSchema = z.object({
   subdomain: z.string().nullable(),
 });
+
+// GET /api/admin/users/[userId] - Get user details with invite history
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const session = await requireAuth();
+
+    if (!isAdmin(session.user.email)) {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
+    const { userId } = await params;
+
+    // Get user details
+    const userResult = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        emailVerified: users.emailVerified,
+        image: users.image,
+        username: users.username,
+        displayName: users.displayName,
+        bio: users.bio,
+        websiteUrl: users.websiteUrl,
+        instagramHandle: users.instagramHandle,
+        tiktokHandle: users.tiktokHandle,
+        youtubeHandle: users.youtubeHandle,
+        twitterHandle: users.twitterHandle,
+        subdomain: users.subdomain,
+        status: users.status,
+        statusChangedAt: users.statusChangedAt,
+        statusChangedBy: users.statusChangedBy,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const user = userResult[0];
+
+    // Get the invite that this user used to sign up (if any)
+    const inviteResult = await db
+      .select({
+        id: invites.id,
+        email: invites.email,
+        createdAt: invites.createdAt,
+        usedAt: invites.usedAt,
+        createdBy: invites.createdBy,
+      })
+      .from(invites)
+      .where(eq(invites.usedBy, userId))
+      .limit(1);
+
+    const invite = inviteResult[0] || null;
+
+    // If there's an invite, get the creator's details
+    let inviteCreator = null;
+    if (invite?.createdBy) {
+      const creatorResult = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, invite.createdBy))
+        .limit(1);
+      inviteCreator = creatorResult[0] || null;
+    }
+
+    // Get who changed the status (if applicable)
+    let statusChangedByUser = null;
+    if (user.statusChangedBy) {
+      const statusChangerResult = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, user.statusChangedBy))
+        .limit(1);
+      statusChangedByUser = statusChangerResult[0] || null;
+    }
+
+    return NextResponse.json({
+      user,
+      invite: invite ? {
+        ...invite,
+        creator: inviteCreator,
+      } : null,
+      statusChangedByUser,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("Error fetching user:", error);
+    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+  }
+}
 
 // PATCH /api/admin/users/[userId] - Update user status or subdomain
 export async function PATCH(

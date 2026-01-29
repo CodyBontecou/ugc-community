@@ -17,6 +17,7 @@ import {
   X,
   Instagram,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { RecordTypeBadge } from "./record-type-badge";
 import { CreateInviteDialog } from "./create-invite-dialog";
 import { DeleteUserDialog } from "./delete-user-dialog";
@@ -57,6 +58,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function UnifiedTable() {
+  const router = useRouter();
   const [records, setRecords] = useState<UnifiedRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -752,7 +754,15 @@ export function UnifiedTable() {
                 </tr>
               ) : (
                 filteredRecords.map((record) => (
-                  <tr key={`${record.type}-${record.id}`} className="hover:bg-warm-gray-50">
+                  <tr
+                    key={`${record.type}-${record.id}`}
+                    className={`hover:bg-warm-gray-50 ${record.type === "user" ? "cursor-pointer" : ""}`}
+                    onClick={() => {
+                      if (record.type === "user") {
+                        router.push(`/dashboard/admin/users/${record.id}`);
+                      }
+                    }}
+                  >
                     <td className="px-4 py-3">
                       <RecordTypeBadge type={record.type} />
                     </td>
@@ -764,7 +774,7 @@ export function UnifiedTable() {
                       {new Date(record.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">{renderDetailsCell(record)}</td>
-                    <td className="px-4 py-3 text-right">{renderActionsCell(record)}</td>
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>{renderActionsCell(record)}</td>
                   </tr>
                 ))
               )}
