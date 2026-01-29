@@ -15,6 +15,11 @@ interface SocialProofProps {
 }
 
 export function SocialProof({ creatorCount, creators }: SocialProofProps) {
+  // Hide section until we have more than 10 creators
+  if (creatorCount <= 10) {
+    return null;
+  }
+
   const displayAvatars = creators.slice(0, 8);
   const remainingCount = creatorCount - displayAvatars.length;
 
