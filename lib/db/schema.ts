@@ -261,8 +261,8 @@ export const posts = pgTable(
     postUrl: text("post_url").notNull(),
     postId: text("post_id"), // Platform-specific post ID (optional)
     postedAt: timestamp("posted_at"), // When post was made on platform
-    verified: boolean("verified").notNull().default(false), // For Brand24 verification
-    source: text("source").notNull().default("manual"), // 'manual' | 'brand24'
+    verified: boolean("verified").notNull().default(false), // Provider verification status
+    source: text("source").notNull().default("manual"), // Provider name: 'apify', 'brand24', etc.
     metadata: jsonb("metadata").$type<PostMetadata>().default({}),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
