@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check, Hash } from "lucide-react";
+import { track } from "@vercel/analytics";
 
 const plans = [
   {
@@ -127,6 +128,7 @@ export function Pricing() {
                 }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => track("pricing_cta_click", { plan: plan.name })}
               >
                 {plan.cta}
               </motion.a>
