@@ -95,6 +95,10 @@ export const auth = betterAuth({
           // For new OAuth users, check for a valid email-specific invite
           const invite = await hasValidInviteForEmail(email);
           if (!invite) {
+            // Store email in context for the error handler
+            if (ctx?.context) {
+              ctx.context.rejectedEmail = email;
+            }
             // No valid invite for this email - reject the sign-up
             return false;
           }
@@ -176,6 +180,9 @@ export const auth = betterAuth({
     "https://ugc.community",
     "https://*.ugc.community",
   ],
+  pages: {
+    error: "/auth/error",
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

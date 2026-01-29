@@ -31,8 +31,12 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
   );
 }
 
-export function WaitlistForm() {
-  const [email, setEmail] = useState("");
+interface WaitlistFormProps {
+  defaultEmail?: string;
+}
+
+export function WaitlistForm({ defaultEmail }: WaitlistFormProps) {
+  const [email, setEmail] = useState(defaultEmail || "");
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [youtube, setYoutube] = useState("");

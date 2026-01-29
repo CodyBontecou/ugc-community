@@ -21,6 +21,13 @@ export function middleware(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "";
   const pathname = request.nextUrl.pathname;
 
+  // Redirect Better Auth's default error page to our custom one
+  if (pathname === "/api/auth/error") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/error";
+    return NextResponse.redirect(url);
+  }
+
   // Block known AI bots from API routes
   if (pathname.startsWith("/api/")) {
     const isBlockedBot = BLOCKED_USER_AGENTS.some((bot) =>
