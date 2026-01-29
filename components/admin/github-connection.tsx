@@ -168,7 +168,7 @@ export function GitHubConnection() {
 
           <button
             onClick={handleConnect}
-            className="flex items-center gap-2 px-4 py-2 bg-warm-gray-900 text-white hover:bg-warm-gray-800 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#24292f] text-white hover:bg-[#1b1f23] border border-[#1b1f23] rounded-lg text-sm font-medium transition-colors shadow-sm"
           >
             <Github size={16} />
             Connect GitHub
