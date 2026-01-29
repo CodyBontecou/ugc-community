@@ -27,7 +27,7 @@ type SortOrder = "newest" | "oldest";
 
 const STATUS_OPTIONS: Record<RecordType, string[]> = {
   user: ["active", "suspended", "banned"],
-  invite: ["active", "used", "expired", "revoked"],
+  invite: ["active", "expired", "revoked"],
   waitlist: ["pending", "invited"],
 };
 
@@ -37,7 +37,6 @@ const STATUS_STYLES: Record<string, string> = {
   suspended: "bg-amber-100 text-amber-700",
   banned: "bg-red-100 text-red-700",
   // Invite statuses
-  used: "bg-green-100 text-green-700",
   revoked: "bg-red-100 text-red-700",
   expired: "bg-warm-gray-100 text-warm-gray-600",
   // Waitlist statuses

@@ -100,6 +100,10 @@ export async function GET() {
       })
     );
 
+    // Create a set of user emails to filter out related waitlist/invite entries
+    // When someone becomes a user, their waitlist entry and used invite are consolidated
+    const userEmails = new Set(allUsers.map((u) => u.email.toLowerCase()));
+
     // Normalize all records into unified format
     const records: UnifiedRecord[] = [];
 
@@ -118,15 +122,17 @@ export async function GET() {
       });
     }
 
-    // Add invites
+    // Add invites (skip used invites since they're now represented by the user)
     for (const invite of allInvites) {
       const isExpired = new Date(invite.expiresAt) < new Date();
       const isUsed = !!invite.usedAt;
       const isRevoked = !!invite.revokedAt;
 
+      // Skip used invites - they've converted to users and are visible in user detail pages
+      if (isUsed) continue;
+
       let status = "active";
-      if (isUsed) status = "used";
-      else if (isRevoked) status = "revoked";
+      if (isRevoked) status = "revoked";
       else if (isExpired) status = "expired";
 
       records.push({
@@ -138,14 +144,17 @@ export async function GET() {
         createdAt: invite.createdAt.toISOString(),
         inviteUrl: getInviteUrl(invite.token),
         expiresAt: invite.expiresAt.toISOString(),
-        usedBy: invite.usedByUser ? { name: invite.usedByUser.name } : null,
+        usedBy: null,
         creator: invite.creator ? { name: invite.creator.name } : null,
         token: invite.token,
       });
     }
 
-    // Add waitlist entries
+    // Add waitlist entries (skip entries where the person is now a user)
     for (const entry of waitlistWithInviters) {
+      // Skip if this email has become a user - their journey is consolidated in the user view
+      if (userEmails.has(entry.email.toLowerCase())) continue;
+
       records.push({
         id: entry.id,
         type: "waitlist",
