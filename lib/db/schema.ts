@@ -155,6 +155,31 @@ export const waitlist = pgTable(
 );
 
 // =====================================================
+// Contact Submissions Tables
+// =====================================================
+
+export const contactSubmissions = pgTable(
+  "contact_submissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    senderName: text("sender_name").notNull(),
+    senderEmail: text("sender_email").notNull(),
+    senderCompany: text("sender_company").notNull(),
+    message: text("message"), // Optional - store for reference/debugging
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    emailSentToCreator: boolean("email_sent_to_creator").notNull().default(false),
+    emailSentToSender: boolean("email_sent_to_sender").notNull().default(false),
+  },
+  (table) => [
+    index("contact_submissions_creator_id_idx").on(table.creatorId),
+    index("contact_submissions_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// =====================================================
 // Media Tables
 // =====================================================
 
@@ -196,6 +221,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     references: [invites.usedBy],
     relationName: "usedInvite",
   }),
+  contactSubmissions: many(contactSubmissions),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -232,6 +258,13 @@ export const invitesRelations = relations(invites, ({ one }) => ({
   }),
 }));
 
+export const contactSubmissionsRelations = relations(contactSubmissions, ({ one }) => ({
+  creator: one(users, {
+    fields: [contactSubmissions.creatorId],
+    references: [users.id],
+  }),
+}));
+
 // =====================================================
 // Types
 // =====================================================
@@ -253,3 +286,5 @@ export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;
 export type Waitlist = typeof waitlist.$inferSelect;
 export type NewWaitlist = typeof waitlist.$inferInsert;
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export type NewContactSubmission = typeof contactSubmissions.$inferInsert;

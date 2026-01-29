@@ -55,6 +55,9 @@ interface UserDetails {
   statusChangedAt: string | null;
   statusChangedBy: string | null;
   profileViewCount: number;
+  contactSubmissionCount: number;
+  contactSubmissionCountLast30Days: number;
+  contactSubmissionCountLast7Days: number;
   vercelProjectId: string | null;
   siteEnabled: boolean;
   githubRepoFullName: string | null;
@@ -822,7 +825,7 @@ export default function UserDetailPage() {
 
       {/* Profile Stats & Site Preview */}
       {user.subdomain && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Stats */}
           <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
             <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
@@ -837,6 +840,40 @@ export default function UserDetailPage() {
                   {user.profileViewCount.toLocaleString()}
                 </p>
                 <p className="text-sm text-warm-gray-500">Profile Views</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Form Stats */}
+          <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
+              Contact Inquiries
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center">
+                  <Mail size={24} className="text-coral" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-warm-gray-900">
+                    {user.contactSubmissionCount.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-warm-gray-500">Total Inquiries</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-warm-gray-100">
+                <div>
+                  <p className="text-lg font-semibold text-warm-gray-900">
+                    {user.contactSubmissionCountLast30Days}
+                  </p>
+                  <p className="text-xs text-warm-gray-500">Last 30 days</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-warm-gray-900">
+                    {user.contactSubmissionCountLast7Days}
+                  </p>
+                  <p className="text-xs text-warm-gray-500">Last 7 days</p>
+                </div>
               </div>
             </div>
           </div>

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin, type UserStatus } from "@/lib/admin";
 import { db } from "@/lib/db";
-import { users, invites, waitlist } from "@/lib/db/schema";
-import { eq, and, ne, or, desc } from "drizzle-orm";
+import { users, invites, waitlist, contactSubmissions } from "@/lib/db/schema";
+import { eq, and, ne, or, desc, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
 import { createProject } from "@/lib/vercel/client";
@@ -172,8 +172,39 @@ export async function GET(
     // Find the invite that was used to sign up (for backwards compatibility)
     const usedInvite = allInvites.find(i => i.isUsedByThisUser) || null;
 
+    // Get contact submission counts
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(contactSubmissions)
+      .where(eq(contactSubmissions.creatorId, userId));
+
+    const [last30DaysCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(contactSubmissions)
+      .where(and(
+        eq(contactSubmissions.creatorId, userId),
+        gte(contactSubmissions.createdAt, thirtyDaysAgo)
+      ));
+
+    const [last7DaysCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(contactSubmissions)
+      .where(and(
+        eq(contactSubmissions.creatorId, userId),
+        gte(contactSubmissions.createdAt, sevenDaysAgo)
+      ));
+
     return NextResponse.json({
-      user,
+      user: {
+        ...user,
+        contactSubmissionCount: Number(totalCount?.count || 0),
+        contactSubmissionCountLast30Days: Number(last30DaysCount?.count || 0),
+        contactSubmissionCountLast7Days: Number(last7DaysCount?.count || 0),
+      },
       invite: usedInvite, // backwards compatibility
       allInvites,
       waitlistEntry: waitlistEntry ? {

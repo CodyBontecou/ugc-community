@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, contactSubmissions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { sendContactInquiry, sendContactConfirmation } from "@/lib/email";
 import { checkBotId } from "botid/server";
@@ -74,6 +74,23 @@ export async function POST(request: NextRequest) {
 
     const portfolioUrl = `https://${data.creatorSubdomain}.ugc.community`;
 
+    // Insert submission record
+    const [submission] = await db
+      .insert(contactSubmissions)
+      .values({
+        creatorId: creator.id,
+        senderName: data.name,
+        senderEmail: data.email,
+        senderCompany: data.company,
+        message: data.message,
+        emailSentToCreator: false,
+        emailSentToSender: false,
+      })
+      .returning({ id: contactSubmissions.id });
+
+    let emailSentToCreator = false;
+    let emailSentToSender = false;
+
     // Send email to creator
     try {
       await sendContactInquiry({
@@ -85,6 +102,7 @@ export async function POST(request: NextRequest) {
         message: data.message,
         portfolioUrl,
       });
+      emailSentToCreator = true;
     } catch (emailError) {
       console.error("Failed to send contact inquiry to creator:", emailError);
       // Continue anyway - we still want to send confirmation
@@ -98,9 +116,16 @@ export async function POST(request: NextRequest) {
         creatorName: creator.displayName || creator.name,
         portfolioUrl,
       });
+      emailSentToSender = true;
     } catch (emailError) {
       console.error("Failed to send contact confirmation:", emailError);
     }
+
+    // Update submission with email delivery status
+    await db
+      .update(contactSubmissions)
+      .set({ emailSentToCreator, emailSentToSender })
+      .where(eq(contactSubmissions.id, submission.id));
 
     return NextResponse.json(
       { success: true, message: "Message sent successfully" },
