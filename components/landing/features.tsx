@@ -38,9 +38,9 @@ const features = [
   },
   {
     icon: <BarChart3 size={24} />,
-    title: "Analytics Dashboard",
+    title: "Analytics Dashboard*",
     description:
-      "See who's viewing your profile, where they're from, and which content performs best.",
+      "See who's viewing your profile, where they're from, and which content performs best. *Coming soon",
   },
   {
     icon: <Heart size={24} />,

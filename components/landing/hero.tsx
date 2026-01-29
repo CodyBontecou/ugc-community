@@ -85,9 +85,8 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Build your brand. Share your journey. Never pay a dime.
+          Your content is your subscription.
           <br />
-          Your content is your subscription.{" "}
           <span className="text-rose font-medium">30 posts/month = unlimited edits.</span>
         </motion.p>
 
