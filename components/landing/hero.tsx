@@ -98,7 +98,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.7 }}
         >
           <motion.a
-            href="#pricing"
+            href="/sign-up"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-warm-gray-900 hover:bg-warm-gray-800 transition-colors"
             style={{ color: '#FFFFFF' }}
             whileHover={{ scale: 1.03 }}

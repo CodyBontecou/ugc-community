@@ -117,6 +117,31 @@ export const invites = pgTable(
 );
 
 // =====================================================
+// Waitlist Tables
+// =====================================================
+
+export const waitlist = pgTable(
+  "waitlist",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull().unique(),
+    instagramHandle: text("instagram_handle"),
+    tiktokHandle: text("tiktok_handle"),
+    youtubeHandle: text("youtube_handle"),
+    facebookHandle: text("facebook_handle"),
+    twitterHandle: text("twitter_handle"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    // Track if they've been invited
+    invitedAt: timestamp("invited_at"),
+    invitedBy: text("invited_by").references(() => users.id, { onDelete: "set null" }),
+  },
+  (table) => [
+    index("waitlist_email_idx").on(table.email),
+    index("waitlist_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// =====================================================
 // Media Tables
 // =====================================================
 
@@ -213,3 +238,5 @@ export type Media = typeof media.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;
+export type Waitlist = typeof waitlist.$inferSelect;
+export type NewWaitlist = typeof waitlist.$inferInsert;

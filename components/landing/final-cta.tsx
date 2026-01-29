@@ -21,7 +21,7 @@ export function FinalCTA() {
             Join thousands of UGC creators who've already made the switch.
           </p>
           <motion.a
-            href="#pricing"
+            href="/sign-up"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-white text-warm-gray-900 shadow-md hover:shadow-lg transition-shadow"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}

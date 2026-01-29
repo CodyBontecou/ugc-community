@@ -1,12 +1,11 @@
-import { SignUpForm } from "@/components/auth";
+import { SignUpForm, WaitlistForm } from "@/components/auth";
 import { validateInviteToken } from "@/lib/invites";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Create Account - ugc.community",
-  description: "Create your ugc.community portfolio account",
+  title: "Join the Waitlist - ugc.community",
+  description: "Sign up for a chance to join ugc.community - currently invite only",
 };
 
 type SearchParams = Promise<{ invite?: string }>;
@@ -18,9 +17,9 @@ export default async function SignUpPage({
 }) {
   const { invite: inviteToken } = await searchParams;
 
-  // Redirect to landing page if no invite token
+  // Show waitlist form if no invite token
   if (!inviteToken) {
-    redirect("/");
+    return <WaitlistForm />;
   }
 
   // Validate the invite token

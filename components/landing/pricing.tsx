@@ -117,8 +117,9 @@ export function Pricing() {
                   </li>
                 ))}
               </ul>
-              <motion.button
-                className={`w-full py-4 px-8 rounded-full font-medium text-base transition-all ${
+              <motion.a
+                href="/sign-up"
+                className={`block w-full py-4 px-8 rounded-full font-medium text-base text-center transition-all ${
                   plan.featured
                     ? "bg-warm-gray-900 hover:bg-warm-gray-800"
                     : "bg-white text-warm-gray-800 border border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
@@ -128,7 +129,7 @@ export function Pricing() {
                 whileTap={{ scale: 0.98 }}
               >
                 {plan.cta}
-              </motion.button>
+              </motion.a>
               {plan.footnote && (
                 <div className="mt-4 flex items-center justify-center gap-1 text-xs text-warm-gray-500">
                   <Hash size={12} className="text-rose" />
