@@ -9,6 +9,8 @@ import {
   varchar,
   index,
   uniqueIndex,
+  date,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -223,6 +225,28 @@ export const portfolioViewDedupe = pgTable(
 );
 
 // =====================================================
+// View History (Daily view tracking for analytics)
+// =====================================================
+
+export const viewHistory = pgTable(
+  "view_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: date("date").notNull(),
+    profileViews: integer("profile_views").notNull().default(0),
+    portfolioViews: integer("portfolio_views").notNull().default(0),
+  },
+  (table) => [
+    index("view_history_user_id_idx").on(table.userId),
+    index("view_history_date_idx").on(table.date),
+    unique("view_history_user_date_unique").on(table.userId, table.date),
+  ]
+);
+
+// =====================================================
 // Media Tables
 // =====================================================
 
@@ -363,6 +387,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   }),
   contactSubmissions: many(contactSubmissions),
   portfolioViewDedupe: many(portfolioViewDedupe),
+  viewHistory: many(viewHistory),
   posts: many(posts),
   userMilestones: many(userMilestones),
   hashtagMentions: many(hashtagMentions),
@@ -412,6 +437,13 @@ export const contactSubmissionsRelations = relations(contactSubmissions, ({ one 
 export const portfolioViewDedupeRelations = relations(portfolioViewDedupe, ({ one }) => ({
   user: one(users, {
     fields: [portfolioViewDedupe.userId],
+    references: [users.id],
+  }),
+}));
+
+export const viewHistoryRelations = relations(viewHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [viewHistory.userId],
     references: [users.id],
   }),
 }));
@@ -506,6 +538,8 @@ export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
 export type PortfolioView = typeof portfolioViewDedupe.$inferSelect;
 export type NewPortfolioView = typeof portfolioViewDedupe.$inferInsert;
+export type ViewHistory = typeof viewHistory.$inferSelect;
+export type NewViewHistory = typeof viewHistory.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type Milestone = typeof milestones.$inferSelect;

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users, portfolioViewDedupe } from "@/lib/db/schema";
+import { users, portfolioViewDedupe, viewHistory } from "@/lib/db/schema";
 import { eq, sql, and, gte } from "drizzle-orm";
 import { createHash } from "crypto";
+
+function getTodayDateString(): string {
+  const now = new Date();
+  return now.toISOString().split("T")[0];
+}
 
 const DEDUP_WINDOW_HOURS = 24;
 
@@ -124,6 +129,7 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
     }
 
     // Increment count and record the view in a transaction
+    const today = getTodayDateString();
     await db.transaction(async (tx) => {
       await tx
         .update(users)
@@ -137,6 +143,22 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
         userId,
         ipHash: hashedIp,
       });
+
+      // Upsert daily view count for analytics
+      await tx
+        .insert(viewHistory)
+        .values({
+          userId,
+          date: today,
+          portfolioViews: 1,
+          profileViews: 0,
+        })
+        .onConflictDoUpdate({
+          target: [viewHistory.userId, viewHistory.date],
+          set: {
+            portfolioViews: sql`${viewHistory.portfolioViews} + 1`,
+          },
+        });
     });
 
     console.log(`Portfolio view tracked: subdomain=${subdomain}, ip_hash=${hashedIp}`);
