@@ -8,6 +8,7 @@ import {
   SocialProof,
   Features,
   HowItWorks,
+  MilestonesRewards,
   Examples,
   Testimonials,
   Pricing,
@@ -68,6 +69,7 @@ export default async function HomePage() {
       <SocialProof creatorCount={creatorCount} creators={socialProofCreators} />
       <Features />
       <HowItWorks />
+      <MilestonesRewards />
       <Examples />
       <Testimonials authorImage={testimonialImage} />
       <Pricing />
