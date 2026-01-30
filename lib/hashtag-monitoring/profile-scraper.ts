@@ -148,37 +148,38 @@ export async function triggerProfileScraper(
   }
 
   try {
-    // Start actor run with webhook
+    // Build webhook configuration for this run
+    // Apify requires webhooks as a base64-encoded JSON array in query params
+    const webhookConfig = [
+      {
+        eventTypes: ["ACTOR.RUN.SUCCEEDED"],
+        requestUrl: webhookUrl,
+        payloadTemplate: JSON.stringify({
+          eventType: "ACTOR.RUN.SUCCEEDED",
+          eventData: {
+            actorId: "{{actorId}}",
+            actorRunId: "{{actorRunId}}",
+          },
+          resource: {
+            defaultDatasetId: "{{defaultDatasetId}}",
+          },
+        }),
+        headersTemplate: JSON.stringify({
+          "X-Apify-Webhook-Secret": process.env.APIFY_WEBHOOK_SECRET || "",
+        }),
+      },
+    ];
+    const webhooksParam = Buffer.from(JSON.stringify(webhookConfig)).toString("base64");
+
+    // Start actor run with webhook as query parameter
     const response = await fetch(
-      `${APIFY_API_BASE}/acts/${encodedActorId}/runs?token=${token}`,
+      `${APIFY_API_BASE}/acts/${encodedActorId}/runs?token=${token}&webhooks=${webhooksParam}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...input,
-          // Configure webhook to notify when run completes
-          webhooks: [
-            {
-              eventTypes: ["ACTOR.RUN.SUCCEEDED"],
-              requestUrl: webhookUrl,
-              payloadTemplate: `{
-                "eventType": "ACTOR.RUN.SUCCEEDED",
-                "eventData": {
-                  "actorId": "{{actorId}}",
-                  "actorRunId": "{{actorRunId}}"
-                },
-                "resource": {
-                  "defaultDatasetId": "{{defaultDatasetId}}"
-                }
-              }`,
-              headersTemplate: `{
-                "X-Apify-Webhook-Secret": "${process.env.APIFY_WEBHOOK_SECRET || ""}"
-              }`,
-            },
-          ],
-        }),
+        body: JSON.stringify(input),
       }
     );
 
