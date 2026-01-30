@@ -12,7 +12,7 @@ const plans = [
     period: "",
     featured: true,
     badge: "Most Popular",
-    commitment: "30 posts/month",
+    commitment: "Earn rewards by posting",
     features: [
       "Unlimited pages",
       "Unlimited uploads",
@@ -60,9 +60,8 @@ export function Pricing() {
             <span className="gradient-text">not payments</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[560px] mx-auto">
-            We'd rather have your content than your money. Create 30 posts/month
-            documenting your creator journey using ugc.community and get Pro
-            features free forever.
+            We'd rather have your content than your money. Post with #ugccommunity
+            to unlock rewards—from free hosting to unlimited edits and beyond.
           </p>
         </motion.div>
 

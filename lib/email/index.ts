@@ -276,7 +276,7 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
                 <tr>
                   <td style="padding: 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #453D37;">
                     <span style="display: inline-block; width: 6px; height: 6px; background: linear-gradient(135deg, #FF6B95, #A855F7); border-radius: 50%; margin-right: 12px; vertical-align: middle;"></span>
-                    <strong style="color: #1A1614;">Free forever</strong> with 30 posts/month
+                    <strong style="color: #1A1614;">Earn rewards</strong> by posting with #ugccommunity
                   </td>
                 </tr>
               </table>

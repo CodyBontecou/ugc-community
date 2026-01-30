@@ -87,7 +87,7 @@ export function Hero() {
         >
           Your content is your subscription.
           <br />
-          <span className="text-rose font-medium">30 posts/month = unlimited edits.</span>
+          <span className="text-rose font-medium">Post more, unlock more rewards.</span>
         </motion.p>
 
         <motion.div
