@@ -42,6 +42,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
 
 interface UserDetails {
   id: string;
@@ -1174,6 +1175,9 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Milestone Progress */}
+      <UserProgressionPath userId={userId} />
 
       {/* Subdomain Management */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">

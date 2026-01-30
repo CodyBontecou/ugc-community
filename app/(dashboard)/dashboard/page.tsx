@@ -8,7 +8,7 @@ import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import { AdvancedAnalytics } from "@/components/dashboard/advanced-analytics";
 import { PostMetrics } from "@/components/dashboard/post-metrics";
 import { PortfolioStatus } from "@/components/dashboard/portfolio-status";
-import { MilestoneProgress } from "@/components/milestones/MilestoneProgress";
+import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
 import { User, Users } from "lucide-react";
 import type { Metadata } from "next";
@@ -53,7 +53,7 @@ async function DashboardContent() {
 
       {/* Milestone Progress */}
       <div id="milestone-progress">
-        <MilestoneProgress />
+        <UserProgressionPath />
       </div>
 
       {/* Portfolio Hosting Status */}
