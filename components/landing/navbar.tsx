@@ -2,10 +2,13 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/auth/client";
 
 export function Navbar() {
   const { data: session, isPending } = useSession();
+  const pathname = usePathname();
+  const isCreatorsPage = pathname?.startsWith("/creators");
 
   return (
     <motion.nav
@@ -21,26 +24,28 @@ export function Navbar() {
           </Link>
         </div>
 
-        <div className="hidden md:flex gap-12">
-          <Link
-            href="/creators"
-            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            Creators
-          </Link>
-          <a
-            href="#features"
-            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#pricing"
-            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-          >
-            Pricing
-          </a>
-        </div>
+        {!isCreatorsPage && (
+          <div className="hidden md:flex gap-12">
+            <Link
+              href="/creators"
+              className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+            >
+              Creators
+            </Link>
+            <a
+              href="#features"
+              className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+            >
+              Pricing
+            </a>
+          </div>
+        )}
 
         <div className="flex-1 flex items-center justify-end gap-6">
           {isPending ? (
