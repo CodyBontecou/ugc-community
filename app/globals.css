@@ -65,16 +65,16 @@ html {
   min-height: 100%;
 }
 
-/* iOS safe area background cover */
+/* iOS safe area background cover - pull into safe area with negative top */
 @supports (padding-top: env(safe-area-inset-top)) {
   html::before {
     content: '';
     position: fixed;
-    top: 0;
+    top: calc(-1 * env(safe-area-inset-top));
     left: 0;
     right: 0;
-    height: env(safe-area-inset-top);
-    background: linear-gradient(135deg, #FFE4DF 0%, #FFDDD6 100%);
+    height: calc(env(safe-area-inset-top) + 100px);
+    background: linear-gradient(180deg, #FFE4DF 0%, #FFFBF9 100%);
     z-index: 9999;
     pointer-events: none;
   }
