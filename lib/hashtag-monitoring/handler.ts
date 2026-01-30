@@ -116,8 +116,13 @@ async function savePost(
     try {
       const { awardedMilestones } = await updateUserPostCount(matchedUserId);
 
-      // Send email notifications for newly awarded milestones
-      if (awardedMilestones.length > 0) {
+      // Send email notifications for lifetime milestones only
+      // (Monthly milestones reset each month, so we don't want to spam users)
+      const lifetimeMilestones = awardedMilestones.filter(
+        ({ milestone }) => milestone.type === "lifetime"
+      );
+
+      if (lifetimeMilestones.length > 0) {
         // Fetch user's email and name for notifications
         const user = await db.query.users.findFirst({
           where: eq(users.id, matchedUserId),
@@ -126,7 +131,7 @@ async function savePost(
 
         if (user?.email) {
           const creatorName = user.displayName || user.name || "Creator";
-          for (const { milestone, monthYear } of awardedMilestones) {
+          for (const { milestone } of lifetimeMilestones) {
             try {
               await sendMilestoneEarnedEmail({
                 creatorEmail: user.email,
@@ -135,7 +140,7 @@ async function savePost(
                 milestoneDescription: milestone.description,
                 rewardType: milestone.rewardType,
                 threshold: milestone.threshold,
-                isMonthly: milestone.type === "monthly",
+                isMonthly: false,
               });
             } catch (emailError) {
               // Log but don't fail - milestone was still awarded

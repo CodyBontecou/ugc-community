@@ -73,6 +73,22 @@ const activeEffects: Record<string, string> = {
   custom_domain: "Custom domain support active",
 };
 
+function isNewReward(earnedAt: string): boolean {
+  const earned = new Date(earnedAt);
+  const now = new Date();
+  const hoursDiff = (now.getTime() - earned.getTime()) / (1000 * 60 * 60);
+  return hoursDiff <= 24;
+}
+
+function NewBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-coral/20 text-coral animate-pulse">
+      <Sparkles size={10} />
+      New
+    </span>
+  );
+}
+
 function RewardCard({ reward }: { reward: ActiveReward }) {
   const Icon = rewardIcons[reward.type] ?? Gift;
   const colors = rewardColors[reward.type] ?? {
@@ -81,9 +97,16 @@ function RewardCard({ reward }: { reward: ActiveReward }) {
     icon: "text-warm-gray-600",
   };
   const activeEffect = activeEffects[reward.type];
+  const isNew = isNewReward(reward.earnedAt);
 
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg border border-warm-gray-100 bg-white hover:border-warm-gray-200 transition-colors">
+    <div
+      className={`flex items-start gap-3 p-4 rounded-lg border bg-white transition-all ${
+        isNew
+          ? "border-coral/30 shadow-[0_0_12px_rgba(255,154,139,0.3)]"
+          : "border-warm-gray-100 hover:border-warm-gray-200"
+      }`}
+    >
       <div
         className={`w-10 h-10 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0`}
       >
@@ -92,6 +115,7 @@ function RewardCard({ reward }: { reward: ActiveReward }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-medium text-warm-gray-900">{reward.name}</h4>
+          {isNew && <NewBadge />}
           {reward.isPermanent ? (
             <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-mint-soft/20 text-mint">
               <CheckCircle2 size={12} />
@@ -196,15 +220,25 @@ export function RewardsOverview() {
             Achievement Badges
           </h3>
           <div className="flex flex-wrap gap-2">
-            {badges.map((badge, index) => (
-              <div
-                key={`badge-${index}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-sm"
-              >
-                <Award size={14} />
-                {badge.name}
-              </div>
-            ))}
+            {badges.map((badge, index) => {
+              const isNew = isNewReward(badge.earnedAt);
+              return (
+                <div
+                  key={`badge-${index}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                    isNew
+                      ? "bg-amber-100 text-amber-700 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  <Award size={14} />
+                  {badge.name}
+                  {isNew && (
+                    <span className="ml-1 w-2 h-2 bg-coral rounded-full animate-pulse" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
