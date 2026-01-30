@@ -13,6 +13,7 @@ import {
   getLifetimePostCountFromMentions,
   updateUserLifetimePostCount,
 } from "./queries";
+import { applyMilestoneReward } from "./rewards";
 
 export type AwardedMilestone = {
   milestone: Milestone;
@@ -88,6 +89,10 @@ export async function checkAndAwardMilestones(
 
     // Award the milestone
     await awardMilestone(userId, milestone.id, monthYear);
+
+    // Apply the milestone's reward
+    await applyMilestoneReward(userId, milestone);
+
     awardedMilestones.push({ milestone, monthYear });
   }
 
@@ -120,3 +125,4 @@ export async function updateUserPostCount(userId: string): Promise<{
 }
 
 export * from "./queries";
+export * from "./rewards";

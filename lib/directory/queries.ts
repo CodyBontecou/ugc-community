@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { and, eq, desc, asc, sql, ilike, arrayOverlaps } from "drizzle-orm";
+import { and, eq, desc, asc, sql, ilike, arrayOverlaps, or, gte } from "drizzle-orm";
 import {
   type Niche,
   type RateRange,
@@ -39,6 +39,7 @@ export interface DirectoryCreator {
   availableForHire: boolean;
   isFeatured: boolean;
   isVerified: boolean;
+  isBoosted: boolean;
   portfolioViewCount: number;
   directoryJoinedAt: Date | null;
   instagramHandles: string[] | null;
@@ -84,6 +85,9 @@ export async function getDirectoryCreators(
   }
 
   // Determine sort order
+  // For popular sort: prioritize permanently featured users, then users with active time-limited boosts, then by views
+  const isBoosted = sql<boolean>`(${users.isFeatured} = true OR (${users.directoryBoostUntil} IS NOT NULL AND ${users.directoryBoostUntil} > NOW()))`;
+
   let orderBy;
   switch (sortOption) {
     case "recent":
@@ -94,8 +98,8 @@ export async function getDirectoryCreators(
       break;
     case "popular":
     default:
-      // Featured first, then by portfolio view count
-      orderBy = [desc(users.isFeatured), desc(users.portfolioViewCount)];
+      // Boosted users first (featured OR active time-limited boost), then by portfolio view count
+      orderBy = [desc(isBoosted), desc(users.portfolioViewCount)];
       break;
   }
 
@@ -124,6 +128,7 @@ export async function getDirectoryCreators(
       availableForHire: users.availableForHire,
       isFeatured: users.isFeatured,
       isVerified: users.isVerified,
+      directoryBoostUntil: users.directoryBoostUntil,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
       instagramHandles: users.instagramHandles,
@@ -136,12 +141,32 @@ export async function getDirectoryCreators(
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  // Filter out creators without subdomain and cast types
+  const now = new Date();
+
+  // Filter out creators without subdomain and compute isBoosted
   const validCreators = creators
     .filter((c) => c.subdomain !== null)
     .map((c) => ({
-      ...c,
+      id: c.id,
       subdomain: c.subdomain as string,
+      displayName: c.displayName,
+      name: c.name,
+      image: c.image,
+      bio: c.bio,
+      tagline: c.tagline,
+      niches: c.niches,
+      locationCity: c.locationCity,
+      locationCountry: c.locationCountry,
+      rateRange: c.rateRange,
+      availableForHire: c.availableForHire,
+      isFeatured: c.isFeatured,
+      isVerified: c.isVerified,
+      isBoosted: c.isFeatured || (c.directoryBoostUntil !== null && c.directoryBoostUntil > now),
+      portfolioViewCount: c.portfolioViewCount,
+      directoryJoinedAt: c.directoryJoinedAt,
+      instagramHandles: c.instagramHandles,
+      tiktokHandles: c.tiktokHandles,
+      youtubeHandles: c.youtubeHandles,
     }));
 
   return { creators: validCreators, total };
@@ -166,6 +191,7 @@ export async function getCreatorBySubdomain(
       availableForHire: users.availableForHire,
       isFeatured: users.isFeatured,
       isVerified: users.isVerified,
+      directoryBoostUntil: users.directoryBoostUntil,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
       instagramHandles: users.instagramHandles,
@@ -184,9 +210,29 @@ export async function getCreatorBySubdomain(
 
   if (!creator || !creator.subdomain) return null;
 
+  const now = new Date();
+
   return {
-    ...creator,
+    id: creator.id,
     subdomain: creator.subdomain,
+    displayName: creator.displayName,
+    name: creator.name,
+    image: creator.image,
+    bio: creator.bio,
+    tagline: creator.tagline,
+    niches: creator.niches,
+    locationCity: creator.locationCity,
+    locationCountry: creator.locationCountry,
+    rateRange: creator.rateRange,
+    availableForHire: creator.availableForHire,
+    isFeatured: creator.isFeatured,
+    isVerified: creator.isVerified,
+    isBoosted: creator.isFeatured || (creator.directoryBoostUntil !== null && creator.directoryBoostUntil > now),
+    portfolioViewCount: creator.portfolioViewCount,
+    directoryJoinedAt: creator.directoryJoinedAt,
+    instagramHandles: creator.instagramHandles,
+    tiktokHandles: creator.tiktokHandles,
+    youtubeHandles: creator.youtubeHandles,
   };
 }
 

@@ -70,6 +70,10 @@ export const users = pgTable(
     // Milestone system fields
     lifetimePostCount: integer("lifetime_post_count").notNull().default(0),
     trackingHashtag: text("tracking_hashtag"),
+    // Milestone reward fields
+    hasAdvancedAnalytics: boolean("has_advanced_analytics").notNull().default(false),
+    hostingUnlockedUntil: timestamp("hosting_unlocked_until"),
+    directoryBoostUntil: timestamp("directory_boost_until"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)

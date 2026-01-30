@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import { MilestoneProgress } from "@/components/milestones/MilestoneProgress";
+import { RewardsOverview } from "@/components/milestones/RewardsOverview";
 import { User, Users } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -43,6 +44,9 @@ async function DashboardContent() {
 
       {/* Milestone Progress */}
       <MilestoneProgress />
+
+      {/* Unlocked Rewards */}
+      <RewardsOverview />
 
       {/* Directory CTA */}
       <Link
