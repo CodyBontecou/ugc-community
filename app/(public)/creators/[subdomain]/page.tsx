@@ -182,6 +182,7 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                   <VerifiedBadge
                     isVerified={creator.isVerified}
                     isFeatured={creator.isFeatured}
+                    isBoosted={creator.isBoosted}
                   />
                 </div>
 

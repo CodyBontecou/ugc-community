@@ -20,6 +20,7 @@ interface CreatorCardProps {
   availableForHire: boolean;
   isFeatured: boolean;
   isVerified: boolean;
+  isBoosted?: boolean;
 }
 
 export function CreatorCard({
@@ -35,6 +36,7 @@ export function CreatorCard({
   availableForHire,
   isFeatured,
   isVerified,
+  isBoosted,
 }: CreatorCardProps) {
   const [imageError, setImageError] = useState(false);
   const displayNameFinal = displayName || name;
@@ -60,10 +62,10 @@ export function CreatorCard({
           </div>
         )}
 
-        {/* Featured/Verified badges overlay */}
-        {(isFeatured || isVerified) && (
+        {/* Featured/Verified/Boosted badges overlay */}
+        {(isFeatured || isVerified || isBoosted) && (
           <div className="absolute top-3 right-3">
-            <VerifiedBadge isFeatured={isFeatured} isVerified={isVerified} />
+            <VerifiedBadge isFeatured={isFeatured} isVerified={isVerified} isBoosted={isBoosted} />
           </div>
         )}
 

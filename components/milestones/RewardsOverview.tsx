@@ -64,6 +64,15 @@ const rewardColors: Record<string, { bg: string; text: string; icon: string }> =
   },
 };
 
+const activeEffects: Record<string, string> = {
+  directory_boost: "Your profile is boosted in the creator directory",
+  analytics: "Advanced analytics dashboard is unlocked",
+  hosting: "Your portfolio is live at your subdomain",
+  badge: "Verified badge displayed on your profile",
+  edits: "Premium editing features enabled",
+  custom_domain: "Custom domain support active",
+};
+
 function RewardCard({ reward }: { reward: ActiveReward }) {
   const Icon = rewardIcons[reward.type] ?? Gift;
   const colors = rewardColors[reward.type] ?? {
@@ -71,6 +80,7 @@ function RewardCard({ reward }: { reward: ActiveReward }) {
     text: "text-warm-gray-700",
     icon: "text-warm-gray-600",
   };
+  const activeEffect = activeEffects[reward.type];
 
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg border border-warm-gray-100 bg-white hover:border-warm-gray-200 transition-colors">
@@ -95,6 +105,12 @@ function RewardCard({ reward }: { reward: ActiveReward }) {
           ) : null}
         </div>
         <p className="text-sm text-warm-gray-600 mt-0.5">{reward.description}</p>
+        {activeEffect && (
+          <p className="text-xs text-mint mt-1.5 flex items-center gap-1">
+            <CheckCircle2 size={12} />
+            {activeEffect}
+          </p>
+        )}
         <p className="text-xs text-warm-gray-400 mt-2">
           Earned from: {reward.milestoneName}
         </p>

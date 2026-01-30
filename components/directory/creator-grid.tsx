@@ -50,6 +50,7 @@ export function CreatorGrid({ creators, loading }: CreatorGridProps) {
           availableForHire={creator.availableForHire}
           isFeatured={creator.isFeatured}
           isVerified={creator.isVerified}
+          isBoosted={creator.isBoosted}
         />
       ))}
     </div>
