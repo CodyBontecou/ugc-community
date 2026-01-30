@@ -3,12 +3,11 @@ import { db } from "@/lib/db";
 import { media } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import {
-  generateStorageKey,
-  getPublicUrl,
+  generatePathname,
   validateFile,
   getMediaType,
-  uploadToR2,
-} from "@/lib/storage/r2-client";
+  uploadToBlob,
+} from "@/lib/storage/blob-client";
 
 // POST /api/media/upload - Upload a file
 export async function POST(request: NextRequest) {
@@ -34,15 +33,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate storage key and upload
-    const key = generateStorageKey(session.user.id, file.type);
+    // Generate pathname and upload
+    const pathname = generatePathname(session.user.id, file.name, file.type);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    await uploadToR2(key, buffer, file.type);
-
-    // Get public URL
-    const url = getPublicUrl(key);
+    const blob = await uploadToBlob(pathname, buffer, file.type);
     const mediaType = getMediaType(file.type);
 
     // Insert into database
@@ -51,11 +47,11 @@ export async function POST(request: NextRequest) {
       .values({
         userId: session.user.id,
         type: mediaType,
-        filename: key,
+        filename: blob.pathname,
         originalFilename: file.name,
         mimeType: file.type,
         size: file.size,
-        url,
+        url: blob.url,
         metadata: {},
       })
       .returning();

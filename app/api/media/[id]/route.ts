@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { media } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq, and } from "drizzle-orm";
-import { deleteFromR2, extractKeyFromUrl } from "@/lib/storage/r2-client";
+import { deleteFromBlob } from "@/lib/storage/blob-client";
 import { z } from "zod";
 
 // GET /api/media/[id] - Get a single media item
@@ -124,15 +124,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
     }
 
-    // Delete from R2
-    const key = extractKeyFromUrl(existing.url);
-    if (key) {
-      try {
-        await deleteFromR2(key);
-      } catch (r2Error) {
-        console.error("Failed to delete from R2:", r2Error);
-        // Continue with database deletion even if R2 fails
-      }
+    // Delete from Vercel Blob
+    try {
+      await deleteFromBlob(existing.url);
+    } catch (blobError) {
+      console.error("Failed to delete from Vercel Blob:", blobError);
+      // Continue with database deletion even if Blob delete fails
     }
 
     // Delete from database
