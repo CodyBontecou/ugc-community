@@ -7,9 +7,21 @@ import type { DirectoryCreator } from "@/lib/directory/queries";
 interface CreatorGridProps {
   creators: DirectoryCreator[];
   loading?: boolean;
+  // Brand save functionality
+  showSaveButton?: boolean;
+  savedIds?: Set<string>;
+  savingIds?: Set<string>;
+  onToggleSave?: (creatorId: string) => void;
 }
 
-export function CreatorGrid({ creators, loading }: CreatorGridProps) {
+export function CreatorGrid({
+  creators,
+  loading,
+  showSaveButton = false,
+  savedIds = new Set(),
+  savingIds = new Set(),
+  onToggleSave,
+}: CreatorGridProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -38,6 +50,7 @@ export function CreatorGrid({ creators, loading }: CreatorGridProps) {
       {creators.map((creator) => (
         <CreatorCard
           key={creator.id}
+          creatorId={creator.id}
           subdomain={creator.subdomain}
           displayName={creator.displayName}
           name={creator.name}
@@ -51,6 +64,10 @@ export function CreatorGrid({ creators, loading }: CreatorGridProps) {
           isFeatured={creator.isFeatured}
           isVerified={creator.isVerified}
           isBoosted={creator.isBoosted}
+          showSaveButton={showSaveButton}
+          isSaved={savedIds.has(creator.id)}
+          isSaving={savingIds.has(creator.id)}
+          onToggleSave={onToggleSave ? () => onToggleSave(creator.id) : undefined}
         />
       ))}
     </div>

@@ -402,6 +402,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   posts: many(posts),
   userMilestones: many(userMilestones),
   hashtagMentions: many(hashtagMentions),
+  // Saved creators (brand perspective - creators this brand has saved)
+  savedCreators: many(savedCreators, { relationName: "brandSavedCreators" }),
+  // Saved by brands (creator perspective - brands that have saved this creator)
+  savedByBrands: many(savedCreators, { relationName: "creatorSavedByBrands" }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -489,6 +493,42 @@ export const hashtagMentionsRelations = relations(hashtagMentions, ({ one }) => 
 }));
 
 // =====================================================
+// Saved Creators (Brand favorites)
+// =====================================================
+
+export const savedCreators = pgTable(
+  "saved_creators",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    brandId: text("brand_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("saved_creators_brand_creator_unique").on(table.brandId, table.creatorId),
+    index("saved_creators_brand_id_idx").on(table.brandId),
+    index("saved_creators_creator_id_idx").on(table.creatorId),
+  ]
+);
+
+export const savedCreatorsRelations = relations(savedCreators, ({ one }) => ({
+  brand: one(users, {
+    fields: [savedCreators.brandId],
+    references: [users.id],
+    relationName: "brandSavedCreators",
+  }),
+  creator: one(users, {
+    fields: [savedCreators.creatorId],
+    references: [users.id],
+    relationName: "creatorSavedByBrands",
+  }),
+}));
+
+// =====================================================
 // Types
 // =====================================================
 
@@ -562,3 +602,5 @@ export type UserMilestone = typeof userMilestones.$inferSelect;
 export type NewUserMilestone = typeof userMilestones.$inferInsert;
 export type HashtagMention = typeof hashtagMentions.$inferSelect;
 export type NewHashtagMention = typeof hashtagMentions.$inferInsert;
+export type SavedCreator = typeof savedCreators.$inferSelect;
+export type NewSavedCreator = typeof savedCreators.$inferInsert;

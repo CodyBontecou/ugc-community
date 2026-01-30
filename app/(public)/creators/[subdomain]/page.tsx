@@ -25,6 +25,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 }
 import { NicheBadges } from "@/components/directory/niche-badges";
 import { VerifiedBadge } from "@/components/directory/verified-badge";
+import { SaveCreatorSection } from "@/components/directory/save-creator-section";
 import { RATE_RANGE_LABELS, type RateRange } from "@/lib/directory/constants";
 import { Navbar } from "@/components/landing/navbar";
 import { BackgroundBlobs } from "@/components/landing/background-blobs";
@@ -235,6 +236,7 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                       isFeatured={creator.isFeatured}
                       isBoosted={creator.isBoosted}
                     />
+                    <SaveCreatorSection creatorId={creator.id} />
                   </div>
 
                   {/* Milestone Badges */}

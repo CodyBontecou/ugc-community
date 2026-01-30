@@ -129,18 +129,19 @@ async function DashboardContent() {
                 </div>
                 <ArrowRight size={16} className="text-warm-gray-400 group-hover:text-coral transition-colors" />
               </Link>
-              <div
-                className="flex items-center gap-3 p-4 rounded-[--radius-lg] bg-warm-gray-50 cursor-not-allowed opacity-60"
-                title="Coming soon"
+              <Link
+                href="/dashboard/saved"
+                className="flex items-center gap-3 p-4 rounded-[--radius-lg] bg-gradient-to-br from-lavender/10 to-sky/10 hover:from-lavender/20 hover:to-sky/20 transition-colors group"
               >
                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
                   <Bookmark size={20} className="text-lavender" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-warm-gray-900">Saved Creators</p>
-                  <p className="text-xs text-warm-gray-500">Coming soon</p>
+                  <p className="text-xs text-warm-gray-500">View favorites</p>
                 </div>
-              </div>
+                <ArrowRight size={16} className="text-warm-gray-400 group-hover:text-lavender transition-colors" />
+              </Link>
               <div
                 className="flex items-center gap-3 p-4 rounded-[--radius-lg] bg-warm-gray-50 cursor-not-allowed opacity-60"
                 title="Coming soon"
@@ -174,11 +175,14 @@ async function DashboardContent() {
                 <span className="text-sm text-warm-gray-700 group-hover:text-warm-gray-900">Browse the creator directory</span>
                 <ArrowRight size={14} className="text-warm-gray-300 ml-auto group-hover:text-coral" />
               </Link>
-              <div className="flex items-center gap-3 p-3 rounded-[--radius-md] bg-warm-gray-50 opacity-60">
-                <Circle size={20} className="text-warm-gray-300 flex-shrink-0" />
-                <span className="text-sm text-warm-gray-500">Save creators you're interested in</span>
-                <span className="text-xs text-warm-gray-400 ml-auto">Coming soon</span>
-              </div>
+              <Link
+                href="/creators"
+                className="flex items-center gap-3 p-3 rounded-[--radius-md] bg-warm-gray-50 hover:bg-coral/5 transition-colors group"
+              >
+                <Circle size={20} className="text-warm-gray-300 flex-shrink-0 group-hover:text-coral" />
+                <span className="text-sm text-warm-gray-700 group-hover:text-warm-gray-900">Save creators you're interested in</span>
+                <ArrowRight size={14} className="text-warm-gray-300 ml-auto group-hover:text-coral" />
+              </Link>
               <div className="flex items-center gap-3 p-3 rounded-[--radius-md] bg-warm-gray-50 opacity-60">
                 <Circle size={20} className="text-warm-gray-300 flex-shrink-0" />
                 <span className="text-sm text-warm-gray-500">Start your first campaign</span>

@@ -10,6 +10,8 @@ import { Pagination } from "@/components/directory/pagination";
 import { Navbar } from "@/components/landing/navbar";
 import { BackgroundBlobs } from "@/components/landing/background-blobs";
 import { useSession } from "@/lib/auth/client";
+import { useSavedCreators } from "@/lib/hooks/use-saved-creators";
+import { useBrandUser } from "@/lib/hooks/use-brand-user";
 import type { DirectoryCreator } from "@/lib/directory/queries";
 import type { Niche, RateRange, SortOption } from "@/lib/directory/constants";
 
@@ -28,6 +30,10 @@ function DirectoryContent() {
   const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const isLoggedIn = !!session?.user;
+
+  // Brand user check and saved creators
+  const { isBrand, isLoading: isBrandLoading } = useBrandUser();
+  const { savedIds, isSaving, toggleSave } = useSavedCreators();
 
   // Parse URL params
   const initialNiches = searchParams.get("niches")?.split(",").filter(Boolean) as Niche[] || [];
@@ -208,7 +214,14 @@ function DirectoryContent() {
           )}
 
           {/* Creator Grid */}
-          <CreatorGrid creators={creators} loading={loading} />
+          <CreatorGrid
+            creators={creators}
+            loading={loading}
+            showSaveButton={isBrand && !isBrandLoading}
+            savedIds={savedIds}
+            savingIds={isSaving}
+            onToggleSave={toggleSave}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

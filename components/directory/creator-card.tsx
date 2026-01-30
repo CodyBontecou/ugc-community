@@ -5,9 +5,11 @@ import Link from "next/link";
 import { MapPin, User } from "lucide-react";
 import { NicheBadges } from "./niche-badges";
 import { VerifiedBadge } from "./verified-badge";
+import { SaveCreatorButton } from "./save-creator-button";
 import { RATE_RANGE_LABELS, type RateRange } from "@/lib/directory/constants";
 
 interface CreatorCardProps {
+  creatorId: string;
   subdomain: string;
   displayName: string | null;
   name: string;
@@ -21,9 +23,15 @@ interface CreatorCardProps {
   isFeatured: boolean;
   isVerified: boolean;
   isBoosted?: boolean;
+  // Brand save functionality
+  showSaveButton?: boolean;
+  isSaved?: boolean;
+  isSaving?: boolean;
+  onToggleSave?: () => void;
 }
 
 export function CreatorCard({
+  creatorId,
   subdomain,
   displayName,
   name,
@@ -37,6 +45,10 @@ export function CreatorCard({
   isFeatured,
   isVerified,
   isBoosted,
+  showSaveButton = false,
+  isSaved = false,
+  isSaving = false,
+  onToggleSave,
 }: CreatorCardProps) {
   const [imageError, setImageError] = useState(false);
   const displayNameFinal = displayName || name;
@@ -69,14 +81,23 @@ export function CreatorCard({
           </div>
         )}
 
-        {/* Available badge */}
-        {availableForHire && (
-          <div className="absolute top-3 left-3">
+        {/* Left side badges/buttons */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {/* Save button for brands */}
+          {showSaveButton && onToggleSave && (
+            <SaveCreatorButton
+              isSaved={isSaved}
+              isSaving={isSaving}
+              onToggle={onToggleSave}
+            />
+          )}
+          {/* Available badge */}
+          {availableForHire && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-mint/90 text-white">
               Available
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Content */}

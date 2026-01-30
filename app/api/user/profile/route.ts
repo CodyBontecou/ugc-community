@@ -37,6 +37,7 @@ export async function GET() {
         youtubeHandles: true,
         twitterHandles: true,
         subdomain: true,
+        role: true,
       },
     });
 
