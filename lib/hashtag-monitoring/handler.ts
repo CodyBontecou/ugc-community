@@ -10,6 +10,7 @@ import { hashtagMentions, users } from "@/lib/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 import { getProvider } from "./index";
 import type { ParsedPost, ProcessingResult } from "./types";
+import { updateUserPostCount } from "@/lib/milestones";
 
 /**
  * Process incoming posts from a webhook
@@ -107,8 +108,20 @@ async function savePost(
     .onConflictDoNothing({ target: hashtagMentions.postUrl })
     .returning({ id: hashtagMentions.id });
 
+  const isDuplicate = inserted.length === 0;
+
+  // Update user's post count and check milestones if matched and not duplicate
+  if (matchedUserId && !isDuplicate) {
+    try {
+      await updateUserPostCount(matchedUserId);
+    } catch (error) {
+      // Log but don't fail the save operation
+      console.error(`Failed to update post count for user ${matchedUserId}:`, error);
+    }
+  }
+
   return {
-    isDuplicate: inserted.length === 0,
+    isDuplicate,
     matchedUserId,
   };
 }
