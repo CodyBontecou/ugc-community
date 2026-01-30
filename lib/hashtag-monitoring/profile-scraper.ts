@@ -126,6 +126,8 @@ export async function triggerProfileScraper(
   }
 
   const actorId = PROFILE_SCRAPER_ACTORS[platform];
+  // Apify API requires tilde (~) instead of slash (/) for namespaced actor IDs in URLs
+  const encodedActorId = actorId.replace("/", "~");
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/hashtag-monitor/apify`;
 
   // Build platform-specific input
@@ -148,7 +150,7 @@ export async function triggerProfileScraper(
   try {
     // Start actor run with webhook
     const response = await fetch(
-      `${APIFY_API_BASE}/acts/${actorId}/runs?token=${token}`,
+      `${APIFY_API_BASE}/acts/${encodedActorId}/runs?token=${token}`,
       {
         method: "POST",
         headers: {
