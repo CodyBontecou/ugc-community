@@ -52,7 +52,7 @@ export async function applyMilestoneReward(
       break;
 
     case "badge":
-      // Badges don't need additional processing - they're displayed from userMilestones
+      await applyBadgeReward(userId, config);
       break;
 
     case "edits":
@@ -115,6 +115,25 @@ async function applyAnalyticsAccess(userId: string): Promise<void> {
 }
 
 /**
+ * Apply badge reward
+ * Special handling for verified badge - sets isVerified on user
+ */
+async function applyBadgeReward(
+  userId: string,
+  config: MilestoneRewardConfig
+): Promise<void> {
+  const badgeType = config.badge_type;
+
+  if (badgeType === "verified") {
+    await db
+      .update(users)
+      .set({ isVerified: true })
+      .where(eq(users.id, userId));
+  }
+  // Other badge types are displayed from userMilestones table, no additional processing needed
+}
+
+/**
  * Apply hosting reward
  */
 async function applyHostingReward(
@@ -158,14 +177,18 @@ async function applyHostingReward(
 
 /**
  * Check if a user has a specific reward type active
+ *
+ * @param badgeType - For badge rewards, optionally specify which badge type (e.g., "verified")
  */
 export async function checkUserHasReward(
   userId: string,
-  rewardType: RewardType
+  rewardType: RewardType,
+  badgeType?: string
 ): Promise<boolean> {
   const [user] = await db
     .select({
       isFeatured: users.isFeatured,
+      isVerified: users.isVerified,
       hasAdvancedAnalytics: users.hasAdvancedAnalytics,
       hostingUnlockedUntil: users.hostingUnlockedUntil,
       directoryBoostUntil: users.directoryBoostUntil,
@@ -194,7 +217,11 @@ export async function checkUserHasReward(
       );
 
     case "badge":
-      // Badges are always available once earned via userMilestones
+      // Check specific badge type if provided
+      if (badgeType === "verified") {
+        return user.isVerified;
+      }
+      // Other badges are always available once earned via userMilestones
       return true;
 
     default:

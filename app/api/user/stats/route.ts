@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { users, contactSubmissions } from "@/lib/db/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
+import { getAnalyticsFeatures } from "@/lib/analytics/access";
 
 // GET /api/user/stats - Get current user's stats
 export async function GET() {
@@ -51,6 +52,9 @@ export async function GET() {
         gte(contactSubmissions.createdAt, sevenDaysAgo)
       ));
 
+    // Get analytics feature access
+    const analyticsFeatures = await getAnalyticsFeatures(userId);
+
     return NextResponse.json({
       profileViewCount: userResult.profileViewCount,
       portfolioViewCount: userResult.portfolioViewCount,
@@ -60,6 +64,7 @@ export async function GET() {
         last30Days: Number(last30DaysCount?.count || 0),
         last7Days: Number(last7DaysCount?.count || 0),
       },
+      analyticsFeatures,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
