@@ -241,12 +241,13 @@ export function UnifiedTable() {
   async function sendWaitlistInvite(record: UnifiedRecord) {
     setUpdating(record.id);
     try {
-      // Create invite
+      // Create invite - use the waitlist user's type as the invite role
       const res = await fetch("/api/admin/invites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: record.email,
+          role: record.userType || "creator",
           expirationDays: 7,
         }),
       });

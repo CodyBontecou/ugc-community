@@ -8,6 +8,7 @@ import {
   validateInviteForEmail,
   hasValidInviteForEmail,
   markInviteAsUsed,
+  getInviteById,
 } from "@/lib/invites";
 
 export const auth = betterAuth({
@@ -112,19 +113,35 @@ export const auth = betterAuth({
         after: async (user, ctx: any) => {
           // Mark invite as used after successful user creation
           const pendingInviteId = ctx?.context?.pendingInviteId;
+          let inviteRole: string | null = null;
 
           if (pendingInviteId) {
-            // Mark the validated invite as used
-            await markInviteAsUsed(pendingInviteId, user.id);
+            // Get the invite to read its role
+            const invite = await getInviteById(pendingInviteId);
+            if (invite) {
+              inviteRole = invite.role;
+              // Mark the validated invite as used
+              await markInviteAsUsed(pendingInviteId, user.id);
+            }
           } else {
             // Fallback: find invite by email
             const email = user.email;
             if (email) {
               const invite = await hasValidInviteForEmail(email);
               if (invite) {
+                inviteRole = invite.role;
                 await markInviteAsUsed(invite.id, user.id);
               }
             }
+          }
+
+          // Set the user's role based on the invite role
+          if (inviteRole && inviteRole !== "creator") {
+            // Update the user's role to match the invite
+            await db
+              .update(schema.users)
+              .set({ role: inviteRole })
+              .where(eq(schema.users.id, user.id));
           }
         },
       },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Copy, Check, Mail } from "lucide-react";
+import { X, Copy, Check, Mail, Sparkles, Building2 } from "lucide-react";
 
 interface CreateInviteDialogProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ export function CreateInviteDialog({
   onCreated,
 }: CreateInviteDialogProps) {
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"creator" | "brand">("creator");
   const [expirationDays, setExpirationDays] = useState(7);
   const [sendEmail, setSendEmail] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,7 @@ export function CreateInviteDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email || undefined,
+          role,
           expirationDays,
           sendEmail: email ? sendEmail : false,
         }),
@@ -67,6 +69,7 @@ export function CreateInviteDialog({
 
   function handleClose() {
     setEmail("");
+    setRole("creator");
     setExpirationDays(7);
     setSendEmail(true);
     setError(null);
@@ -131,6 +134,39 @@ export function CreateInviteDialog({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            {/* Role Selector */}
+            <div>
+              <label className="block text-sm font-medium text-warm-gray-700 mb-2">
+                Role
+              </label>
+              <div className="flex rounded-[--radius-md] bg-warm-gray-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setRole("creator")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-[--radius-sm] text-sm font-medium transition-all ${
+                    role === "creator"
+                      ? "bg-white text-warm-gray-900 shadow-sm"
+                      : "text-warm-gray-500 hover:text-warm-gray-700"
+                  }`}
+                >
+                  <Sparkles size={14} />
+                  Creator
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("brand")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-[--radius-sm] text-sm font-medium transition-all ${
+                    role === "brand"
+                      ? "bg-white text-warm-gray-900 shadow-sm"
+                      : "text-warm-gray-500 hover:text-warm-gray-700"
+                  }`}
+                >
+                  <Building2 size={14} />
+                  Brand
+                </button>
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"

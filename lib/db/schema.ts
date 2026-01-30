@@ -140,6 +140,8 @@ export const invites = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     token: text("token").notNull().unique(),
     email: text("email"), // Optional - can pre-assign to specific email
+    // Role to assign to the user when they sign up with this invite
+    role: text("role").notNull().default("creator"), // "creator" | "brand"
     expiresAt: timestamp("expires_at").notNull(),
     usedAt: timestamp("used_at"),
     usedBy: text("used_by").references(() => users.id, { onDelete: "set null" }),
@@ -172,6 +174,8 @@ export const waitlist = pgTable(
     youtubeHandle: text("youtube_handle"),
     facebookHandle: text("facebook_handle"),
     twitterHandle: text("twitter_handle"),
+    // User type: creator or brand
+    userType: text("user_type").notNull().default("creator"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     // Track if they've been invited
     invitedAt: timestamp("invited_at"),

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 const createInviteSchema = z.object({
   email: z.string().email().optional(),
+  role: z.enum(["creator", "brand"]).default("creator"),
   expirationDays: z.number().min(1).max(90).optional(),
   sendEmail: z.boolean().optional(),
 });
@@ -21,11 +22,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, expirationDays, sendEmail } = createInviteSchema.parse(body);
+    const { email, role, expirationDays, sendEmail } = createInviteSchema.parse(body);
 
     const invite = await createInvite({
       createdBy: session.user.id,
       email,
+      role,
       expirationDays,
     });
 
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
         id: invite.id,
         token: invite.token,
         email: invite.email,
+        role: invite.role,
         expiresAt: invite.expiresAt,
         createdAt: invite.createdAt,
         url: inviteUrl,
@@ -85,6 +88,7 @@ export async function GET() {
         id: invite.id,
         token: invite.token,
         email: invite.email,
+        role: invite.role,
         expiresAt: invite.expiresAt,
         usedAt: invite.usedAt,
         revokedAt: invite.revokedAt,

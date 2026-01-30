@@ -7,6 +7,7 @@ import { checkBotId } from "botid/server";
 
 const waitlistSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
+  userType: z.enum(["creator", "brand"]).default("creator"),
   instagramHandle: z.string().optional().transform((v) => v?.trim() || null),
   tiktokHandle: z.string().optional().transform((v) => v?.trim() || null),
   youtubeHandle: z.string().optional().transform((v) => v?.trim() || null),
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
       .insert(waitlist)
       .values({
         email: data.email.toLowerCase(),
+        userType: data.userType,
         instagramHandle: data.instagramHandle,
         tiktokHandle: data.tiktokHandle,
         youtubeHandle: data.youtubeHandle,
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
       .onConflictDoUpdate({
         target: waitlist.email,
         set: {
+          userType: data.userType,
           instagramHandle: data.instagramHandle,
           tiktokHandle: data.tiktokHandle,
           youtubeHandle: data.youtubeHandle,

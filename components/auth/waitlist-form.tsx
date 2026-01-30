@@ -11,6 +11,8 @@ import {
   Twitter,
   CheckCircle,
   AlertCircle,
+  Building2,
+  Sparkles,
 } from "lucide-react";
 
 // TikTok icon (not in Lucide)
@@ -36,6 +38,7 @@ interface WaitlistFormProps {
 }
 
 export function WaitlistForm({ defaultEmail }: WaitlistFormProps) {
+  const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [email, setEmail] = useState(defaultEmail || "");
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
@@ -57,11 +60,15 @@ export function WaitlistForm({ defaultEmail }: WaitlistFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          instagramHandle: instagram,
-          tiktokHandle: tiktok,
-          youtubeHandle: youtube,
-          facebookHandle: facebook,
-          twitterHandle: twitter,
+          userType,
+          // Only include social handles for creators
+          ...(userType === "creator" && {
+            instagramHandle: instagram,
+            tiktokHandle: tiktok,
+            youtubeHandle: youtube,
+            facebookHandle: facebook,
+            twitterHandle: twitter,
+          }),
         }),
       });
 
@@ -130,6 +137,34 @@ export function WaitlistForm({ defaultEmail }: WaitlistFormProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* User Type Toggle */}
+          <div className="flex rounded-[--radius-md] bg-warm-gray-100 p-1">
+            <button
+              type="button"
+              onClick={() => setUserType("creator")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-[--radius-sm] text-sm font-medium transition-all ${
+                userType === "creator"
+                  ? "bg-white text-warm-gray-900 shadow-sm"
+                  : "text-warm-gray-500 hover:text-warm-gray-700"
+              }`}
+            >
+              <Sparkles size={16} />
+              I'm a Creator
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType("brand")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-[--radius-sm] text-sm font-medium transition-all ${
+                userType === "brand"
+                  ? "bg-white text-warm-gray-900 shadow-sm"
+                  : "text-warm-gray-500 hover:text-warm-gray-700"
+              }`}
+            >
+              <Building2 size={16} />
+              I'm a Brand
+            </button>
+          </div>
+
           {/* Email - Required */}
           <div>
             <label
@@ -152,118 +187,132 @@ export function WaitlistForm({ defaultEmail }: WaitlistFormProps) {
             </div>
           </div>
 
-          <div className="pt-2 pb-1">
-            <p className="text-xs text-warm-gray-500 uppercase tracking-wider font-medium">
-              Social Handles (Optional)
-            </p>
-          </div>
-
-          {/* Instagram */}
-          <div>
-            <label
-              htmlFor="instagram"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              Instagram
-            </label>
-            <div className="relative">
-              <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
-              <input
-                id="instagram"
-                type="text"
-                value={instagram}
-                onChange={(e) => setInstagram(e.target.value)}
-                placeholder="@username"
-                className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* TikTok */}
-          <div>
-            <label
-              htmlFor="tiktok"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              TikTok
-            </label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400">
-                <TikTokIcon size={18} />
+          {/* Social Handles - Only for Creators */}
+          {userType === "creator" && (
+            <>
+              <div className="pt-2 pb-1">
+                <p className="text-xs text-warm-gray-500 uppercase tracking-wider font-medium">
+                  Social Handles (Optional)
+                </p>
               </div>
-              <input
-                id="tiktok"
-                type="text"
-                value={tiktok}
-                onChange={(e) => setTiktok(e.target.value)}
-                placeholder="@username"
-                className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-              />
-            </div>
-          </div>
 
-          {/* YouTube */}
-          <div>
-            <label
-              htmlFor="youtube"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              YouTube
-            </label>
-            <div className="relative">
-              <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
-              <input
-                id="youtube"
-                type="text"
-                value={youtube}
-                onChange={(e) => setYoutube(e.target.value)}
-                placeholder="@channel"
-                className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-              />
-            </div>
-          </div>
+              {/* Instagram */}
+              <div>
+                <label
+                  htmlFor="instagram"
+                  className="block text-sm font-medium text-warm-gray-700 mb-1.5"
+                >
+                  Instagram
+                </label>
+                <div className="relative">
+                  <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
+                  <input
+                    id="instagram"
+                    type="text"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="@username"
+                    className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                  />
+                </div>
+              </div>
 
-          {/* Facebook */}
-          <div>
-            <label
-              htmlFor="facebook"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              Facebook
-            </label>
-            <div className="relative">
-              <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
-              <input
-                id="facebook"
-                type="text"
-                value={facebook}
-                onChange={(e) => setFacebook(e.target.value)}
-                placeholder="@username"
-                className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-              />
-            </div>
-          </div>
+              {/* TikTok */}
+              <div>
+                <label
+                  htmlFor="tiktok"
+                  className="block text-sm font-medium text-warm-gray-700 mb-1.5"
+                >
+                  TikTok
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400">
+                    <TikTokIcon size={18} />
+                  </div>
+                  <input
+                    id="tiktok"
+                    type="text"
+                    value={tiktok}
+                    onChange={(e) => setTiktok(e.target.value)}
+                    placeholder="@username"
+                    className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                  />
+                </div>
+              </div>
 
-          {/* Twitter/X */}
-          <div>
-            <label
-              htmlFor="twitter"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              X (Twitter)
-            </label>
-            <div className="relative">
-              <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
-              <input
-                id="twitter"
-                type="text"
-                value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
-                placeholder="@username"
-                className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-              />
+              {/* YouTube */}
+              <div>
+                <label
+                  htmlFor="youtube"
+                  className="block text-sm font-medium text-warm-gray-700 mb-1.5"
+                >
+                  YouTube
+                </label>
+                <div className="relative">
+                  <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
+                  <input
+                    id="youtube"
+                    type="text"
+                    value={youtube}
+                    onChange={(e) => setYoutube(e.target.value)}
+                    placeholder="@channel"
+                    className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Facebook */}
+              <div>
+                <label
+                  htmlFor="facebook"
+                  className="block text-sm font-medium text-warm-gray-700 mb-1.5"
+                >
+                  Facebook
+                </label>
+                <div className="relative">
+                  <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
+                  <input
+                    id="facebook"
+                    type="text"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="@username"
+                    className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Twitter/X */}
+              <div>
+                <label
+                  htmlFor="twitter"
+                  className="block text-sm font-medium text-warm-gray-700 mb-1.5"
+                >
+                  X (Twitter)
+                </label>
+                <div className="relative">
+                  <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-warm-gray-400" />
+                  <input
+                    id="twitter"
+                    type="text"
+                    value={twitter}
+                    onChange={(e) => setTwitter(e.target.value)}
+                    placeholder="@username"
+                    className="w-full pl-10 pr-4 py-3 bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Brand Info Message */}
+          {userType === "brand" && (
+            <div className="py-4 px-4 bg-lavender-soft/20 rounded-[--radius-md] border border-lavender/20">
+              <p className="text-sm text-warm-gray-600">
+                As a brand, you'll get access to our creator directory to find and connect with talented UGC creators.
+              </p>
             </div>
-          </div>
+          )}
 
           <motion.button
             type="submit"

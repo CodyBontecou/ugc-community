@@ -31,12 +31,14 @@ export interface UnifiedRecord {
   displayName?: string | null;
   // Waitlist-specific
   socials?: SocialHandles | null;
+  userType?: "creator" | "brand"; // User type from waitlist signup
   // Invite-specific
   inviteUrl?: string;
   expiresAt?: string;
   usedBy?: { name: string } | null;
   creator?: { name: string } | null;
   token?: string;
+  role?: "creator" | "brand"; // Invite role
 }
 
 // GET /api/admin/people - List all users, invites, and waitlist entries
@@ -73,6 +75,7 @@ export async function GET() {
         .select({
           id: waitlist.id,
           email: waitlist.email,
+          userType: waitlist.userType,
           instagramHandle: waitlist.instagramHandle,
           tiktokHandle: waitlist.tiktokHandle,
           youtubeHandle: waitlist.youtubeHandle,
@@ -149,6 +152,7 @@ export async function GET() {
         usedBy: null,
         creator: invite.creator ? { name: invite.creator.name } : null,
         token: invite.token,
+        role: (invite.role as "creator" | "brand") || "creator",
       });
     }
 
@@ -164,6 +168,7 @@ export async function GET() {
         name: null,
         status: entry.invitedAt ? "invited" : "pending",
         createdAt: entry.createdAt.toISOString(),
+        userType: (entry.userType as "creator" | "brand") || "creator",
         socials: {
           instagram: entry.instagramHandle,
           tiktok: entry.tiktokHandle,

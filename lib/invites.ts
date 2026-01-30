@@ -18,10 +18,12 @@ export function generateInviteToken(): string {
 export async function createInvite({
   createdBy,
   email,
+  role = "creator",
   expirationDays = DEFAULT_EXPIRATION_DAYS,
 }: {
   createdBy: string;
   email?: string;
+  role?: "creator" | "brand";
   expirationDays?: number;
 }) {
   const token = generateInviteToken();
@@ -33,6 +35,7 @@ export async function createInvite({
     .values({
       token,
       email: email?.toLowerCase(),
+      role,
       expiresAt,
       createdBy,
     })
