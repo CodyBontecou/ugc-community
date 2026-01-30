@@ -37,6 +37,8 @@ export async function processIncomingPosts(
     errors: [],
   };
 
+  console.log(`[HashtagMonitor] Processing webhook from ${providerName}`);
+
   // Get the provider
   const provider = getProvider(providerName);
   if (!provider) {
@@ -48,16 +50,19 @@ export async function processIncomingPosts(
   let parseResult;
   try {
     parseResult = await provider.parseWebhookPayload(payload, headers);
+    console.log(`[HashtagMonitor] Parsed ${parseResult.posts.length} posts from webhook`);
   } catch (error) {
     result.errors.push(
       `Failed to parse webhook: ${error instanceof Error ? error.message : "Unknown error"}`
     );
+    console.error(`[HashtagMonitor] Parse error:`, error);
     return result;
   }
 
   // Add any parsing errors
   if (parseResult.errors) {
     result.errors.push(...parseResult.errors);
+    console.log(`[HashtagMonitor] Parse errors:`, parseResult.errors);
   }
 
   // Filter posts to only include those with the required hashtag
@@ -68,10 +73,13 @@ export async function processIncomingPosts(
 
   // Track how many were filtered out
   const filteredOutCount = parseResult.posts.length - filteredPosts.length;
-  if (filteredOutCount > 0) {
-    console.log(
-      `Filtered out ${filteredOutCount} posts without #${REQUIRED_HASHTAG}`
-    );
+  console.log(
+    `[HashtagMonitor] Filtered: ${filteredPosts.length} posts with #${REQUIRED_HASHTAG}, ${filteredOutCount} without`
+  );
+
+  // Log sample of filtered posts for debugging
+  if (filteredPosts.length > 0) {
+    console.log(`[HashtagMonitor] Sample post: @${filteredPosts[0].authorHandle} on ${filteredPosts[0].platform}`);
   }
 
   // Process each post that contains the required hashtag
@@ -106,6 +114,7 @@ async function savePost(
 ): Promise<{ isDuplicate: boolean; matchedUserId: string | null }> {
   // Try to match to a user based on their social handles
   const matchedUserId = await matchUserByHandle(post.authorHandle, post.platform);
+  console.log(`[HashtagMonitor] Saving post from @${post.authorHandle} (${post.platform}) - matched: ${matchedUserId ? 'YES' : 'NO'}`);
 
   // Insert or ignore if duplicate (based on unique post_url)
   const inserted = await db

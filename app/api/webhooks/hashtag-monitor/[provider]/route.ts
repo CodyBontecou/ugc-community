@@ -18,9 +18,11 @@ export async function POST(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider: providerName } = await params;
+  console.log(`[Webhook] Received POST from provider: ${providerName}`);
 
   // Check if provider exists
   if (!hasProvider(providerName)) {
+    console.log(`[Webhook] Unknown provider: ${providerName}`);
     return NextResponse.json(
       { error: `Unknown provider: ${providerName}` },
       { status: 404 }
@@ -64,8 +66,11 @@ export async function POST(
   // Process the posts
   const result = await processIncomingPosts(providerName, payload, headers);
 
+  console.log(`[Webhook] Processing complete: saved=${result.savedCount}, duplicates=${result.duplicateCount}, matched=${result.matchedCount}, errors=${result.errors.length}`);
+
   // Return appropriate status
   if (!result.success && result.savedCount === 0) {
+    console.log(`[Webhook] Processing failed:`, result.errors);
     return NextResponse.json(
       {
         success: false,
