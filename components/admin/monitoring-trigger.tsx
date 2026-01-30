@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Radio, Loader2, Play, CheckCircle, AlertCircle } from "lucide-react";
+import { Radio, Loader2, Play, CheckCircle, AlertCircle, RefreshCw, Database, ChevronDown, ChevronUp } from "lucide-react";
 
 interface PlatformInfo {
   platform: string;
@@ -32,12 +32,39 @@ interface TriggerResponse {
   };
 }
 
+interface ApifyRun {
+  id: string;
+  actorId: string;
+  status: string;
+  startedAt: string;
+  finishedAt: string;
+  datasetId: string;
+  origin: string;
+}
+
+interface ReprocessResult {
+  success: boolean;
+  itemsInDataset: number;
+  saved: number;
+  duplicates: number;
+  matched: number;
+  errors?: string[];
+}
+
 export function MonitoringTrigger() {
   const [info, setInfo] = useState<MonitoringInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [lastResult, setLastResult] = useState<TriggerResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Reprocess state
+  const [showReprocess, setShowReprocess] = useState(false);
+  const [runs, setRuns] = useState<ApifyRun[]>([]);
+  const [loadingRuns, setLoadingRuns] = useState(false);
+  const [reprocessing, setReprocessing] = useState<string | null>(null);
+  const [reprocessResult, setReprocessResult] = useState<ReprocessResult | null>(null);
+  const [manualDatasetId, setManualDatasetId] = useState("");
 
   useEffect(() => {
     fetchInfo();
@@ -57,6 +84,21 @@ export function MonitoringTrigger() {
       setError("Failed to load monitoring info");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchRuns() {
+    try {
+      setLoadingRuns(true);
+      const response = await fetch("/api/admin/monitoring/reprocess");
+      if (response.ok) {
+        const data = await response.json();
+        setRuns(data.runs || []);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setLoadingRuns(false);
     }
   }
 
@@ -85,6 +127,40 @@ export function MonitoringTrigger() {
       setError("Failed to trigger monitoring");
     } finally {
       setTriggering(false);
+    }
+  }
+
+  async function handleReprocess(datasetId: string) {
+    try {
+      setReprocessing(datasetId);
+      setError(null);
+      setReprocessResult(null);
+
+      const response = await fetch("/api/admin/monitoring/reprocess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ datasetId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setReprocessResult(data);
+      } else {
+        setError(data.error || "Failed to reprocess dataset");
+      }
+    } catch {
+      setError("Failed to reprocess dataset");
+    } finally {
+      setReprocessing(null);
+    }
+  }
+
+  function toggleReprocess() {
+    const newShow = !showReprocess;
+    setShowReprocess(newShow);
+    if (newShow && runs.length === 0) {
+      fetchRuns();
     }
   }
 
@@ -168,6 +244,114 @@ export function MonitoringTrigger() {
       <p className="mt-3 text-xs text-warm-gray-400">
         Automatically runs weekly on Sundays at 6 AM UTC. Scrapes registered user profiles and filters for #ugccommunity posts.
       </p>
+
+      {/* Reprocess Section */}
+      <div className="mt-4 pt-4 border-t border-warm-gray-100">
+        <button
+          onClick={toggleReprocess}
+          className="flex items-center gap-2 text-sm text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+        >
+          <Database size={14} />
+          <span>Reprocess Dataset</span>
+          {showReprocess ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+
+        {showReprocess && (
+          <div className="mt-3 space-y-3">
+            {reprocessResult && (
+              <div
+                className={`p-2 rounded text-xs ${
+                  reprocessResult.matched > 0
+                    ? "bg-green-50 border border-green-200 text-green-700"
+                    : "bg-yellow-50 border border-yellow-200 text-yellow-700"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} />
+                  <span>
+                    Processed {reprocessResult.itemsInDataset} items: {reprocessResult.saved} saved, {reprocessResult.duplicates} duplicates, <strong>{reprocessResult.matched} matched</strong>
+                  </span>
+                </div>
+                {reprocessResult.errors && reprocessResult.errors.length > 0 && (
+                  <div className="mt-1 text-red-600">
+                    Errors: {reprocessResult.errors.slice(0, 2).join(", ")}
+                    {reprocessResult.errors.length > 2 && ` (+${reprocessResult.errors.length - 2} more)`}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Manual dataset ID input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={manualDatasetId}
+                onChange={(e) => setManualDatasetId(e.target.value)}
+                placeholder="Enter dataset ID..."
+                className="flex-1 px-2 py-1.5 text-xs border border-warm-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+              />
+              <button
+                onClick={() => handleReprocess(manualDatasetId)}
+                disabled={!manualDatasetId || reprocessing !== null}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-warm-gray-100 text-warm-gray-700 hover:bg-warm-gray-200 rounded text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {reprocessing === manualDatasetId ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={12} />
+                )}
+                Reprocess
+              </button>
+            </div>
+
+            {/* Recent runs */}
+            {loadingRuns ? (
+              <div className="flex items-center gap-2 text-xs text-warm-gray-500">
+                <Loader2 size={12} className="animate-spin" />
+                Loading recent runs...
+              </div>
+            ) : runs.length > 0 ? (
+              <div className="space-y-1.5">
+                <p className="text-xs text-warm-gray-500">Recent runs:</p>
+                {runs.filter(r => r.status === "SUCCEEDED").slice(0, 5).map((run) => (
+                  <div
+                    key={run.id}
+                    className="flex items-center justify-between p-2 bg-warm-gray-50 rounded text-xs"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <span className="font-mono text-warm-gray-600">{run.datasetId}</span>
+                      <span className="ml-2 text-warm-gray-400">
+                        {new Date(run.finishedAt).toLocaleString()}
+                      </span>
+                      <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
+                        run.origin === "API"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}>
+                        {run.origin}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleReprocess(run.datasetId)}
+                      disabled={reprocessing !== null}
+                      className="flex items-center gap-1 px-2 py-1 bg-white border border-warm-gray-200 hover:border-purple-300 rounded text-warm-gray-600 hover:text-purple-600 transition-colors disabled:opacity-50"
+                    >
+                      {reprocessing === run.datasetId ? (
+                        <Loader2 size={10} className="animate-spin" />
+                      ) : (
+                        <RefreshCw size={10} />
+                      )}
+                      Reprocess
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-warm-gray-400">No recent runs found</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
