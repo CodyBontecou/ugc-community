@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, Mail, TrendingUp, Briefcase } from "lucide-react";
-
-interface Stats {
-  profileViewCount: number;
-  portfolioViewCount: number;
-  hasSubdomain: boolean;
-  contactSubmissions: {
-    total: number;
-    last30Days: number;
-    last7Days: number;
-  };
-}
+import { Eye, Mail, TrendingUp, Briefcase, Lock, BarChart3 } from "lucide-react";
+import type { Stats, AnalyticsFeatures } from "@/lib/types/analytics";
+import { FEATURE_REQUIREMENTS } from "@/lib/types/analytics";
 
 export function CreatorStatsCard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -126,6 +117,34 @@ export function CreatorStatsCard() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Analytics Preview */}
+      {stats.analyticsFeatures && !stats.analyticsFeatures.engagementTrends && (
+        <div className="mt-6 pt-6 border-t border-warm-gray-100">
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-lavender-soft/10 border border-lavender/20">
+            <div className="w-10 h-10 rounded-full bg-lavender-soft/30 flex items-center justify-center flex-shrink-0">
+              <BarChart3 size={20} className="text-lavender" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-medium text-warm-gray-900">
+                  Advanced Analytics
+                </h3>
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-warm-gray-100 text-warm-gray-500">
+                  <Lock size={10} />
+                  Locked
+                </span>
+              </div>
+              <p className="text-sm text-warm-gray-600 mb-2">
+                Unlock engagement trends, platform comparisons, and data export.
+              </p>
+              <p className="text-xs text-lavender font-medium">
+                {FEATURE_REQUIREMENTS.engagementTrends.label} to unlock
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
