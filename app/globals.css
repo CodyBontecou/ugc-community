@@ -61,7 +61,7 @@
 html {
   scroll-behavior: smooth;
   /* Extend background into safe area on iOS - matches theme-color */
-  background: #FFE4DF;
+  background: #FFDDD6;
   min-height: 100%;
 }
 
@@ -74,7 +74,7 @@ html {
     left: 0;
     right: 0;
     height: calc(env(safe-area-inset-top) + 100px);
-    background: linear-gradient(180deg, #FFE4DF 0%, #FFFBF9 100%);
+    background: linear-gradient(180deg, #FFDDD6 0%, #FFFBF9 100%);
     z-index: 9999;
     pointer-events: none;
   }
