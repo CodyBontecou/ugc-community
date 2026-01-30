@@ -65,6 +65,21 @@ html {
   min-height: 100%;
 }
 
+/* iOS safe area background cover */
+@supports (padding-top: env(safe-area-inset-top)) {
+  html::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: linear-gradient(135deg, #FFE4DF 0%, #FFDDD6 100%);
+    z-index: 9999;
+    pointer-events: none;
+  }
+}
+
 body {
   font-family: var(--font-body);
   font-weight: 400;
