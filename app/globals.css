@@ -60,6 +60,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Extend background into safe area on iOS */
+  background: var(--color-peach-100);
+  min-height: 100%;
 }
 
 body {
@@ -73,6 +76,9 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Add safe area padding for iOS notch/status bar */
+  padding-top: env(safe-area-inset-top);
+  min-height: 100dvh;
 }
 
 h1, h2, h3, h4, h5, h6 {
