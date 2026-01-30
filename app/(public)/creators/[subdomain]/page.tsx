@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ExternalLink, MapPin, Instagram, User, ArrowLeft, Trophy } from "lucide-react";
+import { ExternalLink, MapPin, Instagram, User, ArrowLeft, Trophy, Lock } from "lucide-react";
 import { getCreatorBySubdomain } from "@/lib/directory/queries";
 import { getUserBadgeMilestones } from "@/lib/milestones/queries";
+import { getServerSession } from "@/lib/auth/session";
 
 // TikTok icon (not in Lucide)
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -116,6 +117,10 @@ export default async function CreatorProfilePage({ params }: PageProps) {
   if (!creator) {
     notFound();
   }
+
+  // Check if user is logged in
+  const session = await getServerSession();
+  const isLoggedIn = !!session;
 
   // Fetch earned badge milestones for this creator
   const badgeMilestones = await getUserBadgeMilestones(creator.id);
@@ -281,83 +286,147 @@ export default async function CreatorProfilePage({ params }: PageProps) {
 
         {/* Main Content */}
         <main className="container pb-16 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - About */}
-            <div className="lg:col-span-1">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-warm-gray-100">
-                <h2 className="text-lg font-semibold text-warm-gray-900 mb-4">
-                  About
-                </h2>
-                {creator.bio ? (
-                  <p className="text-warm-gray-600 whitespace-pre-line">
-                    {creator.bio}
+          {!isLoggedIn ? (
+            /* Login Gate for Non-Authenticated Users */
+            <div className="relative">
+              {/* Blurred Preview */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 blur-sm pointer-events-none select-none" aria-hidden="true">
+                {/* Left Column - About (Placeholder) */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-warm-gray-100">
+                    <h2 className="text-lg font-semibold text-warm-gray-900 mb-4">
+                      About
+                    </h2>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-warm-gray-200 rounded w-full" />
+                      <div className="h-4 bg-warm-gray-200 rounded w-5/6" />
+                      <div className="h-4 bg-warm-gray-200 rounded w-4/6" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Portfolio Placeholder */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-warm-gray-100">
+                    <div className="p-4 border-b border-warm-gray-100">
+                      <h2 className="text-lg font-semibold text-warm-gray-900">
+                        Portfolio Preview
+                      </h2>
+                    </div>
+                    <div className="aspect-[16/10] bg-warm-gray-100" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Login Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-white rounded-2xl shadow-xl border border-warm-gray-100 p-8 max-w-md mx-4 text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-coral/10 to-rose/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Lock size={28} className="text-coral" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-warm-gray-900 mb-2">
+                    Sign in to view creator profiles
+                  </h2>
+                  <p className="text-warm-gray-600 mb-6">
+                    Create a free account to explore {displayName}&apos;s portfolio, connect with creators, and discover UGC talent.
                   </p>
-                ) : (
-                  <p className="text-warm-gray-400 italic">
-                    No bio available yet.
-                  </p>
-                )}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/sign-in"
+                      className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      className="inline-flex items-center justify-center px-6 py-3 bg-warm-gray-100 text-warm-gray-700 font-medium rounded-full hover:bg-warm-gray-200 transition-colors"
+                    >
+                      Create Account
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Right Column - Portfolio Preview */}
-            <div className="lg:col-span-2">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-warm-gray-100">
-                <div className="p-4 border-b border-warm-gray-100 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-warm-gray-900">
-                    Portfolio Preview
+          ) : (
+            /* Full Content for Authenticated Users */
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - About */}
+              <div className="lg:col-span-1">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-warm-gray-100">
+                  <h2 className="text-lg font-semibold text-warm-gray-900 mb-4">
+                    About
                   </h2>
+                  {creator.bio ? (
+                    <p className="text-warm-gray-600 whitespace-pre-line">
+                      {creator.bio}
+                    </p>
+                  ) : (
+                    <p className="text-warm-gray-400 italic">
+                      No bio available yet.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column - Portfolio Preview */}
+              <div className="lg:col-span-2">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-warm-gray-100">
+                  <div className="p-4 border-b border-warm-gray-100 flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-warm-gray-900">
+                      Portfolio Preview
+                    </h2>
+                    <a
+                      href={portfolioUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coral to-rose text-white text-sm font-medium rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      View Full Site
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
+
+                  {/* Browser Chrome */}
+                  <div className="bg-warm-gray-50 border-b border-warm-gray-100 px-4 py-3 flex items-center gap-3">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
+                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
+                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
+                    </div>
+                    <div className="flex-1 flex justify-center">
+                      <div className="bg-white rounded-md px-4 py-1.5 text-sm text-warm-gray-500 border border-warm-gray-100 max-w-md w-full text-center truncate">
+                        {creator.subdomain}.ugc.community
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Portfolio iframe */}
                   <a
                     href={portfolioUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coral to-rose text-white text-sm font-medium rounded-full hover:opacity-90 transition-opacity"
+                    className="block relative group"
                   >
-                    View Full Site
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-
-                {/* Browser Chrome */}
-                <div className="bg-warm-gray-50 border-b border-warm-gray-100 px-4 py-3 flex items-center gap-3">
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                    <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                    <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="bg-white rounded-md px-4 py-1.5 text-sm text-warm-gray-500 border border-warm-gray-100 max-w-md w-full text-center truncate">
-                      {creator.subdomain}.ugc.community
-                    </div>
-                  </div>
-                </div>
-
-                {/* Portfolio iframe */}
-                <a
-                  href={portfolioUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block relative group"
-                >
-                  <div className="relative aspect-[16/10] bg-warm-gray-50 overflow-hidden">
-                    <iframe
-                      src={portfolioUrl}
-                      className="w-full h-full border-0 pointer-events-none"
-                      title={`${displayName}'s portfolio`}
-                      loading="lazy"
-                    />
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-warm-gray-900/0 group-hover:bg-warm-gray-900/60 transition-all duration-300 flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 bg-white text-warm-gray-900 px-6 py-3 rounded-full font-semibold shadow-lg">
-                        <span>Visit Site</span>
-                        <ExternalLink size={18} />
+                    <div className="relative aspect-[16/10] bg-warm-gray-50 overflow-hidden">
+                      <iframe
+                        src={portfolioUrl}
+                        className="w-full h-full border-0 pointer-events-none"
+                        title={`${displayName}'s portfolio`}
+                        loading="lazy"
+                      />
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-warm-gray-900/0 group-hover:bg-warm-gray-900/60 transition-all duration-300 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 bg-white text-warm-gray-900 px-6 py-3 rounded-full font-semibold shadow-lg">
+                          <span>Visit Site</span>
+                          <ExternalLink size={18} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </a>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
     </>
