@@ -60,24 +60,9 @@
 
 html {
   scroll-behavior: smooth;
-  /* Extend background into safe area on iOS - matches theme-color */
-  background: #FFDDD6;
+  /* Extend background into safe area on iOS */
+  background: var(--color-peach-100);
   min-height: 100%;
-}
-
-/* iOS safe area background cover - pull into safe area with negative top */
-@supports (padding-top: env(safe-area-inset-top)) {
-  html::before {
-    content: '';
-    position: fixed;
-    top: calc(-1 * env(safe-area-inset-top));
-    left: 0;
-    right: 0;
-    height: calc(env(safe-area-inset-top) + 100px);
-    background: linear-gradient(180deg, #FFDDD6 0%, #FFFBF9 100%);
-    z-index: 9999;
-    pointer-events: none;
-  }
 }
 
 body {
@@ -85,12 +70,14 @@ body {
   font-weight: 400;
   line-height: 1.6;
   color: var(--color-warm-gray-800);
-  background: transparent;
+  background: var(--color-cream);
   overflow-x: hidden;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Add safe area padding for iOS notch/status bar */
+  padding-top: env(safe-area-inset-top);
   min-height: 100dvh;
 }
 

@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#FFDDD6",
+  themeColor: "#FFF5F3",
 };
 
 export const metadata: Metadata = {
@@ -34,10 +34,6 @@ export const metadata: Metadata = {
     "brand deals",
     "influencer",
   ],
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-  },
   openGraph: {
     title: "ugc.community - For UGC Creators",
     description:
