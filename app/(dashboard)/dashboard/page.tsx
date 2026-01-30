@@ -16,6 +16,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isBrand } from "@/lib/roles";
+import { isAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = {
   title: "Dashboard - ugc.community",
@@ -38,6 +39,9 @@ async function DashboardContent() {
 
   const userRole = user[0]?.role || "creator";
   const isUserBrand = isBrand(userRole);
+  const isUserAdmin = isAdmin(session.user.email);
+  // Only show creator content for actual creators (not brands or admins)
+  const showCreatorContent = !isUserBrand && !isUserAdmin;
 
   const firstName = session.user.name?.split(" ")[0] || "Creator";
 
@@ -53,33 +57,33 @@ async function DashboardContent() {
         </p>
       </div>
 
-      {/* Schedule Call CTA */}
-      <ScheduleCallCard />
+      {/* Schedule Call CTA - Creator only */}
+      {showCreatorContent && <ScheduleCallCard />}
 
-      {/* Creator Stats */}
-      <CreatorStatsCard />
+      {/* Creator Stats - Creator only */}
+      {showCreatorContent && <CreatorStatsCard />}
 
-      {/* Advanced Analytics */}
-      <AdvancedAnalytics />
+      {/* Advanced Analytics - Creator only */}
+      {showCreatorContent && <AdvancedAnalytics />}
 
-      {/* Post Performance Metrics */}
-      <PostMetrics />
+      {/* Post Performance Metrics - Creator only */}
+      {showCreatorContent && <PostMetrics />}
 
       {/* Milestone Progress - Creator only */}
-      {!isUserBrand && (
+      {showCreatorContent && (
         <div id="milestone-progress">
           <UserProgressionPath />
         </div>
       )}
 
       {/* Portfolio Hosting Status - Creator only */}
-      {!isUserBrand && <PortfolioStatus />}
+      {showCreatorContent && <PortfolioStatus />}
 
       {/* Unlocked Rewards - Creator only */}
-      {!isUserBrand && <RewardsOverview />}
+      {showCreatorContent && <RewardsOverview />}
 
       {/* Directory CTA - Creator only */}
-      {!isUserBrand && (
+      {showCreatorContent && (
         <Link
           href="/dashboard/directory"
           className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 hover:border-warm-gray-300 hover:shadow-sm transition-all"
@@ -131,7 +135,7 @@ async function DashboardContent() {
       </div>
 
       {/* Media Library Section - Creator only */}
-      {!isUserBrand && (
+      {showCreatorContent && (
         <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
           <div className="h-[600px] relative">
             <MediaLibrary />
