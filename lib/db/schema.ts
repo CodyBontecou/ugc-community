@@ -275,6 +275,37 @@ export const posts = pgTable(
 );
 
 // =====================================================
+// Hashtag Mentions (Incoming webhook data from monitoring)
+// =====================================================
+
+export const hashtagMentions = pgTable(
+  "hashtag_mentions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    platform: text("platform").notNull(), // 'tiktok' | 'instagram' | 'youtube' | 'twitter' | 'facebook'
+    postUrl: text("post_url").notNull().unique(),
+    postId: text("post_id"), // Platform-specific post ID
+    authorHandle: text("author_handle").notNull(),
+    authorName: text("author_name"),
+    content: text("content"), // Post caption/description
+    engagement: jsonb("engagement").$type<HashtagMentionEngagement>().default({}),
+    postedAt: timestamp("posted_at"), // When post was made on platform
+    discoveredAt: timestamp("discovered_at").notNull().defaultNow(), // When we found it
+    processedAt: timestamp("processed_at"), // When we matched to user
+    matchedUserId: text("matched_user_id").references(() => users.id, { onDelete: "set null" }),
+    source: text("source").notNull(), // Provider name: 'apify', 'brand24', etc.
+    metadata: jsonb("metadata").$type<HashtagMentionMetadata>().default({}),
+  },
+  (table) => [
+    index("hashtag_mentions_platform_idx").on(table.platform),
+    index("hashtag_mentions_posted_at_idx").on(table.postedAt),
+    index("hashtag_mentions_author_handle_idx").on(table.authorHandle),
+    index("hashtag_mentions_matched_user_id_idx").on(table.matchedUserId),
+    index("hashtag_mentions_source_idx").on(table.source),
+  ]
+);
+
+// =====================================================
 // Milestones System
 // =====================================================
 
@@ -330,6 +361,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   portfolioViewDedupe: many(portfolioViewDedupe),
   posts: many(posts),
   userMilestones: many(userMilestones),
+  hashtagMentions: many(hashtagMentions),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -402,6 +434,13 @@ export const userMilestonesRelations = relations(userMilestones, ({ one }) => ({
   }),
 }));
 
+export const hashtagMentionsRelations = relations(hashtagMentions, ({ one }) => ({
+  matchedUser: one(users, {
+    fields: [hashtagMentions.matchedUserId],
+    references: [users.id],
+  }),
+}));
+
 // =====================================================
 // Types
 // =====================================================
@@ -432,6 +471,24 @@ export type MilestoneRewardConfig = {
   enabled?: boolean;
 };
 
+export type HashtagMentionEngagement = {
+  likes?: number;
+  views?: number;
+  comments?: number;
+  shares?: number;
+  saves?: number;
+};
+
+export type HashtagMentionMetadata = {
+  hashtags?: string[];
+  thumbnailUrl?: string;
+  videoUrl?: string;
+  duration?: number; // seconds for videos
+  isVerified?: boolean; // verified account
+  followerCount?: number;
+  rawData?: Record<string, unknown>; // original webhook payload
+};
+
 // Export types for use in application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -451,3 +508,5 @@ export type Milestone = typeof milestones.$inferSelect;
 export type NewMilestone = typeof milestones.$inferInsert;
 export type UserMilestone = typeof userMilestones.$inferSelect;
 export type NewUserMilestone = typeof userMilestones.$inferInsert;
+export type HashtagMention = typeof hashtagMentions.$inferSelect;
+export type NewHashtagMention = typeof hashtagMentions.$inferInsert;
