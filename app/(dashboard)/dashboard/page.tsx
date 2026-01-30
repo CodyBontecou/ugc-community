@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import { AdvancedAnalytics } from "@/components/dashboard/advanced-analytics";
+import { PostMetrics } from "@/components/dashboard/post-metrics";
 import { PortfolioStatus } from "@/components/dashboard/portfolio-status";
 import { MilestoneProgress } from "@/components/milestones/MilestoneProgress";
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
@@ -46,6 +47,9 @@ async function DashboardContent() {
 
       {/* Advanced Analytics */}
       <AdvancedAnalytics />
+
+      {/* Post Performance Metrics */}
+      <PostMetrics />
 
       {/* Milestone Progress */}
       <div id="milestone-progress">

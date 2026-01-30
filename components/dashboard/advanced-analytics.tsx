@@ -14,10 +14,44 @@ import type { Stats } from "@/lib/types/analytics";
 import { FEATURE_REQUIREMENTS } from "@/lib/types/analytics";
 import { FeatureGate, LockedButton } from "@/components/ui/feature-gate";
 
+// Types for the analytics API response
+type ViewTrend = {
+  week: string;
+  profileViews: number;
+  portfolioViews: number;
+};
+
+type AnalyticsData = {
+  viewTrends: ViewTrend[];
+  platformBreakdown: Record<string, number>;
+  topPosts: Array<{
+    id: string;
+    platform: string;
+    postUrl: string | null;
+    postedAt: Date | null;
+    metadata: Record<string, unknown> | null;
+  }>;
+  totals: {
+    profileViewCount: number;
+    portfolioViewCount: number;
+    lifetimePostCount: number;
+  };
+};
+
+// Platform color mapping
+const PLATFORM_COLORS: Record<string, string> = {
+  instagram: "bg-pink-500",
+  tiktok: "bg-gray-800",
+  youtube: "bg-red-500",
+  twitter: "bg-blue-400",
+  facebook: "bg-blue-600",
+  linkedin: "bg-blue-700",
+  other: "bg-warm-gray-500",
+};
+
 // Simple SVG bar chart component
 function EngagementChart({ data }: { data: number[] }) {
   const max = Math.max(...data, 1);
-  const barWidth = 100 / data.length;
 
   return (
     <div className="h-32 flex items-end gap-1">
@@ -33,21 +67,28 @@ function EngagementChart({ data }: { data: number[] }) {
   );
 }
 
-// Simple platform breakdown component
-function PlatformBreakdown() {
-  // Mock data - in a real implementation this would come from the API
-  const platforms = [
-    { name: "Instagram", percentage: 45, color: "bg-pink-500" },
-    { name: "TikTok", percentage: 35, color: "bg-gray-800" },
-    { name: "YouTube", percentage: 20, color: "bg-red-500" },
-  ];
+// Platform breakdown component with real data
+function PlatformBreakdown({
+  data,
+}: {
+  data: Array<{ name: string; percentage: number; color: string }>;
+}) {
+  if (data.length === 0) {
+    return (
+      <div className="text-center py-4 text-warm-gray-500 text-sm">
+        No platform data available yet
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
-      {platforms.map((platform) => (
+      {data.map((platform) => (
         <div key={platform.name} className="space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="text-warm-gray-700">{platform.name}</span>
+            <span className="text-warm-gray-700 capitalize">
+              {platform.name}
+            </span>
             <span className="text-warm-gray-500">{platform.percentage}%</span>
           </div>
           <div className="h-2 bg-warm-gray-100 rounded-full overflow-hidden">
@@ -64,24 +105,40 @@ function PlatformBreakdown() {
 
 export function AdvancedAnalytics() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       try {
-        const response = await fetch("/api/user/stats");
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
+        // Fetch stats for feature access check
+        const statsResponse = await fetch("/api/user/stats");
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
+
+          // Only fetch analytics if user has advanced analytics access
+          if (statsData.analyticsFeatures?.engagementTrends) {
+            const analyticsResponse = await fetch("/api/user/analytics");
+            if (analyticsResponse.ok) {
+              const analyticsData = await analyticsResponse.json();
+              setAnalytics(analyticsData);
+            } else if (analyticsResponse.status === 403) {
+              // User doesn't have access - this is expected
+            } else {
+              setError("Failed to load analytics data");
+            }
+          }
         }
       } catch {
-        // Silently fail
+        setError("Failed to load data");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchStats();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -95,6 +152,14 @@ export function AdvancedAnalytics() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+        <div className="text-center text-warm-gray-500 text-sm">{error}</div>
+      </div>
+    );
+  }
+
   if (!stats || !stats.hasSubdomain) {
     return null;
   }
@@ -102,12 +167,55 @@ export function AdvancedAnalytics() {
   const features = stats.analyticsFeatures;
   const hasAdvanced = features?.engagementTrends ?? false;
 
-  // Mock engagement data - in real implementation would come from API
-  const mockEngagementData = [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45];
+  // Convert viewTrends to chart data (combined profile + portfolio views per week)
+  const engagementData =
+    analytics?.viewTrends.map(
+      (trend) => trend.profileViews + trend.portfolioViews
+    ) ?? [];
 
-  const handleExport = (format: "csv" | "json") => {
-    // In real implementation, this would trigger a download
-    console.log(`Exporting as ${format}`);
+  // Convert platformBreakdown to display format
+  const platformData = (() => {
+    if (!analytics?.platformBreakdown) return [];
+    const breakdown = analytics.platformBreakdown;
+    const total = Object.values(breakdown).reduce((sum, count) => sum + count, 0);
+    if (total === 0) return [];
+
+    return Object.entries(breakdown)
+      .map(([name, count]) => ({
+        name: name.toLowerCase(),
+        percentage: Math.round((count / total) * 100),
+        color: PLATFORM_COLORS[name.toLowerCase()] || PLATFORM_COLORS.other,
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+  })();
+
+  const hasEnoughData = engagementData.length > 0;
+
+  const handleExport = async (format: "csv" | "json") => {
+    try {
+      const response = await fetch(`/api/user/analytics/export?format=${format}`);
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      // Get the filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch?.[1] || `analytics-export.${format}`;
+
+      // Create blob and trigger download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
   };
 
   return (
@@ -138,11 +246,19 @@ export function AdvancedAnalytics() {
             showTeaser={true}
           >
             <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
-              <EngagementChart data={mockEngagementData} />
-              <div className="flex justify-between text-xs text-warm-gray-500 mt-2">
-                <span>12 weeks ago</span>
-                <span>This week</span>
-              </div>
+              {hasEnoughData ? (
+                <>
+                  <EngagementChart data={engagementData} />
+                  <div className="flex justify-between text-xs text-warm-gray-500 mt-2">
+                    <span>{engagementData.length} weeks ago</span>
+                    <span>This week</span>
+                  </div>
+                </>
+              ) : (
+                <div className="h-32 flex items-center justify-center text-warm-gray-500 text-sm">
+                  Not enough data yet
+                </div>
+              )}
             </div>
           </FeatureGate>
         </div>
@@ -159,7 +275,7 @@ export function AdvancedAnalytics() {
             showTeaser={true}
           >
             <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
-              <PlatformBreakdown />
+              <PlatformBreakdown data={platformData} />
             </div>
           </FeatureGate>
         </div>
