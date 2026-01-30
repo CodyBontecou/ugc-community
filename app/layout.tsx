@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   ],
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   openGraph: {
     title: "ugc.community - For UGC Creators",
