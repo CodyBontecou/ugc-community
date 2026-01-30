@@ -2,15 +2,19 @@
 export { NICHES, NICHE_LABELS, type Niche } from "../directory/constants";
 
 // Job statuses
-export const JOB_STATUSES = ["draft", "active", "paused", "closed"] as const;
+export const JOB_STATUSES = ["draft", "pending_review", "active", "paused", "closed"] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   draft: "Draft",
+  pending_review: "Pending Review",
   active: "Active",
   paused: "Paused",
   closed: "Closed",
 };
+
+// Brand job limits
+export const BRAND_MAX_ACTIVE_JOBS = 5;
 
 // Compensation types
 export const COMPENSATION_TYPES = ["paid", "product", "hybrid", "exposure"] as const;

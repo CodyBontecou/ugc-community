@@ -355,3 +355,145 @@ export async function updateJob(
 export async function deleteJob(jobId: string) {
   await db.delete(contentJobs).where(eq(contentJobs.id, jobId));
 }
+
+// Brand-specific functions
+
+export async function countBrandActiveJobs(brandId: string): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(contentJobs)
+    .where(
+      and(
+        eq(contentJobs.brandId, brandId),
+        inArray(contentJobs.status, ["draft", "pending_review", "active", "paused"])
+      )
+    );
+  return result[0]?.count || 0;
+}
+
+export interface ListBrandJobsOptions {
+  status?: JobStatus | JobStatus[];
+  limit?: number;
+  offset?: number;
+}
+
+export async function listBrandJobs(brandId: string, options: ListBrandJobsOptions = {}) {
+  const { status, limit = 20, offset = 0 } = options;
+
+  const conditions = [eq(contentJobs.brandId, brandId)];
+
+  if (status) {
+    if (Array.isArray(status)) {
+      conditions.push(inArray(contentJobs.status, status));
+    } else {
+      conditions.push(eq(contentJobs.status, status));
+    }
+  }
+
+  const jobs = await db
+    .select({
+      id: contentJobs.id,
+      title: contentJobs.title,
+      description: contentJobs.description,
+      hooks: contentJobs.hooks,
+      compensationType: contentJobs.compensationType,
+      compensationDetails: contentJobs.compensationDetails,
+      niches: contentJobs.niches,
+      platforms: contentJobs.platforms,
+      status: contentJobs.status,
+      createdBy: contentJobs.createdBy,
+      brandId: contentJobs.brandId,
+      isFeatured: contentJobs.isFeatured,
+      deadlineAt: contentJobs.deadlineAt,
+      viewCount: contentJobs.viewCount,
+      createdAt: contentJobs.createdAt,
+      updatedAt: contentJobs.updatedAt,
+      publishedAt: contentJobs.publishedAt,
+    })
+    .from(contentJobs)
+    .where(and(...conditions))
+    .orderBy(desc(contentJobs.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  // Get total count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(contentJobs)
+    .where(and(...conditions));
+  const total = countResult[0]?.count || 0;
+
+  // Get application counts
+  if (jobs.length > 0) {
+    const jobIds = jobs.map((j) => j.id);
+    const applicationCounts = await db
+      .select({
+        jobId: jobApplications.jobId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(jobApplications)
+      .where(inArray(jobApplications.jobId, jobIds))
+      .groupBy(jobApplications.jobId);
+
+    const countMap = new Map(applicationCounts.map((c) => [c.jobId, c.count]));
+    const jobsWithCounts = jobs.map((job) => ({
+      ...job,
+      applicationCount: countMap.get(job.id) || 0,
+    }));
+
+    return {
+      jobs: jobsWithCounts,
+      total,
+      limit,
+      offset,
+    };
+  }
+
+  return {
+    jobs: jobs.map((job) => ({ ...job, applicationCount: 0 })),
+    total,
+    limit,
+    offset,
+  };
+}
+
+export async function getBrandJobById(jobId: string, brandId: string) {
+  const job = await db
+    .select({
+      id: contentJobs.id,
+      title: contentJobs.title,
+      description: contentJobs.description,
+      hooks: contentJobs.hooks,
+      compensationType: contentJobs.compensationType,
+      compensationDetails: contentJobs.compensationDetails,
+      niches: contentJobs.niches,
+      platforms: contentJobs.platforms,
+      status: contentJobs.status,
+      createdBy: contentJobs.createdBy,
+      brandId: contentJobs.brandId,
+      isFeatured: contentJobs.isFeatured,
+      deadlineAt: contentJobs.deadlineAt,
+      viewCount: contentJobs.viewCount,
+      createdAt: contentJobs.createdAt,
+      updatedAt: contentJobs.updatedAt,
+      publishedAt: contentJobs.publishedAt,
+    })
+    .from(contentJobs)
+    .where(and(eq(contentJobs.id, jobId), eq(contentJobs.brandId, brandId)))
+    .limit(1);
+
+  if (!job[0]) return null;
+
+  // Get application count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(jobApplications)
+    .where(eq(jobApplications.jobId, jobId));
+
+  return {
+    job: {
+      ...job[0],
+      applicationCount: countResult[0]?.count || 0,
+    },
+  };
+}

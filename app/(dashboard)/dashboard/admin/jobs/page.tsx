@@ -10,8 +10,10 @@ import {
   Trash2,
   Eye,
   Users,
+  CheckCircle,
 } from "lucide-react";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { BrandBadge } from "@/components/jobs/brand-badge";
 import {
   JOB_STATUSES,
   JOB_STATUS_LABELS,
@@ -27,6 +29,7 @@ interface AdminJob {
   compensationType: string;
   status: string;
   isFeatured: boolean;
+  brandId: string | null;
   viewCount: number;
   createdAt: string;
   publishedAt: string | null;
@@ -39,6 +42,7 @@ export default function AdminJobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "">("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
     setIsLoading(true);
@@ -90,6 +94,29 @@ export default function AdminJobsPage() {
       alert("Failed to delete job");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleApprove = async (jobId: string) => {
+    setApprovingId(jobId);
+    try {
+      const response = await fetch(`/api/admin/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+
+      if (response.ok) {
+        // Refresh the jobs list
+        fetchJobs();
+      } else {
+        alert("Failed to approve job");
+      }
+    } catch (err) {
+      console.error("Error approving job:", err);
+      alert("Failed to approve job");
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -204,13 +231,14 @@ export default function AdminJobsPage() {
                   <tr key={job.id} className="hover:bg-warm-gray-50 transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1">
-                        <span className="font-medium text-warm-gray-900 flex items-center gap-2">
+                        <span className="font-medium text-warm-gray-900 flex items-center gap-2 flex-wrap">
                           {job.title}
                           {job.isFeatured && (
                             <span className="text-xs bg-coral/10 text-coral px-2 py-0.5 rounded-full">
                               Featured
                             </span>
                           )}
+                          {job.brandId && <BrandBadge />}
                         </span>
                         <span className="text-sm text-warm-gray-500 line-clamp-1">
                           {job.description}
@@ -247,6 +275,20 @@ export default function AdminJobsPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        {job.status === "pending_review" && (
+                          <button
+                            onClick={() => handleApprove(job.id)}
+                            disabled={approvingId === job.id}
+                            className="p-2 text-green-500 hover:text-green-700 hover:bg-green-50 rounded-[--radius-md] transition-colors disabled:opacity-50"
+                            title="Approve"
+                          >
+                            {approvingId === job.id ? (
+                              <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <CheckCircle size={16} />
+                            )}
+                          </button>
+                        )}
                         <Link
                           href={`/dashboard/admin/jobs/${job.id}`}
                           className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors"

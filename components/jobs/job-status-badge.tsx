@@ -8,6 +8,7 @@ interface JobStatusBadgeProps {
 
 const statusStyles: Record<JobStatus, string> = {
   draft: "bg-warm-gray-100 text-warm-gray-600",
+  pending_review: "bg-blue-100 text-blue-700",
   active: "bg-green-100 text-green-700",
   paused: "bg-amber-100 text-amber-700",
   closed: "bg-red-100 text-red-700",

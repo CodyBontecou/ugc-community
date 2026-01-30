@@ -166,6 +166,11 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "creator",
+      },
       // Note: Social handles (instagramHandles, tiktokHandles, youtubeHandles, twitterHandles)
       // are stored as arrays in the database and managed via the admin API.
       // Better Auth doesn't support array types in additionalFields.
