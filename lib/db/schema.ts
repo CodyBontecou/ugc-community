@@ -42,6 +42,8 @@ export const users = pgTable(
     subdomain: text("subdomain").unique(),
     // Admin fields for user status management
     status: text("status").notNull().default("active"), // "active" | "suspended" | "banned"
+    // User role - determines feature access
+    role: text("role").notNull().default("creator"), // "creator" | "brand"
     statusChangedAt: timestamp("status_changed_at"),
     statusChangedBy: text("status_changed_by"),
     // Profile analytics

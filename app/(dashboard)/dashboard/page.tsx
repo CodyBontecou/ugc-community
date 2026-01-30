@@ -12,6 +12,10 @@ import { UserProgressionPath } from "@/components/milestones/UserProgressionPath
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
 import { User, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { isBrand } from "@/lib/roles";
 
 export const metadata: Metadata = {
   title: "Dashboard - ugc.community",
@@ -24,6 +28,16 @@ export const dynamic = "force-dynamic";
 async function DashboardContent() {
   const session = await getServerSession();
   if (!session) return null;
+
+  // Fetch user role
+  const user = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  const userRole = user[0]?.role || "creator";
+  const isUserBrand = isBrand(userRole);
 
   const firstName = session.user.name?.split(" ")[0] || "Creator";
 
@@ -51,37 +65,41 @@ async function DashboardContent() {
       {/* Post Performance Metrics */}
       <PostMetrics />
 
-      {/* Milestone Progress */}
-      <div id="milestone-progress">
-        <UserProgressionPath />
-      </div>
-
-      {/* Portfolio Hosting Status */}
-      <PortfolioStatus />
-
-      {/* Unlocked Rewards */}
-      <RewardsOverview />
-
-      {/* Directory CTA */}
-      <Link
-        href="/dashboard/directory"
-        className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 hover:border-warm-gray-300 hover:shadow-sm transition-all"
-      >
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center flex-shrink-0">
-            <Users size={24} className="text-lavender" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
-              Creator Directory
-            </h2>
-            <p className="text-sm text-warm-gray-500">
-              Get discovered by brands. Join the creator directory to make it
-              easy for brands to find and hire you.
-            </p>
-          </div>
+      {/* Milestone Progress - Creator only */}
+      {!isUserBrand && (
+        <div id="milestone-progress">
+          <UserProgressionPath />
         </div>
-      </Link>
+      )}
+
+      {/* Portfolio Hosting Status - Creator only */}
+      {!isUserBrand && <PortfolioStatus />}
+
+      {/* Unlocked Rewards - Creator only */}
+      {!isUserBrand && <RewardsOverview />}
+
+      {/* Directory CTA - Creator only */}
+      {!isUserBrand && (
+        <Link
+          href="/dashboard/directory"
+          className="block bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 hover:border-warm-gray-300 hover:shadow-sm transition-all"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center flex-shrink-0">
+              <Users size={24} className="text-lavender" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
+                Creator Directory
+              </h2>
+              <p className="text-sm text-warm-gray-500">
+                Get discovered by brands. Join the creator directory to make it
+                easy for brands to find and hire you.
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Account Section */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
@@ -112,12 +130,14 @@ async function DashboardContent() {
         </div>
       </div>
 
-      {/* Media Library Section */}
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
-        <div className="h-[600px] relative">
-          <MediaLibrary />
+      {/* Media Library Section - Creator only */}
+      {!isUserBrand && (
+        <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
+          <div className="h-[600px] relative">
+            <MediaLibrary />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -60,6 +60,7 @@ interface UserDetails {
   twitterHandles: string[] | null;
   subdomain: string | null;
   status: string;
+  role: string;
   statusChangedAt: string | null;
   statusChangedBy: string | null;
   profileViewCount: number;
@@ -345,6 +346,11 @@ export default function UserDetailPage() {
   const [savingBio, setSavingBio] = useState(false);
   const [bioError, setBioError] = useState<string | null>(null);
   const [bioSuccess, setBioSuccess] = useState(false);
+
+  // Role editing state
+  const [savingRole, setSavingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
+  const [roleSuccess, setRoleSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -923,6 +929,39 @@ export default function UserDetailPage() {
   // Check if bio has changed
   const bioChanged = bioInput !== (user?.bio || "");
 
+  // Update user role
+  const handleUpdateRole = async (newRole: "creator" | "brand") => {
+    if (!user || user.role === newRole) return;
+
+    setSavingRole(true);
+    setRoleError(null);
+    setRoleSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to update role");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev ? { ...prev, role: data.user.role } : prev
+      );
+      setRoleSuccess(true);
+      setTimeout(() => setRoleSuccess(false), 3000);
+    } catch (err) {
+      setRoleError(err instanceof Error ? err.message : "Failed to update role");
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1178,6 +1217,63 @@ export default function UserDetailPage() {
 
       {/* Milestone Progress */}
       <UserProgressionPath userId={userId} />
+
+      {/* User Role Management */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <User size={20} className="text-warm-gray-600" />
+          <h3 className="text-lg font-semibold text-warm-gray-900">
+            User Role
+          </h3>
+        </div>
+
+        <p className="text-sm text-warm-gray-500 mb-4">
+          Creators have access to milestones, portfolio, and media features. Brands have limited dashboard access.
+        </p>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleUpdateRole("creator")}
+            disabled={savingRole || user.role === "creator"}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+              user.role === "creator"
+                ? "bg-green-100 text-green-700 cursor-default"
+                : "bg-warm-gray-100 text-warm-gray-600 hover:bg-warm-gray-200"
+            }`}
+          >
+            {savingRole && user.role !== "creator" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <User size={16} />
+            )}
+            Creator
+          </button>
+
+          <button
+            onClick={() => handleUpdateRole("brand")}
+            disabled={savingRole || user.role === "brand"}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+              user.role === "brand"
+                ? "bg-purple-100 text-purple-700 cursor-default"
+                : "bg-warm-gray-100 text-warm-gray-600 hover:bg-warm-gray-200"
+            }`}
+          >
+            {savingRole && user.role !== "brand" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Briefcase size={16} />
+            )}
+            Brand
+          </button>
+        </div>
+
+        {roleError && (
+          <p className="text-sm text-red-600 mt-3">{roleError}</p>
+        )}
+        {roleSuccess && (
+          <p className="text-sm text-green-600 mt-3">Role updated successfully!</p>
+        )}
+      </div>
 
       {/* Subdomain Management */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">

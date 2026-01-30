@@ -12,6 +12,10 @@ const updateUserStatusSchema = z.object({
   status: z.enum(["active", "suspended", "banned"]),
 });
 
+const updateUserRoleSchema = z.object({
+  role: z.enum(["creator", "brand"]),
+});
+
 const updateUserSubdomainSchema = z.object({
   subdomain: z.string().nullable(),
 });
@@ -84,6 +88,7 @@ export async function GET(
         twitterHandles: users.twitterHandles,
         subdomain: users.subdomain,
         status: users.status,
+        role: users.role,
         statusChangedAt: users.statusChangedAt,
         statusChangedBy: users.statusChangedBy,
         profileViewCount: users.profileViewCount,
@@ -491,6 +496,27 @@ export async function PATCH(
           tiktokHandles: users.tiktokHandles,
           youtubeHandles: users.youtubeHandles,
           twitterHandles: users.twitterHandles,
+        });
+
+      return NextResponse.json({ user: updated });
+    }
+
+    // Handle role update
+    if ("role" in body) {
+      const { role } = updateUserRoleSchema.parse(body);
+
+      const [updated] = await db
+        .update(users)
+        .set({
+          role,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          role: users.role,
         });
 
       return NextResponse.json({ user: updated });

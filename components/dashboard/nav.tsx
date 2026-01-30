@@ -12,6 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
+import type { UserRole } from "@/lib/roles";
 
 interface DashboardNavProps {
   user: {
@@ -21,13 +22,14 @@ interface DashboardNavProps {
     image?: string | null;
   };
   isAdmin?: boolean;
+  role?: UserRole;
 }
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
-export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
+export function DashboardNav({ user, isAdmin = false, role = "creator" }: DashboardNavProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
