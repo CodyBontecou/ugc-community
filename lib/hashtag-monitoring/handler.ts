@@ -17,6 +17,9 @@ import { postContainsHashtag } from "./profile-scraper";
 // The hashtag we require in posts for them to count
 const REQUIRED_HASHTAG = "ugccommunity";
 
+// Only process posts from the last N days (to avoid reprocessing old posts)
+const MAX_POST_AGE_DAYS = 14;
+
 /**
  * Process incoming posts from a webhook
  *
@@ -67,15 +70,29 @@ export async function processIncomingPosts(
 
   // Filter posts to only include those with the required hashtag
   // This is important for profile-based scraping where we get ALL posts from a user
-  const filteredPosts = parseResult.posts.filter((post) =>
+  const postsWithHashtag = parseResult.posts.filter((post) =>
     postContainsHashtag(post.content, post.metadata?.hashtags, REQUIRED_HASHTAG)
   );
 
-  // Track how many were filtered out
-  const filteredOutCount = parseResult.posts.length - filteredPosts.length;
+  // Filter out old posts to avoid reprocessing
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - MAX_POST_AGE_DAYS);
+
+  const filteredPosts = postsWithHashtag.filter((post) => {
+    if (!post.postedAt) return true; // If no date, process it (let duplicate check handle it)
+    return post.postedAt >= cutoffDate;
+  });
+
+  // Track filtering stats
+  const noHashtagCount = parseResult.posts.length - postsWithHashtag.length;
+  const tooOldCount = postsWithHashtag.length - filteredPosts.length;
+
   console.log(
-    `[HashtagMonitor] Filtered: ${filteredPosts.length} posts with #${REQUIRED_HASHTAG}, ${filteredOutCount} without`
+    `[HashtagMonitor] Filtering: ${parseResult.posts.length} total → ${postsWithHashtag.length} with #${REQUIRED_HASHTAG} → ${filteredPosts.length} within ${MAX_POST_AGE_DAYS} days`
   );
+  if (tooOldCount > 0) {
+    console.log(`[HashtagMonitor] Skipped ${tooOldCount} posts older than ${MAX_POST_AGE_DAYS} days`);
+  }
 
   // Log sample of filtered posts for debugging
   if (filteredPosts.length > 0) {
