@@ -582,6 +582,53 @@ async function fetchDatasetItems(datasetId: string): Promise<unknown[]> {
 }
 
 /**
+ * Instagram profile data structure from apify/instagram-profile-scraper
+ * This is different from hashtag scraper - it returns profile objects with nested posts
+ */
+interface InstagramProfile {
+  username?: string;
+  fullName?: string;
+  followersCount?: number;
+  verified?: boolean;
+  latestPosts?: InstagramPost[];
+}
+
+/**
+ * Flatten profile scraper results into individual posts
+ * Profile scraper returns: [{ username, latestPosts: [...] }, ...]
+ * We need to extract: [post1, post2, post3, ...]
+ */
+function flattenProfileScraperItems(items: unknown[]): unknown[] {
+  const flattenedPosts: unknown[] = [];
+
+  for (const item of items) {
+    if (typeof item !== "object" || item === null) continue;
+
+    const profile = item as InstagramProfile;
+
+    // Check if this is profile scraper output (has latestPosts array)
+    if (profile.latestPosts && Array.isArray(profile.latestPosts)) {
+      // Extract posts from the profile, adding profile info to each post
+      for (const post of profile.latestPosts) {
+        flattenedPosts.push({
+          ...post,
+          // Ensure ownerUsername is set (profile scraper posts should have this)
+          ownerUsername: post.ownerUsername || profile.username,
+          // Add follower count from profile if not on post
+          followersCount: post.followersCount ?? profile.followersCount,
+          isVerified: post.isVerified ?? profile.verified,
+        });
+      }
+    } else {
+      // This is already a flat post (from hashtag scraper)
+      flattenedPosts.push(item);
+    }
+  }
+
+  return flattenedPosts;
+}
+
+/**
  * Parse items based on detected platform
  */
 function parseItems(
@@ -591,7 +638,14 @@ function parseItems(
   const posts: ParsedPost[] = [];
   const errors: string[] = [];
 
-  for (const item of items) {
+  // For Instagram, flatten profile scraper results first
+  const itemsToProcess = platform === "instagram"
+    ? flattenProfileScraperItems(items)
+    : items;
+
+  console.log(`[Apify] Processing ${itemsToProcess.length} items for ${platform} (original: ${items.length})`);
+
+  for (const item of itemsToProcess) {
     if (typeof item !== "object" || item === null) {
       errors.push("Invalid item: not an object");
       continue;
