@@ -7,7 +7,13 @@ export function BackgroundBlobs() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-cream"
+      style={{
+        top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)'
+      }}
+    >
       <motion.div
         className="absolute w-[600px] h-[600px] rounded-full blur-[80px] opacity-50 bg-gradient-to-br from-peach-200 to-coral -top-[200px] -right-[100px]"
         style={{ y: backgroundY }}
