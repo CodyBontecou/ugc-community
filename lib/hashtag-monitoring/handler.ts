@@ -11,6 +11,7 @@ import { eq, or, sql } from "drizzle-orm";
 import { getProvider } from "./index";
 import type { ParsedPost, ProcessingResult } from "./types";
 import { updateUserPostCount } from "@/lib/milestones";
+import { sendMilestoneEarnedEmail } from "@/lib/email";
 
 /**
  * Process incoming posts from a webhook
@@ -113,7 +114,36 @@ async function savePost(
   // Update user's post count and check milestones if matched and not duplicate
   if (matchedUserId && !isDuplicate) {
     try {
-      await updateUserPostCount(matchedUserId);
+      const { awardedMilestones } = await updateUserPostCount(matchedUserId);
+
+      // Send email notifications for newly awarded milestones
+      if (awardedMilestones.length > 0) {
+        // Fetch user's email and name for notifications
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, matchedUserId),
+          columns: { email: true, name: true, displayName: true },
+        });
+
+        if (user?.email) {
+          const creatorName = user.displayName || user.name || "Creator";
+          for (const { milestone, monthYear } of awardedMilestones) {
+            try {
+              await sendMilestoneEarnedEmail({
+                creatorEmail: user.email,
+                creatorName,
+                milestoneName: milestone.name,
+                milestoneDescription: milestone.description,
+                rewardType: milestone.rewardType,
+                threshold: milestone.threshold,
+                isMonthly: milestone.type === "monthly",
+              });
+            } catch (emailError) {
+              // Log but don't fail - milestone was still awarded
+              console.error(`Failed to send milestone email for ${milestone.name}:`, emailError);
+            }
+          }
+        }
+      }
     } catch (error) {
       // Log but don't fail the save operation
       console.error(`Failed to update post count for user ${matchedUserId}:`, error);

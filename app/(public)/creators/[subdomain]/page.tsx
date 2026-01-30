@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ExternalLink, MapPin, Instagram, User, ArrowLeft } from "lucide-react";
+import { ExternalLink, MapPin, Instagram, User, ArrowLeft, Trophy } from "lucide-react";
 import { getCreatorBySubdomain } from "@/lib/directory/queries";
+import { getUserBadgeMilestones } from "@/lib/milestones/queries";
 
 // TikTok icon (not in Lucide)
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -116,6 +117,9 @@ export default async function CreatorProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch earned badge milestones for this creator
+  const badgeMilestones = await getUserBadgeMilestones(creator.id);
+
   const displayName = creator.displayName || creator.name;
   const location = [creator.locationCity, creator.locationCountry]
     .filter(Boolean)
@@ -180,6 +184,22 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                     isFeatured={creator.isFeatured}
                   />
                 </div>
+
+                {/* Milestone Badges */}
+                {badgeMilestones.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {badgeMilestones.map(({ milestone }) => (
+                      <div
+                        key={milestone.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-200"
+                        title={milestone.description || milestone.name}
+                      >
+                        <Trophy size={12} className="text-amber-500" />
+                        {milestone.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Tagline */}
                 {creator.tagline && (

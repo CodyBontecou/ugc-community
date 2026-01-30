@@ -167,3 +167,22 @@ export async function updateUserLifetimePostCount(
     .set({ lifetimePostCount: count })
     .where(eq(users.id, userId));
 }
+
+/**
+ * Get user's earned badge milestones (for profile display)
+ * Returns only lifetime milestones with rewardType = 'badge'
+ */
+export async function getUserBadgeMilestones(userId: string) {
+  const earned = await db.query.userMilestones.findMany({
+    where: and(
+      eq(userMilestones.userId, userId),
+      sql`${userMilestones.monthYear} IS NULL` // Only lifetime badges
+    ),
+    with: {
+      milestone: true,
+    },
+  });
+
+  // Filter to only include badge rewards
+  return earned.filter((e) => e.milestone.rewardType === "badge");
+}
