@@ -12,6 +12,10 @@ import { getProvider } from "./index";
 import type { ParsedPost, ProcessingResult } from "./types";
 import { updateUserPostCount } from "@/lib/milestones";
 import { sendMilestoneEarnedEmail } from "@/lib/email";
+import { postContainsHashtag } from "./profile-scraper";
+
+// The hashtag we require in posts for them to count
+const REQUIRED_HASHTAG = "ugccommunity";
 
 /**
  * Process incoming posts from a webhook
@@ -56,8 +60,22 @@ export async function processIncomingPosts(
     result.errors.push(...parseResult.errors);
   }
 
-  // Process each post
-  for (const post of parseResult.posts) {
+  // Filter posts to only include those with the required hashtag
+  // This is important for profile-based scraping where we get ALL posts from a user
+  const filteredPosts = parseResult.posts.filter((post) =>
+    postContainsHashtag(post.content, post.metadata?.hashtags, REQUIRED_HASHTAG)
+  );
+
+  // Track how many were filtered out
+  const filteredOutCount = parseResult.posts.length - filteredPosts.length;
+  if (filteredOutCount > 0) {
+    console.log(
+      `Filtered out ${filteredOutCount} posts without #${REQUIRED_HASHTAG}`
+    );
+  }
+
+  // Process each post that contains the required hashtag
+  for (const post of filteredPosts) {
     try {
       const saveResult = await savePost(post, providerName);
       if (saveResult.isDuplicate) {
