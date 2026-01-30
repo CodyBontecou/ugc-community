@@ -5,6 +5,7 @@ import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
+import { MilestoneProgress } from "@/components/milestones/MilestoneProgress";
 import { User, Users } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -39,6 +40,9 @@ async function DashboardContent() {
 
       {/* Creator Stats */}
       <CreatorStatsCard />
+
+      {/* Milestone Progress */}
+      <MilestoneProgress />
 
       {/* Directory CTA */}
       <Link
