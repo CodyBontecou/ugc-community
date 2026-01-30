@@ -16,27 +16,36 @@ function AuthErrorContent() {
 
   if (isInviteRequired) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-warm-gray-50 to-white flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-8"
-          >
-            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <UserX className="w-8 h-8 text-amber-600" />
-            </div>
-            <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-              Invite Required
-            </h1>
-            <p className="text-warm-gray-500">
-              We're currently invite-only while we build our community.
-              Join the waitlist and we'll send you an invite soon!
-            </p>
-          </motion.div>
+      <div className="min-h-screen bg-gradient-to-b from-warm-gray-50 to-white">
+        <header className="pt-6 px-4">
+          <div className="container">
+            <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900 hover:text-warm-gray-700 transition-colors">
+              ugc.community
+            </Link>
+          </div>
+        </header>
+        <div className="flex items-center justify-center p-4 min-h-[calc(100vh-60px)]">
+          <div className="w-full max-w-md">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-8"
+            >
+              <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <UserX className="w-8 h-8 text-amber-600" />
+              </div>
+              <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
+                Invite Required
+              </h1>
+              <p className="text-warm-gray-500">
+                We're currently invite-only while we build our community.
+                Join the waitlist and we'll send you an invite soon!
+              </p>
+            </motion.div>
 
-          <WaitlistForm />
+            <WaitlistForm />
+          </div>
         </div>
       </div>
     );
