@@ -24,6 +24,7 @@
     "@vercel/analytics": "^1.6.1",
     "better-auth": "^1.2.8",
     "botid": "^1.5.10",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^11.18.0",
     "lucide-react": "^0.468.0",

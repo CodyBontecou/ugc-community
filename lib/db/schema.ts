@@ -406,6 +406,12 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   savedCreators: many(savedCreators, { relationName: "brandSavedCreators" }),
   // Saved by brands (creator perspective - brands that have saved this creator)
   savedByBrands: many(savedCreators, { relationName: "creatorSavedByBrands" }),
+  // Content jobs created by this user (admin)
+  createdJobs: many(contentJobs, { relationName: "createdJobs" }),
+  // Brand jobs (jobs associated with this brand)
+  brandJobs: many(contentJobs, { relationName: "brandJobs" }),
+  // Job applications (creator perspective)
+  jobApplications: many(jobApplications, { relationName: "jobApplications" }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -529,6 +535,90 @@ export const savedCreatorsRelations = relations(savedCreators, ({ one }) => ({
 }));
 
 // =====================================================
+// Content Jobs (Job Listings for Creators)
+// =====================================================
+
+export const contentJobs = pgTable(
+  "content_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    hooks: jsonb("hooks").$type<string[]>().default([]),
+    compensationType: text("compensation_type").notNull().default("paid"),
+    compensationDetails: text("compensation_details"),
+    niches: text("niches").array().default([]),
+    platforms: text("platforms").array().default([]),
+    status: text("status").notNull().default("draft"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    brandId: text("brand_id").references(() => users.id, { onDelete: "set null" }),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    deadlineAt: timestamp("deadline_at"),
+    viewCount: integer("view_count").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    publishedAt: timestamp("published_at"),
+  },
+  (table) => [
+    index("content_jobs_status_idx").on(table.status),
+    index("content_jobs_created_by_idx").on(table.createdBy),
+    index("content_jobs_brand_id_idx").on(table.brandId),
+    index("content_jobs_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const jobApplications = pgTable(
+  "job_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobId: uuid("job_id")
+      .notNull()
+      .references(() => contentJobs.id, { onDelete: "cascade" }),
+    creatorId: text("creator_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("interested"),
+    note: text("note"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("job_applications_job_creator_unique").on(table.jobId, table.creatorId),
+    index("job_applications_job_id_idx").on(table.jobId),
+    index("job_applications_creator_id_idx").on(table.creatorId),
+    index("job_applications_status_idx").on(table.status),
+  ]
+);
+
+export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [contentJobs.createdBy],
+    references: [users.id],
+    relationName: "createdJobs",
+  }),
+  brand: one(users, {
+    fields: [contentJobs.brandId],
+    references: [users.id],
+    relationName: "brandJobs",
+  }),
+  applications: many(jobApplications),
+}));
+
+export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
+  job: one(contentJobs, {
+    fields: [jobApplications.jobId],
+    references: [contentJobs.id],
+  }),
+  creator: one(users, {
+    fields: [jobApplications.creatorId],
+    references: [users.id],
+    relationName: "jobApplications",
+  }),
+}));
+
+// =====================================================
 // Types
 // =====================================================
 
@@ -604,3 +694,7 @@ export type HashtagMention = typeof hashtagMentions.$inferSelect;
 export type NewHashtagMention = typeof hashtagMentions.$inferInsert;
 export type SavedCreator = typeof savedCreators.$inferSelect;
 export type NewSavedCreator = typeof savedCreators.$inferInsert;
+export type ContentJob = typeof contentJobs.$inferSelect;
+export type NewContentJob = typeof contentJobs.$inferInsert;
+export type JobApplication = typeof jobApplications.$inferSelect;
+export type NewJobApplication = typeof jobApplications.$inferInsert;

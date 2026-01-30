@@ -10,7 +10,7 @@ import { PostMetrics } from "@/components/dashboard/post-metrics";
 import { PortfolioStatus } from "@/components/dashboard/portfolio-status";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
-import { User, Users, Search, Bookmark, Megaphone, CheckCircle, Circle, ArrowRight } from "lucide-react";
+import { User, Users, Search, Bookmark, Megaphone, CheckCircle, Circle, ArrowRight, Briefcase } from "lucide-react";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -83,6 +83,30 @@ async function DashboardContent() {
 
       {/* Unlocked Rewards - Creator only */}
       {showCreatorContent && <RewardsOverview />}
+
+      {/* Jobs CTA - Creator only */}
+      {showCreatorContent && (
+        <Link
+          href="/dashboard/jobs"
+          className="block bg-gradient-to-r from-coral/5 to-rose/5 rounded-[--radius-xl] border border-coral/20 p-6 hover:border-coral/40 hover:shadow-sm transition-all"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
+              <Briefcase size={24} className="text-coral" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
+                Content Jobs
+              </h2>
+              <p className="text-sm text-warm-gray-500">
+                Browse content creation opportunities from brands and ugc.community.
+                Find paid gigs, product collaborations, and more.
+              </p>
+            </div>
+            <ArrowRight size={20} className="text-coral flex-shrink-0 mt-1" />
+          </div>
+        </Link>
+      )}
 
       {/* Directory CTA - Creator only */}
       {showCreatorContent && (
