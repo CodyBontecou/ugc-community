@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getProvider, hasProvider } from "@/lib/hashtag-monitoring";
+// Import providers to ensure they are registered
+import "@/lib/hashtag-monitoring/providers";
 import { processIncomingPosts } from "@/lib/hashtag-monitoring/handler";
 
 export async function POST(
