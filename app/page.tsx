@@ -10,6 +10,7 @@ import {
   HowItWorks,
   MilestonesRewards,
   Examples,
+  ForBrands,
   Testimonials,
   Pricing,
   FinalCTA,
@@ -71,6 +72,7 @@ export default async function HomePage() {
       <HowItWorks />
       <MilestonesRewards />
       <Examples />
+      <ForBrands />
       <Testimonials authorImage={testimonialImage} />
       <Pricing />
       <FinalCTA />
