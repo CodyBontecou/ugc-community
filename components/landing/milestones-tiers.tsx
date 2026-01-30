@@ -17,13 +17,31 @@ type Milestone = {
 
 const monthlyMilestones: Milestone[] = [
   {
+    threshold: 5,
+    label: "5 Posts",
+    sublabel: "per month",
+    icon: <Check size={24} />,
+    rewards: ["Free Hosting"],
+    color: "text-mint",
+    bgColor: "bg-mint-soft/30",
+  },
+  {
+    threshold: 15,
+    label: "15 Posts",
+    sublabel: "per month",
+    icon: <Star size={24} />,
+    rewards: ["5 Profile Edits", "Directory Boost"],
+    color: "text-lavender",
+    bgColor: "bg-lavender-soft/30",
+  },
+  {
     threshold: 30,
     label: "30 Posts",
     sublabel: "per month",
-    icon: <Check size={24} />,
-    rewards: ["Free Hosting", "Directory Boost"],
-    color: "text-mint",
-    bgColor: "bg-mint-soft/30",
+    icon: <Trophy size={24} />,
+    rewards: ["Unlimited Profile Edits"],
+    color: "text-coral",
+    bgColor: "bg-coral/10",
   },
 ];
 

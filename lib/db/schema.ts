@@ -76,6 +76,11 @@ export const users = pgTable(
     hasAdvancedAnalytics: boolean("has_advanced_analytics").notNull().default(false),
     hostingUnlockedUntil: timestamp("hosting_unlocked_until"),
     directoryBoostUntil: timestamp("directory_boost_until"),
+    // Edit allowance fields (monthly milestone rewards)
+    monthlyEditsUsed: integer("monthly_edits_used").notNull().default(0),
+    monthlyEditsAllowance: integer("monthly_edits_allowance").notNull().default(0),
+    editsResetMonth: text("edits_reset_month"), // Format: '2026-01'
+    unlimitedEditsUntil: timestamp("unlimited_edits_until"),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -505,6 +510,9 @@ export type MilestoneRewardConfig = {
   priority?: boolean;
   permanent?: boolean;
   enabled?: boolean;
+  // Edit reward specific
+  edits_granted?: number;
+  companion_boost_days?: number;
 };
 
 export type HashtagMentionEngagement = {

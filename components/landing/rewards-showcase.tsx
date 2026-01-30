@@ -8,6 +8,7 @@ import {
   Award,
   Star,
   Zap,
+  Pencil,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -35,6 +36,14 @@ const rewards: Reward[] = [
       "Get featured prominently in our creator directory for maximum brand visibility.",
     color: "text-coral",
     bgColor: "bg-coral/10",
+  },
+  {
+    icon: <Pencil size={24} />,
+    title: "Profile Edits",
+    description:
+      "Earn profile edit credits to update your bio, tagline, social handles, and more.",
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100",
   },
   {
     icon: <Sparkles size={24} />,

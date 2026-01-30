@@ -56,8 +56,11 @@ export async function applyMilestoneReward(
       break;
 
     case "edits":
+      await applyEditsReward(userId, config);
+      break;
+
     case "custom_domain":
-      // These reward types can be expanded later
+      // This reward type can be expanded later
       break;
   }
 }
@@ -131,6 +134,59 @@ async function applyBadgeReward(
       .where(eq(users.id, userId));
   }
   // Other badge types are displayed from userMilestones table, no additional processing needed
+}
+
+/**
+ * Apply edits reward
+ * Grants profile edit allowance or unlimited edits
+ */
+async function applyEditsReward(
+  userId: string,
+  config: MilestoneRewardConfig
+): Promise<void> {
+  const currentMonth = new Date().toISOString().slice(0, 7); // '2026-01' format
+
+  if (config.unlimited) {
+    // Unlimited edits until end of month
+    const endOfMonth = new Date();
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1, 0); // Last day of current month
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    await db
+      .update(users)
+      .set({ unlimitedEditsUntil: endOfMonth })
+      .where(eq(users.id, userId));
+  } else if (config.edits_granted) {
+    // Grant specific number of edits
+    const [user] = await db
+      .select({
+        editsResetMonth: users.editsResetMonth,
+        monthlyEditsAllowance: users.monthlyEditsAllowance,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    // Reset if different month, otherwise add to allowance
+    const isNewMonth = user?.editsResetMonth !== currentMonth;
+    const newAllowance = isNewMonth
+      ? config.edits_granted
+      : (user?.monthlyEditsAllowance ?? 0) + config.edits_granted;
+
+    await db
+      .update(users)
+      .set({
+        monthlyEditsAllowance: newAllowance,
+        editsResetMonth: currentMonth,
+        monthlyEditsUsed: isNewMonth ? 0 : sql`${users.monthlyEditsUsed}`,
+      })
+      .where(eq(users.id, userId));
+  }
+
+  // Apply companion directory boost if configured
+  if (config.companion_boost_days) {
+    await applyDirectoryBoost(userId, { duration_days: config.companion_boost_days });
+  }
 }
 
 /**

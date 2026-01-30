@@ -14,18 +14,18 @@ const journeySteps = [
   },
   {
     icon: <Rocket size={20} />,
-    label: "Active Creator",
-    description: "30 posts/month",
+    label: "Hosted Creator",
+    description: "5 posts/month",
   },
   {
     icon: <Trophy size={20} />,
-    label: "Verified Creator",
-    description: "100 lifetime posts",
+    label: "Active Creator",
+    description: "15 posts/month",
   },
   {
     icon: <Crown size={20} />,
-    label: "Featured Creator",
-    description: "500+ lifetime posts",
+    label: "Power Creator",
+    description: "30 posts/month",
   },
 ];
 
