@@ -1,0 +1,28 @@
+import { connect } from "inngest/connect";
+import { inngest } from "../lib/inngest/client";
+import { generatePortfolioFunction } from "../lib/inngest/functions/generate-portfolio";
+
+async function main() {
+  console.log("Starting Inngest Connect worker...");
+
+  const connection = await connect({
+    apps: [
+      {
+        client: inngest,
+        functions: [generatePortfolioFunction],
+      },
+    ],
+  });
+
+  console.log(`Connected with ID: ${connection.connectionId}`);
+  console.log(`Connection state: ${connection.state}`);
+
+  // Wait for the connection to close (happens on shutdown signal)
+  await connection.closed;
+  console.log("Connection closed");
+}
+
+main().catch((err) => {
+  console.error("Worker error:", err);
+  process.exit(1);
+});

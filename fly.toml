@@ -1,0 +1,15 @@
+app = "ugc-community-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "worker/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+
+# No HTTP service - this is a background worker
+# It connects outbound to Inngest, doesn't receive inbound requests
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

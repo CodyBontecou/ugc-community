@@ -34,9 +34,8 @@ interface ToolResult {
 // Constants
 // =====================================================
 
-// Reduced from 30 to fit within Vercel function timeout (300s max)
-// Each turn can take 10-30s, so 12 turns = ~2-6 minutes
-const MAX_TURNS = 12;
+// No timeout constraints with Fly worker - allow full generation
+const MAX_TURNS = 30;
 const MODEL = "claude-sonnet-4-20250514";
 
 // =====================================================

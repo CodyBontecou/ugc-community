@@ -1,0 +1,32 @@
+# Dependencies installed in container
+node_modules
+
+# Build outputs
+.next
+out
+dist
+
+# Development files
+.git
+.gitignore
+*.md
+LICENSE
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files (secrets set via Fly)
+.env*
+!.env.example
+
+# Test files
+__tests__
+*.test.ts
+*.spec.ts
+
+# Other
+.DS_Store
+*.log

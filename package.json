@@ -12,7 +12,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "migrate:single-portfolio": "npx tsx scripts/migrate-single-portfolio.ts"
+    "migrate:single-portfolio": "npx tsx scripts/migrate-single-portfolio.ts",
+    "worker": "tsx worker/index.ts",
+    "worker:dev": "tsx watch worker/index.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -29,6 +31,7 @@
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^11.18.0",
     "inngest": "^3.50.0",
+    "ws": "^8.18.0",
     "lucide-react": "^0.468.0",
     "nanoid": "^5.1.6",
     "next": "^16.1.5",
@@ -39,6 +42,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "tsx": "^4.19.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
