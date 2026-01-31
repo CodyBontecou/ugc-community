@@ -13,6 +13,7 @@ import {
   pushFilesToRepo,
   repoExists,
   getRepoInfo,
+  waitForRepoInitialized,
 } from "@/lib/github/push-portfolio";
 import {
   createProject,
@@ -158,6 +159,9 @@ export const generatePortfolioFunction = inngest.createFunction(
             );
             repoFullName = createResult.repoFullName;
             repoId = String(createResult.repoId);
+
+            // Wait for repo to be initialized (auto_init creates commit asynchronously)
+            await waitForRepoInitialized(octokit, repoFullName);
           }
 
           // Update user with repo info

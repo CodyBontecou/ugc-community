@@ -194,6 +194,46 @@ export async function repoExists(
 }
 
 /**
+ * Wait for a repository to be fully initialized (have at least one commit)
+ * This is needed because auto_init creates the initial commit asynchronously
+ */
+export async function waitForRepoInitialized(
+  octokit: Octokit,
+  repoFullName: string,
+  options?: {
+    maxAttempts?: number;
+    delayMs?: number;
+    branch?: string;
+  }
+): Promise<void> {
+  const [owner, repo] = repoFullName.split("/");
+  const maxAttempts = options?.maxAttempts ?? 10;
+  const delayMs = options?.delayMs ?? 1000;
+  const branch = options?.branch ?? "main";
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      // Try to get the default branch ref - this will fail if repo is empty
+      await octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${branch}`,
+      });
+      // Success - repo is initialized
+      return;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        throw new Error(
+          `Repository ${repoFullName} not initialized after ${maxAttempts} attempts`
+        );
+      }
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
+/**
  * Delete a repository (use with caution!)
  */
 export async function deleteRepo(
