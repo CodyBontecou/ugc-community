@@ -1,10 +1,10 @@
-# Apify Hashtag Monitoring Setup
+# Apify Mention Monitoring Setup
 
-This guide explains how to set up Apify actors to monitor hashtags across social media platforms and send data to ugc.community via webhooks.
+This guide explains how to set up Apify actors to monitor @ugc.community mentions across social media platforms and send data to ugc.community via webhooks.
 
 ## Overview
 
-Apify is a web scraping and automation platform that provides actors (pre-built scrapers) for various social media platforms. We use these actors to monitor specific hashtags and receive webhook notifications when new posts are found.
+Apify is a web scraping and automation platform that provides actors (pre-built scrapers) for various social media platforms. We use these actors to monitor mentions of @ugc.community and receive webhook notifications when new posts are found.
 
 ## Prerequisites
 
@@ -41,22 +41,24 @@ Save this as `APIFY_WEBHOOK_SECRET` in your environment variables.
 
 ## Step 3: Set Up Actors by Platform
 
-### Instagram Hashtag Scraper
+### Instagram Search Scraper
 
-**Actor ID:** `apify/instagram-hashtag-scraper`
+**Actor ID:** `apify/instagram-scraper`
 
-**Store URL:** https://apify.com/apify/instagram-hashtag-scraper
+**Store URL:** https://apify.com/apify/instagram-scraper
 
 **Configuration:**
 ```json
 {
-  "hashtags": ["ugccommunity"],
-  "resultsLimit": 100,
-  "searchType": "hashtag"
+  "search": "@ugc.community",
+  "searchType": "user",
+  "resultsLimit": 100
 }
 ```
 
-### TikTok Hashtag Scraper
+Alternatively, monitor posts that tag the @ugc.community account directly using the profile scraper.
+
+### TikTok Scraper
 
 **Actor ID:** `clockworks/tiktok-scraper`
 
@@ -65,7 +67,7 @@ Save this as `APIFY_WEBHOOK_SECRET` in your environment variables.
 **Configuration:**
 ```json
 {
-  "hashtags": ["ugccommunity"],
+  "searchQueries": ["@ugc.community"],
   "resultsPerPage": 100,
   "shouldDownloadVideos": false
 }
@@ -80,11 +82,13 @@ Save this as `APIFY_WEBHOOK_SECRET` in your environment variables.
 **Configuration:**
 ```json
 {
-  "searchTerms": ["#ugccommunity"],
+  "searchTerms": ["@ugc_community"],
   "maxTweets": 100,
   "sort": "Latest"
 }
 ```
+
+Note: Twitter doesn't allow dots in usernames, so use `@ugc_community` (underscore).
 
 ### YouTube Search Scraper
 
@@ -95,7 +99,7 @@ Save this as `APIFY_WEBHOOK_SECRET` in your environment variables.
 **Configuration:**
 ```json
 {
-  "searchKeywords": ["#ugccommunity"],
+  "searchKeywords": ["ugc.community", "@ugc.community"],
   "maxResults": 100
 }
 ```
@@ -109,7 +113,7 @@ Save this as `APIFY_WEBHOOK_SECRET` in your environment variables.
 **Configuration:**
 ```json
 {
-  "searchQueries": ["#ugccommunity"],
+  "searchQueries": ["@ugc.community"],
   "maxPosts": 100
 }
 ```

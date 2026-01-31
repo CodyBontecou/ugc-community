@@ -242,7 +242,7 @@ export function MonitoringTrigger() {
       </div>
 
       <p className="mt-3 text-xs text-warm-gray-400">
-        Automatically runs weekly on Sundays at 6 AM UTC. Scrapes registered user profiles and filters for #ugccommunity posts.
+        Automatically runs weekly on Sundays at 6 AM UTC. Scrapes registered user profiles and filters for @ugc.community mentions.
       </p>
 
       {/* Reprocess Section */}

@@ -1,7 +1,7 @@
 /**
  * Apify Provider Test Fixtures
  *
- * Sample payloads for testing the Apify hashtag monitoring provider.
+ * Sample payloads for testing the Apify mention monitoring provider.
  * These match the actual output schemas from Apify actors.
  *
  * Usage:
@@ -19,7 +19,7 @@ export const sampleWebhookNotification = {
   createdAt: "2026-01-30T10:30:00.000Z",
   eventType: "ACTOR.RUN.SUCCEEDED",
   eventData: {
-    actorId: "apify/instagram-hashtag-scraper",
+    actorId: "apify/instagram-scraper",
     actorRunId: "run123",
     status: "SUCCEEDED",
   },
@@ -30,7 +30,7 @@ export const sampleWebhookNotification = {
 
 /**
  * Instagram Post Sample
- * From: apify/instagram-hashtag-scraper
+ * From: apify/instagram-scraper
  *
  * Key fields:
  * - ownerUsername: Author's Instagram handle
@@ -44,12 +44,12 @@ export const sampleInstagramPosts = [
     ownerUsername: "ugc_creator_jane",
     ownerFullName: "Jane Smith | UGC Creator",
     caption:
-      "Loving this new product! #ugccommunity #sponsored #contentcreator",
+      "Loving this new product! Shoutout to @ugc.community for the opportunity #sponsored #contentcreator",
     likesCount: 1234,
     commentsCount: 56,
     videoViewCount: undefined,
     timestamp: 1706616000,
-    hashtags: ["ugccommunity", "sponsored", "contentcreator"],
+    hashtags: ["sponsored", "contentcreator"],
     url: "https://www.instagram.com/p/DNkLN-Ooe8t/",
     displayUrl:
       "https://scontent.cdninstagram.com/v/t51.29350-15/image.jpg",
@@ -62,12 +62,12 @@ export const sampleInstagramPosts = [
     shortCode: "DNkLN-Ooe8u",
     ownerUsername: "brand_ambassador_mike",
     ownerFullName: "Mike Johnson",
-    caption: "Check out my latest reel! #ugccommunity #reels",
+    caption: "Check out my latest reel! Thanks @ugc.community #reels",
     likesCount: -1, // Hidden by user
     commentsCount: 23,
     videoViewCount: 5678,
     timestamp: "2026-01-30T09:00:00.000Z",
-    hashtags: ["ugccommunity", "reels"],
+    hashtags: ["reels"],
     displayUrl: "https://scontent.cdninstagram.com/v/t51.29350-15/video.jpg",
     type: "Video",
     isVerified: true,
@@ -77,7 +77,7 @@ export const sampleInstagramPosts = [
 
 /**
  * TikTok Post Sample
- * From: clockworks/tiktok-scraper or clockworks/tiktok-hashtag-scraper
+ * From: clockworks/tiktok-scraper
  *
  * Key fields:
  * - authorMeta.name: Author's TikTok handle
@@ -87,7 +87,7 @@ export const sampleInstagramPosts = [
 export const sampleTikTokPosts = [
   {
     id: "7123456789012345678",
-    text: "POV: You finally get paid for your UGC content #ugccommunity #fyp #ugccreator",
+    text: "POV: You finally get paid for your UGC content @ugc.community #fyp #ugccreator",
     webVideoUrl: "https://www.tiktok.com/@ugc_sarah/video/7123456789012345678",
     authorMeta: {
       name: "ugc_sarah",
@@ -108,14 +108,13 @@ export const sampleTikTokPosts = [
     collectCount: 2345,
     createTimeISO: "2026-01-30T08:00:00.000Z",
     hashtags: [
-      { name: "ugccommunity" },
       { name: "fyp" },
       { name: "ugccreator" },
     ],
   },
   {
     id: "7123456789012345679",
-    text: "How I make $5k/month with UGC #ugccommunity #sidehustle",
+    text: "How I make $5k/month with UGC @ugc.community #sidehustle",
     webVideoUrl: "https://www.tiktok.com/@contentking/video/7123456789012345679",
     authorMeta: {
       name: "contentking",
@@ -133,7 +132,7 @@ export const sampleTikTokPosts = [
     commentCount: 3456,
     collectCount: 8901,
     createTime: 1706601600, // Unix timestamp alternative
-    hashtags: [{ name: "ugccommunity" }, { name: "sidehustle" }],
+    hashtags: [{ name: "sidehustle" }],
   },
 ];
 
@@ -150,7 +149,7 @@ export const sampleTwitterPosts = [
   {
     id_str: "1234567890123456789",
     full_text:
-      "Just joined #ugccommunity and already landed my first brand deal! So excited to connect with fellow creators.",
+      "Just joined @ugc_community and already landed my first brand deal! So excited to connect with fellow creators.",
     user: {
       screen_name: "ugc_emma",
       name: "Emma | UGC Creator",
@@ -163,13 +162,13 @@ export const sampleTwitterPosts = [
     quote_count: 5,
     created_at: "Thu Jan 30 10:00:00 +0000 2026",
     entities: {
-      hashtags: [{ text: "ugccommunity" }],
+      hashtags: [],
     },
   },
   // Flat structure format (some scrapers use this)
   {
     id: "1234567890123456790",
-    text: "Best decision I made was focusing on UGC content. #ugccommunity changed my life!",
+    text: "Best decision I made was focusing on UGC content. @ugc_community changed my life!",
     username: "creator_alex",
     displayName: "Alex Rivera",
     isVerified: true,
@@ -179,7 +178,7 @@ export const sampleTwitterPosts = [
     replyCount: 34,
     viewCount: 15000,
     createdAt: "2026-01-30T11:30:00.000Z",
-    hashtags: ["ugccommunity"],
+    hashtags: [],
     tweetUrl: "https://twitter.com/creator_alex/status/1234567890123456790",
   },
 ];
@@ -196,7 +195,7 @@ export const sampleTwitterPosts = [
 export const sampleYouTubePosts = [
   {
     id: "dQw4w9WgXcQ",
-    title: "How I Made $10k My First Month as a UGC Creator | #ugccommunity",
+    title: "How I Made $10k My First Month as a UGC Creator | @ugc.community",
     url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     viewCount: 125000,
     likes: 4500,
@@ -208,14 +207,14 @@ export const sampleYouTubePosts = [
     channelHandle: "ugcsuccessstories",
     numberOfSubscribers: 50000,
     details:
-      "In this video, I share my journey from zero to $10k as a UGC creator...",
+      "In this video, I share my journey from zero to $10k as a UGC creator. Shoutout to @ugc.community...",
     duration: 845, // 14 minutes 5 seconds
     thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-    keywords: ["ugccommunity", "ugc creator", "content creation"],
+    keywords: ["ugc creator", "content creation"],
   },
   {
     id: "abc123XYZ",
-    title: "UGC Creator Tips for Beginners #ugccommunity",
+    title: "UGC Creator Tips for Beginners @ugc.community",
     url: "https://www.youtube.com/watch?v=abc123XYZ",
     viewCount: 45000,
     likes: 1200,
@@ -224,10 +223,10 @@ export const sampleYouTubePosts = [
     channelName: "Creator Academy",
     channelUrl: "https://www.youtube.com/channel/UCabc123",
     subscriberCount: 25000,
-    description: "Learn the basics of becoming a successful UGC creator...",
+    description: "Learn the basics of becoming a successful UGC creator. Thanks @ugc.community...",
     duration: "PT12M30S", // ISO 8601 format
     thumbnailUrl: "https://i.ytimg.com/vi/abc123XYZ/hqdefault.jpg",
-    keywords: ["ugccommunity", "beginner tips"],
+    keywords: ["beginner tips"],
   },
 ];
 
@@ -243,10 +242,10 @@ export const sampleYouTubePosts = [
 export const sampleFacebookPosts = [
   {
     postId: "123456789_987654321",
-    postUrl: "https://www.facebook.com/ugccommunityofficial/posts/987654321",
+    postUrl: "https://www.facebook.com/ugc.community/posts/987654321",
     pageName: "UGC Community Official",
-    pageUrl: "https://www.facebook.com/ugccommunityofficial",
-    text: "Welcome to all our new members! Share your #ugccommunity journey below.",
+    pageUrl: "https://www.facebook.com/ugc.community",
+    text: "Welcome to all our new members! Share your @ugc.community journey below.",
     likes: 567,
     reactions: 623,
     comments: 89,
@@ -261,7 +260,7 @@ export const sampleFacebookPosts = [
     pageName: "Creator Hub",
     pageUrl: "https://www.facebook.com/creatorhub",
     pageHandle: "creatorhub",
-    text: "Tips for getting started with UGC content creation. #ugccommunity #contentcreators",
+    text: "Tips for getting started with UGC content creation. Thanks @ugc.community #contentcreators",
     reactionsCount: 234,
     commentsCount: 45,
     sharesCount: 12,
@@ -297,14 +296,14 @@ export const expectedInstagramParsedPosts = [
     authorHandle: "ugc_creator_jane",
     authorName: "Jane Smith | UGC Creator",
     content:
-      "Loving this new product! #ugccommunity #sponsored #contentcreator",
+      "Loving this new product! Shoutout to @ugc.community for the opportunity #sponsored #contentcreator",
     engagement: {
       likes: 1234,
       comments: 56,
       views: undefined,
     },
     metadata: {
-      hashtags: ["ugccommunity", "sponsored", "contentcreator"],
+      hashtags: ["sponsored", "contentcreator"],
       thumbnailUrl:
         "https://scontent.cdninstagram.com/v/t51.29350-15/image.jpg",
       isVerified: false,
@@ -324,7 +323,7 @@ export const expectedTikTokParsedPosts = [
     authorHandle: "ugc_sarah",
     authorName: "Sarah | UGC Creator",
     content:
-      "POV: You finally get paid for your UGC content #ugccommunity #fyp #ugccreator",
+      "POV: You finally get paid for your UGC content @ugc.community #fyp #ugccreator",
     engagement: {
       likes: 45600,
       views: 890000,
@@ -333,7 +332,7 @@ export const expectedTikTokParsedPosts = [
       saves: 2345,
     },
     metadata: {
-      hashtags: ["ugccommunity", "fyp", "ugccreator"],
+      hashtags: ["fyp", "ugccreator"],
       thumbnailUrl:
         "https://p16-sign-va.tiktokcdn.com/tos-maliva-p-0068/cover.jpg",
       duration: 15,

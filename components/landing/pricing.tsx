@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Hash } from "lucide-react";
+import { Check, AtSign } from "lucide-react";
 import { track } from "@vercel/analytics";
 
 const plans = [
@@ -23,7 +23,7 @@ const plans = [
       "Remove ugc.community badge",
     ],
     cta: "Become a Partner",
-    footnote: "#ugccommunity",
+    footnote: "@ugc.community",
   },
   {
     name: "Pro",
@@ -60,7 +60,7 @@ export function Pricing() {
             <span className="gradient-text">not payments</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[560px] mx-auto">
-            We'd rather have your content than your money. Post with #ugccommunity
+            We'd rather have your content than your money. Tag @ugc.community
             to unlock rewards—from free hosting to unlimited edits and beyond.
           </p>
         </motion.div>
@@ -133,8 +133,8 @@ export function Pricing() {
               </motion.a>
               {plan.footnote && (
                 <div className="mt-4 flex items-center justify-center gap-1 text-xs text-warm-gray-500">
-                  <Hash size={12} className="text-rose" />
-                  <span>Post with <span className="font-medium text-rose">{plan.footnote}</span></span>
+                  <AtSign size={12} className="text-rose" />
+                  <span>Tag <span className="font-medium text-rose">{plan.footnote}</span></span>
                 </div>
               )}
             </motion.div>

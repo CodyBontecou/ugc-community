@@ -12,10 +12,7 @@ import { getProvider } from "./index";
 import type { ParsedPost, ProcessingResult } from "./types";
 import { updateUserPostCount } from "@/lib/milestones";
 import { sendMilestoneEarnedEmail } from "@/lib/email";
-import { postContainsHashtag } from "./profile-scraper";
-
-// The hashtag we require in posts for them to count
-const REQUIRED_HASHTAG = "ugccommunity";
+import { postContainsMention } from "./profile-scraper";
 
 // Only process posts from the last N days (to avoid reprocessing old posts)
 const MAX_POST_AGE_DAYS = 14;
@@ -68,27 +65,27 @@ export async function processIncomingPosts(
     console.log(`[HashtagMonitor] Parse errors:`, parseResult.errors);
   }
 
-  // Filter posts to only include those with the required hashtag
+  // Filter posts to only include those that mention @ugc.community
   // This is important for profile-based scraping where we get ALL posts from a user
-  const postsWithHashtag = parseResult.posts.filter((post) =>
-    postContainsHashtag(post.content, post.metadata?.hashtags, REQUIRED_HASHTAG)
+  const postsWithMention = parseResult.posts.filter((post) =>
+    postContainsMention(post.content, post.platform)
   );
 
   // Filter out old posts to avoid reprocessing
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - MAX_POST_AGE_DAYS);
 
-  const filteredPosts = postsWithHashtag.filter((post) => {
+  const filteredPosts = postsWithMention.filter((post) => {
     if (!post.postedAt) return true; // If no date, process it (let duplicate check handle it)
     return post.postedAt >= cutoffDate;
   });
 
   // Track filtering stats
-  const noHashtagCount = parseResult.posts.length - postsWithHashtag.length;
-  const tooOldCount = postsWithHashtag.length - filteredPosts.length;
+  const noMentionCount = parseResult.posts.length - postsWithMention.length;
+  const tooOldCount = postsWithMention.length - filteredPosts.length;
 
   console.log(
-    `[HashtagMonitor] Filtering: ${parseResult.posts.length} total → ${postsWithHashtag.length} with #${REQUIRED_HASHTAG} → ${filteredPosts.length} within ${MAX_POST_AGE_DAYS} days`
+    `[HashtagMonitor] Filtering: ${parseResult.posts.length} total → ${postsWithMention.length} with @ugc.community mention → ${filteredPosts.length} within ${MAX_POST_AGE_DAYS} days`
   );
   if (tooOldCount > 0) {
     console.log(`[HashtagMonitor] Skipped ${tooOldCount} posts older than ${MAX_POST_AGE_DAYS} days`);

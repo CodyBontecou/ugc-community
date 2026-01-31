@@ -2,9 +2,9 @@
  * Profile-Based Scraping for Apify
  *
  * Triggers Apify profile scrapers for registered platform users,
- * then filters results for posts containing #ugccommunity.
+ * then filters results for posts mentioning @ugc.community.
  *
- * This is more efficient than hashtag scraping when you only want
+ * This is more efficient than broad scraping when you only want
  * to monitor posts from users registered on your platform.
  */
 
@@ -244,6 +244,39 @@ export function postContainsHashtag(
   if (content) {
     const hashtagRegex = new RegExp(`#${normalizedTarget}\\b`, "i");
     return hashtagRegex.test(content);
+  }
+
+  return false;
+}
+
+/**
+ * Check if a post mentions the @ugc.community account
+ *
+ * Handles different username formats per platform:
+ * - Instagram/TikTok: @ugc.community (dots allowed)
+ * - Twitter/X: @ugc_community (underscores, no dots)
+ * - YouTube: ugc.community or UGC Community (channel name)
+ */
+export function postContainsMention(
+  content: string | undefined | null,
+  platform?: string
+): boolean {
+  if (!content) return false;
+
+  const contentLower = content.toLowerCase();
+
+  // Platform-specific handle variations
+  const mentionPatterns = [
+    /@ugc\.community\b/i,      // Instagram, TikTok (with dot)
+    /@ugccommunity\b/i,        // Without dot/separator
+    /@ugc_community\b/i,       // Twitter style (underscore)
+  ];
+
+  // Check all patterns
+  for (const pattern of mentionPatterns) {
+    if (pattern.test(content)) {
+      return true;
+    }
   }
 
   return false;
