@@ -30,12 +30,24 @@ interface Questionnaire {
   userSubdomain: string | null;
 }
 
+interface GenerationResult {
+  success: boolean;
+  githubRepo?: string;
+  githubRepoUrl?: string;
+  deploymentUrl?: string;
+  previewUrl?: string;
+  filesGenerated?: number;
+  error?: string;
+}
+
 export default function AdminQuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [generationResults, setGenerationResults] = useState<Map<string, GenerationResult>>(new Map());
 
   const fetchQuestionnaires = useCallback(async () => {
     setIsLoading(true);
@@ -73,6 +85,44 @@ export default function AdminQuestionnairesPage() {
       }
       return next;
     });
+  };
+
+  const handleGenerate = async (questionnaireId: string) => {
+    if (generatingId) return; // Prevent double-clicks
+
+    setGeneratingId(questionnaireId);
+    // Clear any previous result for this questionnaire
+    setGenerationResults((prev) => {
+      const next = new Map(prev);
+      next.delete(questionnaireId);
+      return next;
+    });
+
+    try {
+      const response = await fetch(
+        `/api/admin/questionnaires/${questionnaireId}/generate`,
+        { method: "POST" }
+      );
+      const data: GenerationResult = await response.json();
+
+      setGenerationResults((prev) => {
+        const next = new Map(prev);
+        next.set(questionnaireId, data);
+        return next;
+      });
+    } catch (err) {
+      console.error("Generation error:", err);
+      setGenerationResults((prev) => {
+        const next = new Map(prev);
+        next.set(questionnaireId, {
+          success: false,
+          error: "Network error. Please try again.",
+        });
+        return next;
+      });
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   // Filter by search
@@ -278,8 +328,73 @@ export default function AdminQuestionnairesPage() {
                         </div>
                       )}
 
+                      {/* Generation Result */}
+                      {generationResults.get(questionnaire.id) && (
+                        <div
+                          className={`rounded-[--radius-md] p-4 ${
+                            generationResults.get(questionnaire.id)?.success
+                              ? "bg-green-50 border border-green-200"
+                              : "bg-red-50 border border-red-200"
+                          }`}
+                        >
+                          {generationResults.get(questionnaire.id)?.success ? (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-green-800">
+                                Portfolio generated successfully!
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {generationResults.get(questionnaire.id)
+                                  ?.previewUrl && (
+                                  <a
+                                    href={
+                                      generationResults.get(questionnaire.id)
+                                        ?.previewUrl
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-green-700 hover:text-green-900"
+                                  >
+                                    <ExternalLink size={14} />
+                                    View Site
+                                  </a>
+                                )}
+                                {generationResults.get(questionnaire.id)
+                                  ?.githubRepoUrl && (
+                                  <a
+                                    href={
+                                      generationResults.get(questionnaire.id)
+                                        ?.githubRepoUrl
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-green-700 hover:text-green-900"
+                                  >
+                                    <FileText size={14} />
+                                    View Code
+                                  </a>
+                                )}
+                              </div>
+                              <p className="text-xs text-green-600">
+                                {generationResults.get(questionnaire.id)
+                                  ?.filesGenerated || 0}{" "}
+                                files generated
+                              </p>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium text-red-800">
+                                Generation failed
+                              </p>
+                              <p className="text-sm text-red-600">
+                                {generationResults.get(questionnaire.id)?.error}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Actions */}
-                      <div className="flex items-center gap-3 pt-2">
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
                         <Link
                           href={`/dashboard/admin/users/${questionnaire.userId}`}
                           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-warm-gray-700 bg-warm-gray-100 rounded-full hover:bg-warm-gray-200 transition-colors"
@@ -297,6 +412,31 @@ export default function AdminQuestionnairesPage() {
                             <ExternalLink size={16} />
                             View Portfolio
                           </a>
+                        )}
+                        {questionnaire.userSubdomain && (
+                          <button
+                            onClick={() => handleGenerate(questionnaire.id)}
+                            disabled={generatingId !== null}
+                            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                              generatingId === questionnaire.id
+                                ? "bg-warm-gray-200 text-warm-gray-500 cursor-wait"
+                                : generatingId !== null
+                                ? "bg-warm-gray-100 text-warm-gray-400 cursor-not-allowed"
+                                : "bg-gradient-to-r from-coral to-rose text-white hover:opacity-90"
+                            }`}
+                          >
+                            {generatingId === questionnaire.id ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={16} />
+                                Generate Website
+                              </>
+                            )}
+                          </button>
                         )}
                       </div>
                     </div>
