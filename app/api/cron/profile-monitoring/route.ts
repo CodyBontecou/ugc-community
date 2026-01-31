@@ -7,10 +7,10 @@ import {
 /**
  * GET /api/cron/profile-monitoring
  *
- * Weekly cron job to trigger profile-based scraping for all registered users.
+ * Daily cron job to trigger profile-based scraping for all registered users.
  * This checks Instagram and TikTok profiles for posts containing #ugccommunity.
  *
- * Schedule: Runs every Sunday at 6 AM UTC (configured in vercel.json)
+ * Schedule: Runs every day at 6 AM UTC (configured in vercel.json)
  */
 export async function GET(request: NextRequest) {
   // Verify cron secret for security
