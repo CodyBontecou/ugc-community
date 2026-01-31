@@ -17,138 +17,66 @@ export interface QuestionnaireData {
 export function buildPortfolioPrompt(data: QuestionnaireData): string {
   const sections: string[] = [];
 
-  // Introduction
-  sections.push(`Generate a complete, production-ready portfolio website for **${data.creatorName}**.`);
+  // Introduction - emphasize efficiency
+  sections.push(`Generate a portfolio website for **${data.creatorName}**.
+
+**IMPORTANT: Be efficient.** Limit web requests to 1-2 maximum. Start creating files quickly.`);
 
   // Creator's Vision
   sections.push(`## Creator's Vision
 
 ${data.portfolioVision}`);
 
-  // Research Workflow - always include if there's inspiration to research
+  // Only include inspiration if provided, and keep it brief
   if (data.inspiringBrands || data.portfolioExamples) {
-    sections.push(`## Research Workflow
-
-Before generating any code, research the creator's inspirations:
-
-1. **Brand Research** (if inspiring brands provided)
-   - Use web_search to find each brand's official website
-   - Use web_fetch to analyze their visual identity, color palette, typography
-   - Note design patterns that align with the creator's vision
-
-2. **Portfolio Analysis** (if portfolio examples provided)
-   - Use web_fetch to view each portfolio URL
-   - Analyze layout structure, interactions, color usage
-   - Identify techniques worth incorporating
-
-3. **Synthesize Findings**
-   - Combine research into a cohesive design direction
-   - Only then begin generating files`);
-  }
-
-  // Research and Inspiration
-  if (data.inspiringBrands || data.portfolioExamples) {
-    const inspirationParts: string[] = [];
+    const parts: string[] = [];
 
     if (data.inspiringBrands) {
-      inspirationParts.push(`**Inspiring Brands:** ${data.inspiringBrands}
-
-Use web_search to find these brands' websites, then web_fetch to analyze:
-- Primary and accent colors
-- Typography choices (font families, weights, sizes)
-- Layout patterns and whitespace usage
-- Interactive elements and hover states
-- Overall aesthetic and mood`);
+      parts.push(`**Brands for inspiration:** ${data.inspiringBrands}`);
     }
 
     if (data.portfolioExamples) {
-      inspirationParts.push(`**Portfolio References:** ${data.portfolioExamples}
-
-Use web_fetch to analyze each portfolio:
-- Section structure and navigation
-- How work is showcased (grids, sliders, case studies)
-- Animation and transition techniques
-- Mobile responsiveness approach`);
+      parts.push(`**Portfolio examples:** ${data.portfolioExamples}
+(You may fetch 1-2 of these URLs for quick reference, but don't spend too much time researching)`);
     }
 
-    sections.push(`## Design Inspiration
+    sections.push(`## Inspiration (Optional Reference)
 
-${inspirationParts.join("\n\n")}`);
+${parts.join("\n\n")}`);
   }
 
-  // Technical Requirements
-  sections.push(`## Technical Requirements
+  // Combined requirements - keep concise
+  sections.push(`## Requirements
 
-- **HTML:** Semantic HTML5 markup
-- **CSS:** Modern CSS (Flexbox, Grid, custom properties, animations)
-- **JavaScript:** Vanilla JavaScript (ES6+) - no frameworks or libraries
-- **Responsive:** Mobile-first design
-- **Performance:** Optimized for fast loading`);
+**Files to create:**
+1. \`index.html\` - Complete page (Hero, Portfolio, About, Contact sections)
+2. \`styles.css\` - All styling with responsive breakpoints
+3. \`script.js\` - Interactions and smooth scrolling
 
-  // Required Files
-  sections.push(`## Required Files
+**Design:**
+- Distinctive, non-generic look based on creator's vision
+- Creative color palette using CSS custom properties
+- Google Fonts for typography
+- Smooth CSS animations and transitions
+- Mobile-first responsive design
+- WCAG 2.1 AA accessibility
 
-Generate the following files using the Write tool:
+**Technical:**
+- Semantic HTML5
+- Modern CSS (Flexbox, Grid)
+- Vanilla JavaScript (ES6+) - no frameworks
 
-### Core Files
-- \`index.html\` - Main HTML page with all sections (Hero, Portfolio, About, Contact)
-- \`styles.css\` - All CSS styles including layout, typography, colors, animations, and responsive design
-- \`script.js\` - JavaScript for interactions, smooth scrolling, and dynamic effects
+**Deployment:** https://${data.subdomain}.ugc.community`);
 
-### Documentation
-- \`README.md\` - Project documentation`);
+  // Simple instructions
+  sections.push(`## Steps
 
-  // Design Guidelines
-  sections.push(`## Design Guidelines
+1. Optionally fetch 1-2 reference URLs (skip if no URLs provided)
+2. Create index.html with all sections
+3. Create styles.css with complete styling
+4. Create script.js for interactivity
 
-1. **Distinctive Aesthetics**
-   - Avoid generic template looks
-   - Create a unique visual identity based on the creator's vision
-   - Use creative typography pairings (Google Fonts via CDN)
-   - Develop a cohesive color palette using CSS custom properties
-
-2. **Animations & Interactions**
-   - Smooth scroll behavior (CSS scroll-behavior or JS)
-   - Subtle hover effects with CSS transitions
-   - Page load animations using CSS animations
-   - Micro-interactions on interactive elements
-
-3. **Accessibility**
-   - WCAG 2.1 AA compliance
-   - Proper heading hierarchy
-   - Sufficient color contrast
-   - Keyboard navigation support
-   - Descriptive alt text placeholders
-
-4. **Performance**
-   - No external JavaScript libraries or frameworks
-   - Optimized for fast loading
-   - Minimal JavaScript footprint`);
-
-  // Deployment Context
-  sections.push(`## Deployment
-
-The site will be deployed to: **https://${data.subdomain}.ugc.community**
-
-Ensure all internal links and metadata reflect this domain.`);
-
-  // Final Instructions - reordered to emphasize research first
-  sections.push(`## Instructions
-
-1. **Research Phase** (use web_search and web_fetch)
-   - Investigate inspiring brands and portfolio examples
-   - Document color palettes, typography, and design patterns
-
-2. **Design Phase**
-   - Synthesize research into a unique visual direction
-   - Plan the color scheme and typography
-
-3. **Build Phase**
-   - Create index.html with all sections using write_file tool
-   - Create styles.css with all styling using write_file tool
-   - Create script.js for interactions using write_file tool
-
-When finished, output a brief summary of what was created.`);
+Start creating files now.`);
 
   return sections.join("\n\n");
 }

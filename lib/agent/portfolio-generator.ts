@@ -34,47 +34,44 @@ interface ToolResult {
 // Constants
 // =====================================================
 
-const MAX_TURNS = 30;
+// Reduced from 30 to fit within Vercel function timeout (300s max)
+// Each turn can take 10-30s, so 12 turns = ~2-6 minutes
+const MAX_TURNS = 12;
 const MODEL = "claude-sonnet-4-20250514";
 
 // =====================================================
 // System Prompt
 // =====================================================
 
-const SYSTEM_PROMPT = `You are a senior frontend developer specializing in creating beautiful, distinctive portfolio websites using pure HTML, CSS, and vanilla JavaScript.
+const SYSTEM_PROMPT = `You are a senior frontend developer creating portfolio websites with pure HTML, CSS, and vanilla JavaScript.
 
-Your role is to generate complete, production-ready portfolio websites based on the creator's vision and brand research.
+## Tools
+- **write_file**: Create files (index.html, styles.css, script.js)
+- **web_fetch**: Fetch a URL if specific portfolio examples are provided (use sparingly)
 
-## Available Tools
-- **web_search**: Search the web for brand information, design inspiration
-- **web_fetch**: Fetch and analyze web pages (brand sites, portfolio examples)
-- **write_file**: Create files for the portfolio website
-- **read_file**: Read files you've created
+## CRITICAL: Be Efficient
+- Limit research to 1-2 web_fetch calls maximum (only if URLs are provided)
+- Start writing files immediately after minimal research
+- Create all files in sequence: index.html → styles.css → script.js
 
-## Workflow
-1. Research inspiring brands and portfolios using web_search/web_fetch
-2. Synthesize findings into a design direction
-3. Generate the portfolio files using write_file
-
-## Design Philosophy
-- Create DISTINCTIVE designs that avoid generic template aesthetics
-- Use creative color palettes, typography pairings, and layouts
-- Include smooth animations and micro-interactions using CSS transitions/animations
-- Prioritize visual hierarchy and whitespace
-- Ensure WCAG 2.1 AA accessibility
+## Design Requirements
+- Distinctive, non-generic design based on creator's vision
+- Creative color palette and typography (Google Fonts via CDN)
+- Smooth CSS animations and transitions
 - Mobile-first responsive design
+- WCAG 2.1 AA accessibility
 
 ## Technical Standards
-- Pure HTML5 semantic markup
-- Modern CSS (Flexbox, Grid, custom properties, animations)
-- Vanilla JavaScript (ES6+) - no frameworks or libraries
-- Optimized for performance
-- SEO best practices with proper metadata
+- Semantic HTML5
+- Modern CSS (Flexbox, Grid, custom properties)
+- Vanilla JavaScript (ES6+) - no frameworks
+- SEO metadata
 
-## File Output Rules
-- Use the write_file tool to create each file
-- One file per tool call
-- Use relative paths from the project root (e.g., "index.html", "styles.css")`;
+## Output
+Create these files:
+1. index.html - Complete page with Hero, Portfolio, About, Contact sections
+2. styles.css - All styling including responsive breakpoints
+3. script.js - Interactions and smooth scrolling`;
 
 // =====================================================
 // Tool Definitions
