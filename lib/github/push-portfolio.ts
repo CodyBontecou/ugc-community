@@ -45,7 +45,7 @@ export async function createPortfolioRepo(
     name: repoName,
     description,
     private: options?.isPrivate ?? false,
-    auto_init: false, // We'll push our own content
+    auto_init: true, // Required for Git Data API to work
     has_issues: false,
     has_projects: false,
     has_wiki: false,
