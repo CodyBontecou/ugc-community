@@ -13,6 +13,7 @@ export interface DirectoryFilters {
   location?: string;
   rateRange?: RateRange;
   availableForHire?: boolean;
+  showAll?: boolean; // When true, show all creators with subdomains (not just directoryListed)
 }
 
 export interface DirectorySort {
@@ -52,15 +53,22 @@ export async function getDirectoryCreators(
   sort: DirectorySort = {},
   pagination: DirectoryPagination = {}
 ): Promise<{ creators: DirectoryCreator[]; total: number }> {
-  const { niches, location, rateRange, availableForHire } = filters;
+  const { niches, location, rateRange, availableForHire, showAll } = filters;
   const { sort: sortOption = "popular" } = sort;
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = pagination;
 
   // Build conditions
-  const conditions = [
-    eq(users.directoryListed, true),
-    eq(users.status, "active"),
-  ];
+  // When showAll is true (authenticated users), show all creators with subdomains
+  // Otherwise, only show creators who opted into directory listing
+  const conditions = showAll
+    ? [
+        sql`${users.subdomain} IS NOT NULL`,
+        eq(users.status, "active"),
+      ]
+    : [
+        eq(users.directoryListed, true),
+        eq(users.status, "active"),
+      ];
 
   // Filter by niches (any match)
   if (niches && niches.length > 0) {
@@ -173,8 +181,24 @@ export async function getDirectoryCreators(
 }
 
 export async function getCreatorBySubdomain(
-  subdomain: string
+  subdomain: string,
+  options: { showAll?: boolean } = {}
 ): Promise<DirectoryCreator | null> {
+  const { showAll } = options;
+
+  // When showAll is true (authenticated users), show any creator with this subdomain
+  // Otherwise, only show creators who opted into directory listing
+  const conditions = showAll
+    ? [
+        eq(users.subdomain, subdomain.toLowerCase()),
+        eq(users.status, "active"),
+      ]
+    : [
+        eq(users.subdomain, subdomain.toLowerCase()),
+        eq(users.directoryListed, true),
+        eq(users.status, "active"),
+      ];
+
   const [creator] = await db
     .select({
       id: users.id,
@@ -199,13 +223,7 @@ export async function getCreatorBySubdomain(
       youtubeHandles: users.youtubeHandles,
     })
     .from(users)
-    .where(
-      and(
-        eq(users.subdomain, subdomain.toLowerCase()),
-        eq(users.directoryListed, true),
-        eq(users.status, "active")
-      )
-    )
+    .where(and(...conditions))
     .limit(1);
 
   if (!creator || !creator.subdomain) return null;

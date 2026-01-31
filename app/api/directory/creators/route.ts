@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDirectoryCreators } from "@/lib/directory/queries";
+import { getServerSession } from "@/lib/auth/session";
 import {
   NICHES,
   RATE_RANGES,
@@ -10,10 +11,14 @@ import {
   type SortOption,
 } from "@/lib/directory/constants";
 
-// GET /api/directory/creators - List creators with filters (public)
+// GET /api/directory/creators - List creators with filters
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
+    // Check if user is authenticated
+    const session = await getServerSession();
+    const isAuthenticated = !!session?.user;
 
     // Parse filters
     const nichesParam = searchParams.get("niches");
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
     );
 
     const { creators, total } = await getDirectoryCreators(
-      { niches, location, rateRange, availableForHire },
+      { niches, location, rateRange, availableForHire, showAll: isAuthenticated },
       { sort },
       { page, pageSize }
     );

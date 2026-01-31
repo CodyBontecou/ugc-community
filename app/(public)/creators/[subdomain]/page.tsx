@@ -113,15 +113,17 @@ function PersonJsonLd({
 
 export default async function CreatorProfilePage({ params }: PageProps) {
   const { subdomain } = await params;
-  const creator = await getCreatorBySubdomain(subdomain);
-
-  if (!creator) {
-    notFound();
-  }
 
   // Check if user is logged in
   const session = await getServerSession();
   const isLoggedIn = !!session;
+
+  // Authenticated users can see all creators with subdomains
+  const creator = await getCreatorBySubdomain(subdomain, { showAll: isLoggedIn });
+
+  if (!creator) {
+    notFound();
+  }
 
   // Fetch earned badge milestones for this creator
   const badgeMilestones = await getUserBadgeMilestones(creator.id);
