@@ -32,6 +32,7 @@ interface Questionnaire {
 
 interface GenerationResult {
   success: boolean;
+  generationId?: string;
   githubRepo?: string;
   githubRepoUrl?: string;
   deploymentUrl?: string;
@@ -39,6 +40,28 @@ interface GenerationResult {
   filesGenerated?: number;
   error?: string;
 }
+
+interface GenerationStatus {
+  id: string;
+  status: string;
+  githubRepo: string | null;
+  deploymentUrl: string | null;
+  previewUrl: string | null;
+  filesGenerated: number | null;
+  error: string | null;
+  errorStep: string | null;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Queued...",
+  generating: "Generating with AI...",
+  pushing: "Pushing to GitHub...",
+  deploying: "Deploying to Vercel...",
+  completed: "Completed",
+  failed: "Failed",
+};
 
 export default function AdminQuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
@@ -48,6 +71,30 @@ export default function AdminQuestionnairesPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [generationResults, setGenerationResults] = useState<Map<string, GenerationResult>>(new Map());
+  const [generationStatuses, setGenerationStatuses] = useState<Map<string, GenerationStatus>>(new Map());
+  const [pollingId, setPollingId] = useState<string | null>(null);
+
+  const fetchGenerationStatus = useCallback(async (questionnaireId: string) => {
+    try {
+      const response = await fetch(
+        `/api/admin/questionnaires/${questionnaireId}/generate/status`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.generation) {
+          setGenerationStatuses((prev) => {
+            const next = new Map(prev);
+            next.set(questionnaireId, data.generation);
+            return next;
+          });
+          return data.generation as GenerationStatus;
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching generation status:", err);
+    }
+    return null;
+  }, []);
 
   const fetchQuestionnaires = useCallback(async () => {
     setIsLoading(true);
@@ -57,7 +104,13 @@ export default function AdminQuestionnairesPage() {
       const response = await fetch("/api/admin/questionnaires");
       if (response.ok) {
         const data = await response.json();
-        setQuestionnaires(data.questionnaires || []);
+        const loadedQuestionnaires = data.questionnaires || [];
+        setQuestionnaires(loadedQuestionnaires);
+
+        // Fetch status for each questionnaire
+        for (const q of loadedQuestionnaires) {
+          fetchGenerationStatus(q.id);
+        }
       } else if (response.status === 403) {
         setError("Admin access required");
       } else {
@@ -69,11 +122,26 @@ export default function AdminQuestionnairesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchGenerationStatus]);
 
   useEffect(() => {
     fetchQuestionnaires();
   }, [fetchQuestionnaires]);
+
+  // Poll for status updates when generating
+  useEffect(() => {
+    if (!pollingId) return;
+
+    const intervalId = setInterval(async () => {
+      const status = await fetchGenerationStatus(pollingId);
+      if (status && (status.status === "completed" || status.status === "failed")) {
+        setPollingId(null);
+        setGeneratingId(null);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(intervalId);
+  }, [pollingId, fetchGenerationStatus]);
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
@@ -91,7 +159,12 @@ export default function AdminQuestionnairesPage() {
     if (generatingId) return; // Prevent double-clicks
 
     setGeneratingId(questionnaireId);
-    // Clear any previous result for this questionnaire
+    // Clear any previous status/result
+    setGenerationStatuses((prev) => {
+      const next = new Map(prev);
+      next.delete(questionnaireId);
+      return next;
+    });
     setGenerationResults((prev) => {
       const next = new Map(prev);
       next.delete(questionnaireId);
@@ -105,11 +178,20 @@ export default function AdminQuestionnairesPage() {
       );
       const data: GenerationResult = await response.json();
 
-      setGenerationResults((prev) => {
-        const next = new Map(prev);
-        next.set(questionnaireId, data);
-        return next;
-      });
+      if (data.generationId) {
+        // Start polling for status updates
+        setPollingId(questionnaireId);
+        // Also fetch initial status
+        await fetchGenerationStatus(questionnaireId);
+      } else {
+        // Fallback for immediate response (shouldn't happen with new flow)
+        setGenerationResults((prev) => {
+          const next = new Map(prev);
+          next.set(questionnaireId, data);
+          return next;
+        });
+        setGeneratingId(null);
+      }
     } catch (err) {
       console.error("Generation error:", err);
       setGenerationResults((prev) => {
@@ -120,7 +202,6 @@ export default function AdminQuestionnairesPage() {
         });
         return next;
       });
-    } finally {
       setGeneratingId(null);
     }
   };
@@ -231,6 +312,8 @@ export default function AdminQuestionnairesPage() {
         <div className="space-y-4">
           {filtered.map((questionnaire) => {
             const isExpanded = expandedIds.has(questionnaire.id);
+            const status = generationStatuses.get(questionnaire.id);
+            const isActiveGeneration = status && !["completed", "failed"].includes(status.status);
 
             return (
               <div
@@ -269,6 +352,26 @@ export default function AdminQuestionnairesPage() {
                       </p>
                     )}
                   </div>
+
+                  {/* Status badge */}
+                  {status && (
+                    <div className="flex-shrink-0 hidden sm:block">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${
+                          status.status === "completed"
+                            ? "bg-green-100 text-green-700"
+                            : status.status === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {isActiveGeneration && (
+                          <Loader2 size={12} className="animate-spin" />
+                        )}
+                        {STATUS_LABELS[status.status] || status.status}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Submitted date */}
                   <div className="text-right flex-shrink-0 hidden sm:block">
@@ -328,28 +431,26 @@ export default function AdminQuestionnairesPage() {
                         </div>
                       )}
 
-                      {/* Generation Result */}
-                      {generationResults.get(questionnaire.id) && (
+                      {/* Generation Status */}
+                      {status && (
                         <div
                           className={`rounded-[--radius-md] p-4 ${
-                            generationResults.get(questionnaire.id)?.success
+                            status.status === "completed"
                               ? "bg-green-50 border border-green-200"
-                              : "bg-red-50 border border-red-200"
+                              : status.status === "failed"
+                              ? "bg-red-50 border border-red-200"
+                              : "bg-amber-50 border border-amber-200"
                           }`}
                         >
-                          {generationResults.get(questionnaire.id)?.success ? (
+                          {status.status === "completed" ? (
                             <div className="space-y-2">
                               <p className="text-sm font-medium text-green-800">
                                 Portfolio generated successfully!
                               </p>
                               <div className="flex flex-wrap gap-2">
-                                {generationResults.get(questionnaire.id)
-                                  ?.previewUrl && (
+                                {status.previewUrl && (
                                   <a
-                                    href={
-                                      generationResults.get(questionnaire.id)
-                                        ?.previewUrl
-                                    }
+                                    href={status.previewUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-sm text-green-700 hover:text-green-900"
@@ -358,13 +459,9 @@ export default function AdminQuestionnairesPage() {
                                     View Site
                                   </a>
                                 )}
-                                {generationResults.get(questionnaire.id)
-                                  ?.githubRepoUrl && (
+                                {status.githubRepo && (
                                   <a
-                                    href={
-                                      generationResults.get(questionnaire.id)
-                                        ?.githubRepoUrl
-                                    }
+                                    href={`https://github.com/${status.githubRepo}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-sm text-green-700 hover:text-green-900"
@@ -374,20 +471,48 @@ export default function AdminQuestionnairesPage() {
                                   </a>
                                 )}
                               </div>
-                              <p className="text-xs text-green-600">
-                                {generationResults.get(questionnaire.id)
-                                  ?.filesGenerated || 0}{" "}
-                                files generated
-                              </p>
+                              {status.filesGenerated && (
+                                <p className="text-xs text-green-600">
+                                  {status.filesGenerated} files generated
+                                </p>
+                              )}
+                              {status.completedAt && (
+                                <p className="text-xs text-green-500">
+                                  Completed{" "}
+                                  {formatDistanceToNow(new Date(status.completedAt), {
+                                    addSuffix: true,
+                                  })}
+                                </p>
+                              )}
                             </div>
-                          ) : (
+                          ) : status.status === "failed" ? (
                             <div>
                               <p className="text-sm font-medium text-red-800">
                                 Generation failed
                               </p>
                               <p className="text-sm text-red-600">
-                                {generationResults.get(questionnaire.id)?.error}
+                                {status.error}
                               </p>
+                              {status.errorStep && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  Failed at step: {status.errorStep}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
+                              <div>
+                                <p className="text-sm font-medium text-amber-800">
+                                  {STATUS_LABELS[status.status] || status.status}
+                                </p>
+                                <p className="text-xs text-amber-600">
+                                  Started{" "}
+                                  {formatDistanceToNow(new Date(status.startedAt), {
+                                    addSuffix: true,
+                                  })}
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -416,24 +541,28 @@ export default function AdminQuestionnairesPage() {
                         {questionnaire.userSubdomain && (
                           <button
                             onClick={() => handleGenerate(questionnaire.id)}
-                            disabled={generatingId !== null}
+                            disabled={generatingId !== null || isActiveGeneration}
                             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                              generatingId === questionnaire.id
+                              generatingId === questionnaire.id || isActiveGeneration
                                 ? "bg-warm-gray-200 text-warm-gray-500 cursor-wait"
                                 : generatingId !== null
                                 ? "bg-warm-gray-100 text-warm-gray-400 cursor-not-allowed"
                                 : "bg-gradient-to-r from-coral to-rose text-white hover:opacity-90"
                             }`}
                           >
-                            {generatingId === questionnaire.id ? (
+                            {generatingId === questionnaire.id || isActiveGeneration ? (
                               <>
                                 <Loader2 size={16} className="animate-spin" />
-                                Generating...
+                                {isActiveGeneration
+                                  ? STATUS_LABELS[status!.status]
+                                  : "Starting..."}
                               </>
                             ) : (
                               <>
                                 <Sparkles size={16} />
-                                Generate Website
+                                {status?.status === "completed"
+                                  ? "Regenerate Website"
+                                  : "Generate Website"}
                               </>
                             )}
                           </button>

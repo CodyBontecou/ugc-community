@@ -157,6 +157,41 @@ export const onboardingQuestionnaires = pgTable(
 );
 
 // =====================================================
+// Portfolio Generations (Status Tracking)
+// =====================================================
+
+export const portfolioGenerations = pgTable(
+  "portfolio_generations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    questionnaireId: uuid("questionnaire_id").references(
+      () => onboardingQuestionnaires.id,
+      { onDelete: "set null" }
+    ),
+    // Status: 'pending', 'generating', 'pushing', 'deploying', 'completed', 'failed'
+    status: text("status").notNull().default("pending"),
+    githubRepo: text("github_repo"),
+    deploymentUrl: text("deployment_url"),
+    previewUrl: text("preview_url"),
+    filesGenerated: integer("files_generated"),
+    error: text("error"),
+    errorStep: text("error_step"),
+    startedAt: timestamp("started_at").notNull().defaultNow(),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => [
+    index("portfolio_generations_user_id_idx").on(table.userId),
+    index("portfolio_generations_status_idx").on(table.status),
+    index("portfolio_generations_questionnaire_id_idx").on(
+      table.questionnaireId
+    ),
+  ]
+);
+
+// =====================================================
 // Invite System Tables
 // =====================================================
 
@@ -449,12 +484,26 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   messageReadReceipts: many(messageReadReceipts),
   // Onboarding questionnaires
   onboardingQuestionnaires: many(onboardingQuestionnaires),
+  // Portfolio generations
+  portfolioGenerations: many(portfolioGenerations),
 }));
 
 export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
   user: one(users, {
     fields: [onboardingQuestionnaires.userId],
     references: [users.id],
+  }),
+  generations: one(portfolioGenerations),
+}));
+
+export const portfolioGenerationsRelations = relations(portfolioGenerations, ({ one }) => ({
+  user: one(users, {
+    fields: [portfolioGenerations.userId],
+    references: [users.id],
+  }),
+  questionnaire: one(onboardingQuestionnaires, {
+    fields: [portfolioGenerations.questionnaireId],
+    references: [onboardingQuestionnaires.id],
   }),
 }));
 
@@ -1023,3 +1072,5 @@ export type MessageReadReceipt = typeof messageReadReceipts.$inferSelect;
 export type NewMessageReadReceipt = typeof messageReadReceipts.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
 export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
+export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
+export type NewPortfolioGeneration = typeof portfolioGenerations.$inferInsert;
