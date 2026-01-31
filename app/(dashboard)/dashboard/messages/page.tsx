@@ -7,6 +7,7 @@ import { NewConversationDialog } from "@/components/messages/NewConversationDial
 import { ParticipantList } from "@/components/messages/ParticipantList";
 import { useMessagePolling } from "@/lib/hooks/use-message-polling";
 import { useTypingPolling } from "@/lib/hooks/use-typing-polling";
+import { useSession } from "@/lib/auth/client";
 
 interface Participant {
   userId: string;
@@ -80,7 +81,9 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { data: session, isPending: isSessionLoading } = useSession();
+  const currentUserId = session?.user?.id || null;
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<{
@@ -102,22 +105,6 @@ export default function MessagesPage() {
     initialMessages as any
   );
   const { typingUsers, setTyping } = useTypingPolling(selectedConversationId);
-
-  // Fetch current user
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch("/api/auth/session");
-        if (response.ok) {
-          const data = await response.json();
-          setCurrentUserId(data.user?.id || null);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    }
-    fetchUser();
-  }, []);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -298,7 +285,7 @@ export default function MessagesPage() {
     selectedConversation?.participants.find((p) => p.userId === currentUserId)
       ?.role === "owner";
 
-  if (!currentUserId) {
+  if (isSessionLoading || !currentUserId) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
         <div className="animate-pulse text-warm-gray-400">Loading...</div>
