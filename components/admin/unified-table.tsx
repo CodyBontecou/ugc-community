@@ -14,10 +14,12 @@ import {
   ShieldOff,
   Ban,
   Instagram,
+  UserPlus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RecordTypeBadge } from "./record-type-badge";
 import { CreateInviteDialog } from "./create-invite-dialog";
+import { ConvertInviteDialog } from "./convert-invite-dialog";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import type { RecordType, UnifiedRecord } from "@/app/api/admin/people/route";
 import type { UserStatus } from "@/lib/admin";
@@ -73,6 +75,7 @@ export function UnifiedTable() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
+  const [inviteToConvert, setInviteToConvert] = useState<UnifiedRecord | null>(null);
   const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
 
@@ -561,18 +564,28 @@ export function UnifiedTable() {
           {isActive ? (
             <>
               {hasEmail && (
-                <button
-                  onClick={() => resendInviteEmail(record.id)}
-                  disabled={isUpdating}
-                  className="p-2 text-warm-gray-400 hover:text-coral rounded transition-colors disabled:opacity-50"
-                  title="Resend email"
-                >
-                  {isUpdating ? (
-                    <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-coral rounded-full animate-spin" />
-                  ) : (
-                    <Mail size={16} />
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={() => setInviteToConvert(record)}
+                    disabled={isUpdating}
+                    className="p-2 text-warm-gray-400 hover:text-green-600 rounded transition-colors disabled:opacity-50"
+                    title="Convert to user"
+                  >
+                    <UserPlus size={16} />
+                  </button>
+                  <button
+                    onClick={() => resendInviteEmail(record.id)}
+                    disabled={isUpdating}
+                    className="p-2 text-warm-gray-400 hover:text-coral rounded transition-colors disabled:opacity-50"
+                    title="Resend email"
+                  >
+                    {isUpdating ? (
+                      <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-coral rounded-full animate-spin" />
+                    ) : (
+                      <Mail size={16} />
+                    )}
+                  </button>
+                </>
               )}
               <button
                 onClick={() => copyLink(record)}
@@ -812,6 +825,18 @@ export function UnifiedTable() {
         onClose={() => setUserToDelete(null)}
         onDeleted={handleUserDeleted}
         user={userToDelete ? { id: userToDelete.id, name: userToDelete.name, email: userToDelete.email } : null}
+      />
+
+      <ConvertInviteDialog
+        isOpen={inviteToConvert !== null}
+        onClose={() => setInviteToConvert(null)}
+        onConverted={fetchRecords}
+        invite={inviteToConvert ? {
+          id: inviteToConvert.id,
+          email: inviteToConvert.email,
+          role: inviteToConvert.role,
+          socials: inviteToConvert.socials,
+        } : null}
       />
     </>
   );
