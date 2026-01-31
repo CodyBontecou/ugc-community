@@ -32,12 +32,12 @@ ${data.portfolioVision}`);
 Before generating any code, research the creator's inspirations:
 
 1. **Brand Research** (if inspiring brands provided)
-   - Use WebSearch to find each brand's official website
-   - Use WebFetch to analyze their visual identity, color palette, typography
+   - Use web_search to find each brand's official website
+   - Use web_fetch to analyze their visual identity, color palette, typography
    - Note design patterns that align with the creator's vision
 
 2. **Portfolio Analysis** (if portfolio examples provided)
-   - Use WebFetch to view each portfolio URL
+   - Use web_fetch to view each portfolio URL
    - Analyze layout structure, interactions, color usage
    - Identify techniques worth incorporating
 
@@ -53,7 +53,7 @@ Before generating any code, research the creator's inspirations:
     if (data.inspiringBrands) {
       inspirationParts.push(`**Inspiring Brands:** ${data.inspiringBrands}
 
-Use WebSearch to find these brands' websites, then WebFetch to analyze:
+Use web_search to find these brands' websites, then web_fetch to analyze:
 - Primary and accent colors
 - Typography choices (font families, weights, sizes)
 - Layout patterns and whitespace usage
@@ -64,7 +64,7 @@ Use WebSearch to find these brands' websites, then WebFetch to analyze:
     if (data.portfolioExamples) {
       inspirationParts.push(`**Portfolio References:** ${data.portfolioExamples}
 
-Use WebFetch to analyze each portfolio:
+Use web_fetch to analyze each portfolio:
 - Section structure and navigation
 - How work is showcased (grids, sliders, case studies)
 - Animation and transition techniques
@@ -135,7 +135,7 @@ Ensure all internal links and metadata reflect this domain.`);
   // Final Instructions - reordered to emphasize research first
   sections.push(`## Instructions
 
-1. **Research Phase** (use WebSearch and WebFetch)
+1. **Research Phase** (use web_search and web_fetch)
    - Investigate inspiring brands and portfolio examples
    - Document color palettes, typography, and design patterns
 
@@ -144,9 +144,9 @@ Ensure all internal links and metadata reflect this domain.`);
    - Plan the color scheme and typography
 
 3. **Build Phase**
-   - Create index.html with all sections using Write tool
-   - Create styles.css with all styling using Write tool
-   - Create script.js for interactions using Write tool
+   - Create index.html with all sections using write_file tool
+   - Create styles.css with all styling using write_file tool
+   - Create script.js for interactions using write_file tool
 
 When finished, output a brief summary of what was created.`);
 
