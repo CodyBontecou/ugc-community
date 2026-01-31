@@ -1,12 +1,20 @@
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { and, eq, desc, asc, sql, ilike, arrayOverlaps, or, gte } from "drizzle-orm";
+import { and, eq, desc, asc, sql, ilike, arrayOverlaps, or, gte, notInArray } from "drizzle-orm";
 import {
   type Niche,
   type RateRange,
   type SortOption,
   DEFAULT_PAGE_SIZE,
 } from "./constants";
+
+/**
+ * Get list of admin emails from environment variable
+ * Used to exclude admins from the creator directory
+ */
+function getAdminEmails(): string[] {
+  return process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || [];
+}
 
 export interface DirectoryFilters {
   niches?: Niche[];
@@ -69,6 +77,12 @@ export async function getDirectoryCreators(
         eq(users.directoryListed, true),
         eq(users.status, "active"),
       ];
+
+  // Exclude admin users from the directory
+  const adminEmails = getAdminEmails();
+  if (adminEmails.length > 0) {
+    conditions.push(notInArray(users.email, adminEmails));
+  }
 
   // Filter by niches (any match)
   if (niches && niches.length > 0) {
@@ -199,6 +213,12 @@ export async function getCreatorBySubdomain(
         eq(users.status, "active"),
       ];
 
+  // Exclude admin users from the directory
+  const adminEmails = getAdminEmails();
+  if (adminEmails.length > 0) {
+    conditions.push(notInArray(users.email, adminEmails));
+  }
+
   const [creator] = await db
     .select({
       id: users.id,
@@ -255,12 +275,21 @@ export async function getCreatorBySubdomain(
 }
 
 export async function getDirectoryListedSubdomains(): Promise<string[]> {
+  const adminEmails = getAdminEmails();
+  const conditions = [
+    eq(users.directoryListed, true),
+    eq(users.status, "active"),
+  ];
+
+  // Exclude admin users from the directory
+  if (adminEmails.length > 0) {
+    conditions.push(notInArray(users.email, adminEmails));
+  }
+
   const result = await db
     .select({ subdomain: users.subdomain })
     .from(users)
-    .where(
-      and(eq(users.directoryListed, true), eq(users.status, "active"))
-    );
+    .where(and(...conditions));
 
   return result
     .filter((r) => r.subdomain !== null)
