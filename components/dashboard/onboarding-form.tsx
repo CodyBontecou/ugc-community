@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Calendar, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Calendar, ArrowRight, Check, Loader2, Sparkles, AlertCircle, Globe } from "lucide-react";
 
 const CALENDLY_URL = "https://calendly.com/cody-isolated/30min";
 
@@ -18,9 +18,68 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [subdomain, setSubdomain] = useState("");
+  const [subdomainStatus, setSubdomainStatus] = useState<{
+    checking: boolean;
+    available: boolean | null;
+    error: string | null;
+    suggestions: string[];
+  }>({ checking: false, available: null, error: null, suggestions: [] });
   const [portfolioVision, setPortfolioVision] = useState("");
   const [inspiringBrands, setInspiringBrands] = useState("");
   const [portfolioExamples, setPortfolioExamples] = useState("");
+
+  // Check subdomain availability with debounce
+  const checkSubdomainAvailability = useCallback(async (value: string) => {
+    if (value.length < 3) {
+      setSubdomainStatus({ checking: false, available: null, error: null, suggestions: [] });
+      return;
+    }
+
+    setSubdomainStatus(prev => ({ ...prev, checking: true }));
+
+    try {
+      const response = await fetch(`/api/user/subdomain?check=${encodeURIComponent(value)}`);
+      const data = await response.json();
+
+      if (data.available) {
+        setSubdomainStatus({
+          checking: false,
+          available: true,
+          error: null,
+          suggestions: [],
+        });
+      } else {
+        setSubdomainStatus({
+          checking: false,
+          available: false,
+          error: data.reason || "Not available",
+          suggestions: data.suggestions || [],
+        });
+      }
+    } catch {
+      setSubdomainStatus({
+        checking: false,
+        available: null,
+        error: "Failed to check availability",
+        suggestions: [],
+      });
+    }
+  }, []);
+
+  // Debounce subdomain check
+  useEffect(() => {
+    if (!subdomain || subdomain.length < 3) {
+      setSubdomainStatus({ checking: false, available: null, error: null, suggestions: [] });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkSubdomainAvailability(subdomain);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [subdomain, checkSubdomainAvailability]);
 
   // Check if user has already submitted
   useEffect(() => {
@@ -30,6 +89,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         if (response.ok) {
           const data = await response.json();
           setHasSubmitted(data.hasSubmitted);
+          if (data.subdomain) {
+            setSubdomain(data.subdomain);
+            setSubdomainStatus({ checking: false, available: true, error: null, suggestions: [] });
+          }
           if (data.questionnaire) {
             setPortfolioVision(data.questionnaire.portfolioVision || "");
             setInspiringBrands(data.questionnaire.inspiringBrands || "");
@@ -49,6 +112,18 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+
+    // Validate subdomain before submitting
+    if (!subdomain || subdomain.length < 3) {
+      setError("Please enter a subdomain (at least 3 characters)");
+      return;
+    }
+
+    if (subdomainStatus.available === false) {
+      setError("Please choose an available subdomain");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -56,6 +131,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          subdomain,
           portfolioVision,
           inspiringBrands,
           portfolioExamples,
@@ -66,16 +142,23 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
       if (!response.ok) {
         setError(data.error || "Failed to submit");
+        if (data.suggestions) {
+          setSubdomainStatus(prev => ({
+            ...prev,
+            available: false,
+            suggestions: data.suggestions,
+          }));
+        }
         return;
       }
 
       setHasSubmitted(true);
-      setSuccessMessage(hasSubmitted ? "Updated!" : "Submitted!");
+      setSuccessMessage(hasSubmitted ? "Updated!" : "Submitted - your portfolio is being generated!");
       onSubmitSuccess?.();
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -121,6 +204,92 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Subdomain */}
+        <div>
+          <label
+            htmlFor="subdomain"
+            className="block text-sm font-medium text-warm-gray-900 mb-2"
+          >
+            Choose your portfolio URL *
+          </label>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Globe className="h-5 w-5 text-warm-gray-400" />
+              </div>
+              <input
+                id="subdomain"
+                type="text"
+                value={subdomain}
+                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="yourname"
+                className={`w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 ${
+                  subdomainStatus.available === true
+                    ? "border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                    : subdomainStatus.available === false
+                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                    : "border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20"
+                }`}
+                required
+                minLength={3}
+                maxLength={63}
+              />
+              {subdomainStatus.checking && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-warm-gray-400" />
+                </div>
+              )}
+              {!subdomainStatus.checking && subdomainStatus.available === true && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <Check className="h-4 w-4 text-green-500" />
+                </div>
+              )}
+              {!subdomainStatus.checking && subdomainStatus.available === false && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                </div>
+              )}
+            </div>
+            <span className="text-warm-gray-500 text-sm whitespace-nowrap">.ugc.community</span>
+          </div>
+          {subdomainStatus.available === true && subdomain.length >= 3 && (
+            <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+              <Check className="w-3 h-3" />
+              Available! Your portfolio will be at {subdomain}.ugc.community
+            </p>
+          )}
+          {subdomainStatus.available === false && (
+            <div className="mt-1.5">
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {subdomainStatus.error}
+              </p>
+              {subdomainStatus.suggestions.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-warm-gray-500 mb-1">Try one of these instead:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {subdomainStatus.suggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => setSubdomain(suggestion)}
+                        className="text-xs px-2 py-1 rounded-full bg-warm-gray-100 text-warm-gray-700 hover:bg-coral/10 hover:text-coral transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {subdomain.length > 0 && subdomain.length < 3 && (
+            <p className="mt-1.5 text-xs text-warm-gray-500">
+              Subdomain must be at least 3 characters
+            </p>
+          )}
+        </div>
+
         {/* Portfolio Vision */}
         <div>
           <label
@@ -205,18 +374,27 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || portfolioVision.length < 10}
+          disabled={
+            isSubmitting ||
+            portfolioVision.length < 10 ||
+            subdomain.length < 3 ||
+            subdomainStatus.available === false ||
+            subdomainStatus.checking
+          }
           className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Submitting...
+              {hasSubmitted ? "Updating..." : "Creating your portfolio..."}
             </>
           ) : hasSubmitted ? (
             "Update Responses"
           ) : (
-            "Submit"
+            <>
+              <Sparkles className="w-4 h-4" />
+              Generate My Portfolio
+            </>
           )}
         </button>
       </form>

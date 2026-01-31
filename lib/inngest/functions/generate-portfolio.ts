@@ -29,7 +29,7 @@ export const generatePortfolioFunction = inngest.createFunction(
   },
   { event: "portfolio/generate.requested" },
   async ({ event, step }) => {
-    const { generationId, questionnaireId, userId, adminUserId } = event.data;
+    const { generationId, questionnaireId, userId, githubRepoFullName, adminUserId } = event.data;
 
     // Helper to update generation status
     const updateStatus = async (updates: Record<string, unknown>) => {
@@ -62,19 +62,42 @@ export const generatePortfolioFunction = inngest.createFunction(
           .from(users)
           .where(eq(users.id, userId));
 
-        const [admin] = await db
-          .select({
-            githubAccessToken: users.githubAccessToken,
-            githubUsername: users.githubUsername,
-          })
-          .from(users)
-          .where(eq(users.id, adminUserId));
-
-        if (!questionnaire || !user || !admin?.githubAccessToken) {
+        if (!questionnaire || !user) {
           throw new Error("Missing required data");
         }
 
-        return { questionnaire, user, admin };
+        // Use service token (preferred) or fall back to admin token for backward compatibility
+        let githubToken = process.env.GITHUB_SERVICE_TOKEN;
+        let githubUsername = process.env.GITHUB_SERVICE_USERNAME;
+
+        // Fall back to admin token if service token not configured and adminUserId provided
+        if (!githubToken && adminUserId) {
+          const [admin] = await db
+            .select({
+              githubAccessToken: users.githubAccessToken,
+              githubUsername: users.githubUsername,
+            })
+            .from(users)
+            .where(eq(users.id, adminUserId));
+
+          if (admin?.githubAccessToken) {
+            githubToken = admin.githubAccessToken;
+            githubUsername = admin.githubUsername || undefined;
+          }
+        }
+
+        if (!githubToken) {
+          throw new Error("No GitHub token available for portfolio generation");
+        }
+
+        return {
+          questionnaire,
+          user,
+          githubToken,
+          githubUsername,
+          // Use repo from event data if provided, otherwise from user record
+          repoFullName: githubRepoFullName || user.githubRepoFullName,
+        };
       });
 
       // Step 2: Generate portfolio with Claude
@@ -110,13 +133,14 @@ export const generatePortfolioFunction = inngest.createFunction(
       });
 
       const githubResult = await step.run("push-to-github", async () => {
-        const octokit = new Octokit({ auth: data.admin.githubAccessToken });
+        const octokit = new Octokit({ auth: data.githubToken });
         const repoName = `${data.user.subdomain}-portfolio`;
-        let repoFullName = data.user.githubRepoFullName;
+        let repoFullName = data.repoFullName || data.user.githubRepoFullName;
         let repoId = data.user.githubRepoId;
 
-        if (!repoFullName) {
-          const expectedRepoName = `${data.admin.githubUsername}/${repoName}`;
+        // If no repo exists, try to find or create one
+        if (!repoFullName && data.githubUsername) {
+          const expectedRepoName = `${data.githubUsername}/${repoName}`;
           const exists = await repoExists(octokit, expectedRepoName);
 
           if (exists) {
@@ -144,6 +168,16 @@ export const generatePortfolioFunction = inngest.createFunction(
               githubRepoId: repoId,
             })
             .where(eq(users.id, userId));
+        }
+
+        if (!repoFullName) {
+          throw new Error("No GitHub repository available for push");
+        }
+
+        // Get repo ID if we don't have it
+        if (!repoId) {
+          const repoInfo = await getRepoInfo(octokit, repoFullName);
+          repoId = String(repoInfo.id);
         }
 
         // Push files

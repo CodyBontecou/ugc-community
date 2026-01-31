@@ -7,7 +7,10 @@ type Events = {
       generationId: string;
       questionnaireId: string;
       userId: string;
-      adminUserId: string;
+      // GitHub repo full name (e.g., "username/repo-name") - pre-created on questionnaire submit
+      githubRepoFullName?: string;
+      // Admin user ID - optional for backward compatibility (uses service token when not provided)
+      adminUserId?: string;
     };
   };
 };
