@@ -6,7 +6,7 @@ import { users, invites, waitlist, contactSubmissions } from "@/lib/db/schema";
 import { eq, and, ne, or, desc, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
-import { createProject } from "@/lib/vercel/client";
+import { createProject, VercelApiError } from "@/lib/vercel/client";
 
 const updateUserStatusSchema = z.object({
   status: z.enum(["active", "suspended", "banned"]),
@@ -417,8 +417,20 @@ export async function PATCH(
           vercelProjectId = project.id;
         } catch (error) {
           console.error("Failed to create Vercel project:", error);
+
+          // Extract error details for better debugging
+          let errorMessage = "Failed to create Vercel project. Please try again or set the project ID manually.";
+          if (error instanceof VercelApiError) {
+            errorMessage = `Vercel API error: ${error.message}`;
+            if (error.code) {
+              errorMessage += ` (code: ${error.code})`;
+            }
+          } else if (error instanceof Error) {
+            errorMessage = `Failed to create Vercel project: ${error.message}`;
+          }
+
           return NextResponse.json(
-            { error: "Failed to create Vercel project. Please try again or set the project ID manually." },
+            { error: errorMessage },
             { status: 500 }
           );
         }
