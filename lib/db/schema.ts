@@ -134,6 +134,29 @@ export const verifications = pgTable("verifications", {
 });
 
 // =====================================================
+// Onboarding Questionnaires
+// =====================================================
+
+export const onboardingQuestionnaires = pgTable(
+  "onboarding_questionnaires",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    portfolioVision: text("portfolio_vision").notNull(),
+    inspiringBrands: text("inspiring_brands"),
+    portfolioExamples: text("portfolio_examples"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("onboarding_questionnaires_user_id_idx").on(table.userId),
+    index("onboarding_questionnaires_created_at_idx").on(table.createdAt),
+  ]
+);
+
+// =====================================================
 // Invite System Tables
 // =====================================================
 
@@ -424,6 +447,15 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   sentMessages: many(messages),
   messageReactions: many(messageReactions),
   messageReadReceipts: many(messageReadReceipts),
+  // Onboarding questionnaires
+  onboardingQuestionnaires: many(onboardingQuestionnaires),
+}));
+
+export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
+  user: one(users, {
+    fields: [onboardingQuestionnaires.userId],
+    references: [users.id],
+  }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -989,3 +1021,5 @@ export type MessageReaction = typeof messageReactions.$inferSelect;
 export type NewMessageReaction = typeof messageReactions.$inferInsert;
 export type MessageReadReceipt = typeof messageReadReceipts.$inferSelect;
 export type NewMessageReadReceipt = typeof messageReadReceipts.$inferInsert;
+export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
+export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;

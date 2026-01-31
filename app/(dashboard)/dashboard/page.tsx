@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { MediaLibrary } from "@/components/media/media-library";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
-import { ScheduleCallCard } from "@/components/dashboard/schedule-call-card";
+import { OnboardingForm } from "@/components/dashboard/onboarding-form";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import { AdvancedAnalytics } from "@/components/dashboard/advanced-analytics";
 import { PostMetrics } from "@/components/dashboard/post-metrics";
@@ -59,8 +59,8 @@ async function DashboardContent() {
         </p>
       </div>
 
-      {/* Schedule Call CTA - Creator only */}
-      {showCreatorContent && <ScheduleCallCard />}
+      {/* Onboarding Form - Creator only */}
+      {showCreatorContent && <OnboardingForm />}
 
       {/* Creator Stats - Creator only */}
       {showCreatorContent && <CreatorStatsCard />}
