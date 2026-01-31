@@ -11,13 +11,10 @@ import {
   User,
   Shield,
   Settings,
-  MessageCircle,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { UnreadBadge } from "@/components/messages/UnreadBadge";
-import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 
 interface DashboardNavProps {
   user: {
@@ -32,13 +29,11 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/messages", label: "Messages", icon: MessageCircle, showBadge: true },
 ];
 
 export function DashboardNav({ user, isAdmin = false, role = "creator" }: DashboardNavProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount } = useUnreadCount();
 
   const allNavItems = isAdmin
     ? [...navItems, { href: "/dashboard/admin", label: "Admin", icon: Shield }]
@@ -62,9 +57,6 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
           >
             <item.icon size={18} />
             {item.label}
-            {"showBadge" in item && item.showBadge && unreadCount > 0 && (
-              <UnreadBadge count={unreadCount} className="absolute -top-1 -right-1" />
-            )}
           </Link>
         ))}
       </nav>

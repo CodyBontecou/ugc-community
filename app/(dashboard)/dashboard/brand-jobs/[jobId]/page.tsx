@@ -11,14 +11,10 @@ import {
   ExternalLink,
   Check,
   X,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { JobForm } from "@/components/jobs/job-form";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { ApplicationStatusBadge } from "@/components/jobs/ApplicationStatusBadge";
-import { ApplicationMessageThread } from "@/components/jobs/ApplicationMessageThread";
 import type { JobStatus, Niche, Platform, CompensationType, ApplicationStatus } from "@/lib/jobs/constants";
 import { NICHE_LABELS } from "@/lib/jobs/constants";
 
@@ -55,18 +51,6 @@ interface Application {
   creator: Creator;
 }
 
-interface Message {
-  id: string;
-  message: string;
-  createdAt: string;
-  sender: {
-    id: string;
-    name: string | null;
-    displayName: string | null;
-    image: string | null;
-  };
-}
-
 interface JobData {
   job: {
     id: string;
@@ -96,18 +80,12 @@ export default function BrandJobDetailPage({
   const { jobId } = use(params);
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "applications" ? "applications" : "details";
-  const expandedId = searchParams.get("expand");
 
   const [jobData, setJobData] = useState<JobData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"details" | "applications">(initialTab);
-  const [expandedApplication, setExpandedApplication] = useState<string | null>(expandedId);
-  const [applicationMessages, setApplicationMessages] = useState<Record<string, Message[]>>({});
-  const [loadingMessages, setLoadingMessages] = useState<Record<string, boolean>>({});
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-  const [requestInfoMessage, setRequestInfoMessage] = useState("");
-  const [showRequestInfoModal, setShowRequestInfoModal] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchJob() {
@@ -133,61 +111,16 @@ export default function BrandJobDetailPage({
     fetchJob();
   }, [jobId]);
 
-  const fetchMessages = async (applicationId: string) => {
-    if (applicationMessages[applicationId]) return;
-
-    setLoadingMessages((prev) => ({ ...prev, [applicationId]: true }));
-    try {
-      const response = await fetch(`/api/applications/${applicationId}/messages`);
-      if (response.ok) {
-        const data = await response.json();
-        setApplicationMessages((prev) => ({ ...prev, [applicationId]: data.messages }));
-      }
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-    } finally {
-      setLoadingMessages((prev) => ({ ...prev, [applicationId]: false }));
-    }
-  };
-
-  const handleExpandApplication = (applicationId: string) => {
-    if (expandedApplication === applicationId) {
-      setExpandedApplication(null);
-    } else {
-      setExpandedApplication(applicationId);
-      fetchMessages(applicationId);
-    }
-  };
-
-  const handleSendMessage = async (applicationId: string, message: string) => {
-    const response = await fetch(`/api/applications/${applicationId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setApplicationMessages((prev) => ({
-        ...prev,
-        [applicationId]: [...(prev[applicationId] || []), data.message],
-      }));
-    } else {
-      throw new Error("Failed to send message");
-    }
-  };
-
   const handleUpdateStatus = async (
     applicationId: string,
-    status: "accepted" | "rejected" | "info_requested",
-    message?: string
+    status: "accepted" | "rejected"
   ) => {
     setUpdatingStatus(applicationId);
     try {
       const response = await fetch(`/api/brand/jobs/${jobId}/applications/${applicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, message }),
+        body: JSON.stringify({ status }),
       });
 
       if (response.ok) {
@@ -201,29 +134,6 @@ export default function BrandJobDetailPage({
             ),
           };
         });
-
-        // If message was sent, add it to the thread
-        if (message) {
-          const newMessage: Message = {
-            id: crypto.randomUUID(),
-            message,
-            createdAt: new Date().toISOString(),
-            sender: {
-              id: jobData?.currentUserId || "",
-              name: null,
-              displayName: "You",
-              image: null,
-            },
-          };
-          setApplicationMessages((prev) => ({
-            ...prev,
-            [applicationId]: [...(prev[applicationId] || []), newMessage],
-          }));
-        }
-
-        // Close request info modal
-        setShowRequestInfoModal(null);
-        setRequestInfoMessage("");
       }
     } catch (err) {
       console.error("Error updating status:", err);
@@ -425,9 +335,6 @@ export default function BrandJobDetailPage({
           ) : (
             <div className="divide-y divide-warm-gray-100">
               {applications.map((application) => {
-                const isExpanded = expandedApplication === application.id;
-                const messages = applicationMessages[application.id] || [];
-                const isLoadingMessages = loadingMessages[application.id];
                 const isUpdating = updatingStatus === application.id;
                 const canTakeAction = !["accepted", "rejected"].includes(application.status);
 
@@ -526,101 +433,17 @@ export default function BrandJobDetailPage({
                                   <X size={12} />
                                   Decline
                                 </button>
-                                <button
-                                  onClick={() => setShowRequestInfoModal(application.id)}
-                                  disabled={isUpdating}
-                                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-coral hover:text-coral/80 transition-colors disabled:opacity-50"
-                                >
-                                  <MessageSquare size={12} />
-                                  Request Info
-                                </button>
                               </div>
                             )}
                           </div>
                         </div>
-
-                        {/* Expand button */}
-                        <button
-                          onClick={() => handleExpandApplication(application.id)}
-                          className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] transition-colors"
-                          title={isExpanded ? "Collapse" : "View messages"}
-                        >
-                          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
                       </div>
                     </div>
-
-                    {/* Expanded message thread */}
-                    {isExpanded && (
-                      <div className="border-t border-warm-gray-100 bg-warm-gray-50">
-                        <ApplicationMessageThread
-                          applicationId={application.id}
-                          currentUserId={currentUserId}
-                          messages={messages}
-                          onSendMessage={(msg) => handleSendMessage(application.id, msg)}
-                          isLoading={isLoadingMessages}
-                        />
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Request Info Modal */}
-      {showRequestInfoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => {
-              setShowRequestInfoModal(null);
-              setRequestInfoMessage("");
-            }}
-          />
-          <div className="relative bg-white rounded-[--radius-xl] shadow-xl max-w-lg w-full mx-4 p-6">
-            <h3 className="text-lg font-medium text-warm-gray-900 mb-2">
-              Request More Information
-            </h3>
-            <p className="text-sm text-warm-gray-600 mb-4">
-              Send a message to the creator asking for more details about their application.
-            </p>
-            <textarea
-              value={requestInfoMessage}
-              onChange={(e) => setRequestInfoMessage(e.target.value)}
-              placeholder="What would you like to know?"
-              rows={4}
-              className="w-full px-4 py-3 text-sm border border-warm-gray-200 rounded-[--radius-lg] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral resize-none"
-            />
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => {
-                  setShowRequestInfoModal(null);
-                  setRequestInfoMessage("");
-                }}
-                className="px-4 py-2 text-sm font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (showRequestInfoModal && requestInfoMessage.trim()) {
-                    handleUpdateStatus(showRequestInfoModal, "info_requested", requestInfoMessage.trim());
-                  }
-                }}
-                disabled={!requestInfoMessage.trim() || updatingStatus === showRequestInfoModal}
-                className="px-4 py-2 text-sm font-medium text-white bg-coral hover:bg-coral/90 rounded-[--radius-md] transition-colors disabled:opacity-50"
-              >
-                {updatingStatus === showRequestInfoModal ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  "Send"
-                )}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

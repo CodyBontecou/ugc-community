@@ -5,21 +5,8 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Loader2, ExternalLink, Briefcase } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/jobs/ApplicationStatusBadge";
-import { ApplicationMessageThread } from "@/components/jobs/ApplicationMessageThread";
 import type { ApplicationStatus } from "@/lib/jobs/constants";
 import { COMPENSATION_TYPE_LABELS, type CompensationType } from "@/lib/jobs/constants";
-
-interface Message {
-  id: string;
-  message: string;
-  createdAt: string;
-  sender: {
-    id: string;
-    name: string | null;
-    displayName: string | null;
-    image: string | null;
-  };
-}
 
 interface ApplicationData {
   application: {
@@ -46,8 +33,6 @@ interface ApplicationData {
       } | null;
     };
   };
-  messages: Message[];
-  currentUserId: string;
 }
 
 export default function CreatorApplicationDetailPage({
@@ -83,27 +68,6 @@ export default function CreatorApplicationDetailPage({
     }
     fetchApplication();
   }, [applicationId]);
-
-  const handleSendMessage = async (message: string) => {
-    const response = await fetch(`/api/applications/${applicationId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      setData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          messages: [...prev.messages, result.message],
-        };
-      });
-    } else {
-      throw new Error("Failed to send message");
-    }
-  };
 
   if (isLoading) {
     return (
@@ -147,7 +111,7 @@ export default function CreatorApplicationDetailPage({
     );
   }
 
-  const { application, messages, currentUserId } = data;
+  const { application } = data;
   const brandName =
     application.job.brand?.displayName ||
     application.job.brand?.name ||
@@ -197,15 +161,13 @@ export default function CreatorApplicationDetailPage({
       {application.status === "info_requested" && (
         <div className="bg-amber-50 border border-amber-200 rounded-[--radius-lg] p-4">
           <p className="text-sm text-amber-700">
-            <strong>Action needed:</strong> {brandName} has requested more information. Please respond in the messages below.
+            <strong>Action needed:</strong> {brandName} has requested more information.
           </p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Job Details */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 space-y-4 sticky top-6">
+      {/* Job Details */}
+      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-warm-gray-100 flex items-center justify-center">
                 <Briefcase size={20} className="text-warm-gray-400" />
@@ -287,26 +249,6 @@ export default function CreatorApplicationDetailPage({
                 </p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Message Thread */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-warm-gray-100">
-              <h3 className="font-medium text-warm-gray-900">Messages</h3>
-              <p className="text-xs text-warm-gray-500">
-                Communicate directly with {brandName}
-              </p>
-            </div>
-            <ApplicationMessageThread
-              applicationId={applicationId}
-              currentUserId={currentUserId}
-              messages={messages}
-              onSendMessage={handleSendMessage}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

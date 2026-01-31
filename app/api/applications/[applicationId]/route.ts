@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { jobApplications, contentJobs, users, applicationMessages } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { jobApplications, contentJobs, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 // GET /api/applications/[applicationId] - Get application details for creator
 export async function GET(
@@ -55,9 +55,9 @@ export async function GET(
       .limit(1);
 
     const isCreator = application.creatorId === session.user.id;
-    const isBrand = job?.brandId === session.user.id;
+    const isBrandOwner = job?.brandId === session.user.id;
 
-    if (!isCreator && !isBrand) {
+    if (!isCreator && !isBrandOwner) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -77,24 +77,6 @@ export async function GET(
       brand = brandUser || null;
     }
 
-    // Get messages
-    const messages = await db
-      .select({
-        id: applicationMessages.id,
-        message: applicationMessages.message,
-        createdAt: applicationMessages.createdAt,
-        sender: {
-          id: users.id,
-          name: users.name,
-          displayName: users.displayName,
-          image: users.image,
-        },
-      })
-      .from(applicationMessages)
-      .innerJoin(users, eq(applicationMessages.senderId, users.id))
-      .where(eq(applicationMessages.applicationId, applicationId))
-      .orderBy(applicationMessages.createdAt);
-
     return NextResponse.json({
       application: {
         ...application,
@@ -103,8 +85,6 @@ export async function GET(
           brand,
         },
       },
-      messages,
-      currentUserId: session.user.id,
     });
   } catch (error) {
     console.error("Error fetching application:", error);

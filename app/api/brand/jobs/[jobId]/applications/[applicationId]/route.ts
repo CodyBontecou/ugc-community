@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { contentJobs, jobApplications, users, applicationMessages } from "@/lib/db/schema";
+import { contentJobs, jobApplications, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isBrand } from "@/lib/roles";
 import { createNotification } from "@/lib/notifications/queries";
@@ -60,12 +60,11 @@ export async function PATCH(
 
     // Parse request body
     const body = await request.json();
-    const { status, message } = body as {
-      status: "accepted" | "rejected" | "info_requested";
-      message?: string;
+    const { status } = body as {
+      status: "accepted" | "rejected";
     };
 
-    if (!["accepted", "rejected", "info_requested"].includes(status)) {
+    if (!["accepted", "rejected"].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
@@ -78,15 +77,6 @@ export async function PATCH(
       })
       .where(eq(jobApplications.id, applicationId))
       .returning();
-
-    // If there's a message, create it
-    if (message && message.trim()) {
-      await db.insert(applicationMessages).values({
-        applicationId,
-        senderId: session.user.id,
-        message: message.trim(),
-      });
-    }
 
     // Get creator info for notification and email
     const [creator] = await db
@@ -105,22 +95,16 @@ export async function PATCH(
       const notificationTitles = {
         accepted: `${user.name || "A brand"} accepted your application`,
         rejected: `Application update for "${job.title}"`,
-        info_requested: `${user.name || "A brand"} has a question`,
       };
 
       const notificationMessages = {
         accepted: `Congratulations! You've been selected for "${job.title}".`,
         rejected: `The brand has decided to go in a different direction for "${job.title}".`,
-        info_requested: message || `They'd like more information about your application for "${job.title}".`,
       };
 
       await createNotification({
         userId: creator.id,
-        type: status === "accepted"
-          ? "application_accepted"
-          : status === "rejected"
-          ? "application_rejected"
-          : "application_info_requested",
+        type: status === "accepted" ? "application_accepted" : "application_rejected",
         title: notificationTitles[status],
         message: notificationMessages[status],
         link: `/dashboard/applications/${applicationId}`,
@@ -142,7 +126,6 @@ export async function PATCH(
             brandName: user.name || "A brand",
             jobTitle: job.title,
             status,
-            message: message || undefined,
             applicationId,
           });
         } catch (emailError) {
@@ -159,7 +142,7 @@ export async function PATCH(
   }
 }
 
-// GET /api/brand/jobs/[jobId]/applications/[applicationId] - Get application details with messages
+// GET /api/brand/jobs/[jobId]/applications/[applicationId] - Get application details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string; applicationId: string }> }
@@ -223,25 +206,7 @@ export async function GET(
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
-    // Get messages
-    const messages = await db
-      .select({
-        id: applicationMessages.id,
-        message: applicationMessages.message,
-        createdAt: applicationMessages.createdAt,
-        sender: {
-          id: users.id,
-          name: users.name,
-          displayName: users.displayName,
-          image: users.image,
-        },
-      })
-      .from(applicationMessages)
-      .innerJoin(users, eq(applicationMessages.senderId, users.id))
-      .where(eq(applicationMessages.applicationId, applicationId))
-      .orderBy(applicationMessages.createdAt);
-
-    return NextResponse.json({ application, messages });
+    return NextResponse.json({ application });
   } catch (error) {
     console.error("Error fetching application:", error);
     return NextResponse.json({ error: "Failed to fetch application" }, { status: 500 });

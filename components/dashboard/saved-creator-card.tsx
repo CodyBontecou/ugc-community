@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { User, MapPin, ExternalLink, X, Loader2, MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { User, MapPin, ExternalLink, X, Loader2 } from "lucide-react";
 import { NicheBadges } from "@/components/directory/niche-badges";
 
 interface SavedCreatorCardProps {
@@ -37,8 +36,6 @@ export function SavedCreatorCard({
 }: SavedCreatorCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
-  const [isStartingConversation, setIsStartingConversation] = useState(false);
-  const router = useRouter();
 
   const displayNameFinal = displayName || name;
   const location = [locationCity, locationCountry].filter(Boolean).join(", ");
@@ -56,33 +53,6 @@ export function SavedCreatorCard({
       await onRemove(creatorId);
     } finally {
       setIsRemoving(false);
-    }
-  };
-
-  const handleStartConversation = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsStartingConversation(true);
-    try {
-      const response = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "direct",
-          participantIds: [creatorId],
-        }),
-      });
-
-      if (response.ok) {
-        const { conversation } = await response.json();
-        router.push(`/dashboard/messages?conversation=${conversation.id}`);
-      } else {
-        console.error("Failed to create conversation");
-      }
-    } catch (error) {
-      console.error("Error starting conversation:", error);
-    } finally {
-      setIsStartingConversation(false);
     }
   };
 
@@ -159,18 +129,6 @@ export function SavedCreatorCard({
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          <button
-            onClick={handleStartConversation}
-            disabled={isStartingConversation}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-coral to-rose hover:opacity-90 rounded-[--radius-md] transition-opacity disabled:opacity-50"
-          >
-            {isStartingConversation ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <MessageSquare size={14} />
-            )}
-            Message
-          </button>
           {subdomain && (
             <>
               <Link

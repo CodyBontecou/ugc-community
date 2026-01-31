@@ -172,7 +172,7 @@ export default function BrandSettingsPage() {
               <div>
                 <h3 className="font-medium text-warm-gray-900">Application Updates</h3>
                 <p className="text-sm text-warm-gray-500 mt-0.5">
-                  Receive an email when there are updates to your applications (messages, status changes)
+                  Receive an email when there are updates to your applications (status changes)
                 </p>
               </div>
             </div>

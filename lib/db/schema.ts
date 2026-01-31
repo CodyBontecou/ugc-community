@@ -475,13 +475,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   jobApplications: many(jobApplications, { relationName: "jobApplications" }),
   // Notifications
   notifications: many(notifications),
-  // Application messages sent by this user
-  applicationMessages: many(applicationMessages),
-  // Messaging system
-  conversationParticipants: many(conversationParticipants),
-  sentMessages: many(messages),
-  messageReactions: many(messageReactions),
-  messageReadReceipts: many(messageReadReceipts),
   // Onboarding questionnaires
   onboardingQuestionnaires: many(onboardingQuestionnaires),
   // Portfolio generations
@@ -699,7 +692,7 @@ export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
   applications: many(jobApplications),
 }));
 
-export const jobApplicationsRelations = relations(jobApplications, ({ one, many }) => ({
+export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
   job: one(contentJobs, {
     fields: [jobApplications.jobId],
     references: [contentJobs.id],
@@ -709,7 +702,6 @@ export const jobApplicationsRelations = relations(jobApplications, ({ one, many 
     references: [users.id],
     relationName: "jobApplications",
   }),
-  messages: many(applicationMessages),
 }));
 
 // =====================================================
@@ -745,211 +737,6 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
-// =====================================================
-// Application Messages
-// =====================================================
-
-export const applicationMessages = pgTable(
-  "application_messages",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    applicationId: uuid("application_id")
-      .notNull()
-      .references(() => jobApplications.id, { onDelete: "cascade" }),
-    senderId: text("sender_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    message: text("message").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("application_messages_application_id_idx").on(table.applicationId),
-    index("application_messages_created_at_idx").on(table.createdAt),
-  ]
-);
-
-export const applicationMessagesRelations = relations(applicationMessages, ({ one }) => ({
-  application: one(jobApplications, {
-    fields: [applicationMessages.applicationId],
-    references: [jobApplications.id],
-  }),
-  sender: one(users, {
-    fields: [applicationMessages.senderId],
-    references: [users.id],
-  }),
-}));
-
-// =====================================================
-// Messaging System
-// =====================================================
-
-export const conversations = pgTable(
-  "conversations",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    type: text("type").notNull(), // 'direct' | 'group'
-    name: text("name"), // Optional - for group conversations
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    metadata: jsonb("metadata").$type<ConversationMetadata>().default({}),
-    lastMessageAt: timestamp("last_message_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("conversations_created_by_idx").on(table.createdBy),
-    index("conversations_last_message_at_idx").on(table.lastMessageAt),
-  ]
-);
-
-export const conversationParticipants = pgTable(
-  "conversation_participants",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    conversationId: uuid("conversation_id")
-      .notNull()
-      .references(() => conversations.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    role: text("role").notNull().default("member"), // 'owner' | 'member'
-    joinedAt: timestamp("joined_at").notNull().defaultNow(),
-    leftAt: timestamp("left_at"), // Soft delete - when user left the conversation
-    lastReadAt: timestamp("last_read_at"), // For read receipts/unread count
-    mutedUntil: timestamp("muted_until"), // Mute notifications until this time
-  },
-  (table) => [
-    index("conversation_participants_conversation_id_idx").on(table.conversationId),
-    index("conversation_participants_user_id_idx").on(table.userId),
-    index("conversation_participants_user_active_idx").on(table.userId, table.leftAt),
-    unique("conversation_participants_unique").on(table.conversationId, table.userId),
-  ]
-);
-
-export const messages = pgTable(
-  "messages",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    conversationId: uuid("conversation_id")
-      .notNull()
-      .references(() => conversations.id, { onDelete: "cascade" }),
-    senderId: text("sender_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    content: text("content").notNull(),
-    type: text("type").notNull().default("text"), // 'text' | 'system'
-    replyToId: uuid("reply_to_id"), // FK to messages.id (self-ref in migration)
-    metadata: jsonb("metadata").$type<MessageMetadata>().default({}),
-    editedAt: timestamp("edited_at"),
-    deletedAt: timestamp("deleted_at"), // Soft delete
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("messages_conversation_created_idx").on(table.conversationId, table.createdAt),
-    index("messages_sender_id_idx").on(table.senderId),
-  ]
-);
-
-export const messageReactions = pgTable(
-  "message_reactions",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    messageId: uuid("message_id")
-      .notNull()
-      .references(() => messages.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    emoji: text("emoji").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("message_reactions_message_id_idx").on(table.messageId),
-    unique("message_reactions_unique").on(table.messageId, table.userId, table.emoji),
-  ]
-);
-
-export const messageReadReceipts = pgTable(
-  "message_read_receipts",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    messageId: uuid("message_id")
-      .notNull()
-      .references(() => messages.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    readAt: timestamp("read_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("message_read_receipts_message_id_idx").on(table.messageId),
-    index("message_read_receipts_user_id_idx").on(table.userId),
-    unique("message_read_receipts_unique").on(table.messageId, table.userId),
-  ]
-);
-
-// Messaging Relations
-export const conversationsRelations = relations(conversations, ({ one, many }) => ({
-  createdByUser: one(users, {
-    fields: [conversations.createdBy],
-    references: [users.id],
-  }),
-  participants: many(conversationParticipants),
-  messages: many(messages),
-}));
-
-export const conversationParticipantsRelations = relations(conversationParticipants, ({ one }) => ({
-  conversation: one(conversations, {
-    fields: [conversationParticipants.conversationId],
-    references: [conversations.id],
-  }),
-  user: one(users, {
-    fields: [conversationParticipants.userId],
-    references: [users.id],
-  }),
-}));
-
-export const messagesRelations = relations(messages, ({ one, many }) => ({
-  conversation: one(conversations, {
-    fields: [messages.conversationId],
-    references: [conversations.id],
-  }),
-  sender: one(users, {
-    fields: [messages.senderId],
-    references: [users.id],
-  }),
-  replyTo: one(messages, {
-    fields: [messages.replyToId],
-    references: [messages.id],
-    relationName: "messageReplies",
-  }),
-  replies: many(messages, { relationName: "messageReplies" }),
-  reactions: many(messageReactions),
-  readReceipts: many(messageReadReceipts),
-}));
-
-export const messageReactionsRelations = relations(messageReactions, ({ one }) => ({
-  message: one(messages, {
-    fields: [messageReactions.messageId],
-    references: [messages.id],
-  }),
-  user: one(users, {
-    fields: [messageReactions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const messageReadReceiptsRelations = relations(messageReadReceipts, ({ one }) => ({
-  message: one(messages, {
-    fields: [messageReadReceipts.messageId],
-    references: [messages.id],
-  }),
-  user: one(users, {
-    fields: [messageReadReceipts.userId],
-    references: [users.id],
-  }),
-}));
 
 // =====================================================
 // Types
@@ -1013,19 +800,6 @@ export type NotificationMetadata = {
   messageId?: string;
 };
 
-export type ConversationMetadata = {
-  description?: string;
-  avatarUrl?: string;
-};
-
-export type MessageMetadata = {
-  attachments?: Array<{
-    type: string;
-    url: string;
-    name: string;
-    size?: number;
-  }>;
-};
 
 // Export types for use in application
 export type User = typeof users.$inferSelect;
@@ -1058,18 +832,6 @@ export type JobApplication = typeof jobApplications.$inferSelect;
 export type NewJobApplication = typeof jobApplications.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
-export type ApplicationMessage = typeof applicationMessages.$inferSelect;
-export type NewApplicationMessage = typeof applicationMessages.$inferInsert;
-export type Conversation = typeof conversations.$inferSelect;
-export type NewConversation = typeof conversations.$inferInsert;
-export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
-export type NewConversationParticipant = typeof conversationParticipants.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type NewMessage = typeof messages.$inferInsert;
-export type MessageReaction = typeof messageReactions.$inferSelect;
-export type NewMessageReaction = typeof messageReactions.$inferInsert;
-export type MessageReadReceipt = typeof messageReadReceipts.$inferSelect;
-export type NewMessageReadReceipt = typeof messageReadReceipts.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
 export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
 export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
