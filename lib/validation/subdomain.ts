@@ -193,7 +193,7 @@ export function validateSubdomain(input: string): SubdomainValidationResult {
   if (!parseResult.success) {
     return {
       valid: false,
-      error: parseResult.error.errors[0]?.message || "Invalid subdomain format",
+      error: parseResult.error.issues[0]?.message || "Invalid subdomain format",
     };
   }
 
