@@ -497,3 +497,151 @@ export async function getBrandJobById(jobId: string, brandId: string) {
     },
   };
 }
+
+// Admin functions for viewing all applications
+export interface AdminApplicationFilters {
+  status?: string;
+  creatorId?: string;
+  jobId?: string;
+  search?: string;
+}
+
+export async function listAllApplications(
+  filters: AdminApplicationFilters = {},
+  limit = 50,
+  offset = 0
+) {
+  const conditions = [];
+
+  if (filters.status) {
+    conditions.push(eq(jobApplications.status, filters.status));
+  }
+
+  if (filters.creatorId) {
+    conditions.push(eq(jobApplications.creatorId, filters.creatorId));
+  }
+
+  if (filters.jobId) {
+    conditions.push(eq(jobApplications.jobId, filters.jobId));
+  }
+
+  if (filters.search) {
+    conditions.push(
+      or(
+        ilike(contentJobs.title, `%${filters.search}%`),
+        ilike(users.name, `%${filters.search}%`),
+        ilike(users.displayName, `%${filters.search}%`)
+      )
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const applications = await db
+    .select({
+      id: jobApplications.id,
+      jobId: jobApplications.jobId,
+      creatorId: jobApplications.creatorId,
+      status: jobApplications.status,
+      note: jobApplications.note,
+      createdAt: jobApplications.createdAt,
+      updatedAt: jobApplications.updatedAt,
+      job: {
+        id: contentJobs.id,
+        title: contentJobs.title,
+        description: contentJobs.description,
+        compensationType: contentJobs.compensationType,
+        compensationDetails: contentJobs.compensationDetails,
+        status: contentJobs.status,
+      },
+      creator: {
+        id: users.id,
+        name: users.name,
+        displayName: users.displayName,
+        image: users.image,
+        subdomain: users.subdomain,
+      },
+    })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
+    .innerJoin(users, eq(jobApplications.creatorId, users.id))
+    .where(whereClause)
+    .orderBy(desc(jobApplications.updatedAt))
+    .limit(limit)
+    .offset(offset);
+
+  // Get total count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
+    .innerJoin(users, eq(jobApplications.creatorId, users.id))
+    .where(whereClause);
+
+  return {
+    applications,
+    total: countResult[0]?.count || 0,
+    limit,
+    offset,
+  };
+}
+
+export async function getCreatorApplicationsAdmin(creatorId: string) {
+  const applications = await db
+    .select({
+      id: jobApplications.id,
+      jobId: jobApplications.jobId,
+      status: jobApplications.status,
+      note: jobApplications.note,
+      createdAt: jobApplications.createdAt,
+      updatedAt: jobApplications.updatedAt,
+      job: {
+        id: contentJobs.id,
+        title: contentJobs.title,
+        description: contentJobs.description,
+        compensationType: contentJobs.compensationType,
+        compensationDetails: contentJobs.compensationDetails,
+        status: contentJobs.status,
+      },
+    })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
+    .where(eq(jobApplications.creatorId, creatorId))
+    .orderBy(desc(jobApplications.updatedAt));
+
+  // Get brand info for each job
+  const applicationsWithBrand = await Promise.all(
+    applications.map(async (app) => {
+      const [job] = await db
+        .select({ brandId: contentJobs.brandId })
+        .from(contentJobs)
+        .where(eq(contentJobs.id, app.job.id))
+        .limit(1);
+
+      let brand = null;
+      if (job?.brandId) {
+        const [brandUser] = await db
+          .select({
+            id: users.id,
+            name: users.name,
+            displayName: users.displayName,
+            image: users.image,
+          })
+          .from(users)
+          .where(eq(users.id, job.brandId))
+          .limit(1);
+        brand = brandUser || null;
+      }
+
+      return {
+        ...app,
+        job: {
+          ...app.job,
+          brand,
+        },
+      };
+    })
+  );
+
+  return applicationsWithBrand;
+}

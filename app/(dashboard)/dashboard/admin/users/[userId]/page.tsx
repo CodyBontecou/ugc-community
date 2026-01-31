@@ -43,6 +43,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
+import { ApplicationStatusBadge } from "@/components/jobs/ApplicationStatusBadge";
+import { formatDistanceToNow } from "date-fns";
+import {
+  COMPENSATION_TYPE_LABELS,
+  type CompensationType,
+  type ApplicationStatus,
+} from "@/lib/jobs/constants";
 
 interface UserDetails {
   id: string;
@@ -157,6 +164,29 @@ interface StatusChangedByUser {
   id: string;
   name: string;
   email: string;
+}
+
+interface UserApplication {
+  id: string;
+  jobId: string;
+  status: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  job: {
+    id: string;
+    title: string;
+    description: string;
+    compensationType: string;
+    compensationDetails: string | null;
+    status: string;
+    brand: {
+      id: string;
+      name: string | null;
+      displayName: string | null;
+      image: string | null;
+    } | null;
+  };
 }
 
 interface TimelineEvent {
@@ -352,6 +382,10 @@ export default function UserDetailPage() {
   const [roleError, setRoleError] = useState<string | null>(null);
   const [roleSuccess, setRoleSuccess] = useState(false);
 
+  // Job applications state
+  const [applications, setApplications] = useState<UserApplication[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -434,6 +468,28 @@ export default function UserDetailPage() {
       fetchRepoLinkStatus();
     }
   }, [user?.vercelProjectId, user?.githubRepoFullName, userId]);
+
+  // Fetch job applications for this user
+  useEffect(() => {
+    async function fetchApplications() {
+      if (!user) return;
+
+      setLoadingApplications(true);
+      try {
+        const response = await fetch(`/api/admin/users/${userId}/applications`);
+        if (response.ok) {
+          const data = await response.json();
+          setApplications(data.applications || []);
+        }
+      } catch {
+        // Silently fail - applications just won't be shown
+      } finally {
+        setLoadingApplications(false);
+      }
+    }
+
+    fetchApplications();
+  }, [user, userId]);
 
   // Fetch repositories when dropdown opens
   const fetchRepos = async (search = "") => {
@@ -1217,6 +1273,114 @@ export default function UserDetailPage() {
 
       {/* Milestone Progress */}
       <UserProgressionPath userId={userId} />
+
+      {/* Job Applications Section */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Briefcase size={20} className="text-warm-gray-600" />
+            <h3 className="text-lg font-semibold text-warm-gray-900">
+              Job Applications ({applications.length})
+            </h3>
+          </div>
+          <Link
+            href={`/dashboard/admin/applications?creatorId=${userId}`}
+            className="text-sm text-coral hover:text-coral/80 flex items-center gap-1"
+          >
+            View all
+            <ExternalLink size={14} />
+          </Link>
+        </div>
+
+        {loadingApplications ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 size={24} className="animate-spin text-warm-gray-400" />
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-warm-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Briefcase size={20} className="text-warm-gray-400" />
+            </div>
+            <p className="text-warm-gray-500 text-sm">No job applications yet</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-warm-gray-200">
+                  <th className="text-left text-xs font-semibold text-warm-gray-600 uppercase tracking-wider pb-3">
+                    Job
+                  </th>
+                  <th className="text-left text-xs font-semibold text-warm-gray-600 uppercase tracking-wider pb-3 hidden sm:table-cell">
+                    Brand
+                  </th>
+                  <th className="text-left text-xs font-semibold text-warm-gray-600 uppercase tracking-wider pb-3">
+                    Status
+                  </th>
+                  <th className="text-left text-xs font-semibold text-warm-gray-600 uppercase tracking-wider pb-3 hidden md:table-cell">
+                    Applied
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-gray-100">
+                {applications.slice(0, 5).map((app) => {
+                  const brandName =
+                    app.job.brand?.displayName ||
+                    app.job.brand?.name ||
+                    "Unknown Brand";
+
+                  return (
+                    <tr key={app.id} className="hover:bg-warm-gray-50">
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-col gap-1">
+                          <Link
+                            href={`/dashboard/admin/jobs/${app.jobId}`}
+                            className="font-medium text-warm-gray-900 hover:text-coral transition-colors text-sm"
+                          >
+                            {app.job.title}
+                          </Link>
+                          <span className="text-xs text-warm-gray-500">
+                            {COMPENSATION_TYPE_LABELS[
+                              app.job.compensationType as CompensationType
+                            ] || app.job.compensationType}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 hidden sm:table-cell">
+                        <span className="text-sm text-warm-gray-600">
+                          {brandName}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <ApplicationStatusBadge
+                          status={app.status as ApplicationStatus}
+                        />
+                      </td>
+                      <td className="py-3 hidden md:table-cell">
+                        <span className="text-sm text-warm-gray-500">
+                          {formatDistanceToNow(new Date(app.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {applications.length > 5 && (
+              <div className="pt-4 border-t border-warm-gray-100 mt-4">
+                <Link
+                  href={`/dashboard/admin/applications?creatorId=${userId}`}
+                  className="text-sm text-coral hover:text-coral/80"
+                >
+                  View all {applications.length} applications →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* User Role Management */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
