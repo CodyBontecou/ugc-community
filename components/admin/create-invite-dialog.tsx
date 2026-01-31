@@ -272,7 +272,7 @@ export function CreateInviteDialog({
               </div>
             )}
 
-            {email && role === "creator" && (
+            {email && (
               <div className="space-y-2 pt-2 border-t border-warm-gray-100">
                 <p className="text-xs text-warm-gray-500">
                   Social media handles (optional)
