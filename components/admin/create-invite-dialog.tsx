@@ -24,8 +24,7 @@ export function CreateInviteDialog({
   const [emailSent, setEmailSent] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Add to waitlist option
-  const [addToWaitlist, setAddToWaitlist] = useState(false);
+  // Waitlist + social handles (auto-added when email provided)
   const [waitlistAdded, setWaitlistAdded] = useState(false);
   const [instagramHandle, setInstagramHandle] = useState("");
   const [tiktokHandle, setTiktokHandle] = useState("");
@@ -41,8 +40,8 @@ export function CreateInviteDialog({
     setError(null);
 
     try {
-      // If adding to waitlist, create waitlist entry first
-      if (addToWaitlist && email) {
+      // When email is provided, add to waitlist first (replicates organic signup)
+      if (email) {
         const waitlistRes = await fetch("/api/admin/waitlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,9 +58,13 @@ export function CreateInviteDialog({
 
         if (!waitlistRes.ok) {
           const data = await waitlistRes.json();
-          throw new Error(data.error || "Failed to add to waitlist");
+          // If already in waitlist, that's fine - continue with invite
+          if (data.error !== "Email already exists in waitlist") {
+            throw new Error(data.error || "Failed to add to waitlist");
+          }
+        } else {
+          setWaitlistAdded(true);
         }
-        setWaitlistAdded(true);
       }
 
       // Create the invite
@@ -85,9 +88,8 @@ export function CreateInviteDialog({
       setCreatedUrl(data.invite.url);
       setEmailSent(data.invite.emailSent);
 
-      // If we added to waitlist, mark it as invited
-      if (addToWaitlist && email) {
-        // Get the waitlist entry ID and mark as invited
+      // Mark waitlist entry as invited
+      if (email) {
         const waitlistListRes = await fetch("/api/admin/waitlist");
         if (waitlistListRes.ok) {
           const waitlistData = await waitlistListRes.json();
@@ -129,7 +131,6 @@ export function CreateInviteDialog({
     setCreatedUrl(null);
     setEmailSent(false);
     setCopied(false);
-    setAddToWaitlist(false);
     setWaitlistAdded(false);
     setInstagramHandle("");
     setTiktokHandle("");
@@ -271,68 +272,48 @@ export function CreateInviteDialog({
               </div>
             )}
 
-            {email && (
-              <div className="space-y-3 pt-2 border-t border-warm-gray-100">
-                <div className="flex items-center gap-2">
+            {email && role === "creator" && (
+              <div className="space-y-2 pt-2 border-t border-warm-gray-100">
+                <p className="text-xs text-warm-gray-500">
+                  Social media handles (optional)
+                </p>
+                <div className="grid grid-cols-2 gap-2">
                   <input
-                    id="addToWaitlist"
-                    type="checkbox"
-                    checked={addToWaitlist}
-                    onChange={(e) => setAddToWaitlist(e.target.checked)}
-                    className="w-4 h-4 rounded border-warm-gray-300 text-coral focus:ring-coral/20"
+                    type="text"
+                    placeholder="Instagram"
+                    value={instagramHandle}
+                    onChange={(e) => setInstagramHandle(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
                   />
-                  <label
-                    htmlFor="addToWaitlist"
-                    className="text-sm text-warm-gray-700"
-                  >
-                    Add to waitlist (replicates signup)
-                  </label>
+                  <input
+                    type="text"
+                    placeholder="TikTok"
+                    value={tiktokHandle}
+                    onChange={(e) => setTiktokHandle(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                  />
+                  <input
+                    type="text"
+                    placeholder="YouTube"
+                    value={youtubeHandle}
+                    onChange={(e) => setYoutubeHandle(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Facebook"
+                    value={facebookHandle}
+                    onChange={(e) => setFacebookHandle(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                  />
+                  <input
+                    type="text"
+                    placeholder="X (Twitter)"
+                    value={twitterHandle}
+                    onChange={(e) => setTwitterHandle(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
+                  />
                 </div>
-
-                {addToWaitlist && role === "creator" && (
-                  <div className="space-y-3 pl-6">
-                    <p className="text-xs text-warm-gray-500">
-                      Optional: Add social media handles
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder="Instagram"
-                        value={instagramHandle}
-                        onChange={(e) => setInstagramHandle(e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                      />
-                      <input
-                        type="text"
-                        placeholder="TikTok"
-                        value={tiktokHandle}
-                        onChange={(e) => setTiktokHandle(e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                      />
-                      <input
-                        type="text"
-                        placeholder="YouTube"
-                        value={youtubeHandle}
-                        onChange={(e) => setYoutubeHandle(e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Facebook"
-                        value={facebookHandle}
-                        onChange={(e) => setFacebookHandle(e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                      />
-                      <input
-                        type="text"
-                        placeholder="X (Twitter)"
-                        value={twitterHandle}
-                        onChange={(e) => setTwitterHandle(e.target.value)}
-                        className="px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
