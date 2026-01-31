@@ -83,6 +83,9 @@ export const users = pgTable(
     monthlyEditsAllowance: integer("monthly_edits_allowance").notNull().default(0),
     editsResetMonth: text("edits_reset_month"), // Format: '2026-01'
     unlimitedEditsUntil: timestamp("unlimited_edits_until"),
+    // Notification preferences
+    emailOnJobApplication: boolean("email_on_job_application").notNull().default(true),
+    emailOnApplicationUpdate: boolean("email_on_application_update").notNull().default(true),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -412,6 +415,10 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   brandJobs: many(contentJobs, { relationName: "brandJobs" }),
   // Job applications (creator perspective)
   jobApplications: many(jobApplications, { relationName: "jobApplications" }),
+  // Notifications
+  notifications: many(notifications),
+  // Application messages sent by this user
+  applicationMessages: many(applicationMessages),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -606,7 +613,7 @@ export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
   applications: many(jobApplications),
 }));
 
-export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
+export const jobApplicationsRelations = relations(jobApplications, ({ one, many }) => ({
   job: one(contentJobs, {
     fields: [jobApplications.jobId],
     references: [contentJobs.id],
@@ -615,6 +622,74 @@ export const jobApplicationsRelations = relations(jobApplications, ({ one }) => 
     fields: [jobApplications.creatorId],
     references: [users.id],
     relationName: "jobApplications",
+  }),
+  messages: many(applicationMessages),
+}));
+
+// =====================================================
+// Notifications
+// =====================================================
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(), // 'job_application' | 'application_accepted' | 'application_rejected' | 'application_info_requested' | 'new_message'
+    title: text("title").notNull(),
+    message: text("message"),
+    link: text("link"),
+    metadata: jsonb("metadata").$type<NotificationMetadata>().default({}),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("notifications_user_id_idx").on(table.userId),
+    index("notifications_user_read_idx").on(table.userId, table.readAt),
+    index("notifications_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+// =====================================================
+// Application Messages
+// =====================================================
+
+export const applicationMessages = pgTable(
+  "application_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    applicationId: uuid("application_id")
+      .notNull()
+      .references(() => jobApplications.id, { onDelete: "cascade" }),
+    senderId: text("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("application_messages_application_id_idx").on(table.applicationId),
+    index("application_messages_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const applicationMessagesRelations = relations(applicationMessages, ({ one }) => ({
+  application: one(jobApplications, {
+    fields: [applicationMessages.applicationId],
+    references: [jobApplications.id],
+  }),
+  sender: one(users, {
+    fields: [applicationMessages.senderId],
+    references: [users.id],
   }),
 }));
 
@@ -669,6 +744,17 @@ export type HashtagMentionMetadata = {
   rawData?: Record<string, unknown>; // original webhook payload
 };
 
+export type NotificationMetadata = {
+  jobId?: string;
+  jobTitle?: string;
+  applicationId?: string;
+  creatorId?: string;
+  creatorName?: string;
+  brandId?: string;
+  brandName?: string;
+  messageId?: string;
+};
+
 // Export types for use in application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -698,3 +784,7 @@ export type ContentJob = typeof contentJobs.$inferSelect;
 export type NewContentJob = typeof contentJobs.$inferInsert;
 export type JobApplication = typeof jobApplications.$inferSelect;
 export type NewJobApplication = typeof jobApplications.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+export type ApplicationMessage = typeof applicationMessages.$inferSelect;
+export type NewApplicationMessage = typeof applicationMessages.$inferInsert;

@@ -27,6 +27,7 @@ export async function GET(
     return NextResponse.json({
       ...result,
       applications,
+      currentUserId: session.user.id,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {

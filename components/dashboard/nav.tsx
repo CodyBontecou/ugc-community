@@ -10,9 +10,11 @@ import {
   ChevronDown,
   User,
   Shield,
+  Settings,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface DashboardNavProps {
   user: {
@@ -44,7 +46,7 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
   };
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-4">
       {/* Navigation Links */}
       <nav className="hidden md:flex items-center gap-1">
         {allNavItems.map((item) => (
@@ -58,6 +60,9 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
           </Link>
         ))}
       </nav>
+
+      {/* Notification Bell */}
+      <NotificationBell />
 
       {/* User Menu */}
       <div className="relative">
@@ -127,6 +132,17 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
                   <User size={16} />
                   View Profile
                 </Link>
+
+                {role === "brand" && (
+                  <Link
+                    href="/dashboard/brand-settings"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
+                  >
+                    <Settings size={16} />
+                    Settings
+                  </Link>
+                )}
 
                 <button
                   onClick={handleSignOut}

@@ -739,3 +739,317 @@ export async function sendMilestoneEarnedEmail(params: MilestoneEarnedParams) {
     throw error;
   }
 }
+
+// =====================================================
+// Job Application Emails
+// =====================================================
+
+interface JobApplicationEmailParams {
+  brandName: string;
+  brandEmail: string;
+  creatorName: string;
+  creatorSubdomain?: string | null;
+  jobTitle: string;
+  jobId: string;
+}
+
+/**
+ * Notify brand when a creator applies to their job
+ */
+export async function sendJobApplicationEmail(params: JobApplicationEmailParams) {
+  const { brandName, brandEmail, creatorName, creatorSubdomain, jobTitle, jobId } = params;
+
+  const firstName = brandName.split(" ")[0] || "there";
+  const applicationsUrl = `https://ugc.community/dashboard/brand-jobs/${jobId}?tab=applications`;
+  const portfolioUrl = creatorSubdomain
+    ? `https://${creatorSubdomain}.ugc.community`
+    : null;
+
+  const { error } = await getResend().emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: brandEmail,
+    subject: `New application for "${jobTitle}"`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFFBF9; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBF9;">
+    <tr>
+      <td align="center" style="padding: 48px 20px;">
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.08);">
+
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #FF9A8B 0%, #FF6B95 50%, #A855F7 100%); border-radius: 24px 24px 0 0;"></td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 48px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
+                    ugc.community
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <div style="font-size: 48px; line-height: 1;">&#128587;</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 24px 40px 0 40px;">
+              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; line-height: 1.2; color: #1A1614;">
+                New Application
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Hey ${firstName}, <strong style="color: #1A1614;">${creatorName}</strong> is interested in your job "${jobTitle}".
+              </p>
+            </td>
+          </tr>
+
+          ${portfolioUrl ? `
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FAF7F5; border-radius: 16px; border: 1px solid #E8E2DD;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; color: #A69B91; text-transform: uppercase; letter-spacing: 0.05em;">Creator Portfolio</p>
+                    <a href="${portfolioUrl}" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #FF6B95; text-decoration: none;">${portfolioUrl}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ` : ""}
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius: 50px; background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%); box-shadow: 0 4px 16px rgba(255, 107, 149, 0.3);">
+                    <a href="${applicationsUrl}" style="display: inline-block; padding: 14px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;">
+                      View Applications
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 40px 48px 40px;">
+              <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1A1614;">
+                — The ugc.community team
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px;">
+          <tr>
+            <td align="center" style="padding: 28px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #A69B91;">
+                You're receiving this because you have a job listing on ugc.community. <a href="https://ugc.community/dashboard/brand-settings" style="color: #A69B91;">Manage preferences</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    console.error("Failed to send job application email:", error);
+    throw error;
+  }
+}
+
+interface ApplicationStatusEmailParams {
+  creatorName: string;
+  creatorEmail: string;
+  brandName: string;
+  jobTitle: string;
+  status: "accepted" | "rejected" | "info_requested";
+  message?: string;
+  applicationId: string;
+}
+
+/**
+ * Notify creator when brand updates their application status
+ */
+export async function sendApplicationStatusEmail(params: ApplicationStatusEmailParams) {
+  const { creatorName, creatorEmail, brandName, jobTitle, status, message, applicationId } = params;
+
+  const firstName = creatorName.split(" ")[0] || "there";
+  const applicationUrl = `https://ugc.community/dashboard/applications/${applicationId}`;
+
+  const statusConfig = {
+    accepted: {
+      emoji: "&#127881;",
+      heading: "Great news!",
+      body: `<strong style="color: #1A1614;">${brandName}</strong> has accepted your application for "${jobTitle}".`,
+      buttonText: "View Details",
+      buttonBg: "background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);",
+    },
+    rejected: {
+      emoji: "&#128172;",
+      heading: "Application Update",
+      body: `<strong style="color: #1A1614;">${brandName}</strong> has decided to go in a different direction for "${jobTitle}". Don't worry - there are plenty of other opportunities!`,
+      buttonText: "Browse Jobs",
+      buttonBg: "background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);",
+    },
+    info_requested: {
+      emoji: "&#128172;",
+      heading: "Message from ${brandName}",
+      body: `<strong style="color: #1A1614;">${brandName}</strong> has a question about your application for "${jobTitle}".`,
+      buttonText: "Reply Now",
+      buttonBg: "background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%);",
+    },
+  };
+
+  const config = statusConfig[status];
+  const actualHeading = config.heading.replace("${brandName}", brandName);
+  const buttonUrl = status === "rejected" ? "https://ugc.community/jobs" : applicationUrl;
+
+  const { error } = await getResend().emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: creatorEmail,
+    subject: status === "accepted"
+      ? `Congratulations! You've been accepted for "${jobTitle}"`
+      : status === "info_requested"
+      ? `${brandName} sent you a message`
+      : `Update on your application for "${jobTitle}"`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFFBF9; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBF9;">
+    <tr>
+      <td align="center" style="padding: 48px 20px;">
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.08);">
+
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #FF9A8B 0%, #FF6B95 50%, #A855F7 100%); border-radius: 24px 24px 0 0;"></td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 48px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
+                    ugc.community
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <div style="font-size: 48px; line-height: 1;">${config.emoji}</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 24px 40px 0 40px;">
+              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; line-height: 1.2; color: #1A1614;">
+                ${actualHeading}
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Hey ${firstName}, ${config.body}
+              </p>
+            </td>
+          </tr>
+
+          ${message ? `
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FAF7F5; border-radius: 16px; border: 1px solid #E8E2DD;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; color: #A69B91; text-transform: uppercase; letter-spacing: 0.05em;">Message from ${brandName}</p>
+                    <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #453D37; white-space: pre-wrap;">${message}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ` : ""}
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius: 50px; ${config.buttonBg} box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);">
+                    <a href="${buttonUrl}" style="display: inline-block; padding: 14px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;">
+                      ${config.buttonText}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 40px 48px 40px;">
+              <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1A1614;">
+                — The ugc.community team
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px;">
+          <tr>
+            <td align="center" style="padding: 28px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #A69B91;">
+                You're receiving this because you applied to a job on ugc.community
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    console.error("Failed to send application status email:", error);
+    throw error;
+  }
+}

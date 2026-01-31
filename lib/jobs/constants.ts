@@ -45,14 +45,23 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
 };
 
 // Application statuses
-export const APPLICATION_STATUSES = ["interested", "applied", "accepted", "rejected"] as const;
+export const APPLICATION_STATUSES = ["interested", "applied", "accepted", "rejected", "info_requested"] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   interested: "Interested",
   applied: "Applied",
   accepted: "Accepted",
-  rejected: "Rejected",
+  rejected: "Declined",
+  info_requested: "Info Requested",
+};
+
+export const APPLICATION_STATUS_COLORS: Record<ApplicationStatus, { bg: string; text: string }> = {
+  interested: { bg: "bg-blue-50", text: "text-blue-700" },
+  applied: { bg: "bg-blue-50", text: "text-blue-700" },
+  accepted: { bg: "bg-green-50", text: "text-green-700" },
+  rejected: { bg: "bg-warm-gray-50", text: "text-warm-gray-500" },
+  info_requested: { bg: "bg-amber-50", text: "text-amber-700" },
 };
 
 // Default pagination
