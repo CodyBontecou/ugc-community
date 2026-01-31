@@ -1,15 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError, createAuthMiddleware } from "better-auth/api";
-import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
-import {
-  validateInviteForEmail,
-  hasValidInviteForEmail,
-  markInviteAsUsed,
-  getInviteById,
-} from "@/lib/invites";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -30,121 +22,6 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       enabled: !!process.env.GOOGLE_CLIENT_ID,
-    },
-  },
-  hooks: {
-    before: createAuthMiddleware(async (ctx) => {
-      // Validate invite token on email/password sign-up
-      if (ctx.path === "/sign-up/email") {
-        // Get invite token from custom header
-        const inviteToken = ctx.headers?.get("x-invite-token");
-        const email = ctx.body?.email;
-
-        if (!inviteToken) {
-          throw new APIError("BAD_REQUEST", {
-            message: "An invite is required to sign up",
-          });
-        }
-
-        if (!email) {
-          throw new APIError("BAD_REQUEST", {
-            message: "Email is required",
-          });
-        }
-
-        const result = await validateInviteForEmail(inviteToken, email);
-
-        if (!result.valid) {
-          throw new APIError("BAD_REQUEST", {
-            message: result.error || "Invalid or expired invite",
-          });
-        }
-
-        // Store invite ID in context for use in databaseHooks
-        ctx.context.pendingInviteId = result.invite?.id;
-      }
-    }),
-  },
-  databaseHooks: {
-    user: {
-      create: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        before: async (user, ctx: any) => {
-          // For email/password sign-ups, the invite was already validated in hooks.before
-          // Check if we have a validated invite ID in the context
-          if (ctx?.context?.pendingInviteId) {
-            // Already validated via hooks.before, allow the sign-up
-            return;
-          }
-
-          // For OAuth sign-ups, check if the email has a valid invite
-          const email = user.email;
-          if (!email) {
-            return false; // Reject sign-up without email
-          }
-
-          // Check if user already exists (this is a sign-in, not sign-up)
-          const existingUser = await db.query.users.findFirst({
-            where: eq(schema.users.email, email),
-          });
-
-          if (existingUser) {
-            // Allow sign-in for existing users
-            return;
-          }
-
-          // For new OAuth users, check for a valid email-specific invite
-          const invite = await hasValidInviteForEmail(email);
-          if (!invite) {
-            // Store email in context for the error handler
-            if (ctx?.context) {
-              ctx.context.rejectedEmail = email;
-            }
-            // No valid invite for this email - reject the sign-up
-            return false;
-          }
-
-          // Store invite ID for after hook
-          if (ctx?.context) {
-            ctx.context.pendingInviteId = invite.id;
-          }
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        after: async (user, ctx: any) => {
-          // Mark invite as used after successful user creation
-          const pendingInviteId = ctx?.context?.pendingInviteId;
-          let inviteRole: string | null = null;
-
-          if (pendingInviteId) {
-            // Get the invite to read its role
-            const invite = await getInviteById(pendingInviteId);
-            if (invite) {
-              inviteRole = invite.role;
-              // Mark the validated invite as used
-              await markInviteAsUsed(pendingInviteId, user.id);
-            }
-          } else {
-            // Fallback: find invite by email
-            const email = user.email;
-            if (email) {
-              const invite = await hasValidInviteForEmail(email);
-              if (invite) {
-                inviteRole = invite.role;
-                await markInviteAsUsed(invite.id, user.id);
-              }
-            }
-          }
-
-          // Set the user's role based on the invite role
-          if (inviteRole && inviteRole !== "creator") {
-            // Update the user's role to match the invite
-            await db
-              .update(schema.users)
-              .set({ role: inviteRole })
-              .where(eq(schema.users.id, user.id));
-          }
-        },
-      },
     },
   },
   user: {
