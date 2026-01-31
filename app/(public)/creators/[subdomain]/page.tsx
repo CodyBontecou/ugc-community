@@ -36,7 +36,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { subdomain } = await params;
-  const creator = await getCreatorBySubdomain(subdomain);
+
+  // Check if user is logged in to determine visibility
+  const session = await getServerSession();
+  const isLoggedIn = !!session;
+
+  const creator = await getCreatorBySubdomain(subdomain, { showAll: isLoggedIn });
 
   if (!creator) {
     return {
