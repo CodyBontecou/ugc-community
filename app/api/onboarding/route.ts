@@ -9,7 +9,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { Octokit } from "@octokit/rest";
-import { createPortfolioRepo } from "@/lib/github/push-portfolio";
+import { createPortfolioRepo, waitForRepoInitialized } from "@/lib/github/push-portfolio";
 import { inngest } from "@/lib/inngest/client";
 import {
   validateSubdomain,
@@ -172,6 +172,9 @@ export async function POST(request: NextRequest) {
 
         repoFullName = repoResult.repoFullName;
         repoId = String(repoResult.repoId);
+
+        // Wait for repo to be initialized (auto_init creates commit asynchronously)
+        await waitForRepoInitialized(octokit, repoFullName);
 
         // Update user with repo info
         await db
