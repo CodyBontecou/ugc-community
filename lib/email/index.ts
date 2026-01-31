@@ -12,6 +12,59 @@ function getResend(): Resend {
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@ugc.community";
 const FROM_NAME = process.env.FROM_NAME || "ugc.community";
 
+interface WaitlistNotificationParams {
+  email: string;
+  userType: string;
+  instagramHandle?: string | null;
+  tiktokHandle?: string | null;
+  youtubeHandle?: string | null;
+  facebookHandle?: string | null;
+  twitterHandle?: string | null;
+}
+
+export async function sendWaitlistNotification(params: WaitlistNotificationParams) {
+  const { email, userType, instagramHandle, tiktokHandle, youtubeHandle, facebookHandle, twitterHandle } = params;
+
+  const socialHandles = [
+    instagramHandle && `Instagram: @${instagramHandle}`,
+    tiktokHandle && `TikTok: @${tiktokHandle}`,
+    youtubeHandle && `YouTube: ${youtubeHandle}`,
+    facebookHandle && `Facebook: ${facebookHandle}`,
+    twitterHandle && `X/Twitter: @${twitterHandle}`,
+  ].filter(Boolean);
+
+  const socialsHtml = socialHandles.length > 0
+    ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #625850;">${socialHandles.join("<br>")}</p>`
+    : "";
+
+  const { error } = await getResend().emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: "cody@isolated.tech",
+    subject: `New waitlist signup: ${email}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 500px; margin: 0 auto; background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="margin: 0 0 16px 0; color: #1A1614;">New Waitlist Signup</h2>
+    <p style="margin: 0; font-size: 16px; color: #1A1614;"><strong>Email:</strong> ${email}</p>
+    <p style="margin: 8px 0 0 0; font-size: 16px; color: #1A1614;"><strong>Type:</strong> ${userType}</p>
+    ${socialsHtml}
+  </div>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    console.error("Failed to send waitlist notification email:", error);
+    throw error;
+  }
+}
+
 export async function sendWaitlistConfirmation(email: string) {
   const { error } = await getResend().emails.send({
     from: `${FROM_NAME} <${FROM_EMAIL}>`,

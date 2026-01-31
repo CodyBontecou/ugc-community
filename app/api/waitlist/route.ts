@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { waitlist } from "@/lib/db/schema";
-import { sendWaitlistConfirmation } from "@/lib/email";
+import { sendWaitlistConfirmation, sendWaitlistNotification } from "@/lib/email";
 import { checkBotId } from "botid/server";
 
 const waitlistSchema = z.object({
@@ -56,6 +56,21 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       // Log but don't fail the request if email fails
       console.error("Failed to send confirmation email:", emailError);
+    }
+
+    // Send notification email to admin
+    try {
+      await sendWaitlistNotification({
+        email: data.email.toLowerCase(),
+        userType: data.userType,
+        instagramHandle: data.instagramHandle,
+        tiktokHandle: data.tiktokHandle,
+        youtubeHandle: data.youtubeHandle,
+        facebookHandle: data.facebookHandle,
+        twitterHandle: data.twitterHandle,
+      });
+    } catch (notifyError) {
+      console.error("Failed to send waitlist notification:", notifyError);
     }
 
     return NextResponse.json({
