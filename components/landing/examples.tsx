@@ -16,6 +16,17 @@ const examples = [
       satisfaction: "100%",
     },
   },
+  {
+    name: "Aman",
+    role: "Gen Z Fashion & Lifestyle Creator",
+    url: "https://amanyadhav.ugc.community",
+    image: "/examples/aman-preview.png",
+    stats: {
+      views: "60K+",
+      brands: "10+",
+      satisfaction: "32K",
+    },
+  },
 ];
 
 export function Examples() {
