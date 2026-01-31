@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ConversationThread } from "@/components/messages/ConversationThread";
 import { NewConversationDialog } from "@/components/messages/NewConversationDialog";
@@ -83,6 +84,8 @@ interface Conversation {
 export default function MessagesPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
   const currentUserId = session?.user?.id || null;
+  const searchParams = useSearchParams();
+  const conversationParam = searchParams.get("conversation");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -126,6 +129,13 @@ export default function MessagesPage() {
       fetchConversations();
     }
   }, [currentUserId, fetchConversations]);
+
+  // Handle conversation query parameter for deep linking
+  useEffect(() => {
+    if (conversationParam && !isLoadingConversations) {
+      setSelectedConversationId(conversationParam);
+    }
+  }, [conversationParam, isLoadingConversations]);
 
   // Fetch messages when conversation changes
   useEffect(() => {

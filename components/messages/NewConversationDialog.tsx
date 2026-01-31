@@ -9,6 +9,7 @@ interface User {
   displayName: string | null;
   image: string | null;
   role: string;
+  interactionType?: "application" | "saved";
 }
 
 interface NewConversationDialogProps {
@@ -29,34 +30,39 @@ export function NewConversationDialog({
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [groupName, setGroupName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Search users
+  // Load messageable users on mount
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setUsers([]);
-      return;
-    }
+    if (!isOpen) return;
 
-    const debounce = setTimeout(async () => {
-      setIsSearching(true);
+    const loadMessageableUsers = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch("/api/messages/messageable-users");
         if (response.ok) {
           const data = await response.json();
-          // Filter out current user
           setUsers(data.users.filter((u: User) => u.id !== currentUserId));
         }
       } catch (error) {
-        console.error("Error searching users:", error);
+        console.error("Error loading messageable users:", error);
       } finally {
-        setIsSearching(false);
+        setIsLoading(false);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(debounce);
-  }, [searchQuery, currentUserId]);
+    loadMessageableUsers();
+  }, [isOpen, currentUserId]);
+
+  // Filter users by search query (client-side filtering since we already have all messageable users)
+  const filteredUsers = searchQuery.trim()
+    ? users.filter((user) => {
+        const query = searchQuery.toLowerCase();
+        const name = user.name?.toLowerCase() || "";
+        const displayName = user.displayName?.toLowerCase() || "";
+        return name.includes(query) || displayName.includes(query);
+      })
+    : users;
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -163,17 +169,19 @@ export function NewConversationDialog({
 
         {/* User list */}
         <div className="flex-1 overflow-y-auto">
-          {isSearching ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 size={24} className="animate-spin text-warm-gray-400" />
             </div>
-          ) : users.length === 0 ? (
-            <div className="py-8 text-center text-sm text-warm-gray-500">
-              {searchQuery ? "No users found" : "Start typing to search users"}
+          ) : filteredUsers.length === 0 ? (
+            <div className="py-8 px-4 text-center text-sm text-warm-gray-500">
+              {searchQuery
+                ? "No users found matching your search"
+                : "No users to message yet. Connect with creators through job applications or save creators to your list."}
             </div>
           ) : (
             <div className="divide-y divide-warm-gray-100">
-              {users.map((user) => {
+              {filteredUsers.map((user) => {
                 const isSelected = selectedUsers.some((u) => u.id === user.id);
 
                 return (
@@ -200,7 +208,18 @@ export function NewConversationDialog({
                       <p className="text-sm font-medium text-warm-gray-900 truncate">
                         {user.displayName || user.name}
                       </p>
-                      <p className="text-xs text-warm-gray-500 capitalize">{user.role}</p>
+                      <p className="text-xs text-warm-gray-500">
+                        <span className="capitalize">{user.role}</span>
+                        {user.interactionType && (
+                          <span className="text-warm-gray-400">
+                            {" "}
+                            &middot;{" "}
+                            {user.interactionType === "application"
+                              ? "via job"
+                              : "saved"}
+                          </span>
+                        )}
+                      </p>
                     </div>
                     {isSelected && (
                       <div className="w-6 h-6 rounded-full bg-coral flex items-center justify-center">

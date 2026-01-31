@@ -6,6 +6,9 @@ import {
   messageReactions,
   messageReadReceipts,
   users,
+  jobApplications,
+  contentJobs,
+  savedCreators,
 } from "@/lib/db/schema";
 import { eq, and, desc, sql, isNull, gt, lt, inArray, or, ilike } from "drizzle-orm";
 import type { ConversationType, ParticipantRole } from "./constants";
@@ -13,6 +16,180 @@ import { MESSAGE_LIMIT, CONVERSATION_LIMIT, TYPING_TIMEOUT_MS } from "./constant
 
 // In-memory typing indicators (replace with Redis in production)
 const typingIndicators = new Map<string, Map<string, number>>();
+
+// =====================================================
+// Messaging Permission Functions
+// =====================================================
+
+/**
+ * Check if two users have had an interaction that allows messaging.
+ * Interactions include:
+ * 1. Job application: Creator applied to a job posted by the brand
+ * 2. Saved creator: Brand has saved the creator
+ */
+export async function canMessageUser(userId1: string, userId2: string): Promise<boolean> {
+  // Get user roles to determine who is the creator vs brand
+  const [user1, user2] = await Promise.all([
+    db.select({ role: users.role }).from(users).where(eq(users.id, userId1)).limit(1),
+    db.select({ role: users.role }).from(users).where(eq(users.id, userId2)).limit(1),
+  ]);
+
+  if (!user1[0] || !user2[0]) {
+    return false;
+  }
+
+  const user1Role = user1[0].role;
+  const user2Role = user2[0].role;
+
+  // Check job applications - does either user have an application connecting them?
+  // This works regardless of which user is the creator/brand
+  const applicationInteraction = await db
+    .select({ id: jobApplications.id })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(contentJobs.id, jobApplications.jobId))
+    .where(
+      or(
+        // userId1 is creator, userId2 is brand
+        and(
+          eq(jobApplications.creatorId, userId1),
+          eq(contentJobs.brandId, userId2)
+        ),
+        // userId1 is brand, userId2 is creator
+        and(
+          eq(jobApplications.creatorId, userId2),
+          eq(contentJobs.brandId, userId1)
+        )
+      )
+    )
+    .limit(1);
+
+  if (applicationInteraction.length > 0) {
+    return true;
+  }
+
+  // Check saved creators - does either brand have the other saved?
+  const savedInteraction = await db
+    .select({ id: savedCreators.id })
+    .from(savedCreators)
+    .where(
+      or(
+        // userId1 is brand, userId2 is creator
+        and(
+          eq(savedCreators.brandId, userId1),
+          eq(savedCreators.creatorId, userId2)
+        ),
+        // userId1 is creator, userId2 is brand
+        and(
+          eq(savedCreators.brandId, userId2),
+          eq(savedCreators.creatorId, userId1)
+        )
+      )
+    )
+    .limit(1);
+
+  if (savedInteraction.length > 0) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Get all users that the current user can message based on interactions.
+ * Returns users who:
+ * 1. Applied to a job posted by the current user (if current user is a brand)
+ * 2. Posted a job that the current user applied to (if current user is a creator)
+ * 3. The current user has saved (if current user is a brand)
+ * 4. Have saved the current user (if current user is a creator)
+ */
+export async function getMessageableUsers(userId: string): Promise<{
+  id: string;
+  name: string;
+  displayName: string | null;
+  image: string | null;
+  role: string;
+  interactionType: "application" | "saved";
+}[]> {
+  // Get creators who applied to the current user's jobs (if user is a brand)
+  const creatorsFromApplications = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+    })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(contentJobs.id, jobApplications.jobId))
+    .innerJoin(users, eq(users.id, jobApplications.creatorId))
+    .where(eq(contentJobs.brandId, userId));
+
+  // Get brands whose jobs the current user has applied to (if user is a creator)
+  const brandsFromApplications = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+    })
+    .from(jobApplications)
+    .innerJoin(contentJobs, eq(contentJobs.id, jobApplications.jobId))
+    .innerJoin(users, eq(users.id, contentJobs.brandId))
+    .where(eq(jobApplications.creatorId, userId));
+
+  // Get creators the current user has saved (if user is a brand)
+  const savedCreatorsList = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+    })
+    .from(savedCreators)
+    .innerJoin(users, eq(users.id, savedCreators.creatorId))
+    .where(eq(savedCreators.brandId, userId));
+
+  // Get brands who have saved the current user (if user is a creator)
+  const brandsSavedUser = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+    })
+    .from(savedCreators)
+    .innerJoin(users, eq(users.id, savedCreators.brandId))
+    .where(eq(savedCreators.creatorId, userId));
+
+  // Combine and deduplicate results
+  const userMap = new Map<string, {
+    id: string;
+    name: string;
+    displayName: string | null;
+    image: string | null;
+    role: string;
+    interactionType: "application" | "saved";
+  }>();
+
+  // Add application-based users
+  for (const user of [...creatorsFromApplications, ...brandsFromApplications]) {
+    if (!userMap.has(user.id)) {
+      userMap.set(user.id, { ...user, interactionType: "application" });
+    }
+  }
+
+  // Add saved-based users (don't overwrite if already exists from application)
+  for (const user of [...savedCreatorsList, ...brandsSavedUser]) {
+    if (!userMap.has(user.id)) {
+      userMap.set(user.id, { ...user, interactionType: "saved" });
+    }
+  }
+
+  return Array.from(userMap.values());
+}
 
 // =====================================================
 // Conversation Functions
