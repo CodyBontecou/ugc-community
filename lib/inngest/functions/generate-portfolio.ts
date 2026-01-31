@@ -139,8 +139,20 @@ export const generatePortfolioFunction = inngest.createFunction(
         let repoFullName = data.repoFullName || data.user.githubRepoFullName;
         let repoId = data.user.githubRepoId;
 
-        // If no repo exists, try to find or create one
-        if (!repoFullName && data.githubUsername) {
+        // Verify existing repo still exists, or create a new one
+        let needsNewRepo = !repoFullName;
+        if (repoFullName) {
+          const exists = await repoExists(octokit, repoFullName);
+          if (!exists) {
+            console.log(`Repo ${repoFullName} no longer exists, will create new one`);
+            needsNewRepo = true;
+            repoFullName = null;
+            repoId = null;
+          }
+        }
+
+        // Create repo if needed
+        if (needsNewRepo && data.githubUsername) {
           const expectedRepoName = `${data.githubUsername}/${repoName}`;
           const exists = await repoExists(octokit, expectedRepoName);
 
@@ -175,7 +187,7 @@ export const generatePortfolioFunction = inngest.createFunction(
         }
 
         if (!repoFullName) {
-          throw new Error("No GitHub repository available for push");
+          throw new Error("No GitHub repository available for push. Ensure GITHUB_SERVICE_USERNAME is configured.");
         }
 
         // Get repo ID if we don't have it

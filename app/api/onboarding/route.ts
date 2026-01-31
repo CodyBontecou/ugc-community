@@ -158,13 +158,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create GitHub repo if user doesn't have one yet
+    // Create or verify GitHub repo
     let repoFullName = user.githubRepoFullName;
     let repoId: string | null = null;
 
-    if (!repoFullName) {
-      try {
-        const octokit = new Octokit({ auth: githubToken });
+    try {
+      const octokit = new Octokit({ auth: githubToken });
+
+      // Check if existing repo still exists
+      let needsNewRepo = !repoFullName;
+      if (repoFullName) {
+        const { repoExists } = await import("@/lib/github/push-portfolio");
+        const exists = await repoExists(octokit, repoFullName);
+        if (!exists) {
+          console.log(`Repo ${repoFullName} no longer exists, creating new one`);
+          needsNewRepo = true;
+        }
+      }
+
+      if (needsNewRepo) {
         const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
           description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
           isPrivate: false,
@@ -184,13 +196,13 @@ export async function POST(request: NextRequest) {
             githubRepoId: repoId,
           })
           .where(eq(users.id, session.user.id));
-      } catch (repoError) {
-        console.error("Failed to create GitHub repo:", repoError);
-        return NextResponse.json(
-          { error: "Failed to create portfolio repository. Please try again." },
-          { status: 500 }
-        );
       }
+    } catch (repoError) {
+      console.error("Failed to create/verify GitHub repo:", repoError);
+      return NextResponse.json(
+        { error: "Failed to create portfolio repository. Please try again." },
+        { status: 500 }
+      );
     }
 
     // Create new questionnaire
@@ -222,7 +234,7 @@ export async function POST(request: NextRequest) {
         generationId: generation.id,
         questionnaireId: created.id,
         userId: session.user.id,
-        githubRepoFullName: repoFullName,
+        githubRepoFullName: repoFullName || undefined,
       },
     });
 
