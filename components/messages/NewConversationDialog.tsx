@@ -9,7 +9,7 @@ interface User {
   displayName: string | null;
   image: string | null;
   role: string;
-  interactionType?: "application" | "saved";
+  interactionType?: "application" | "saved" | "admin";
 }
 
 interface NewConversationDialogProps {
@@ -210,7 +210,7 @@ export function NewConversationDialog({
                       </p>
                       <p className="text-xs text-warm-gray-500">
                         <span className="capitalize">{user.role}</span>
-                        {user.interactionType && (
+                        {user.interactionType && user.interactionType !== "admin" && (
                           <span className="text-warm-gray-400">
                             {" "}
                             &middot;{" "}

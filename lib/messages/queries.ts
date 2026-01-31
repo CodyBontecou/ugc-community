@@ -191,6 +191,54 @@ export async function getMessageableUsers(userId: string): Promise<{
   return Array.from(userMap.values());
 }
 
+/**
+ * Get all users for admin messaging (admins can message anyone).
+ * Supports search filtering and excludes the current user.
+ */
+export async function getAllUsersForAdmin(
+  currentUserId: string,
+  searchQuery?: string
+): Promise<{
+  id: string;
+  name: string;
+  displayName: string | null;
+  image: string | null;
+  role: string;
+  interactionType: "admin";
+}[]> {
+  const conditions = [
+    eq(users.status, "active"),
+  ];
+
+  // Add search filter if query provided
+  if (searchQuery && searchQuery.length >= 2) {
+    conditions.push(
+      or(
+        ilike(users.name, `%${searchQuery}%`),
+        ilike(users.displayName, `%${searchQuery}%`),
+        ilike(users.email, `%${searchQuery}%`)
+      )!
+    );
+  }
+
+  const results = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      displayName: users.displayName,
+      image: users.image,
+      role: users.role,
+    })
+    .from(users)
+    .where(and(...conditions))
+    .limit(50);
+
+  // Filter out current user and add admin interaction type
+  return results
+    .filter((user) => user.id !== currentUserId)
+    .map((user) => ({ ...user, interactionType: "admin" as const }));
+}
+
 // =====================================================
 // Conversation Functions
 // =====================================================
