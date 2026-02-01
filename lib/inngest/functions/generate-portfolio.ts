@@ -4,10 +4,12 @@ import {
   portfolioGenerations,
   users,
   onboardingQuestionnaires,
+  portfolioProjects,
+  portfolioProjectMedia,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { generatePortfolio } from "@/lib/agent/portfolio-generator";
-import { QuestionnaireData } from "@/lib/agent/portfolio-prompt";
+import { QuestionnaireData, PortfolioProjectData } from "@/lib/agent/portfolio-prompt";
 import {
   createPortfolioRepo,
   pushFilesToRepo,
@@ -67,6 +69,38 @@ export const generatePortfolioFunction = inngest.createFunction(
           throw new Error("Missing required data");
         }
 
+        // Fetch portfolio projects with media
+        const projects = await db.query.portfolioProjects.findMany({
+          where: eq(portfolioProjects.userId, userId),
+          orderBy: [asc(portfolioProjects.displayOrder)],
+          with: {
+            projectMedia: {
+              orderBy: [asc(portfolioProjectMedia.displayOrder)],
+              with: {
+                media: true,
+              },
+            },
+          },
+        });
+
+        // Transform projects into the format expected by the prompt builder
+        const portfolioProjectsData: PortfolioProjectData[] = projects.map((project) => {
+          const mediaUrls = project.projectMedia.map((pm) => pm.media.url);
+          const coverMedia = project.projectMedia.find((pm) => pm.isCover);
+          const coverUrl = coverMedia?.media.url || mediaUrls[0];
+
+          return {
+            title: project.title,
+            brandName: project.brandName,
+            campaignDescription: project.campaignDescription,
+            contentType: project.contentType,
+            platforms: project.platforms,
+            results: project.results,
+            mediaUrls,
+            coverUrl,
+          };
+        });
+
         // Use service token (preferred) or fall back to admin token for backward compatibility
         let githubToken = process.env.GITHUB_SERVICE_TOKEN;
         let githubUsername = process.env.GITHUB_SERVICE_USERNAME;
@@ -98,6 +132,7 @@ export const generatePortfolioFunction = inngest.createFunction(
           githubUsername,
           // Use repo from event data if provided, otherwise from user record
           repoFullName: githubRepoFullName || user.githubRepoFullName,
+          portfolioProjects: portfolioProjectsData,
         };
       });
 
@@ -115,6 +150,7 @@ export const generatePortfolioFunction = inngest.createFunction(
             portfolioExamples: data.questionnaire.portfolioExamples,
             creatorName: data.user.name,
             subdomain: data.user.subdomain!,
+            portfolioProjects: data.portfolioProjects,
           };
 
           const result = await generatePortfolio(questionnaireData);
