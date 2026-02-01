@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Loader2, Eye, EyeOff, AtSign } from "lucide-react";
+import { Mail, Lock, User, Loader2, Eye, EyeOff, AtSign, CheckCircle } from "lucide-react";
 import { signUp, signIn } from "@/lib/auth/client";
 
 export function SignUpForm() {
@@ -16,6 +16,7 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +60,8 @@ export function SignUpForm() {
         });
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      // Show verification message instead of redirecting
+      setVerificationSent(true);
     } catch {
       setError("An unexpected error occurred");
     } finally {
@@ -87,6 +88,42 @@ export function SignUpForm() {
       setIsLoading(false);
     }
   };
+
+  // Show verification success screen
+  if (verificationSent) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-[--radius-xl] p-8 shadow-lg border border-warm-gray-100"
+        >
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-50 flex items-center justify-center">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-3">
+              Check your email
+            </h1>
+            <p className="text-warm-gray-500 mb-6">
+              We sent a verification link to{" "}
+              <span className="font-medium text-warm-gray-700">{email}</span>
+            </p>
+            <p className="text-sm text-warm-gray-400 mb-6">
+              Click the link in the email to verify your account and get started.
+            </p>
+            <Link
+              href="/sign-in"
+              className="text-rose hover:text-rose/80 font-medium transition-colors text-sm"
+            >
+              Back to sign in
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
