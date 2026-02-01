@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDirectoryCreators } from "@/lib/directory/queries";
 import { getServerSession } from "@/lib/auth/session";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { canAccessCreatorDirectory } from "@/lib/roles";
+import { isAdmin } from "@/lib/admin";
 import {
   NICHES,
   RATE_RANGES,
@@ -12,13 +17,38 @@ import {
 } from "@/lib/directory/constants";
 
 // GET /api/directory/creators - List creators with filters
+// Restricted to Brand and Admin users only
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
     // Check if user is authenticated
     const session = await getServerSession();
-    const isAuthenticated = !!session?.user;
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // Check if user is admin or brand
+    const isUserAdmin = isAdmin(session.user.email);
+    if (!isUserAdmin) {
+      // Fetch user role from database
+      const user = await db
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.id, session.user.id))
+        .limit(1);
+
+      const userRole = user[0]?.role;
+      if (!canAccessCreatorDirectory(userRole)) {
+        return NextResponse.json(
+          { error: "Access denied. Only brand accounts can browse the creator directory." },
+          { status: 403 }
+        );
+      }
+    }
 
     // Parse filters
     const nichesParam = searchParams.get("niches");
@@ -58,7 +88,7 @@ export async function GET(request: NextRequest) {
     );
 
     const { creators, total } = await getDirectoryCreators(
-      { niches, location, rateRange, availableForHire, showAll: isAuthenticated },
+      { niches, location, rateRange, availableForHire, showAll: true },
       { sort },
       { page, pageSize }
     );

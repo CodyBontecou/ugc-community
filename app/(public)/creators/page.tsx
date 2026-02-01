@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Lock } from "lucide-react";
+import { Lock, ShieldX } from "lucide-react";
 import { CreatorGrid } from "@/components/directory/creator-grid";
 import { DirectoryFilters } from "@/components/directory/directory-filters";
 import { Pagination } from "@/components/directory/pagination";
@@ -11,7 +11,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { BackgroundBlobs } from "@/components/landing/background-blobs";
 import { useSession } from "@/lib/auth/client";
 import { useSavedCreators } from "@/lib/hooks/use-saved-creators";
-import { useBrandUser } from "@/lib/hooks/use-brand-user";
+import { useDirectoryAccess } from "@/lib/hooks/use-directory-access";
 import type { DirectoryCreator } from "@/lib/directory/queries";
 import type { Niche, RateRange, SortOption } from "@/lib/directory/constants";
 
@@ -31,8 +31,8 @@ function DirectoryContent() {
   const { data: session, isPending } = useSession();
   const isLoggedIn = !!session?.user;
 
-  // Brand user check and saved creators
-  const { isBrand, isLoading: isBrandLoading } = useBrandUser();
+  // Directory access check (brand or admin only)
+  const { hasAccess, isBrand, isLoading: isAccessLoading } = useDirectoryAccess();
   const { savedIds, isSaving, toggleSave } = useSavedCreators();
 
   // Parse URL params
@@ -183,6 +183,30 @@ function DirectoryContent() {
                 </div>
               </div>
             </div>
+          ) : !isAccessLoading && !hasAccess ? (
+            /* Access Denied for Non-Brand/Non-Admin Users */
+            <div className="flex flex-col items-center text-center py-8">
+              <div className="bg-white rounded-2xl shadow-xl border border-warm-gray-100 p-8 max-w-md mx-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-warm-gray-100 to-warm-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShieldX size={28} className="text-warm-gray-500" />
+                </div>
+                <h2 className="text-xl font-semibold text-warm-gray-900 mb-2">
+                  Brand Access Only
+                </h2>
+                <p className="text-warm-gray-600 mb-6">
+                  The creator directory is exclusively available to brand accounts.
+                  If you're a brand looking to discover UGC creators, please contact us to upgrade your account.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity"
+                  >
+                    Back to Dashboard
+                  </Link>
+                </div>
+              </div>
+            </div>
           ) : (
             /* Filters - Only show for authenticated users */
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-warm-gray-100">
@@ -203,8 +227,8 @@ function DirectoryContent() {
         </div>
       </header>
 
-      {/* Main Content - Only show for authenticated users */}
-      {(isPending || isLoggedIn) && (
+      {/* Main Content - Only show for authenticated users with access */}
+      {(isPending || (isLoggedIn && (isAccessLoading || hasAccess))) && (
         <main className="container py-8 relative z-10">
           {/* Results count */}
           {!loading && (
@@ -217,7 +241,7 @@ function DirectoryContent() {
           <CreatorGrid
             creators={creators}
             loading={loading}
-            showSaveButton={isBrand && !isBrandLoading}
+            showSaveButton={isBrand && !isAccessLoading}
             savedIds={savedIds}
             savingIds={isSaving}
             onToggleSave={toggleSave}

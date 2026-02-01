@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getUserEditAllowance, consumeEdit } from "@/lib/edits/allowance";
+import { isAdmin } from "@/lib/admin";
 
 const updateProfileSchema = z.object({
   displayName: z.string().max(50, "Display name must be 50 characters or less").optional().nullable(),
@@ -46,9 +47,13 @@ export async function GET() {
     }
 
     const editAllowance = await getUserEditAllowance(session.user.id);
+    const userIsAdmin = isAdmin(session.user.email);
 
     return NextResponse.json({
-      profile: user,
+      profile: {
+        ...user,
+        isAdmin: userIsAdmin,
+      },
       editAllowance,
     });
   } catch (error) {

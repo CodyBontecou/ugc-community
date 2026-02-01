@@ -15,3 +15,7 @@ export function canAccessMilestones(role: string | null | undefined): boolean {
 export function canAccessPortfolio(role: string | null | undefined): boolean {
   return !isBrand(role);
 }
+
+export function canAccessCreatorDirectory(role: string | null | undefined): boolean {
+  return isBrand(role);
+}
