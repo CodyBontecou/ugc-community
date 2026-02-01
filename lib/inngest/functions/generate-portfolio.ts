@@ -166,7 +166,7 @@ export const generatePortfolioFunction = inngest.createFunction(
               data.user.subdomain!,
               {
                 description: `Portfolio website for ${data.user.name}`,
-                isPrivate: false,
+                isPrivate: true,
               }
             );
             repoFullName = createResult.repoFullName;

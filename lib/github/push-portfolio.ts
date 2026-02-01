@@ -44,7 +44,7 @@ export async function createPortfolioRepo(
   const { data: repo } = await octokit.repos.createForAuthenticatedUser({
     name: repoName,
     description,
-    private: options?.isPrivate ?? false,
+    private: options?.isPrivate ?? true,
     auto_init: true, // Required for Git Data API to work
     has_issues: false,
     has_projects: false,

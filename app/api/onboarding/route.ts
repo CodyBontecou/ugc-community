@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       if (needsNewRepo) {
         const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
           description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
-          isPrivate: false,
+          isPrivate: true,
         });
 
         repoFullName = repoResult.repoFullName;
