@@ -3,14 +3,43 @@ import { db } from "@/lib/db";
 import { media } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { uploadToBlob, generateThumbnailPathname } from "@/lib/storage/blob-client";
-import ffmpeg from "fluent-ffmpeg";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 
-// Set ffmpeg path from the installer
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+const execFileAsync = promisify(execFile);
+
+// Get ffmpeg and ffprobe paths from the installer
+const ffmpegPath = ffmpegInstaller.path;
+const ffprobePath = ffmpegPath.replace(/ffmpeg$/, "ffprobe");
+
+async function getVideoDuration(videoPath: string): Promise<number> {
+  const { stdout } = await execFileAsync(ffprobePath, [
+    "-v", "quiet",
+    "-print_format", "json",
+    "-show_format",
+    videoPath,
+  ]);
+  const metadata = JSON.parse(stdout);
+  return parseFloat(metadata.format?.duration) || 0;
+}
+
+async function extractFrame(
+  videoPath: string,
+  outputPath: string,
+  seekTime: number
+): Promise<void> {
+  await execFileAsync(ffmpegPath, [
+    "-ss", seekTime.toString(),
+    "-i", videoPath,
+    "-frames:v", "1",
+    "-y",
+    outputPath,
+  ]);
+}
 
 export const processVideoFunction = inngest.createFunction(
   {
@@ -37,28 +66,12 @@ export const processVideoFunction = inngest.createFunction(
       await fs.promises.writeFile(videoPath, buffer);
 
       // Get duration using ffprobe
-      const videoDuration = await new Promise<number>((resolve, reject) => {
-        ffmpeg.ffprobe(videoPath, (err, metadata) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(metadata.format.duration || 0);
-        });
-      });
+      const videoDuration = await getVideoDuration(videoPath);
 
       // Extract poster frame at 1 second (or earlier if video is shorter)
       const seekTime = Math.min(1, videoDuration / 2);
       const posterFilePath = path.join(dir, "poster.jpg");
-      await new Promise<void>((resolve, reject) => {
-        ffmpeg(videoPath)
-          .seekInput(seekTime)
-          .frames(1)
-          .output(posterFilePath)
-          .on("end", () => resolve())
-          .on("error", (err) => reject(err))
-          .run();
-      });
+      await extractFrame(videoPath, posterFilePath, seekTime);
 
       return { tempDir: dir, posterPath: posterFilePath, duration: videoDuration };
     });
