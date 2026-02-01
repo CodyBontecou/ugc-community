@@ -499,6 +499,20 @@ export async function generatePortfolio(
     // Collect generated files from temp directory
     const files = await collectFiles(tempDir);
 
+    // Add vercel.json for static site deployment (no build step)
+    files.push({
+      path: "vercel.json",
+      content: JSON.stringify(
+        {
+          framework: null,
+          buildCommand: null,
+          outputDirectory: ".",
+        },
+        null,
+        2
+      ),
+    });
+
     // Validate we have the minimum required files
     const requiredFiles = ["index.html", "styles.css"];
     const missingFiles = requiredFiles.filter(
