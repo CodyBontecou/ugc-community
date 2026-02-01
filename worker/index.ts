@@ -1,6 +1,7 @@
 import { connect } from "inngest/connect";
 import { inngest } from "../lib/inngest/client";
 import { generatePortfolioFunction } from "../lib/inngest/functions/generate-portfolio";
+import { processVideoFunction } from "../lib/inngest/functions/process-video";
 
 async function main() {
   console.log("Starting Inngest Connect worker...");
@@ -9,7 +10,7 @@ async function main() {
     apps: [
       {
         client: inngest,
-        functions: [generatePortfolioFunction],
+        functions: [generatePortfolioFunction, processVideoFunction],
       },
     ],
   });

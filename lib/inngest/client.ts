@@ -13,6 +13,13 @@ type Events = {
       adminUserId?: string;
     };
   };
+  "media/video.uploaded": {
+    data: {
+      mediaId: string;
+      userId: string;
+      videoUrl: string;
+    };
+  };
 };
 
 export const inngest = new Inngest({

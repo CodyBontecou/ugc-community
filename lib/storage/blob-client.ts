@@ -31,20 +31,30 @@ export function getExtensionFromMimeType(mimeType: string): string {
 /**
  * Generate a pathname for the blob
  * Format: {userId}/{timestamp}-{filename}.{ext}
+ * @param overrideExtension - Optional extension to use instead of deriving from mimeType
  */
 export function generatePathname(
   userId: string,
   originalFilename: string,
-  mimeType: string
+  mimeType: string,
+  overrideExtension?: string
 ): string {
   const timestamp = Date.now();
-  const ext = getExtensionFromMimeType(mimeType);
+  const ext = overrideExtension || getExtensionFromMimeType(mimeType);
   // Sanitize filename - remove extension and special chars
   const baseName = originalFilename
     .replace(/\.[^/.]+$/, "") // remove extension
     .replace(/[^a-zA-Z0-9-_]/g, "-") // replace special chars
     .substring(0, 50); // limit length
   return `${userId}/${timestamp}-${baseName}.${ext}`;
+}
+
+/**
+ * Check if a mime type is an image type that should be converted to WebP
+ */
+export function shouldConvertToWebP(mimeType: string): boolean {
+  // Convert JPEG and PNG to WebP; GIF and WebP stay as-is
+  return mimeType === "image/jpeg" || mimeType === "image/png";
 }
 
 /**
