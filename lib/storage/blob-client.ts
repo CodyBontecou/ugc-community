@@ -104,3 +104,15 @@ export async function uploadToBlob(
 export async function deleteFromBlob(url: string): Promise<void> {
   await del(url);
 }
+
+/**
+ * Generate a thumbnail pathname from an original pathname
+ * Adds '-thumb' suffix before the extension
+ */
+export function generateThumbnailPathname(originalPathname: string): string {
+  const lastDot = originalPathname.lastIndexOf(".");
+  if (lastDot === -1) {
+    return `${originalPathname}-thumb`;
+  }
+  return `${originalPathname.slice(0, lastDot)}-thumb${originalPathname.slice(lastDot)}`;
+}

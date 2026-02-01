@@ -7,7 +7,10 @@ import {
   validateFile,
   getMediaType,
   uploadToBlob,
+  generateThumbnailPathname,
+  ALLOWED_IMAGE_TYPES,
 } from "@/lib/storage/blob-client";
+import sharp from "sharp";
 
 // POST /api/media/upload - Upload a file
 export async function POST(request: NextRequest) {
@@ -41,6 +44,41 @@ export async function POST(request: NextRequest) {
     const blob = await uploadToBlob(pathname, buffer, file.type);
     const mediaType = getMediaType(file.type);
 
+    let thumbnailUrl: string | null = null;
+    let imageMetadata: { width?: number; height?: number } = {};
+
+    // For images: generate thumbnail and extract metadata
+    if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      try {
+        const sharpImage = sharp(buffer);
+        const metadata = await sharpImage.metadata();
+
+        // Extract dimensions
+        if (metadata.width && metadata.height) {
+          imageMetadata = {
+            width: metadata.width,
+            height: metadata.height,
+          };
+        }
+
+        // Generate thumbnail (max 400px width, preserve aspect ratio)
+        const thumbnailBuffer = await sharpImage
+          .resize(400, null, { withoutEnlargement: true })
+          .toBuffer();
+
+        const thumbnailPathname = generateThumbnailPathname(pathname);
+        const thumbnailBlob = await uploadToBlob(
+          thumbnailPathname,
+          thumbnailBuffer,
+          file.type
+        );
+        thumbnailUrl = thumbnailBlob.url;
+      } catch (err) {
+        // Log error but don't fail the upload - thumbnail is optional
+        console.error("Error generating thumbnail/metadata:", err);
+      }
+    }
+
     // Insert into database
     const [mediaRecord] = await db
       .insert(media)
@@ -52,7 +90,8 @@ export async function POST(request: NextRequest) {
         mimeType: file.type,
         size: file.size,
         url: blob.url,
-        metadata: {},
+        thumbnailUrl,
+        metadata: imageMetadata,
       })
       .returning();
 
