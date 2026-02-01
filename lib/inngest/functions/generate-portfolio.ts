@@ -220,7 +220,7 @@ export const generatePortfolioFunction = inngest.createFunction(
         if (!vercelProjectId) {
           const vercelProject = await createProject({
             name: `${data.user.subdomain}-portfolio`,
-            framework: undefined,
+            framework: null, // Static site - no framework/build step
             gitRepository: {
               type: "github",
               repo: githubResult.repoFullName,

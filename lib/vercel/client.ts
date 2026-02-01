@@ -243,7 +243,7 @@ export async function getProject(projectId: string): Promise<{
 
 export interface CreateProjectOptions {
   name: string;
-  framework?: string;
+  framework?: string | null;
   gitRepository?: {
     type: "github";
     repo: string;
@@ -268,7 +268,7 @@ export async function createProject(
     headers: getHeaders(),
     body: JSON.stringify({
       name: options.name,
-      framework: options.framework || "nextjs",
+      framework: options.framework ?? null,
       gitRepository: options.gitRepository,
     }),
   });
