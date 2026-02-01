@@ -9,7 +9,10 @@ import {
   uploadToBlob,
   generateThumbnailPathname,
   ALLOWED_IMAGE_TYPES,
+  ALLOWED_VIDEO_TYPES,
+  shouldConvertToWebP,
 } from "@/lib/storage/blob-client";
+import { inngest } from "@/lib/inngest/client";
 import sharp from "sharp";
 
 // POST /api/media/upload - Upload a file
@@ -36,19 +39,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate pathname and upload
-    const pathname = generatePathname(session.user.id, file.name, file.type);
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const blob = await uploadToBlob(pathname, buffer, file.type);
+    let buffer: Buffer = Buffer.from(arrayBuffer);
     const mediaType = getMediaType(file.type);
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
+
+    // For images that should be converted to WebP, do the conversion
+    let finalMimeType = file.type;
+    let pathname: string;
+
+    if (isImage && shouldConvertToWebP(file.type)) {
+      // Process image: auto-orient, resize large images, strip EXIF, convert to WebP
+      buffer = Buffer.from(
+        await sharp(buffer)
+          .rotate() // Auto-orient based on EXIF, then EXIF is stripped
+          .resize(2000, 2000, { fit: "inside", withoutEnlargement: true }) // Max 2000px, preserve aspect ratio
+          .webp({ quality: 80 })
+          .toBuffer()
+      );
+      finalMimeType = "image/webp";
+      pathname = generatePathname(session.user.id, file.name, file.type, "webp");
+    } else {
+      pathname = generatePathname(session.user.id, file.name, file.type);
+    }
+
+    const blob = await uploadToBlob(pathname, buffer, finalMimeType);
 
     let thumbnailUrl: string | null = null;
     let imageMetadata: { width?: number; height?: number } = {};
 
     // For images: generate thumbnail and extract metadata
-    if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    if (isImage) {
       try {
         const sharpImage = sharp(buffer);
         const metadata = await sharpImage.metadata();
@@ -61,16 +83,17 @@ export async function POST(request: NextRequest) {
           };
         }
 
-        // Generate thumbnail (max 400px width, preserve aspect ratio)
+        // Generate thumbnail (max 400px width, preserve aspect ratio, always WebP)
         const thumbnailBuffer = await sharpImage
           .resize(400, null, { withoutEnlargement: true })
+          .webp({ quality: 80 })
           .toBuffer();
 
-        const thumbnailPathname = generateThumbnailPathname(pathname);
+        const thumbnailPathname = generateThumbnailPathname(pathname).replace(/\.\w+$/, ".webp");
         const thumbnailBlob = await uploadToBlob(
           thumbnailPathname,
           thumbnailBuffer,
-          file.type
+          "image/webp"
         );
         thumbnailUrl = thumbnailBlob.url;
       } catch (err) {
@@ -87,13 +110,25 @@ export async function POST(request: NextRequest) {
         type: mediaType,
         filename: blob.pathname,
         originalFilename: file.name,
-        mimeType: file.type,
-        size: file.size,
+        mimeType: finalMimeType,
+        size: buffer.length, // Use converted buffer size
         url: blob.url,
         thumbnailUrl,
         metadata: imageMetadata,
       })
       .returning();
+
+    // For videos: trigger async processing for poster frame and duration
+    if (isVideo) {
+      await inngest.send({
+        name: "media/video.uploaded",
+        data: {
+          mediaId: mediaRecord.id,
+          userId: session.user.id,
+          videoUrl: blob.url,
+        },
+      });
+    }
 
     return NextResponse.json(mediaRecord, { status: 201 });
   } catch (error) {
