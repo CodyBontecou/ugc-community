@@ -12,8 +12,10 @@ import {
   StarOff,
   Calendar,
   Building2,
+  Loader2,
 } from "lucide-react";
 import type { Media } from "@/lib/db/schema";
+import { formatDuration, isVideoProcessing } from "@/lib/media/utils";
 
 interface ProjectMedia {
   id: string;
@@ -91,9 +93,30 @@ export function ProjectCard({
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
             />
+          ) : coverMedia.thumbnailUrl ? (
+            <>
+              <img
+                src={coverMedia.thumbnailUrl}
+                alt={project.title}
+                className={`w-full h-full object-cover transition-opacity ${
+                  imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+              />
+              {coverMedia.metadata?.duration !== undefined && (
+                <div className="absolute bottom-2 left-2 px-1.5 py-0.5 text-[10px] font-medium bg-black/70 text-white rounded">
+                  {formatDuration(coverMedia.metadata.duration)}
+                </div>
+              )}
+            </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-warm-gray-200">
+            <div className="w-full h-full flex flex-col items-center justify-center bg-warm-gray-200">
               <Video size={40} className="text-warm-gray-400" />
+              <div className="flex items-center gap-1.5 mt-2">
+                <Loader2 size={14} className="text-warm-gray-500 animate-spin" />
+                <span className="text-xs text-warm-gray-500">Processing...</span>
+              </div>
             </div>
           )
         ) : (

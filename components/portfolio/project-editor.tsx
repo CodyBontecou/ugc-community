@@ -16,6 +16,7 @@ import {
 import { MediaLibrary } from "@/components/media/media-library";
 import type { Media } from "@/lib/db/schema";
 import type { PortfolioProject } from "./project-card";
+import { formatDuration, isVideoProcessing } from "@/lib/media/utils";
 
 interface ProjectEditorProps {
   project?: PortfolioProject;
@@ -435,9 +436,26 @@ export function ProjectEditor({
                           alt=""
                           className="w-full h-full object-cover"
                         />
+                      ) : item.media.thumbnailUrl ? (
+                        <>
+                          <img
+                            src={item.media.thumbnailUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                          {item.media.metadata?.duration !== undefined && (
+                            <div className="absolute bottom-1 right-1 px-1 py-0.5 text-[9px] font-medium bg-black/70 text-white rounded">
+                              {formatDuration(item.media.metadata.duration)}
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-warm-gray-200">
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-warm-gray-200">
                           <Video size={24} className="text-warm-gray-400" />
+                          <div className="flex items-center gap-1 mt-1">
+                            <Loader2 size={10} className="text-warm-gray-500 animate-spin" />
+                            <span className="text-[8px] text-warm-gray-500">Processing</span>
+                          </div>
                         </div>
                       )}
 

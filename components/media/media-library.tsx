@@ -12,8 +12,10 @@ import {
   Check,
   AlertCircle,
   FolderOpen,
+  Clock,
 } from "lucide-react";
 import type { Media } from "@/lib/db/schema";
+import { formatDuration, isVideoProcessing } from "@/lib/media/utils";
 
 interface MediaLibraryProps {
   onSelect?: (media: Media) => void;
@@ -41,6 +43,12 @@ export function MediaLibrary({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [processingTimeout, setProcessingTimeout] = useState<Set<string>>(new Set());
+  const processingStartTimes = useRef<Map<string, number>>(new Map());
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const POLLING_INTERVAL = 4000; // 4 seconds
+  const MAX_POLLING_DURATION = 120000; // 2 minutes
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
@@ -71,6 +79,82 @@ export function MediaLibrary({
   useEffect(() => {
     fetchMedia();
   }, [fetchMedia]);
+
+  // Polling for video processing status
+  useEffect(() => {
+    const processingVideos = items.filter((item) => isVideoProcessing(item));
+
+    // Track start times for new processing videos
+    processingVideos.forEach((video) => {
+      if (!processingStartTimes.current.has(video.id)) {
+        processingStartTimes.current.set(video.id, Date.now());
+      }
+    });
+
+    // Clean up start times for videos that are no longer processing
+    const processingIds = new Set(processingVideos.map((v) => v.id));
+    processingStartTimes.current.forEach((_, id) => {
+      if (!processingIds.has(id)) {
+        processingStartTimes.current.delete(id);
+      }
+    });
+
+    if (processingVideos.length === 0) {
+      // No videos processing, clear interval
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Start polling if not already polling
+    if (!pollingIntervalRef.current) {
+      pollingIntervalRef.current = setInterval(async () => {
+        // Check for timeouts
+        const now = Date.now();
+        const timedOutIds: string[] = [];
+
+        processingStartTimes.current.forEach((startTime, id) => {
+          if (now - startTime > MAX_POLLING_DURATION) {
+            timedOutIds.push(id);
+          }
+        });
+
+        if (timedOutIds.length > 0) {
+          setProcessingTimeout((prev) => {
+            const next = new Set(prev);
+            timedOutIds.forEach((id) => next.add(id));
+            return next;
+          });
+          timedOutIds.forEach((id) => processingStartTimes.current.delete(id));
+        }
+
+        // Fetch updated media to check processing status
+        try {
+          const params = new URLSearchParams({
+            type: activeTab,
+            page: page.toString(),
+            limit: "20",
+          });
+          const response = await fetch(`/api/media?${params}`);
+          if (response.ok) {
+            const data = await response.json();
+            setItems(data.items);
+          }
+        } catch {
+          // Silent fail for polling, don't show error
+        }
+      }, POLLING_INTERVAL);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [items, activeTab, page]);
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -276,6 +360,7 @@ export function MediaLibrary({
                 onSelect={onSelect}
                 onDelete={(id) => setDeleteConfirm(id)}
                 isDeleting={deleteConfirm === item.id}
+                processingTimedOut={processingTimeout.has(item.id)}
               />
             ))}
           </div>
@@ -361,6 +446,7 @@ interface MediaItemProps {
   onSelect?: (media: Media) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
+  processingTimedOut?: boolean;
 }
 
 function MediaItem({
@@ -369,6 +455,7 @@ function MediaItem({
   onSelect,
   onDelete,
   isDeleting,
+  processingTimedOut,
 }: MediaItemProps) {
   const [loaded, setLoaded] = useState(false);
 
@@ -390,14 +477,43 @@ function MediaItem({
           loading="lazy"
           onLoad={() => setLoaded(true)}
         />
+      ) : item.thumbnailUrl ? (
+        <>
+          <img
+            src={item.thumbnailUrl}
+            alt={item.metadata?.alt || item.originalFilename}
+            className={`w-full h-full object-cover transition-opacity ${
+              loaded ? "opacity-100" : "opacity-0"
+            }`}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+          />
+          {/* Duration badge */}
+          {item.metadata?.duration !== undefined && (
+            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium bg-black/70 text-white rounded">
+              {formatDuration(item.metadata.duration)}
+            </div>
+          )}
+        </>
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-warm-gray-200">
+        <div className="w-full h-full flex flex-col items-center justify-center bg-warm-gray-200">
           <Video size={32} className="text-warm-gray-400" />
+          {processingTimedOut ? (
+            <div className="flex items-center gap-1.5 mt-2 px-2">
+              <Clock size={12} className="text-amber-500" />
+              <span className="text-[10px] text-amber-600 text-center">Taking longer than expected</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 mt-2">
+              <Loader2 size={12} className="text-warm-gray-500 animate-spin" />
+              <span className="text-[10px] text-warm-gray-500">Processing...</span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Loading placeholder */}
-      {!loaded && item.type === "image" && (
+      {!loaded && (item.type === "image" || item.thumbnailUrl) && (
         <div className="absolute inset-0 flex items-center justify-center">
           <Loader2 size={20} className="text-warm-gray-400 animate-spin" />
         </div>
