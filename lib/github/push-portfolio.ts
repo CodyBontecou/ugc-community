@@ -18,6 +18,8 @@ export interface PushFilesResult {
 export interface GitHubFile {
   path: string;
   content: string;
+  /** If true, content is already base64-encoded binary data */
+  isBinary?: boolean;
 }
 
 // =====================================================
@@ -105,10 +107,16 @@ export async function pushFilesToRepo(
 
   // Step 2: Create blobs for each file
   const blobPromises = files.map(async (file) => {
+    // For binary files (already base64), use content directly
+    // For text files, encode to base64
+    const content = file.isBinary
+      ? file.content
+      : Buffer.from(file.content).toString("base64");
+
     const { data: blob } = await octokit.git.createBlob({
       owner,
       repo,
-      content: Buffer.from(file.content).toString("base64"),
+      content,
       encoding: "base64",
     });
     return {

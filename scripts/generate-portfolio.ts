@@ -145,8 +145,15 @@ async function main() {
   for (const file of result.files) {
     const filePath = join(outputDir, file.path);
     await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(filePath, file.content, "utf-8");
-    console.log(`  Created: ${file.path}`);
+
+    // Handle binary files (base64 encoded) vs text files
+    if (file.isBinary) {
+      await writeFile(filePath, Buffer.from(file.content, "base64"));
+      console.log(`  Created: ${file.path} (binary)`);
+    } else {
+      await writeFile(filePath, file.content, "utf-8");
+      console.log(`  Created: ${file.path}`);
+    }
   }
 
   console.log("\n=======================");
