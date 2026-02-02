@@ -199,3 +199,176 @@ export async function hasPublishedPortfolio(userId: string): Promise<boolean> {
 
   return !!config;
 }
+
+// =====================================================
+// Editor Queries
+// =====================================================
+
+/**
+ * Get all active templates
+ */
+export async function getActiveTemplates(): Promise<Template[]> {
+  return db.query.templates.findMany({
+    where: eq(templates.isActive, true),
+  });
+}
+
+/**
+ * Get a single template by slug
+ */
+export async function getTemplateBySlug(slug: string): Promise<Template | null> {
+  const template = await db.query.templates.findFirst({
+    where: eq(templates.slug, slug),
+  });
+  return template ?? null;
+}
+
+/**
+ * Get user's portfolio config (with template)
+ */
+export async function getUserPortfolioConfig(userId: string): Promise<(PortfolioConfig & { template: Template | null }) | null> {
+  const config = await db.query.portfolioConfigs.findFirst({
+    where: eq(portfolioConfigs.userId, userId),
+    with: {
+      template: true,
+    },
+  });
+  return config ?? null;
+}
+
+/**
+ * Create or update portfolio config with selected template
+ */
+export async function selectTemplate(userId: string, templateId: string): Promise<PortfolioConfig> {
+  // Check if user already has a config
+  const existing = await db.query.portfolioConfigs.findFirst({
+    where: eq(portfolioConfigs.userId, userId),
+  });
+
+  // Get template defaults
+  const template = await db.query.templates.findFirst({
+    where: eq(templates.id, templateId),
+  });
+
+  if (!template) {
+    throw new Error("Template not found");
+  }
+
+  if (existing) {
+    // Update existing config
+    const [updated] = await db
+      .update(portfolioConfigs)
+      .set({
+        templateId,
+        sections: template.sectionDefaults ?? {},
+        updatedAt: new Date(),
+      })
+      .where(eq(portfolioConfigs.id, existing.id))
+      .returning();
+    return updated;
+  } else {
+    // Create new config
+    const [created] = await db
+      .insert(portfolioConfigs)
+      .values({
+        userId,
+        templateId,
+        sections: template.sectionDefaults ?? {},
+      })
+      .returning();
+    return created;
+  }
+}
+
+/**
+ * Update portfolio sections
+ */
+export async function updatePortfolioSections(
+  userId: string,
+  sections: PortfolioConfig["sections"]
+): Promise<PortfolioConfig> {
+  const [updated] = await db
+    .update(portfolioConfigs)
+    .set({
+      sections,
+      updatedAt: new Date(),
+    })
+    .where(eq(portfolioConfigs.userId, userId))
+    .returning();
+  
+  if (!updated) {
+    throw new Error("Portfolio config not found");
+  }
+  
+  return updated;
+}
+
+/**
+ * Update portfolio theme
+ */
+export async function updatePortfolioTheme(
+  userId: string,
+  theme: PortfolioConfig["theme"]
+): Promise<PortfolioConfig> {
+  const [updated] = await db
+    .update(portfolioConfigs)
+    .set({
+      theme,
+      updatedAt: new Date(),
+    })
+    .where(eq(portfolioConfigs.userId, userId))
+    .returning();
+  
+  if (!updated) {
+    throw new Error("Portfolio config not found");
+  }
+  
+  return updated;
+}
+
+/**
+ * Publish or unpublish portfolio
+ */
+export async function setPortfolioPublished(
+  userId: string,
+  isPublished: boolean
+): Promise<PortfolioConfig> {
+  const [updated] = await db
+    .update(portfolioConfigs)
+    .set({
+      isPublished,
+      publishedAt: isPublished ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(portfolioConfigs.userId, userId))
+    .returning();
+  
+  if (!updated) {
+    throw new Error("Portfolio config not found");
+  }
+  
+  return updated;
+}
+
+/**
+ * Update SEO settings
+ */
+export async function updatePortfolioSeo(
+  userId: string,
+  seo: PortfolioConfig["seo"]
+): Promise<PortfolioConfig> {
+  const [updated] = await db
+    .update(portfolioConfigs)
+    .set({
+      seo,
+      updatedAt: new Date(),
+    })
+    .where(eq(portfolioConfigs.userId, userId))
+    .returning();
+  
+  if (!updated) {
+    throw new Error("Portfolio config not found");
+  }
+  
+  return updated;
+}

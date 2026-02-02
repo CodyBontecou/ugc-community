@@ -1,3 +1,11 @@
 export { ProjectCard, type PortfolioProject } from "./project-card";
 export { ProjectEditor } from "./project-editor";
 export { ProjectsManager } from "./projects-manager";
+export { TemplateCard } from "./template-card";
+export { SectionManager } from "./section-manager";
+export { SectionItem } from "./section-item";
+export { ThemeEditor } from "./theme-editor";
+export { ColorPicker } from "./color-picker";
+export { FontSelector } from "./font-selector";
+export { ContentEditor } from "./content-editor";
+export * from "./forms";

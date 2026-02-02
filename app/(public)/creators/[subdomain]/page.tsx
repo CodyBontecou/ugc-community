@@ -43,7 +43,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const session = await getServerSession();
   const isLoggedIn = !!session;
 
-  const creator = await getCreatorBySubdomain(subdomain, { showAll: isLoggedIn });
+  const [creator, portfolioData] = await Promise.all([
+    getCreatorBySubdomain(subdomain, { showAll: isLoggedIn }),
+    // Include unpublished for metadata - will be checked on page render
+    getPortfolioDataBySubdomain(subdomain, { includeUnpublished: true }),
+  ]);
 
   if (!creator) {
     return {
@@ -52,23 +56,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const displayName = creator.displayName || creator.name;
+
+  // Use portfolio SEO settings if available, otherwise fall back to defaults
+  const seoConfig = portfolioData?.config?.seo;
+  const title = seoConfig?.title || `${displayName} - UGC Creator | ugc.community`;
   const description =
+    seoConfig?.description ||
     creator.tagline ||
     creator.bio ||
     `${displayName} is a UGC creator on ugc.community`;
 
   return {
-    title: `${displayName} - UGC Creator | ugc.community`,
+    title,
     description,
     openGraph: {
-      title: `${displayName} - UGC Creator`,
+      title: seoConfig?.title || `${displayName} - UGC Creator`,
       description,
       type: "profile",
       images: creator.image ? [{ url: creator.image }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${displayName} - UGC Creator`,
+      title: seoConfig?.title || `${displayName} - UGC Creator`,
       description,
       images: creator.image ? [creator.image] : undefined,
     },
