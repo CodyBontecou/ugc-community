@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
+import { DeleteAccountButton } from "@/components/dashboard/delete-account-button";
 import { ArrowLeft, User } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -78,6 +79,18 @@ async function SettingsContent() {
         </p>
         <SignOutButton />
       </div>
+
+      {/* Delete account */}
+      <div className="bg-white rounded-[--radius-xl] border border-red-200 p-6">
+        <h3 className="font-medium text-warm-gray-900 mb-2">Delete Account</h3>
+        <p className="text-sm text-warm-gray-500 mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        <DeleteAccountButton 
+          userName={session.user.name} 
+          userEmail={session.user.email} 
+        />
+      </div>
     </div>
   );
 }
@@ -89,6 +102,7 @@ export default function SettingsPage() {
         <div className="animate-pulse space-y-8 max-w-2xl mx-auto">
           <div className="h-12 bg-warm-gray-200 rounded w-1/4" />
           <div className="h-48 bg-warm-gray-200 rounded-[--radius-xl]" />
+          <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
           <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
         </div>
       }
