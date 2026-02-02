@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface DashboardNavProps {
   user: {
@@ -60,9 +59,6 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
           </Link>
         ))}
       </nav>
-
-      {/* Notification Bell */}
-      <NotificationBell />
 
       {/* User Menu */}
       <div className="relative">
