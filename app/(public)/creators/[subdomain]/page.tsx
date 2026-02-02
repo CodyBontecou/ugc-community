@@ -5,6 +5,8 @@ import { ExternalLink, MapPin, Instagram, User, ArrowLeft, Trophy, Lock } from "
 import { getCreatorBySubdomain } from "@/lib/directory/queries";
 import { getUserBadgeMilestones } from "@/lib/milestones/queries";
 import { getServerSession } from "@/lib/auth/session";
+import { getPortfolioDataBySubdomain } from "@/lib/templates/queries";
+import { PortfolioRenderer } from "@/lib/templates/render";
 
 // TikTok icon (not in Lucide)
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -122,6 +124,7 @@ export default async function CreatorProfilePage({ params }: PageProps) {
   // Check if user is logged in
   const session = await getServerSession();
   const isLoggedIn = !!session;
+  const currentUserId = session?.user?.id;
 
   // Authenticated users can see all creators with subdomains
   const creator = await getCreatorBySubdomain(subdomain, { showAll: isLoggedIn });
@@ -130,6 +133,32 @@ export default async function CreatorProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  // Check if viewing own portfolio (for draft preview)
+  const isOwner = currentUserId === creator.id;
+
+  // Try to fetch portfolio data
+  // Include unpublished if owner is viewing
+  const portfolioData = await getPortfolioDataBySubdomain(subdomain, {
+    includeUnpublished: isOwner,
+  });
+
+  // If portfolio exists, render the template-based portfolio
+  if (portfolioData) {
+    return (
+      <PortfolioRenderer
+        user={portfolioData.user}
+        config={portfolioData.config}
+        template={portfolioData.template}
+        projects={portfolioData.projects}
+        projectCoverMedia={portfolioData.projectCoverMedia}
+        mediaMap={portfolioData.mediaMap}
+        isOwnerPreview={isOwner}
+      />
+    );
+  }
+
+  // No portfolio config - fall back to directory profile view
+
   // Fetch earned badge milestones for this creator
   const badgeMilestones = await getUserBadgeMilestones(creator.id);
 
@@ -137,7 +166,6 @@ export default async function CreatorProfilePage({ params }: PageProps) {
   const location = [creator.locationCity, creator.locationCountry]
     .filter(Boolean)
     .join(", ");
-  const portfolioUrl = `https://${creator.subdomain}.ugc.community`;
 
   return (
     <>
@@ -362,61 +390,18 @@ export default async function CreatorProfilePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* Right Column - Portfolio Preview */}
+              {/* Right Column - No Portfolio Message */}
               <div className="lg:col-span-2">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-warm-gray-100">
-                  <div className="p-4 border-b border-warm-gray-100 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-warm-gray-900">
-                      Portfolio Preview
-                    </h2>
-                    <a
-                      href={portfolioUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coral to-rose text-white text-sm font-medium rounded-full hover:opacity-90 transition-opacity"
-                    >
-                      View Full Site
-                      <ExternalLink size={14} />
-                    </a>
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-sm border border-warm-gray-100 p-8 text-center">
+                  <div className="w-16 h-16 bg-warm-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <User size={32} className="text-warm-gray-400" />
                   </div>
-
-                  {/* Browser Chrome */}
-                  <div className="bg-warm-gray-50 border-b border-warm-gray-100 px-4 py-3 flex items-center gap-3">
-                    <div className="flex gap-2">
-                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                      <div className="w-3 h-3 rounded-full bg-warm-gray-200" />
-                    </div>
-                    <div className="flex-1 flex justify-center">
-                      <div className="bg-white rounded-md px-4 py-1.5 text-sm text-warm-gray-500 border border-warm-gray-100 max-w-md w-full text-center truncate">
-                        {creator.subdomain}.ugc.community
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Portfolio iframe */}
-                  <a
-                    href={portfolioUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block relative group"
-                  >
-                    <div className="relative aspect-[16/10] bg-warm-gray-50 overflow-hidden">
-                      <iframe
-                        src={portfolioUrl}
-                        className="w-full h-full border-0 pointer-events-none"
-                        title={`${displayName}'s portfolio`}
-                        loading="lazy"
-                      />
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-warm-gray-900/0 group-hover:bg-warm-gray-900/60 transition-all duration-300 flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 bg-white text-warm-gray-900 px-6 py-3 rounded-full font-semibold shadow-lg">
-                          <span>Visit Site</span>
-                          <ExternalLink size={18} />
-                        </div>
-                      </div>
-                    </div>
-                  </a>
+                  <h2 className="text-lg font-semibold text-warm-gray-900 mb-2">
+                    Portfolio Coming Soon
+                  </h2>
+                  <p className="text-warm-gray-600">
+                    This creator hasn&apos;t set up their portfolio yet.
+                  </p>
                 </div>
               </div>
             </div>
