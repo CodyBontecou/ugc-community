@@ -151,6 +151,7 @@ export const onboardingQuestionnaires = pgTable(
     // Structured fields for better data management
     socialMediaHandles: jsonb("social_media_handles").$type<SocialMediaHandle[]>().default([]),
     inspirationUrls: text("inspiration_urls").array().default([]),
+    inspiringBrandsList: text("inspiring_brands_list").array().default([]),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

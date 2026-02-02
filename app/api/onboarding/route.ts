@@ -30,6 +30,7 @@ const submitQuestionnaireSchema = z.object({
   // New structured fields
   socialMediaHandles: z.array(socialMediaHandleSchema).max(20).optional(),
   inspirationUrls: z.array(z.string().url("Invalid URL format")).max(10).optional(),
+  inspiringBrandsList: z.array(z.string().max(200)).max(20).optional(),
 });
 
 // GET /api/onboarding - Check if user has submitted questionnaire
@@ -55,6 +56,7 @@ export async function GET() {
         // Ensure arrays are returned properly
         socialMediaHandles: existing.socialMediaHandles || [],
         inspirationUrls: existing.inspirationUrls || [],
+        inspiringBrandsList: existing.inspiringBrandsList || [],
       } : null,
       subdomain: user?.subdomain || null,
     });
@@ -140,6 +142,7 @@ export async function POST(request: NextRequest) {
           portfolioExamples: validated.portfolioExamples || null,
           socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
           inspirationUrls: validated.inspirationUrls || [],
+          inspiringBrandsList: validated.inspiringBrandsList || [],
           updatedAt: new Date(),
         })
         .where(eq(onboardingQuestionnaires.userId, session.user.id))
@@ -151,6 +154,7 @@ export async function POST(request: NextRequest) {
           ...updated,
           socialMediaHandles: updated.socialMediaHandles || [],
           inspirationUrls: updated.inspirationUrls || [],
+          inspiringBrandsList: updated.inspiringBrandsList || [],
         },
         subdomain: normalizedSubdomain,
       });
@@ -235,6 +239,7 @@ export async function POST(request: NextRequest) {
         portfolioExamples: validated.portfolioExamples || null,
         socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
         inspirationUrls: validated.inspirationUrls || [],
+        inspiringBrandsList: validated.inspiringBrandsList || [],
       })
       .returning();
 

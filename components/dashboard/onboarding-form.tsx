@@ -76,7 +76,6 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     suggestions: string[];
   }>({ checking: false, available: null, error: null, suggestions: [] });
   const [portfolioVision, setPortfolioVision] = useState("");
-  const [inspiringBrands, setInspiringBrands] = useState("");
 
   // Structured fields
   const [socialMediaHandles, setSocialMediaHandles] = useState<SocialMediaHandle[]>([
@@ -84,6 +83,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   ]);
   const [inspirationUrls, setInspirationUrls] = useState<string[]>([""]);
   const [urlErrors, setUrlErrors] = useState<{ [key: number]: string }>({});
+  const [inspiringBrandsList, setInspiringBrandsList] = useState<string[]>([""]);
 
   // Check subdomain availability with debounce
   const checkSubdomainAvailability = useCallback(async (value: string) => {
@@ -151,7 +151,6 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           }
           if (data.questionnaire) {
             setPortfolioVision(data.questionnaire.portfolioVision || "");
-            setInspiringBrands(data.questionnaire.inspiringBrands || "");
 
             // Load structured fields if available
             if (data.questionnaire.socialMediaHandles?.length > 0) {
@@ -167,6 +166,19 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
                 .filter((s: string) => s.length > 0);
               if (urls.length > 0) {
                 setInspirationUrls(urls);
+              }
+            }
+            // Load inspiring brands list
+            if (data.questionnaire.inspiringBrandsList?.length > 0) {
+              setInspiringBrandsList(data.questionnaire.inspiringBrandsList);
+            } else if (data.questionnaire.inspiringBrands) {
+              // Migrate old format: try to extract brands from text
+              const brands = data.questionnaire.inspiringBrands
+                .split(/[,\n]/)
+                .map((s: string) => s.trim())
+                .filter((s: string) => s.length > 0);
+              if (brands.length > 0) {
+                setInspiringBrandsList(brands);
               }
             }
           }
@@ -231,6 +243,23 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     setUrlErrors(newErrors);
   };
 
+  // Inspiring brands management
+  const addInspiringBrand = () => {
+    setInspiringBrandsList([...inspiringBrandsList, ""]);
+  };
+
+  const removeInspiringBrand = (index: number) => {
+    if (inspiringBrandsList.length > 1) {
+      setInspiringBrandsList(inspiringBrandsList.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateInspiringBrand = (index: number, value: string) => {
+    const updated = [...inspiringBrandsList];
+    updated[index] = value;
+    setInspiringBrandsList(updated);
+  };
+
   const getPlatformIcon = (platformId: string) => {
     const platform = SOCIAL_PLATFORMS.find((p) => p.id === platformId);
     if (!platform) return <Globe className="w-4 h-4" />;
@@ -268,9 +297,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
     setIsSubmitting(true);
 
-    // Filter out empty social handles and URLs
+    // Filter out empty social handles, URLs, and brands
     const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
     const validUrls = inspirationUrls.filter((url) => url.trim().length > 0 && isValidUrl(url));
+    const validBrands = inspiringBrandsList.filter((brand) => brand.trim().length > 0);
 
     try {
       const response = await fetch("/api/onboarding", {
@@ -279,11 +309,12 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         body: JSON.stringify({
           subdomain,
           portfolioVision,
-          inspiringBrands,
           socialMediaHandles: validSocialHandles,
           inspirationUrls: validUrls,
+          inspiringBrandsList: validBrands,
           // Keep backwards compatibility
           portfolioExamples: validUrls.join("\n"),
+          inspiringBrands: validBrands.join(", "),
         }),
       });
 
@@ -530,21 +561,52 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
         {/* Inspiring Brands */}
         <div>
-          <label htmlFor="inspiringBrands" className="block text-sm font-medium text-warm-gray-900 mb-2">
+          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
             Brands that inspire you
           </label>
-          <textarea
-            id="inspiringBrands"
-            value={inspiringBrands}
-            onChange={(e) => setInspiringBrands(e.target.value)}
-            placeholder="e.g., Glossier's minimalist aesthetic, Apple's clean product photography, Aesop's elegant typography..."
-            rows={3}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
-            maxLength={1000}
-          />
-          <p className="mt-1.5 text-xs text-warm-gray-500">
-            What brands have a look and feel that resonates with you?
+          <p className="text-xs text-warm-gray-500 mb-3">
+            Add brands whose look and feel resonates with you (one per field)
           </p>
+
+          <div className="space-y-3">
+            {inspiringBrandsList.map((brand, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={(e) => updateInspiringBrand(index, e.target.value)}
+                  placeholder="e.g., Glossier's minimalist aesthetic"
+                  className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                  maxLength={200}
+                />
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() => removeInspiringBrand(index)}
+                  disabled={inspiringBrandsList.length === 1}
+                  className={`p-2 rounded-[--radius-md] transition-colors ${
+                    inspiringBrandsList.length === 1
+                      ? "text-warm-gray-300 cursor-not-allowed"
+                      : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                  }`}
+                  title="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add another button */}
+          <button
+            type="button"
+            onClick={addInspiringBrand}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add another brand
+          </button>
         </div>
 
         {/* Website Inspiration URLs */}
