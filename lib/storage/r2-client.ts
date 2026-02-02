@@ -6,19 +6,57 @@ import {
 } from "@aws-sdk/client-s3";
 
 // R2 Configuration from environment variables
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "ugc-media";
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!; // e.g., https://media.ugc.community
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL; // e.g., https://media.ugc.community
 
-// S3-compatible client for Cloudflare R2
-export const r2Client = new S3Client({
-  region: "auto",
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
+/**
+ * Check if R2 is configured
+ */
+export function isR2Configured(): boolean {
+  return !!(R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_PUBLIC_URL);
+}
+
+/**
+ * Get the R2 client, throwing a clear error if not configured
+ */
+function getR2Client(): S3Client {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    throw new Error(
+      "R2 storage is not configured. Please set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_PUBLIC_URL in your environment variables."
+    );
+  }
+
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  });
+}
+
+// Lazily initialized R2 client
+let _r2Client: S3Client | null = null;
+
+function getOrCreateR2Client(): S3Client {
+  if (!_r2Client) {
+    _r2Client = getR2Client();
+  }
+  return _r2Client;
+}
+
+export const r2Client = new Proxy({} as S3Client, {
+  get(_, prop) {
+    const client = getOrCreateR2Client();
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop];
+    if (typeof value === "function") {
+      return value.bind(client);
+    }
+    return value;
   },
 });
 
@@ -68,6 +106,9 @@ export function generateStorageKey(
  * Get the public URL for a stored file
  */
 export function getPublicUrl(key: string): string {
+  if (!R2_PUBLIC_URL) {
+    throw new Error("R2_PUBLIC_URL is not configured in environment variables.");
+  }
   return `${R2_PUBLIC_URL}/${key}`;
 }
 
@@ -158,7 +199,7 @@ export async function getFromR2(
  * Extract storage key from public URL
  */
 export function extractKeyFromUrl(url: string): string | null {
-  if (!url.startsWith(R2_PUBLIC_URL)) {
+  if (!R2_PUBLIC_URL || !url.startsWith(R2_PUBLIC_URL)) {
     return null;
   }
   return url.replace(`${R2_PUBLIC_URL}/`, "");

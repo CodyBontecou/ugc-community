@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -74,6 +75,10 @@ export const auth = betterAuth({
     "https://ugc.community",
     "https://*.ugc.community",
   ],
+  logger: {
+    disabled: false,
+    level: "debug",
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;
