@@ -21,7 +21,7 @@ async function DashboardContent() {
   const showCreatorContent = !isUserAdmin;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto min-h-[calc(100vh-12rem)] flex flex-col justify-center">
       {/* Onboarding Slides */}
       {showCreatorContent && <OnboardingSlides />}
     </div>
@@ -32,7 +32,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="animate-pulse max-w-4xl mx-auto">
+        <div className="animate-pulse max-w-4xl mx-auto min-h-[calc(100vh-12rem)] flex flex-col justify-center">
           <div className="h-[500px] bg-warm-gray-200 rounded-[--radius-xl]" />
         </div>
       }
