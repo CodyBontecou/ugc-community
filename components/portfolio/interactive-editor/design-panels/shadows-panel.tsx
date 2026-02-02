@@ -77,7 +77,7 @@ export function ShadowsPanel({
                 type="number"
                 value={shadows.xOffset}
                 onChange={(e) => updateShadow("xOffset", parseInt(e.target.value) || 0)}
-                className="w-16 h-8 text-center bg-secondary border-border"
+                className="w-16 h-8 text-center bg-[#1f1f1f] border-[#333] text-white"
               />
             </div>
           </div>
@@ -100,7 +100,7 @@ export function ShadowsPanel({
                 type="number"
                 value={shadows.yOffset}
                 onChange={(e) => updateShadow("yOffset", parseInt(e.target.value) || 0)}
-                className="w-16 h-8 text-center bg-secondary border-border"
+                className="w-16 h-8 text-center bg-[#1f1f1f] border-[#333] text-white"
               />
             </div>
           </div>
@@ -123,7 +123,7 @@ export function ShadowsPanel({
                 type="number"
                 value={shadows.blur}
                 onChange={(e) => updateShadow("blur", parseInt(e.target.value) || 0)}
-                className="w-16 h-8 text-center bg-secondary border-border"
+                className="w-16 h-8 text-center bg-[#1f1f1f] border-[#333] text-white"
               />
             </div>
           </div>
@@ -146,7 +146,7 @@ export function ShadowsPanel({
                 type="number"
                 value={shadows.spread}
                 onChange={(e) => updateShadow("spread", parseInt(e.target.value) || 0)}
-                className="w-16 h-8 text-center bg-secondary border-border"
+                className="w-16 h-8 text-center bg-[#1f1f1f] border-[#333] text-white"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export function ShadowsPanel({
                 type="number"
                 value={Math.round(shadows.opacity * 100)}
                 onChange={(e) => updateShadow("opacity", (parseInt(e.target.value) || 0) / 100)}
-                className="w-16 h-8 text-center bg-secondary border-border"
+                className="w-16 h-8 text-center bg-[#1f1f1f] border-[#333] text-white"
               />
             </div>
           </div>
@@ -185,7 +185,7 @@ export function ShadowsPanel({
               updateShadow("color", colorOption?.color || value);
             }}
           >
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <div className="flex items-center gap-2">
                 <div
                   className="w-5 h-5 rounded border border-border bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"

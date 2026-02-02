@@ -33,7 +33,7 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
   const [localValue, setLocalValue] = useState(value);
 
   return (
-    <div className="flex items-center gap-2 p-2 bg-secondary rounded-lg border border-border">
+    <div className="flex items-center gap-2 p-2 bg-[#1f1f1f] rounded-lg border border-[#333]">
       <div
         className="w-6 h-6 rounded border border-border shrink-0"
         style={{ backgroundColor: value }}
@@ -43,7 +43,7 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={() => onChange(localValue)}
-        className="flex-1 bg-transparent text-sm text-foreground outline-none"
+        className="flex-1 bg-transparent text-sm text-white outline-none"
       />
       <ChevronDown size={14} className="text-muted-foreground" />
     </div>

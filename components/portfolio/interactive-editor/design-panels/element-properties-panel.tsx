@@ -183,7 +183,7 @@ export function ElementPropertiesPanel({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onBlur={handleContentBlur}
-            className="min-h-[80px] bg-secondary border-border resize-none"
+            className="min-h-[80px] bg-[#1f1f1f] border-[#333] text-white resize-none"
             placeholder="Element content..."
           />
         </div>
@@ -197,7 +197,7 @@ export function ElementPropertiesPanel({
               value={typography.fontFamily}
               onValueChange={(value) => handleTypographyChange("fontFamily", value)}
             >
-              <SelectTrigger className="w-full bg-secondary border-border">
+              <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -214,7 +214,7 @@ export function ElementPropertiesPanel({
                 value={typography.fontWeight}
                 onValueChange={(value) => handleTypographyChange("fontWeight", value)}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-[#1f1f1f] border-[#333] text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -230,7 +230,7 @@ export function ElementPropertiesPanel({
                 value={typography.fontSize}
                 onValueChange={(value) => handleTypographyChange("fontSize", value)}
               >
-                <SelectTrigger className="bg-secondary border-border">
+                <SelectTrigger className="bg-[#1f1f1f] border-[#333] text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +252,7 @@ export function ElementPropertiesPanel({
                 <Input
                   value={typography.lineHeight}
                   onChange={(e) => handleTypographyChange("lineHeight", e.target.value)}
-                  className="bg-secondary border-border"
+                  className="bg-[#1f1f1f] border-[#333] text-white"
                   placeholder="1.75rem"
                 />
               </div>
@@ -263,7 +263,7 @@ export function ElementPropertiesPanel({
                 <Input
                   value={typography.letterSpacing}
                   onChange={(e) => handleTypographyChange("letterSpacing", e.target.value)}
-                  className="bg-secondary border-border"
+                  className="bg-[#1f1f1f] border-[#333] text-white"
                   placeholder="0.1em"
                 />
               </div>
@@ -385,7 +385,7 @@ export function ElementPropertiesPanel({
         <div>
           <label className="text-sm text-foreground mb-2 block">Color</label>
           <Select value={color} onValueChange={handleColorChange}>
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 rounded border border-border"
@@ -416,7 +416,7 @@ export function ElementPropertiesPanel({
         <div>
           <label className="text-sm text-foreground mb-2 block">Background</label>
           <Select value={background} onValueChange={handleBackgroundChange}>
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 rounded border border-border bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"
@@ -456,25 +456,25 @@ export function ElementPropertiesPanel({
                 value={margin.top}
                 onChange={(e) => setMargin({ ...margin, top: e.target.value })}
                 placeholder="T"
-                className="bg-secondary border-border text-center"
+                className="bg-[#1f1f1f] border-[#333] text-white text-center"
               />
               <Input
                 value={margin.right}
                 onChange={(e) => setMargin({ ...margin, right: e.target.value })}
                 placeholder="R"
-                className="bg-secondary border-border text-center"
+                className="bg-[#1f1f1f] border-[#333] text-white text-center"
               />
               <Input
                 value={margin.bottom}
                 onChange={(e) => setMargin({ ...margin, bottom: e.target.value })}
                 placeholder="B"
-                className="bg-secondary border-border text-center"
+                className="bg-[#1f1f1f] border-[#333] text-white text-center"
               />
               <Input
                 value={margin.left}
                 onChange={(e) => setMargin({ ...margin, left: e.target.value })}
                 placeholder="L"
-                className="bg-secondary border-border text-center"
+                className="bg-[#1f1f1f] border-[#333] text-white text-center"
               />
             </div>
           </div>

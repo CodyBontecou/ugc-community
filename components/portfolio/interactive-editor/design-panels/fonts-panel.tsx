@@ -68,7 +68,7 @@ export function FontsPanel({ fonts, onFontsChange, onBack }: FontsPanelProps) {
             value={fonts.sans}
             onValueChange={(value) => onFontsChange({ ...fonts, sans: value })}
           >
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +88,7 @@ export function FontsPanel({ fonts, onFontsChange, onBack }: FontsPanelProps) {
             value={fonts.serif || ""}
             onValueChange={(value) => onFontsChange({ ...fonts, serif: value })}
           >
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <SelectValue placeholder="Select font..." />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export function FontsPanel({ fonts, onFontsChange, onBack }: FontsPanelProps) {
             value={fonts.mono}
             onValueChange={(value) => onFontsChange({ ...fonts, mono: value })}
           >
-            <SelectTrigger className="w-full bg-secondary border-border">
+            <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

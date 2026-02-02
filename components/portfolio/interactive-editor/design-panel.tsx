@@ -206,7 +206,7 @@ export function DesignPanel({
                     handleFontChange({ ...designSystem.fonts, sans: value })
                   }
                 >
-                  <SelectTrigger className="w-full bg-secondary border-border">
+                  <SelectTrigger className="w-full bg-[#1f1f1f] border-[#333] text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
