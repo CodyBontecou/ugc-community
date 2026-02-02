@@ -11,10 +11,6 @@ import { UserProgressionPath } from "@/components/milestones/UserProgressionPath
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { isBrand } from "@/lib/roles";
 import { isAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = {
@@ -29,18 +25,9 @@ async function DashboardContent() {
   const session = await getServerSession();
   if (!session) return null;
 
-  // Fetch user role
-  const user = await db
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .limit(1);
-
-  const userRole = user[0]?.role || "creator";
-  const isUserBrand = isBrand(userRole);
   const isUserAdmin = isAdmin(session.user.email);
-  // Only show creator content for actual creators (not brands or admins)
-  const showCreatorContent = !isUserBrand && !isUserAdmin;
+  // Show creator content for everyone except admins
+  const showCreatorContent = !isUserAdmin;
 
   const firstName = session.user.name?.split(" ")[0] || "Creator";
 
@@ -52,35 +39,33 @@ async function DashboardContent() {
           Hey {firstName}!
         </h1>
         <p className="text-lg text-warm-gray-500">
-          {isUserBrand
-            ? "Manage your brand dashboard"
-            : "Welcome to your dashboard"}
+          Welcome to your dashboard
         </p>
       </div>
 
-      {/* Onboarding Form - Creator only */}
+      {/* Onboarding Form */}
       {showCreatorContent && <OnboardingForm />}
 
-      {/* Creator Stats - Creator only */}
+      {/* Creator Stats */}
       {showCreatorContent && <CreatorStatsCard />}
 
-      {/* Advanced Analytics - Creator only */}
+      {/* Advanced Analytics */}
       {showCreatorContent && <AdvancedAnalytics />}
 
-      {/* Post Performance Metrics - Creator only */}
+      {/* Post Performance Metrics */}
       {showCreatorContent && <PostMetrics />}
 
-      {/* Milestone Progress - Creator only */}
+      {/* Milestone Progress */}
       {showCreatorContent && (
         <div id="milestone-progress">
           <UserProgressionPath />
         </div>
       )}
 
-      {/* Portfolio Hosting Status - Creator only */}
+      {/* Portfolio Hosting Status */}
       {showCreatorContent && <PortfolioStatus />}
 
-      {/* Unlocked Rewards - Creator only */}
+      {/* Unlocked Rewards */}
       {showCreatorContent && <RewardsOverview />}
 
       {/* Account Section */}
@@ -112,7 +97,7 @@ async function DashboardContent() {
         </div>
       </div>
 
-      {/* Media Library Section - Creator only */}
+      {/* Media Library Section */}
       {showCreatorContent && (
         <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
           <div className="h-[600px] relative">
