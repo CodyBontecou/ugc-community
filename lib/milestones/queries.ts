@@ -2,11 +2,14 @@
  * Milestone System Database Queries
  *
  * Low-level database operations for the milestone system.
+ * Note: Hashtag monitoring has been removed. Post counts are tracked
+ * through the user's lifetimePostCount field which can be updated manually
+ * or through future integrations.
  */
 
 import { db } from "@/lib/db";
-import { milestones, userMilestones, users, hashtagMentions } from "@/lib/db/schema";
-import { eq, and, sql, gte, lt } from "drizzle-orm";
+import { milestones, userMilestones, users } from "@/lib/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 
 /**
  * Get all milestone definitions
@@ -106,40 +109,18 @@ export async function hasUserEarnedMilestone(
 }
 
 /**
- * Get user's monthly post count from hashtagMentions
+ * Get user's monthly post count
+ * Note: With hashtag monitoring removed, this returns 0.
+ * Future implementations could use manual post tracking.
  */
 export async function getMonthlyPostCount(
   userId: string,
   year: number,
   month: number
 ): Promise<number> {
-  const startOfMonth = new Date(year, month - 1, 1);
-  const startOfNextMonth = new Date(year, month, 1);
-
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(hashtagMentions)
-    .where(
-      and(
-        eq(hashtagMentions.matchedUserId, userId),
-        gte(hashtagMentions.postedAt, startOfMonth),
-        lt(hashtagMentions.postedAt, startOfNextMonth)
-      )
-    );
-
-  return Number(result?.count ?? 0);
-}
-
-/**
- * Get user's lifetime post count from hashtagMentions
- */
-export async function getLifetimePostCountFromMentions(userId: string): Promise<number> {
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(hashtagMentions)
-    .where(eq(hashtagMentions.matchedUserId, userId));
-
-  return Number(result?.count ?? 0);
+  // Hashtag monitoring removed - return 0 for now
+  // This can be updated when manual post tracking is implemented
+  return 0;
 }
 
 /**

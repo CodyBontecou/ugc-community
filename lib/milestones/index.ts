@@ -2,6 +2,8 @@
  * Milestone Checking Service
  *
  * Handles checking and awarding milestones to users based on their post counts.
+ * Note: Hashtag monitoring has been removed. Post counts are now tracked
+ * through the user's lifetimePostCount field.
  */
 
 import type { Milestone } from "@/lib/db/schema";
@@ -10,7 +12,7 @@ import {
   hasUserEarnedMilestone,
   awardMilestone,
   getMonthlyPostCount,
-  getLifetimePostCountFromMentions,
+  getUserLifetimePostCount,
   updateUserLifetimePostCount,
 } from "./queries";
 import { applyMilestoneReward } from "./rewards";
@@ -215,7 +217,7 @@ export async function checkAndAwardMilestones(
     now.getFullYear(),
     now.getMonth() + 1
   );
-  const lifetimePostCount = await getLifetimePostCountFromMentions(userId);
+  const lifetimePostCount = await getUserLifetimePostCount(userId);
 
   // Check each milestone
   for (const milestone of allMilestones) {
@@ -255,23 +257,21 @@ export async function checkAndAwardMilestones(
  * Update a user's lifetime post count and check for new milestones
  *
  * @param userId - The user ID to update
+ * @param newCount - The new lifetime post count
  * @returns Object with updated count and newly awarded milestones
  */
-export async function updateUserPostCount(userId: string): Promise<{
+export async function updateUserPostCount(userId: string, newCount: number): Promise<{
   lifetimePostCount: number;
   awardedMilestones: AwardedMilestone[];
 }> {
-  // Count total matched posts for user
-  const lifetimePostCount = await getLifetimePostCountFromMentions(userId);
-
   // Update the user's lifetime post count
-  await updateUserLifetimePostCount(userId, lifetimePostCount);
+  await updateUserLifetimePostCount(userId, newCount);
 
   // Check and award any new milestones
   const awardedMilestones = await checkAndAwardMilestones(userId);
 
   return {
-    lifetimePostCount,
+    lifetimePostCount: newCount,
     awardedMilestones,
   };
 }

@@ -4,11 +4,9 @@ import { getPortfolioStatus } from "@/lib/portfolio/status";
 
 export type PortfolioStatusResponse = {
   isActive: boolean;
-  reason: "hosting_reward" | "posting_requirement_met" | "requirement_not_met";
+  reason: "hosting_reward" | "default_active";
   hasHostingReward: boolean;
   hostingRewardExpiry: string | null;
-  monthlyPostCount: number;
-  requiredPostCount: number;
 };
 
 /**
@@ -26,8 +24,6 @@ export async function GET() {
       reason: status.reason,
       hasHostingReward: status.hasHostingReward,
       hostingRewardExpiry: status.hostingRewardExpiry?.toISOString() ?? null,
-      monthlyPostCount: status.monthlyPostCount,
-      requiredPostCount: status.requiredPostCount,
     };
 
     return NextResponse.json(response);
