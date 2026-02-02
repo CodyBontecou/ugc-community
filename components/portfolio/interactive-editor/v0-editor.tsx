@@ -67,6 +67,9 @@ export function V0Editor({
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(384); // Default w-96 = 384px
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   // Track HTML state before live editing started
   const htmlBeforeLiveEditRef = useRef<string | null>(null);
@@ -328,6 +331,42 @@ export function V0Editor({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  // Handle sidebar resize
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    resizeRef.current = { startX: e.clientX, startWidth: sidebarWidth };
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !resizeRef.current) return;
+      
+      const delta = e.clientX - resizeRef.current.startX;
+      const newWidth = Math.min(Math.max(resizeRef.current.startWidth + delta, 280), 600);
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeRef.current = null;
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing]);
+
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
 
@@ -384,9 +423,10 @@ export function V0Editor({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Chat Panel */}
         <div
-          className={`bg-[#0a0a0a] border-r border-[#1f1f1f] flex flex-col transition-all duration-300 ${
-            isSidebarCollapsed ? "w-0 overflow-hidden" : "w-96"
+          className={`bg-[#0a0a0a] border-r border-[#1f1f1f] flex flex-col relative ${
+            isSidebarCollapsed ? "w-0 overflow-hidden" : ""
           }`}
+          style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
         >
           <V0ChatPanel
             selectedElement={selectedElement}
@@ -398,6 +438,15 @@ export function V0Editor({
             isStreaming={isStreaming}
             onStreamingChange={setIsStreaming}
           />
+          {/* Resize handle */}
+          {!isSidebarCollapsed && (
+            <div
+              onMouseDown={handleResizeStart}
+              className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500/50 transition-colors ${
+                isResizing ? "bg-blue-500/50" : "bg-transparent"
+              }`}
+            />
+          )}
         </div>
 
         {/* Main Preview Area */}
