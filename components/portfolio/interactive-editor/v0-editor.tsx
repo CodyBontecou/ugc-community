@@ -8,29 +8,16 @@ import {
   Loader2,
   Monitor,
   Smartphone,
-  Eye,
   Check,
-  Code2,
   Share2,
   ChevronLeft,
   ChevronRight,
   RotateCw,
   MoreHorizontal,
-  MessageSquare,
-  Palette,
-  GitBranch,
-  Link2,
-  Variable,
-  Settings,
   Undo2,
   Redo2,
-  Plus,
   ChevronDown,
-  Send,
-  Image as ImageIcon,
   Sparkles,
-  Copy,
-  Mail,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
 import { V0ChatPanel } from "./v0-chat-panel";
@@ -55,21 +42,11 @@ interface V0EditorProps {
 }
 
 type DeviceSize = "desktop" | "mobile";
-type ViewMode = "preview" | "code";
 
 const DEVICE_WIDTHS: Record<DeviceSize, string> = {
   desktop: "100%",
   mobile: "375px",
 };
-
-const NAV_ITEMS = [
-  { id: "chat", icon: MessageSquare, label: "Chat" },
-  { id: "design", icon: Palette, label: "Design" },
-  { id: "git", icon: GitBranch, label: "Git" },
-  { id: "connect", icon: Link2, label: "Connect" },
-  { id: "vars", icon: Variable, label: "Vars" },
-  { id: "settings", icon: Settings, label: "Settings" },
-] as const;
 
 export function V0Editor({
   portfolioId,
@@ -85,12 +62,10 @@ export function V0Editor({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deviceSize, setDeviceSize] = useState<DeviceSize>("desktop");
-  const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isRefreshLoading, setIsRefreshLoading] = useState(false);
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
-  const [activeNav, setActiveNav] = useState<string>("chat");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Track HTML state before live editing started
@@ -407,32 +382,6 @@ export function V0Editor({
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Icon Navigation */}
-        <nav className="w-14 bg-[#0a0a0a] border-r border-[#1f1f1f] flex flex-col items-center py-4">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveNav(item.id)}
-              className={`w-10 h-10 flex flex-col items-center justify-center rounded-lg mb-1 transition-colors ${
-                activeNav === item.id
-                  ? "bg-[#1f1f1f] text-white"
-                  : "text-[#666] hover:text-white hover:bg-[#1f1f1f]"
-              }`}
-              title={item.label}
-            >
-              <item.icon size={18} />
-              <span className="text-[9px] mt-0.5">{item.label}</span>
-            </button>
-          ))}
-          <div className="flex-1" />
-          <button
-            className="w-10 h-10 flex items-center justify-center text-[#666] hover:text-white hover:bg-[#1f1f1f] rounded-lg transition-colors"
-            title="Email"
-          >
-            <Mail size={18} />
-          </button>
-        </nav>
-
         {/* Left Sidebar - Chat Panel */}
         <div
           className={`bg-[#0a0a0a] border-r border-[#1f1f1f] flex flex-col transition-all duration-300 ${
@@ -463,28 +412,6 @@ export function V0Editor({
               >
                 {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
-              
-              {/* View mode toggle */}
-              <div className="flex items-center bg-[#1f1f1f] rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode("preview")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "preview" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
-                  }`}
-                  title="Preview"
-                >
-                  <Eye size={16} />
-                </button>
-                <button
-                  onClick={() => setViewMode("code")}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === "code" ? "bg-[#2a2a2a] text-white" : "text-[#666] hover:text-white"
-                  }`}
-                  title="Code"
-                >
-                  <Code2 size={16} />
-                </button>
-              </div>
             </div>
 
             {/* URL Bar */}
@@ -556,42 +483,32 @@ export function V0Editor({
             </div>
           </div>
 
-          {/* Preview/Code Content */}
+          {/* Preview Content */}
           <div className="flex-1 p-4 overflow-auto relative">
-            {viewMode === "preview" ? (
-              <>
-                <div
-                  className={`mx-auto bg-white rounded-lg overflow-hidden shadow-2xl transition-all duration-300 h-full ${
-                    deviceSize === "desktop" ? "w-full max-w-[calc(100%-120px)]" : "w-[375px]"
-                  }`}
-                >
-                  <EditableIframe
-                    html={html}
-                    onElementSelect={handleElementSelect}
-                    onElementRefresh={handleElementRefresh}
-                    selectedSelector={selectedElement?.selector}
-                    isRefreshLoading={isRefreshLoading}
-                  />
-                </div>
-                {/* Section Navigation */}
-                <V0SectionNav
-                  html={html}
-                  onSectionClick={(selector) => {
-                    // Scroll to section in iframe
-                    const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: "scroll-to", selector }, "*");
-                    }
-                  }}
-                />
-              </>
-            ) : (
-              <div className="h-full bg-[#1f1f1f] rounded-lg p-4 overflow-auto">
-                <pre className="text-sm text-[#999] font-mono whitespace-pre-wrap break-all">
-                  {html}
-                </pre>
-              </div>
-            )}
+            <div
+              className={`mx-auto bg-white rounded-lg overflow-hidden shadow-2xl transition-all duration-300 h-full ${
+                deviceSize === "desktop" ? "w-full max-w-[calc(100%-120px)]" : "w-[375px]"
+              }`}
+            >
+              <EditableIframe
+                html={html}
+                onElementSelect={handleElementSelect}
+                onElementRefresh={handleElementRefresh}
+                selectedSelector={selectedElement?.selector}
+                isRefreshLoading={isRefreshLoading}
+              />
+            </div>
+            {/* Section Navigation */}
+            <V0SectionNav
+              html={html}
+              onSectionClick={(selector) => {
+                // Scroll to section in iframe
+                const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage({ type: "scroll-to", selector }, "*");
+                }
+              }}
+            />
           </div>
         </div>
       </div>
