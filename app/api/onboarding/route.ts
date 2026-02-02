@@ -188,29 +188,43 @@ export async function POST(request: NextRequest) {
 
     try {
       const octokit = new Octokit({ auth: githubToken });
+      const { repoExists, getRepoInfo } = await import("@/lib/github/push-portfolio");
+      const expectedRepoName = `${normalizedSubdomain}-portfolio`;
+      const expectedRepoFullName = `${process.env.GITHUB_SERVICE_USERNAME}/${expectedRepoName}`;
 
       // Check if existing repo still exists
       let needsNewRepo = !repoFullName;
       if (repoFullName) {
-        const { repoExists } = await import("@/lib/github/push-portfolio");
         const exists = await repoExists(octokit, repoFullName);
         if (!exists) {
-          console.log(`Repo ${repoFullName} no longer exists, creating new one`);
+          console.log(`Repo ${repoFullName} no longer exists, checking for expected repo`);
           needsNewRepo = true;
         }
       }
 
       if (needsNewRepo) {
-        const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
-          description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
-          isPrivate: true,
-        });
+        // Before creating, check if the expected repo already exists (from a previous failed attempt)
+        const expectedExists = await repoExists(octokit, expectedRepoFullName);
+        
+        if (expectedExists) {
+          // Repo already exists - use it instead of failing
+          console.log(`Found existing repo ${expectedRepoFullName}, linking to user`);
+          const repoInfo = await getRepoInfo(octokit, expectedRepoFullName);
+          repoFullName = expectedRepoFullName;
+          repoId = String(repoInfo.id);
+        } else {
+          // Create new repo
+          const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
+            description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
+            isPrivate: true,
+          });
 
-        repoFullName = repoResult.repoFullName;
-        repoId = String(repoResult.repoId);
+          repoFullName = repoResult.repoFullName;
+          repoId = String(repoResult.repoId);
 
-        // Wait for repo to be initialized (auto_init creates commit asynchronously)
-        await waitForRepoInitialized(octokit, repoFullName);
+          // Wait for repo to be initialized (auto_init creates commit asynchronously)
+          await waitForRepoInitialized(octokit, repoFullName);
+        }
 
         // Update user with repo info
         await db
