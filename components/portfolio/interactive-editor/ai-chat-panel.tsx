@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, Copy, Check, X, Loader2, ChevronDown, Mic } from "lucide-react";
+import { Sparkles, Copy, Check, X, Loader2 } from "lucide-react";
 
 // AI Elements
 import {
@@ -35,18 +35,6 @@ import {
   type AttachmentData,
 } from "@/components/ai-elements/attachments";
 import {
-  ModelSelector,
-  ModelSelectorTrigger,
-  ModelSelectorContent,
-  ModelSelectorInput,
-  ModelSelectorList,
-  ModelSelectorEmpty,
-  ModelSelectorGroup,
-  ModelSelectorItem,
-  ModelSelectorLogo,
-  ModelSelectorName,
-} from "@/components/ai-elements/model-selector";
-import {
   Reasoning,
   ReasoningTrigger,
   ReasoningContent,
@@ -58,25 +46,6 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
-import { SpeechInput } from "@/components/ai-elements/speech-input";
-import {
-  MicSelector,
-  MicSelectorTrigger,
-  MicSelectorContent,
-  MicSelectorInput,
-  MicSelectorList,
-  MicSelectorEmpty,
-  MicSelectorItem,
-  MicSelectorLabel,
-  MicSelectorValue,
-} from "@/components/ai-elements/mic-selector";
-
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 import type { SelectedElement } from "@/lib/editor/types";
 import { getElementTypeName } from "@/lib/editor/html-element-selector";
@@ -107,34 +76,6 @@ interface ChatMessage {
   attachments?: AttachmentData[];
 }
 
-interface ModelOption {
-  id: string;
-  name: string;
-  description: string;
-  provider: "anthropic";
-}
-
-const MODEL_OPTIONS: ModelOption[] = [
-  {
-    id: "claude-sonnet-4-20250514",
-    name: "Claude Sonnet",
-    description: "Balanced speed and capability (default)",
-    provider: "anthropic",
-  },
-  {
-    id: "claude-3-5-haiku-20241022",
-    name: "Claude Haiku",
-    description: "Fastest responses",
-    provider: "anthropic",
-  },
-  {
-    id: "claude-sonnet-4-5",
-    name: "Claude Sonnet 4.5",
-    description: "Most capable model",
-    provider: "anthropic",
-  },
-];
-
 interface AIChatPanelProps {
   selectedElement: SelectedElement | null;
   portfolioId: string;
@@ -159,16 +100,11 @@ export function AIChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamedContent, setStreamedContent] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>("claude-sonnet-4-20250514");
-  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentData[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [showMicSelector, setShowMicSelector] = useState(false);
-  const [selectedMic, setSelectedMic] = useState<string | undefined>(undefined);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -176,17 +112,6 @@ export function AIChatPanel({
   }, [messages, streamedContent]);
 
   const generateId = () => Math.random().toString(36).substring(7);
-
-  const handleAddAttachment = useCallback((files: File[]) => {
-    const newAttachments: AttachmentData[] = files.map((file) => ({
-      id: generateId(),
-      type: "file" as const,
-      url: URL.createObjectURL(file),
-      mediaType: file.type,
-      filename: file.name,
-    }));
-    setAttachments((prev) => [...prev, ...newAttachments]);
-  }, []);
 
   const handleRemoveAttachment = useCallback((id: string) => {
     setAttachments((prev) => {
@@ -297,7 +222,6 @@ export function AIChatPanel({
               instruction: message,
               fullHtml,
               tagName: selectedElement.tagName,
-              model: selectedModel,
               images: validImages.length > 0 ? validImages : undefined,
             }),
             signal: abortControllerRef.current.signal,
@@ -390,7 +314,6 @@ export function AIChatPanel({
               action: "refine-html",
               currentHtml: fullHtml,
               feedback: message,
-              model: selectedModel,
               images: validImages.length > 0 ? validImages : undefined,
             }),
             signal: abortControllerRef.current.signal,
@@ -493,7 +416,7 @@ export function AIChatPanel({
         abortControllerRef.current = null;
       }
     },
-    [selectedElement, portfolioId, fullHtml, onApplyEdit, onFullPageGenerate, onStreamingChange, selectedModel, attachments]
+    [selectedElement, portfolioId, fullHtml, onApplyEdit, onFullPageGenerate, onStreamingChange, attachments]
   );
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -512,98 +435,8 @@ export function AIChatPanel({
     setMessages((prev) => prev.filter((m) => !m.isThinking));
   };
 
-  const handleSpeechTranscription = useCallback((text: string) => {
-    setInputValue((prev) => prev + (prev ? " " : "") + text);
-    textareaRef.current?.focus();
-  }, []);
-
-  const currentModel = MODEL_OPTIONS.find((m) => m.id === selectedModel) || MODEL_OPTIONS[0];
-
   return (
     <div className="flex flex-col h-full dark">
-      {/* Header with Model Selector */}
-      <div className="px-4 py-2 border-b border-border flex items-center justify-between">
-        <ModelSelector open={modelSelectorOpen} onOpenChange={setModelSelectorOpen}>
-          <ModelSelectorTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ModelSelectorLogo provider="anthropic" className="size-4" />
-              <span className="text-sm">{currentModel.name}</span>
-              <ChevronDown className="size-3" />
-            </Button>
-          </ModelSelectorTrigger>
-          <ModelSelectorContent className="w-80">
-            <ModelSelectorInput placeholder="Search models..." />
-            <ModelSelectorList>
-              <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-              <ModelSelectorGroup heading="Claude Models">
-                {MODEL_OPTIONS.map((model) => (
-                  <ModelSelectorItem
-                    key={model.id}
-                    value={model.id}
-                    onSelect={() => {
-                      setSelectedModel(model.id);
-                      setModelSelectorOpen(false);
-                    }}
-                    className="flex items-center gap-3 py-3"
-                  >
-                    <ModelSelectorLogo provider="anthropic" className="size-4" />
-                    <div className="flex-1 min-w-0">
-                      <ModelSelectorName className="font-medium">{model.name}</ModelSelectorName>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {model.description}
-                      </p>
-                    </div>
-                    {model.id === selectedModel && (
-                      <Check className="size-4 text-primary" />
-                    )}
-                  </ModelSelectorItem>
-                ))}
-              </ModelSelectorGroup>
-            </ModelSelectorList>
-          </ModelSelectorContent>
-        </ModelSelector>
-
-        {/* Voice Input Controls */}
-        <div className="flex items-center gap-1">
-          <Popover open={showMicSelector} onOpenChange={setShowMicSelector}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Mic className="size-4 text-muted-foreground" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-0">
-              <MicSelector value={selectedMic} onValueChange={setSelectedMic}>
-                <MicSelectorContent>
-                  <MicSelectorInput />
-                  <MicSelectorList>
-                    {(devices) =>
-                      devices.length === 0 ? (
-                        <MicSelectorEmpty />
-                      ) : (
-                        devices.map((device) => (
-                          <MicSelectorItem key={device.deviceId} value={device.deviceId}>
-                            <MicSelectorLabel device={device} />
-                          </MicSelectorItem>
-                        ))
-                      )
-                    }
-                  </MicSelectorList>
-                </MicSelectorContent>
-              </MicSelector>
-            </PopoverContent>
-          </Popover>
-          <SpeechInput
-            onTranscriptionChange={handleSpeechTranscription}
-            className="h-8 w-8"
-            size="icon"
-          />
-        </div>
-      </div>
-
       {/* Selected Element Indicator */}
       <AnimatePresence>
         {selectedElement && (
