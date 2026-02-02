@@ -10,6 +10,8 @@ import {
   ChevronDown,
   User,
   Shield,
+  Trophy,
+  Settings,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
@@ -27,6 +29,8 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/milestones", label: "Milestones", icon: Trophy },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardNav({ user, isAdmin = false, role = "creator" }: DashboardNavProps) {
@@ -121,12 +125,12 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
                 </div>
 
                 <Link
-                  href="/dashboard/profile"
+                  href="/dashboard/settings"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
                 >
-                  <User size={16} />
-                  View Profile
+                  <Settings size={16} />
+                  Settings
                 </Link>
 
                 <button
