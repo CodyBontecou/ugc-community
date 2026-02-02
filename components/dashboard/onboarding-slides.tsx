@@ -613,6 +613,7 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
   };
 
   return (
+    <>
     <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
       {/* Progress indicator */}
       <div className="bg-gradient-to-br from-coral/5 via-rose/5 to-violet/5 px-6 py-4 border-b border-warm-gray-100">
@@ -774,25 +775,25 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
         </div>
       </div>
 
-      {/* Calendly Link */}
-      <div className="px-6 pb-6">
-        <div className="flex items-center gap-3 text-warm-gray-500">
-          <Calendar className="w-5 h-5 text-warm-gray-400 flex-shrink-0" />
-          <p className="text-sm">
-            Want to chat about your portfolio?{" "}
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-coral hover:underline font-medium inline-flex items-center gap-1"
-            >
-              Schedule a quick call
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-          </p>
-        </div>
-      </div>
     </div>
+
+      {/* Calendly Link - positioned outside card, bottom left */}
+      <div className="mt-4 flex items-center gap-2 text-warm-gray-500">
+        <Calendar className="w-4 h-4 text-warm-gray-400 flex-shrink-0" />
+        <p className="text-sm">
+          Want to chat about your portfolio?{" "}
+          <a
+            href={CALENDLY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-coral hover:underline font-medium inline-flex items-center gap-1"
+          >
+            Schedule a quick call
+            <ArrowRight className="w-3.5 h-3.5" />
+          </a>
+        </p>
+      </div>
+    </>
   );
 }
 
