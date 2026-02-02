@@ -180,17 +180,6 @@ export function DesignPanel({
             </div>
 
             <div className="p-4 space-y-6">
-              {/* Design System Section */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-foreground">Design System</span>
-                  <Settings2 size={14} className="text-muted-foreground" />
-                </div>
-                <button className="w-full p-4 border border-dashed border-border rounded-lg text-muted-foreground text-sm hover:border-muted-foreground transition-colors">
-                  Add a design system
-                </button>
-              </div>
-
               {/* Fonts Section */}
               <div>
                 <button

@@ -327,12 +327,12 @@ export function V0ChatPanel({
         {messages.length === 0 && (
           <div className="text-center py-8">
             <div className="w-12 h-12 rounded-full bg-[#1f1f1f] flex items-center justify-center mx-auto mb-4">
-              <Sparkles size={24} className="text-[#666]" />
+              <Sparkles size={24} className="text-[#999]" />
             </div>
-            <h3 className="text-white font-medium mb-2">
+            <h3 className="text-white font-semibold mb-2">
               What would you like to build?
             </h3>
-            <p className="text-sm text-[#666] max-w-[250px] mx-auto">
+            <p className="text-sm text-[#aaa] max-w-[250px] mx-auto">
               {selectedElement
                 ? `Describe how you want to change the selected ${getElementTypeName(selectedElement.tagName).toLowerCase()}`
                 : "Describe your changes or select an element to edit"}

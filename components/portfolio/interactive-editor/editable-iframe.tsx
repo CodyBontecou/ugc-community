@@ -11,6 +11,7 @@ interface EditableIframeProps {
   onElementRefresh?: (element: SelectedElement) => void;
   selectedSelector?: string | null;
   isRefreshLoading?: boolean;
+  isDesignMode?: boolean;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function EditableIframe({
   onElementRefresh,
   selectedSelector,
   isRefreshLoading = false,
+  isDesignMode = false,
   className = "",
 }: EditableIframeProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -53,7 +55,12 @@ export function EditableIframe({
           }
           break;
         case "ready":
-          // Iframe is ready, update selection if needed
+          // Iframe is ready, send design mode state
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: "set-design-mode", enabled: isDesignMode },
+            "*"
+          );
+          // Update selection if needed
           if (selectedSelector) {
             iframeRef.current?.contentWindow?.postMessage(
               { type: "update-selection", selector: selectedSelector },
@@ -63,7 +70,7 @@ export function EditableIframe({
           break;
       }
     },
-    [onElementSelect, onElementHover, onElementRefresh, selectedSelector]
+    [onElementSelect, onElementHover, onElementRefresh, selectedSelector, isDesignMode]
   );
 
   // Set up message listener
@@ -96,6 +103,13 @@ export function EditableIframe({
       iframeRef.current.contentWindow.postMessage({ type: "stop-loading" }, "*");
     }
   }, [isRefreshLoading]);
+
+  // Send design mode state to iframe
+  useEffect(() => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: "set-design-mode", enabled: isDesignMode }, "*");
+    }
+  }, [isDesignMode]);
 
   return (
     <iframe

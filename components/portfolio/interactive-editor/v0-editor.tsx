@@ -706,10 +706,10 @@ export function V0Editor({
           </div>
 
           {/* Preview Content */}
-          <div className="flex-1 p-4 overflow-auto relative">
+          <div className={`flex-1 overflow-auto relative ${deviceSize === "desktop" ? "" : "p-4"}`}>
             <div
-              className={`mx-auto bg-white rounded-lg overflow-hidden shadow-2xl transition-all duration-300 h-full ${
-                deviceSize === "desktop" ? "w-full max-w-[calc(100%-120px)]" : "w-[375px]"
+              className={`mx-auto bg-white overflow-hidden transition-all duration-300 h-full ${
+                deviceSize === "desktop" ? "w-full" : "w-[375px] rounded-lg shadow-2xl"
               }`}
             >
               <EditableIframe
@@ -718,6 +718,7 @@ export function V0Editor({
                 onElementRefresh={handleElementRefresh}
                 selectedSelector={selectedElement?.selector}
                 isRefreshLoading={isRefreshLoading}
+                isDesignMode={sidebarView === "design"}
               />
             </div>
             {/* Section Navigation */}

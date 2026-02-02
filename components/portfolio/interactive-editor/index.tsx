@@ -508,10 +508,10 @@ export function InteractiveHtmlEditor({
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Iframe preview */}
-        <div className="flex-1 flex items-center justify-center p-4 bg-warm-gray-100 overflow-auto">
+        <div className={`flex-1 flex overflow-auto ${deviceSize === "desktop" ? "" : "items-center justify-center bg-warm-gray-100 p-4"}`}>
           <div
-            className={`bg-white shadow-lg rounded-[--radius-lg] overflow-hidden transition-all duration-300 ${
-              deviceSize === "desktop" ? "w-full h-full" : "h-[calc(100vh-180px)]"
+            className={`bg-white overflow-hidden transition-all duration-300 ${
+              deviceSize === "desktop" ? "w-full h-full" : "h-[calc(100vh-180px)] shadow-lg rounded-lg"
             }`}
             style={{
               width: DEVICE_WIDTHS[deviceSize],

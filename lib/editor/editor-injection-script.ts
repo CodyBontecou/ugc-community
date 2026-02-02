@@ -35,9 +35,9 @@ export const EDITOR_INJECTION_SCRIPT = `
   let highlightOverlay = null;
   let selectionOverlay = null;
   let loadingOverlay = null;
-  let refreshButton = null;
   let currentHoveredElement = null;
   let loadingElement = null;
+  let isDesignMode = false;
 
   // Create overlay element
   function createOverlay(id) {
@@ -52,93 +52,6 @@ export const EDITOR_INJECTION_SCRIPT = `
     \`;
     document.body.appendChild(overlay);
     return overlay;
-  }
-
-  // Create refresh button
-  function createRefreshButton() {
-    const btn = document.createElement('button');
-    btn.id = 'editor-refresh-button';
-    btn.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>\`;
-    btn.title = 'Regenerate with AI';
-    btn.style.cssText = \`
-      position: absolute;
-      z-index: 1000000;
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #ff6b95 0%, #ff8fab 100%);
-      color: white;
-      border: 2px solid white;
-      border-radius: 50%;
-      cursor: pointer;
-      opacity: 0;
-      transform: scale(0.8);
-      transition: opacity 0.15s ease-out, transform 0.15s ease-out;
-      box-shadow: 0 2px 8px rgba(255, 107, 149, 0.4);
-      pointer-events: auto;
-    \`;
-    document.body.appendChild(btn);
-
-    btn.addEventListener('mouseenter', () => {
-      btn.style.transform = 'scale(1.1)';
-      btn.style.boxShadow = '0 4px 12px rgba(255, 107, 149, 0.5)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = 'scale(1)';
-      btn.style.boxShadow = '0 2px 8px rgba(255, 107, 149, 0.4)';
-    });
-
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (currentHoveredElement) {
-        const selector = generateSelector(currentHoveredElement);
-        const rect = currentHoveredElement.getBoundingClientRect();
-
-        // Show loading immediately
-        showLoadingOnElement(selector);
-
-        postToParent('refresh-element', {
-          selector: selector,
-          content: currentHoveredElement.innerHTML,
-          tagName: currentHoveredElement.tagName,
-          outerHtml: currentHoveredElement.outerHTML,
-          rect: {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height
-          }
-        });
-      }
-    });
-
-    return btn;
-  }
-
-  // Position refresh button
-  function positionRefreshButton(element) {
-    if (!element || !refreshButton) {
-      if (refreshButton) {
-        refreshButton.style.opacity = '0';
-        refreshButton.style.pointerEvents = 'none';
-      }
-      return;
-    }
-
-    const rect = element.getBoundingClientRect();
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-
-    // Position at top-right corner of the element
-    refreshButton.style.top = \`\${rect.top + scrollY - 14}px\`;
-    refreshButton.style.left = \`\${rect.left + scrollX + rect.width - 14}px\`;
-    refreshButton.style.opacity = '1';
-    refreshButton.style.pointerEvents = 'auto';
-    refreshButton.style.transform = 'scale(1)';
   }
 
   // Create loading overlay with blur effect
@@ -203,7 +116,6 @@ export const EDITOR_INJECTION_SCRIPT = `
 
     // Hide hover states
     highlightOverlay.style.display = 'none';
-    positionRefreshButton(null);
   }
 
   // Hide loading state
@@ -219,7 +131,6 @@ export const EDITOR_INJECTION_SCRIPT = `
   selectionOverlay = createOverlay('editor-selection-overlay');
   selectionOverlay.style.border = \`2px solid \${BORDER_COLOR}\`;
   selectionOverlay.style.boxShadow = \`0 0 0 2px rgba(255, 107, 149, 0.2)\`;
-  refreshButton = createRefreshButton();
   loadingOverlay = createLoadingOverlay();
 
   // Generate unique CSS selector for element
@@ -400,10 +311,11 @@ export const EDITOR_INJECTION_SCRIPT = `
     window.parent.postMessage({ type, payload }, '*');
   }
 
-  // Handle mouse move for hover highlight
+  // Handle mouse move for hover highlight (only in design mode)
   document.addEventListener('mousemove', (e) => {
-    // Don't hide if hovering over the refresh button
-    if (e.target === refreshButton || refreshButton?.contains(e.target)) {
+    if (!isDesignMode) {
+      highlightOverlay.style.display = 'none';
+      document.body.style.cursor = 'default';
       return;
     }
 
@@ -414,12 +326,6 @@ export const EDITOR_INJECTION_SCRIPT = `
       const isMedia = isMediaEditable(editableElement);
       const hoverColor = isMedia ? MEDIA_HIGHLIGHT_COLOR : HIGHLIGHT_COLOR;
       positionOverlay(highlightOverlay, editableElement, hoverColor);
-      // Only show refresh button for text elements, not media
-      if (!isMedia) {
-        positionRefreshButton(editableElement);
-      } else {
-        positionRefreshButton(null);
-      }
       document.body.style.cursor = 'pointer';
 
       const payload = {
@@ -439,18 +345,14 @@ export const EDITOR_INJECTION_SCRIPT = `
     } else if (!editableElement) {
       currentHoveredElement = null;
       highlightOverlay.style.display = 'none';
-      positionRefreshButton(null);
       document.body.style.cursor = 'default';
       postToParent('element-unhover', null);
     }
   });
 
-  // Handle click for selection
+  // Handle click for selection (only in design mode)
   document.addEventListener('click', (e) => {
-    // Ignore clicks on the refresh button
-    if (e.target === refreshButton || refreshButton?.contains(e.target)) {
-      return;
-    }
+    if (!isDesignMode) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -572,6 +474,17 @@ export const EDITOR_INJECTION_SCRIPT = `
 
   // Listen for messages from parent
   window.addEventListener('message', (e) => {
+    if (e.data?.type === 'set-design-mode') {
+      isDesignMode = e.data.enabled;
+      // Hide overlays when leaving design mode
+      if (!isDesignMode) {
+        highlightOverlay.style.display = 'none';
+        selectionOverlay.style.display = 'none';
+        selectedElement = null;
+        currentHoveredElement = null;
+        document.body.style.cursor = 'default';
+      }
+    }
     if (e.data?.type === 'deselect') {
       selectedElement = null;
       selectionOverlay.style.display = 'none';

@@ -1,9 +1,9 @@
 "use client";
 
-import { MessageCircle, Palette, GitBranch, Upload, Box, Settings, Mail } from "lucide-react";
+import { MessageCircle, Palette, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SidebarView = "chat" | "design" | "git" | "connect" | "vars" | "settings";
+export type SidebarView = "chat" | "design";
 
 interface NavItem {
   id: SidebarView;
@@ -14,10 +14,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "chat", icon: <MessageCircle size={20} />, label: "Chat" },
   { id: "design", icon: <Palette size={20} />, label: "Design" },
-  { id: "git", icon: <GitBranch size={20} />, label: "Git" },
-  { id: "connect", icon: <Upload size={20} />, label: "Connect" },
-  { id: "vars", icon: <Box size={20} />, label: "Vars" },
-  { id: "settings", icon: <Settings size={20} />, label: "Settings" },
 ];
 
 interface EditorSidebarNavProps {
