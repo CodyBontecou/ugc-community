@@ -78,6 +78,58 @@ const SLIDES = [
 
 type SlideId = (typeof SLIDES)[number]["id"];
 
+// localStorage key for saving progress
+const STORAGE_KEY = "onboarding-progress";
+
+interface SavedProgress {
+  currentSlide: number;
+  visitedSlides: number[];
+  subdomain: string;
+  portfolioVision: string;
+  socialMediaHandles: SocialMediaHandle[];
+  inspirationUrls: string[];
+  inspiringBrandsList: string[];
+  savedAt: number;
+}
+
+// Helper to load progress from localStorage
+function loadSavedProgress(): SavedProgress | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return null;
+    const data = JSON.parse(saved) as SavedProgress;
+    // Expire after 7 days
+    if (Date.now() - data.savedAt > 7 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// Helper to save progress to localStorage
+function saveProgress(data: Omit<SavedProgress, "savedAt">) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, savedAt: Date.now() }));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// Helper to clear saved progress
+function clearSavedProgress() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // Animation variants
 const slideVariants = {
   enter: (direction: number) => ({
@@ -174,7 +226,7 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
     return () => clearTimeout(timer);
   }, [subdomain, checkSubdomainAvailability]);
 
-  // Check if user has already submitted
+  // Check if user has already submitted, and restore progress from localStorage
   useEffect(() => {
     async function checkStatus() {
       try {
@@ -182,54 +234,92 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
         if (response.ok) {
           const data = await response.json();
           setHasSubmitted(data.hasSubmitted);
-          if (data.subdomain) {
-            setSubdomain(data.subdomain);
-            setSubdomainStatus({ checking: false, available: true, error: null, suggestions: [] });
-          }
-          if (data.questionnaire) {
-            setPortfolioVision(data.questionnaire.portfolioVision || "");
-
-            if (data.questionnaire.socialMediaHandles?.length > 0) {
-              setSocialMediaHandles(data.questionnaire.socialMediaHandles);
-            }
-            if (data.questionnaire.inspirationUrls?.length > 0) {
-              setInspirationUrls(data.questionnaire.inspirationUrls);
-            } else if (data.questionnaire.portfolioExamples) {
-              const urls = data.questionnaire.portfolioExamples
-                .split(/[\n,]/)
-                .map((s: string) => s.trim())
-                .filter((s: string) => s.length > 0);
-              if (urls.length > 0) {
-                setInspirationUrls(urls);
-              }
-            }
-            if (data.questionnaire.inspiringBrandsList?.length > 0) {
-              setInspiringBrandsList(data.questionnaire.inspiringBrandsList);
-            } else if (data.questionnaire.inspiringBrands) {
-              const brands = data.questionnaire.inspiringBrands
-                .split(/[,\n]/)
-                .map((s: string) => s.trim())
-                .filter((s: string) => s.length > 0);
-              if (brands.length > 0) {
-                setInspiringBrandsList(brands);
-              }
-            }
-          }
-
-          // If user has submitted, go to review slide
+          
+          // If user has already submitted, load from server and go to review
           if (data.hasSubmitted) {
+            // Clear any local progress since they've already submitted
+            clearSavedProgress();
+            
+            if (data.subdomain) {
+              setSubdomain(data.subdomain);
+              setSubdomainStatus({ checking: false, available: true, error: null, suggestions: [] });
+            }
+            if (data.questionnaire) {
+              setPortfolioVision(data.questionnaire.portfolioVision || "");
+
+              if (data.questionnaire.socialMediaHandles?.length > 0) {
+                setSocialMediaHandles(data.questionnaire.socialMediaHandles);
+              }
+              if (data.questionnaire.inspirationUrls?.length > 0) {
+                setInspirationUrls(data.questionnaire.inspirationUrls);
+              } else if (data.questionnaire.portfolioExamples) {
+                const urls = data.questionnaire.portfolioExamples
+                  .split(/[\n,]/)
+                  .map((s: string) => s.trim())
+                  .filter((s: string) => s.length > 0);
+                if (urls.length > 0) {
+                  setInspirationUrls(urls);
+                }
+              }
+              if (data.questionnaire.inspiringBrandsList?.length > 0) {
+                setInspiringBrandsList(data.questionnaire.inspiringBrandsList);
+              } else if (data.questionnaire.inspiringBrands) {
+                const brands = data.questionnaire.inspiringBrands
+                  .split(/[,\n]/)
+                  .map((s: string) => s.trim())
+                  .filter((s: string) => s.length > 0);
+                if (brands.length > 0) {
+                  setInspiringBrandsList(brands);
+                }
+              }
+            }
+            
             setCurrentSlide(SLIDES.length - 1);
             setVisitedSlides(new Set(SLIDES.map((_, i) => i)));
+          } else {
+            // User hasn't submitted yet - check for saved local progress
+            const savedProgress = loadSavedProgress();
+            
+            if (savedProgress) {
+              // Restore from localStorage
+              setCurrentSlide(savedProgress.currentSlide);
+              setVisitedSlides(new Set(savedProgress.visitedSlides));
+              setSubdomain(savedProgress.subdomain);
+              setPortfolioVision(savedProgress.portfolioVision);
+              setSocialMediaHandles(savedProgress.socialMediaHandles);
+              setInspirationUrls(savedProgress.inspirationUrls);
+              setInspiringBrandsList(savedProgress.inspiringBrandsList);
+              
+              // Re-validate subdomain if it was set
+              if (savedProgress.subdomain.length >= 3) {
+                checkSubdomainAvailability(savedProgress.subdomain);
+              }
+            } else if (data.subdomain) {
+              // No local progress but user has a subdomain set on server
+              setSubdomain(data.subdomain);
+              setSubdomainStatus({ checking: false, available: true, error: null, suggestions: [] });
+            }
           }
         }
       } catch (err) {
         console.error("Error checking onboarding status:", err);
+        // On error, still try to load from localStorage
+        const savedProgress = loadSavedProgress();
+        if (savedProgress) {
+          setCurrentSlide(savedProgress.currentSlide);
+          setVisitedSlides(new Set(savedProgress.visitedSlides));
+          setSubdomain(savedProgress.subdomain);
+          setPortfolioVision(savedProgress.portfolioVision);
+          setSocialMediaHandles(savedProgress.socialMediaHandles);
+          setInspirationUrls(savedProgress.inspirationUrls);
+          setInspiringBrandsList(savedProgress.inspiringBrandsList);
+        }
       } finally {
         setIsLoading(false);
       }
     }
     checkStatus();
-  }, []);
+  }, [checkSubdomainAvailability]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -244,6 +334,35 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
+
+  // Save progress to localStorage whenever form state changes
+  useEffect(() => {
+    // Don't save if still loading or if user has already submitted
+    if (isLoading || hasSubmitted) return;
+    
+    // Don't save if we're on the welcome slide with no progress
+    if (currentSlide === 0 && !subdomain && !portfolioVision) return;
+
+    saveProgress({
+      currentSlide,
+      visitedSlides: Array.from(visitedSlides),
+      subdomain,
+      portfolioVision,
+      socialMediaHandles,
+      inspirationUrls,
+      inspiringBrandsList,
+    });
+  }, [
+    isLoading,
+    hasSubmitted,
+    currentSlide,
+    visitedSlides,
+    subdomain,
+    portfolioVision,
+    socialMediaHandles,
+    inspirationUrls,
+    inspiringBrandsList,
+  ]);
 
   // Social media handle management
   const addSocialHandle = () => {
@@ -405,6 +524,10 @@ export function OnboardingSlides({ onSubmitSuccess }: OnboardingSlidesProps) {
 
       setHasSubmitted(true);
       setSuccessMessage(hasSubmitted ? "Updated!" : "Submitted - your portfolio is being generated!");
+      
+      // Clear saved progress on successful submission
+      clearSavedProgress();
+      
       onSubmitSuccess?.();
 
       setTimeout(() => setSuccessMessage(null), 5000);
