@@ -19,7 +19,7 @@ import {
 
 const socialMediaHandleSchema = z.object({
   platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "linkedin", "other"]),
-  handle: z.string().max(200),
+  handle: z.string().min(1, "Handle is required").max(200),
 });
 
 const submitQuestionnaireSchema = z.object({
@@ -27,10 +27,10 @@ const submitQuestionnaireSchema = z.object({
   portfolioVision: z.string().min(10, "Please describe your portfolio vision (at least 10 characters)").max(2000),
   inspiringBrands: z.string().max(1000).optional(),
   portfolioExamples: z.string().max(1000).optional(),
-  // New structured fields
-  socialMediaHandles: z.array(socialMediaHandleSchema).max(20).optional(),
-  inspirationUrls: z.array(z.string().url("Invalid URL format")).max(10).optional(),
-  inspiringBrandsList: z.array(z.string().max(200)).max(20).optional(),
+  // Structured fields - all required with at least one entry
+  socialMediaHandles: z.array(socialMediaHandleSchema).min(1, "Please add at least one social media handle").max(20),
+  inspirationUrls: z.array(z.string().url("Invalid URL format")).min(1, "Please add at least one website").max(10),
+  inspiringBrandsList: z.array(z.string().min(1).max(200)).min(1, "Please add at least one brand").max(20),
 });
 
 // GET /api/onboarding - Check if user has submitted questionnaire

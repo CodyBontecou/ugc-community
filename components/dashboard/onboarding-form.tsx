@@ -287,8 +287,26 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       return;
     }
 
-    // Validate URLs
+    // Validate at least one social media handle
+    const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
+    if (validSocialHandles.length === 0) {
+      setError("Please add at least one social media handle");
+      return;
+    }
+
+    // Validate at least one inspiring brand
+    const validBrands = inspiringBrandsList.filter((brand) => brand.trim().length > 0);
+    if (validBrands.length === 0) {
+      setError("Please add at least one brand that inspires you");
+      return;
+    }
+
+    // Validate URLs - at least one required
     const nonEmptyUrls = inspirationUrls.filter((url) => url.trim().length > 0);
+    if (nonEmptyUrls.length === 0) {
+      setError("Please add at least one website that inspires you");
+      return;
+    }
     const invalidUrls = nonEmptyUrls.filter((url) => !isValidUrl(url));
     if (invalidUrls.length > 0) {
       setError("Please fix the invalid URLs before submitting");
@@ -296,11 +314,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     }
 
     setIsSubmitting(true);
-
-    // Filter out empty social handles, URLs, and brands
-    const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
-    const validUrls = inspirationUrls.filter((url) => url.trim().length > 0 && isValidUrl(url));
-    const validBrands = inspiringBrandsList.filter((brand) => brand.trim().length > 0);
+    const validUrls = nonEmptyUrls.filter((url) => isValidUrl(url));
 
     try {
       const response = await fetch("/api/onboarding", {
@@ -468,10 +482,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         {/* Social Media Handles */}
         <div>
           <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Your social media handles
+            Your social media handles *
           </label>
           <p className="text-xs text-warm-gray-500 mb-3">
-            Add all your social media profiles to display on your portfolio
+            Add at least one social media profile to display on your portfolio
           </p>
 
           <div className="space-y-3">
@@ -562,10 +576,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         {/* Inspiring Brands */}
         <div>
           <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Brands that inspire you
+            Brands that inspire you *
           </label>
           <p className="text-xs text-warm-gray-500 mb-3">
-            Add brands whose look and feel resonates with you (one per field)
+            Add at least one brand whose look and feel resonates with you
           </p>
 
           <div className="space-y-3">
@@ -612,10 +626,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         {/* Website Inspiration URLs */}
         <div>
           <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Websites that inspire you
+            Websites that inspire you *
           </label>
           <p className="text-xs text-warm-gray-500 mb-3">
-            Add links to portfolios or websites you'd like yours to resemble (one per field)
+            Add at least one link to a portfolio or website you'd like yours to resemble
           </p>
 
           <div className="space-y-3">
