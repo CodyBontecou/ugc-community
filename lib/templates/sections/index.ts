@@ -12,3 +12,6 @@ export type { AboutProps } from "./About";
 
 export { Work } from "./Work";
 export type { WorkProps, ProjectWithMedia } from "./Work";
+
+export { Contact } from "./Contact";
+export type { ContactProps } from "./Contact";
