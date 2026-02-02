@@ -269,15 +269,20 @@ export async function POST(request: NextRequest) {
       .returning({ id: portfolioGenerations.id });
 
     // Dispatch to Inngest for portfolio generation
-    await inngest.send({
-      name: "portfolio/generate.requested",
-      data: {
-        generationId: generation.id,
-        questionnaireId: created.id,
-        userId: session.user.id,
-        githubRepoFullName: repoFullName || undefined,
-      },
-    });
+    try {
+      await inngest.send({
+        name: "portfolio/generate.requested",
+        data: {
+          generationId: generation.id,
+          questionnaireId: created.id,
+          userId: session.user.id,
+          githubRepoFullName: repoFullName || undefined,
+        },
+      });
+    } catch (inngestError) {
+      // Log but don't fail the request - generation can be triggered manually
+      console.error("Failed to dispatch to Inngest (portfolio generation won't auto-start):", inngestError);
+    }
 
     return NextResponse.json({
       message: "Questionnaire submitted - your portfolio is being generated!",
@@ -295,8 +300,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     console.error("Error submitting questionnaire:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to submit questionnaire" },
+      { error: `Failed to submit questionnaire: ${errorMessage}` },
       { status: 500 }
     );
   }
