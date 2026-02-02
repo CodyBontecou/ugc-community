@@ -103,6 +103,8 @@ export function SectionManager({ config, template }: SectionManagerProps) {
         }
 
         setLastSaved(new Date());
+        // Dispatch event to refresh preview
+        window.dispatchEvent(new CustomEvent("portfolio-updated"));
       } catch (err) {
         console.error("Failed to save:", err);
         setError(err instanceof Error ? err.message : "Failed to save changes");

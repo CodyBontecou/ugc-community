@@ -8,4 +8,6 @@ export { ThemeEditor } from "./theme-editor";
 export { ColorPicker } from "./color-picker";
 export { FontSelector } from "./font-selector";
 export { ContentEditor } from "./content-editor";
+export { PortfolioEditorLayout } from "./portfolio-editor-layout";
 export * from "./forms";
+export * from "./preview";

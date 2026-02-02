@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { getServerSession } from "@/lib/auth/session";
-import { getUserPortfolioConfig } from "@/lib/templates/queries";
+import { getUserPortfolioConfig, getPortfolioData } from "@/lib/templates/queries";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, portfolioProjects, portfolioProjectMedia, media } from "@/lib/db/schema";
 import {
   ArrowLeft,
   Layout,
@@ -16,6 +16,7 @@ import {
   Settings,
   Search,
 } from "lucide-react";
+import { PortfolioEditorLayout } from "@/components/portfolio/portfolio-editor-layout";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,6 +25,39 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+async function getPreviewData(userId: string) {
+  const portfolioData = await getPortfolioData(userId, { includeUnpublished: true });
+  
+  if (!portfolioData) {
+    return null;
+  }
+
+  // Convert Maps to objects for serialization
+  const projectCoverMedia: Record<string, typeof portfolioData.projectCoverMedia extends Map<string, infer V> ? V : never> = {};
+  for (const [key, value] of portfolioData.projectCoverMedia) {
+    projectCoverMedia[key] = value;
+  }
+
+  const mediaMap: Record<string, typeof portfolioData.mediaMap extends Map<string, infer V> ? V : never> = {};
+  for (const [key, value] of portfolioData.mediaMap) {
+    mediaMap[key] = value;
+  }
+
+  // Build projects with cover media
+  const projectsWithMedia = portfolioData.projects.map((project) => ({
+    ...project,
+    coverMedia: projectCoverMedia[project.id] ?? null,
+  }));
+
+  return {
+    user: portfolioData.user,
+    config: portfolioData.config,
+    template: portfolioData.template,
+    projects: projectsWithMedia,
+    mediaMap,
+  };
+}
 
 async function PortfolioEditorContent() {
   const session = await getServerSession();
@@ -48,8 +82,15 @@ async function PortfolioEditorContent() {
   const subdomain = user?.subdomain;
   const isPublished = portfolioConfig.isPublished;
 
-  return (
-    <div className="max-w-4xl mx-auto">
+  // Get preview data
+  const previewData = await getPreviewData(session.user.id);
+
+  if (!previewData) {
+    redirect("/dashboard/portfolio/templates");
+  }
+
+  const editorContent = (
+    <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -60,41 +101,41 @@ async function PortfolioEditorContent() {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900">
+            <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900">
               Portfolio Editor
             </h1>
-            <p className="mt-1 text-warm-gray-500">
+            <p className="mt-0.5 text-sm text-warm-gray-500">
               Using {template?.name ?? "Unknown"} template
             </p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {subdomain && (
             <Link
               href={`/creators/${subdomain}`}
               target="_blank"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-warm-gray-700 bg-white border border-warm-gray-200 rounded-lg hover:bg-warm-gray-50 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-warm-gray-700 bg-white border border-warm-gray-200 rounded-lg hover:bg-warm-gray-50 transition-colors"
             >
-              <Eye size={16} />
-              Preview
-              <ExternalLink size={14} />
+              <Eye size={14} />
+              Open
+              <ExternalLink size={12} />
             </Link>
           )}
           <Link
             href="/dashboard/portfolio/templates"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-warm-gray-700 bg-white border border-warm-gray-200 rounded-lg hover:bg-warm-gray-50 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-warm-gray-700 bg-white border border-warm-gray-200 rounded-lg hover:bg-warm-gray-50 transition-colors"
           >
-            <Layout size={16} />
-            Change Template
+            <Layout size={14} />
+            Change
           </Link>
         </div>
       </div>
 
       {/* Status Card */}
       <div
-        className={`mb-6 p-4 rounded-xl border ${
+        className={`mb-6 p-3 rounded-xl border ${
           isPublished
             ? "bg-mint/10 border-mint/30"
             : "bg-amber-50 border-amber-200"
@@ -103,28 +144,28 @@ async function PortfolioEditorContent() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className={`w-3 h-3 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 isPublished ? "bg-mint" : "bg-amber-400"
               }`}
             />
             <span
-              className={`font-medium ${
+              className={`text-sm font-medium ${
                 isPublished ? "text-mint" : "text-amber-700"
               }`}
             >
               {isPublished ? "Published" : "Draft"}
             </span>
             {subdomain && (
-              <span className="text-sm text-warm-gray-500">
+              <span className="text-xs text-warm-gray-500">
                 {isPublished
-                  ? `Live at ugc.community/creators/${subdomain}`
+                  ? `ugc.community/creators/${subdomain}`
                   : "Not visible to public"}
               </span>
             )}
           </div>
           <Link
             href="/dashboard/portfolio/publish"
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               isPublished
                 ? "bg-warm-gray-100 text-warm-gray-700 hover:bg-warm-gray-200"
                 : "bg-coral text-white hover:bg-coral/90"
@@ -136,22 +177,21 @@ async function PortfolioEditorContent() {
       </div>
 
       {/* Editor Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/dashboard/portfolio/sections"
-          className="group p-6 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
+          className="group p-4 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center group-hover:bg-coral/20 transition-colors">
-              <Layout className="w-6 h-6 text-coral" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-coral/10 flex items-center justify-center group-hover:bg-coral/20 transition-colors">
+              <Layout className="w-5 h-5 text-coral" />
             </div>
             <div>
-              <h3 className="font-semibold text-warm-gray-900 mb-1">
+              <h3 className="font-semibold text-warm-gray-900 text-sm mb-0.5">
                 Section Manager
               </h3>
-              <p className="text-sm text-warm-gray-500">
-                Reorder sections, toggle visibility, and choose variants for
-                Hero, About, Work, and more.
+              <p className="text-xs text-warm-gray-500">
+                Reorder sections, toggle visibility, choose variants
               </p>
             </div>
           </div>
@@ -159,19 +199,18 @@ async function PortfolioEditorContent() {
 
         <Link
           href="/dashboard/portfolio/theme"
-          className="group p-6 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
+          className="group p-4 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-              <Palette className="w-6 h-6 text-purple-600" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+              <Palette className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-warm-gray-900 mb-1">
+              <h3 className="font-semibold text-warm-gray-900 text-sm mb-0.5">
                 Theme Editor
               </h3>
-              <p className="text-sm text-warm-gray-500">
-                Customize colors, fonts, spacing, and effects to match your
-                brand.
+              <p className="text-xs text-warm-gray-500">
+                Customize colors, fonts, spacing, effects
               </p>
             </div>
           </div>
@@ -179,19 +218,18 @@ async function PortfolioEditorContent() {
 
         <Link
           href="/dashboard/portfolio/content"
-          className="group p-6 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
+          className="group p-4 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <FileText className="w-6 h-6 text-blue-600" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-warm-gray-900 mb-1">
+              <h3 className="font-semibold text-warm-gray-900 text-sm mb-0.5">
                 Content Editor
               </h3>
-              <p className="text-sm text-warm-gray-500">
-                Edit headlines, descriptions, testimonials, and other text
-                content.
+              <p className="text-xs text-warm-gray-500">
+                Edit headlines, descriptions, testimonials
               </p>
             </div>
           </div>
@@ -199,19 +237,18 @@ async function PortfolioEditorContent() {
 
         <Link
           href="/dashboard/projects"
-          className="group p-6 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
+          className="group p-4 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <Settings className="w-6 h-6 text-green-600" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+              <Settings className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-warm-gray-900 mb-1">
+              <h3 className="font-semibold text-warm-gray-900 text-sm mb-0.5">
                 Manage Projects
               </h3>
-              <p className="text-sm text-warm-gray-500">
-                Add, edit, or remove portfolio projects displayed in your Work
-                section.
+              <p className="text-xs text-warm-gray-500">
+                Add, edit, or remove portfolio projects
               </p>
             </div>
           </div>
@@ -219,18 +256,18 @@ async function PortfolioEditorContent() {
 
         <Link
           href="/dashboard/portfolio/seo"
-          className="group p-6 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all"
+          className="group p-4 bg-white rounded-xl border border-warm-gray-200 hover:border-coral/50 hover:shadow-md transition-all md:col-span-2"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-              <Search className="w-6 h-6 text-amber-600" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+              <Search className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-warm-gray-900 mb-1">
+              <h3 className="font-semibold text-warm-gray-900 text-sm mb-0.5">
                 SEO Settings
               </h3>
-              <p className="text-sm text-warm-gray-500">
-                Optimize how your portfolio appears in search engine results.
+              <p className="text-xs text-warm-gray-500">
+                Optimize how your portfolio appears in search engine results
               </p>
             </div>
           </div>
@@ -238,18 +275,16 @@ async function PortfolioEditorContent() {
       </div>
 
       {/* Quick Tips */}
-      <div className="mt-8 p-6 bg-warm-gray-50 rounded-xl">
-        <h3 className="font-semibold text-warm-gray-900 mb-3">Quick Tips</h3>
-        <ul className="space-y-2 text-sm text-warm-gray-600">
+      <div className="mt-6 p-4 bg-warm-gray-50 rounded-xl">
+        <h3 className="font-semibold text-warm-gray-900 text-sm mb-2">Quick Tips</h3>
+        <ul className="space-y-1.5 text-xs text-warm-gray-600">
           <li className="flex items-start gap-2">
             <span className="text-coral">•</span>
-            Preview your changes before publishing to see exactly how visitors
-            will see your portfolio.
+            The preview updates automatically as you make changes.
           </li>
           <li className="flex items-start gap-2">
             <span className="text-coral">•</span>
-            Your Work section automatically pulls from your Projects. Make sure
-            to add some!
+            Use device buttons to see how your portfolio looks on mobile.
           </li>
           <li className="flex items-start gap-2">
             <span className="text-coral">•</span>
@@ -259,31 +294,26 @@ async function PortfolioEditorContent() {
       </div>
     </div>
   );
+
+  return (
+    <PortfolioEditorLayout initialData={previewData}>
+      {editorContent}
+    </PortfolioEditorLayout>
+  );
 }
 
 export default function PortfolioEditorPage() {
   return (
-    <div className="p-6 md:p-10">
-      <Suspense
-        fallback={
-          <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-10 w-48 bg-warm-gray-200 rounded mb-4" />
-              <div className="h-6 w-64 bg-warm-gray-100 rounded mb-8" />
-              <div className="grid grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="h-32 bg-warm-gray-100 rounded-xl"
-                  />
-                ))}
-              </div>
-            </div>
+    <Suspense
+      fallback={
+        <div className="flex h-[calc(100vh-64px)] items-center justify-center">
+          <div className="animate-pulse text-warm-gray-400">
+            Loading editor...
           </div>
-        }
-      >
-        <PortfolioEditorContent />
-      </Suspense>
-    </div>
+        </div>
+      }
+    >
+      <PortfolioEditorContent />
+    </Suspense>
   );
 }
