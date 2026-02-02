@@ -473,12 +473,12 @@ export function AIChatPanel({
         {messages.length === 0 && (
           <div className="text-center py-8">
             <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
-              <Sparkles size={24} className="text-muted-foreground" />
+              <Sparkles size={24} className="text-[#999]" />
             </div>
-            <h3 className="text-foreground font-medium mb-2">
+            <p className="text-white font-semibold text-lg mb-2">
               What would you like to build?
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-[250px] mx-auto">
+            </p>
+            <p className="text-sm text-[#aaa] max-w-[250px] mx-auto">
               {selectedElement
                 ? `Describe how you want to change the selected ${getElementTypeName(selectedElement.tagName).toLowerCase()}`
                 : "Describe your changes or select an element to edit"}
