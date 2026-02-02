@@ -510,6 +510,66 @@ export const EDITOR_INJECTION_SCRIPT = `
     }
   });
 
+  // Generate CSS from design system
+  function generateDesignSystemCSS(design) {
+    const { colors, fonts, radius, shadows } = design;
+    
+    const shadowValue = shadows.preset === 'none' 
+      ? 'none' 
+      : shadows.xOffset + 'px ' + shadows.yOffset + 'px ' + shadows.blur + 'px ' + shadows.spread + 'px rgba(0,0,0,' + shadows.opacity + ')';
+    
+    return \`
+      :root {
+        --primary: \${colors.colors.primary};
+        --primary-foreground: \${colors.colors.primaryForeground};
+        --secondary: \${colors.colors.secondary};
+        --secondary-foreground: \${colors.colors.secondaryForeground};
+        --accent: \${colors.colors.accent};
+        --accent-foreground: \${colors.colors.accentForeground};
+        --background: \${colors.colors.background};
+        --foreground: \${colors.colors.foreground};
+        --card: \${colors.colors.card};
+        --card-foreground: \${colors.colors.cardForeground};
+        --muted: \${colors.colors.muted};
+        --muted-foreground: \${colors.colors.mutedForeground};
+        --radius: \${radius}rem;
+        --shadow: \${shadowValue};
+        --font-sans: "\${fonts.sans}", system-ui, sans-serif;
+        --font-serif: "\${fonts.serif}", Georgia, serif;
+        --font-mono: "\${fonts.mono}", monospace;
+      }
+      body {
+        font-family: var(--font-\${fonts.defaultStyle});
+        background-color: var(--background);
+        color: var(--foreground);
+      }
+      img, .card, [class*='card'] {
+        border-radius: var(--radius);
+      }
+    \`;
+  }
+
+  // Apply design system to page
+  function applyDesignSystem(design) {
+    let styleEl = document.querySelector('style#design-system-live');
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'design-system-live';
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = generateDesignSystemCSS(design);
+  }
+
+  // Apply styles to a specific element
+  function applyElementStyles(selector, styles) {
+    const element = document.querySelector(selector);
+    if (element) {
+      Object.keys(styles).forEach(function(key) {
+        element.style[key] = styles[key];
+      });
+    }
+  }
+
   // Listen for messages from parent
   window.addEventListener('message', (e) => {
     if (e.data?.type === 'deselect') {
@@ -536,6 +596,12 @@ export const EDITOR_INJECTION_SCRIPT = `
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    }
+    if (e.data?.type === 'apply-design-system' && e.data?.designSystem) {
+      applyDesignSystem(e.data.designSystem);
+    }
+    if (e.data?.type === 'apply-element-styles' && e.data?.selector && e.data?.styles) {
+      applyElementStyles(e.data.selector, e.data.styles);
     }
   });
 

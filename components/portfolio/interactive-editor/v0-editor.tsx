@@ -18,11 +18,15 @@ import {
   Redo2,
   ChevronDown,
   Sparkles,
+  Eye,
+  Code,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
 import { AIChatPanel } from "./ai-chat-panel";
 import { V0SectionNav } from "./v0-section-nav";
 import { MediaLibrary } from "@/components/media/media-library";
+import { EditorSidebarNav, type SidebarView } from "./editor-sidebar-nav";
+import { DesignPanel } from "./design-panel";
 import {
   replaceElementContent,
   replaceElementOuter,
@@ -33,6 +37,11 @@ import {
 import type { SelectedElement, HistoryState } from "@/lib/editor/types";
 import { MAX_HISTORY_SIZE } from "@/lib/editor/types";
 import type { Media } from "@/lib/db/schema";
+import {
+  DesignSystem,
+  DEFAULT_DESIGN_SYSTEM,
+  applyDesignSystemToHtml,
+} from "@/lib/editor/design-system";
 
 interface V0EditorProps {
   portfolioId: string;
@@ -70,6 +79,12 @@ export function V0Editor({
   const [sidebarWidth, setSidebarWidth] = useState(384); // Default w-96 = 384px
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  
+  // Sidebar view state (chat vs design)
+  const [sidebarView, setSidebarView] = useState<SidebarView>("chat");
+  
+  // Design system state
+  const [designSystem, setDesignSystem] = useState<DesignSystem>(DEFAULT_DESIGN_SYSTEM);
 
   // Track HTML state before live editing started
   const htmlBeforeLiveEditRef = useRef<string | null>(null);
@@ -318,6 +333,104 @@ export function V0Editor({
     updateHtml(newHtml);
   }, [updateHtml]);
 
+  // Handle design system changes - apply to HTML in real-time
+  const handleDesignSystemChange = useCallback((newDesign: DesignSystem) => {
+    setDesignSystem(newDesign);
+    // Apply design system CSS to iframe in real-time
+    const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ 
+        type: "apply-design-system", 
+        designSystem: newDesign 
+      }, "*");
+    }
+  }, []);
+
+  // Handle element style changes from design panel
+  const handleElementStyleChange = useCallback((selector: string, styles: Record<string, string>) => {
+    const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: "apply-element-styles",
+        selector,
+        styles,
+      }, "*");
+    }
+    // Also update the HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const element = doc.querySelector(selector) as HTMLElement;
+    if (element) {
+      Object.entries(styles).forEach(([key, value]) => {
+        element.style[key as any] = value;
+      });
+      const newHtml = `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
+      if (newHtml !== html) {
+        updateHtml(newHtml);
+      }
+    }
+  }, [html, updateHtml]);
+
+  // Handle element content changes from design panel
+  const handleElementContentChange = useCallback((selector: string, content: string) => {
+    const newHtml = replaceElementContent(html, selector, content);
+    if (newHtml !== html) {
+      updateHtml(newHtml);
+    }
+  }, [html, updateHtml]);
+
+  // Handle element chat from design panel
+  const handleElementChat = useCallback(async (message: string) => {
+    if (!selectedElement) return;
+    // Reuse the same AI edit logic as the chat panel
+    setIsStreaming(true);
+    try {
+      const response = await fetch("/api/ai/edit-element", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          portfolioId,
+          selector: selectedElement.selector,
+          currentContent: selectedElement.content,
+          outerHtml: selectedElement.outerHtml,
+          instruction: message,
+          fullHtml: html,
+          tagName: selectedElement.tagName,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to generate edit");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+      }
+
+      if (accumulated.trim()) {
+        const trimmed = accumulated.trim();
+        const tagName = selectedElement.tagName.toLowerCase();
+        const isOuterHtml =
+          trimmed.startsWith(`<${tagName}`) ||
+          trimmed.startsWith(`<${tagName.toUpperCase()}`);
+        handleApplyEdit(trimmed, isOuterHtml);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to edit element");
+    } finally {
+      setIsStreaming(false);
+    }
+  }, [selectedElement, portfolioId, html, handleApplyEdit]);
+
   // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -421,23 +534,73 @@ export function V0Editor({
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Chat Panel */}
+        {/* Left Sidebar Navigation */}
+        <EditorSidebarNav
+          activeView={sidebarView}
+          onViewChange={setSidebarView}
+        />
+
+        {/* Left Sidebar - Chat or Design Panel */}
         <div
           className={`bg-[#0a0a0a] border-r border-[#1f1f1f] flex flex-col relative ${
             isSidebarCollapsed ? "w-0 overflow-hidden" : ""
           }`}
           style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
         >
-          <AIChatPanel
-            selectedElement={selectedElement}
-            portfolioId={portfolioId}
-            fullHtml={html}
-            onApplyEdit={handleApplyEdit}
-            onFullPageGenerate={handleFullPageGenerate}
-            onDeselect={() => setSelectedElement(null)}
-            isStreaming={isStreaming}
-            onStreamingChange={setIsStreaming}
-          />
+          <AnimatePresence mode="wait">
+            {sidebarView === "chat" ? (
+              <motion.div
+                key="chat"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <AIChatPanel
+                  selectedElement={selectedElement}
+                  portfolioId={portfolioId}
+                  fullHtml={html}
+                  onApplyEdit={handleApplyEdit}
+                  onFullPageGenerate={handleFullPageGenerate}
+                  onDeselect={() => setSelectedElement(null)}
+                  isStreaming={isStreaming}
+                  onStreamingChange={setIsStreaming}
+                />
+              </motion.div>
+            ) : sidebarView === "design" ? (
+              <motion.div
+                key="design"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <DesignPanel
+                  designSystem={designSystem}
+                  onDesignSystemChange={handleDesignSystemChange}
+                  selectedElement={selectedElement}
+                  onElementStyleChange={handleElementStyleChange}
+                  onElementContentChange={handleElementContentChange}
+                  onDeselect={() => setSelectedElement(null)}
+                  onElementChat={handleElementChat}
+                  isStreaming={isStreaming}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex items-center justify-center text-muted-foreground"
+              >
+                <div className="text-center">
+                  <p className="text-sm">Coming soon</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           {/* Resize handle */}
           {!isSidebarCollapsed && (
             <div
@@ -461,6 +624,16 @@ export function V0Editor({
               >
                 {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
+              
+              {/* View/Code toggle */}
+              <div className="flex items-center bg-[#1f1f1f] rounded-lg p-0.5 ml-2">
+                <button className="p-1.5 rounded-md bg-[#2a2a2a] text-white">
+                  <Eye size={14} />
+                </button>
+                <button className="p-1.5 rounded-md text-[#666] hover:text-white transition-colors">
+                  <Code size={14} />
+                </button>
+              </div>
             </div>
 
             {/* URL Bar */}
@@ -561,6 +734,39 @@ export function V0Editor({
           </div>
         </div>
       </div>
+
+      {/* Unsaved changes banner */}
+      <AnimatePresence>
+        {hasUnsavedChanges && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 px-4 py-2 bg-[#1f1f1f] rounded-lg shadow-lg border border-[#333]"
+          >
+            <div className="flex items-center gap-2 text-white text-sm">
+              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+              Unsaved Changes
+            </div>
+            <button
+              onClick={() => {
+                setHtml(initialHtmlRef.current);
+                setHasUnsavedChanges(false);
+              }}
+              className="px-3 py-1 text-sm text-[#999] hover:text-white transition-colors"
+            >
+              Reset
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-3 py-1 text-sm text-black bg-white hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Error banner */}
       <AnimatePresence>
