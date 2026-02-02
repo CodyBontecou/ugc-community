@@ -1,5 +1,43 @@
-// Re-export niches from directory constants
-export { NICHES, NICHE_LABELS, type Niche } from "../directory/constants";
+// Predefined niches for creator categorization (kept from removed directory system)
+export const NICHES = [
+  "beauty",
+  "fashion",
+  "tech",
+  "lifestyle",
+  "food",
+  "fitness",
+  "travel",
+  "gaming",
+  "parenting",
+  "home",
+  "pets",
+  "finance",
+  "health",
+  "automotive",
+  "sports",
+  "entertainment",
+] as const;
+
+export type Niche = (typeof NICHES)[number];
+
+export const NICHE_LABELS: Record<Niche, string> = {
+  beauty: "Beauty",
+  fashion: "Fashion",
+  tech: "Tech",
+  lifestyle: "Lifestyle",
+  food: "Food & Drink",
+  fitness: "Fitness",
+  travel: "Travel",
+  gaming: "Gaming",
+  parenting: "Parenting",
+  home: "Home & Decor",
+  pets: "Pets",
+  finance: "Finance",
+  health: "Health & Wellness",
+  automotive: "Automotive",
+  sports: "Sports",
+  entertainment: "Entertainment",
+};
 
 // Job statuses
 export const JOB_STATUSES = ["draft", "pending_review", "active", "paused", "closed"] as const;

@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { getDirectoryListedSubdomains } from "@/lib/directory/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://ugc.community";
@@ -11,12 +10,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
-    },
-    {
-      url: `${baseUrl}/creators`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
     },
     {
       url: `${baseUrl}/sign-in`,
@@ -32,19 +25,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Dynamic creator profile pages
-  let creatorPages: MetadataRoute.Sitemap = [];
-  try {
-    const subdomains = await getDirectoryListedSubdomains();
-    creatorPages = subdomains.map((subdomain) => ({
-      url: `${baseUrl}/creators/${subdomain}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
-  } catch (error) {
-    console.error("Error fetching creator subdomains for sitemap:", error);
-  }
-
-  return [...staticPages, ...creatorPages];
+  return staticPages;
 }

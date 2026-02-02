@@ -3,7 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { User, MapPin, ExternalLink, X, Loader2 } from "lucide-react";
-import { NicheBadges } from "@/components/directory/niche-badges";
+
+// Simple inline niche badges component
+function NicheBadges({ niches, max = 3 }: { niches: string[] | null; max?: number }) {
+  if (!niches || niches.length === 0) return null;
+  const displayNiches = niches.slice(0, max);
+  const remaining = niches.length - max;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {displayNiches.map((niche) => (
+        <span
+          key={niche}
+          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-lavender-soft/30 text-lavender"
+        >
+          {niche}
+        </span>
+      ))}
+      {remaining > 0 && (
+        <span className="text-xs text-warm-gray-400">+{remaining}</span>
+      )}
+    </div>
+  );
+}
 
 interface SavedCreatorCardProps {
   creatorId: string;
@@ -130,23 +152,15 @@ export function SavedCreatorCard({
         {/* Action buttons */}
         <div className="flex gap-2">
           {subdomain && (
-            <>
-              <Link
-                href={`/creators/${subdomain}`}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-[--radius-md] transition-colors"
-              >
-                View Profile
-              </Link>
-              <a
-                href={`https://${subdomain}.ugc.community`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
-                title="View Portfolio"
-              >
-                <ExternalLink size={14} />
-              </a>
-            </>
+            <a
+              href={`https://${subdomain}.ugc.community`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-[--radius-md] transition-colors"
+            >
+              View Portfolio
+              <ExternalLink size={14} />
+            </a>
           )}
         </div>
       </div>
