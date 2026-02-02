@@ -118,13 +118,26 @@ export const RESERVED_SUBDOMAINS = new Set([
 
 // Common profanity/offensive terms to block
 // This is a basic list - consider using a dedicated library for production
-const PROFANITY_LIST = new Set([
+
+// Terms that should ONLY match exactly (to avoid false positives like "Cassandra" containing "ass")
+// These short terms appear in many legitimate words
+const EXACT_MATCH_ONLY = new Set([
+  "ass",
+  "damn",
+  "fag",
+  "sex",
+  "xxx",
+  "kkk",
+  "kill",
+  "rape",
+]);
+
+// Terms that can match as substrings (longer/less likely to appear in legitimate words)
+const SUBSTRING_MATCH_TERMS = new Set([
   // Slurs and hate speech
   "fuck",
   "shit",
-  "ass",
   "bitch",
-  "damn",
   "cunt",
   "dick",
   "cock",
@@ -135,7 +148,6 @@ const PROFANITY_LIST = new Set([
   "nigger",
   "nigga",
   "faggot",
-  "fag",
   "retard",
 
   // Variations with common substitutions
@@ -151,24 +163,22 @@ const PROFANITY_LIST = new Set([
   // Hate/violence terms
   "nazi",
   "hitler",
-  "kkk",
   "isis",
   "terrorist",
-  "kill",
   "murder",
-  "rape",
   "suicide",
 
   // Spam/scam indicators
   "porn",
-  "xxx",
-  "sex",
   "viagra",
   "casino",
   "lottery",
   "bitcoin-free",
   "free-money",
 ]);
+
+// Combined list for exact matching (includes both sets)
+const PROFANITY_LIST = new Set([...EXACT_MATCH_ONLY, ...SUBSTRING_MATCH_TERMS]);
 
 export type SubdomainValidationResult = {
   valid: boolean;
@@ -220,16 +230,18 @@ export function validateSubdomain(input: string): SubdomainValidationResult {
 }
 
 /**
- * Checks if a string contains profanity (exact match or as substring)
+ * Checks if a string contains profanity
+ * - Short common terms only match exactly (to avoid flagging "Cassandra", "class", etc.)
+ * - Longer/unique slurs match as substrings
  */
 function containsProfanity(str: string): boolean {
-  // Exact match
-  if (PROFANITY_LIST.has(str)) {
+  // Check exact-match-only terms (short words that appear in legitimate names)
+  if (EXACT_MATCH_ONLY.has(str)) {
     return true;
   }
 
-  // Substring match (profanity embedded in subdomain)
-  for (const term of PROFANITY_LIST) {
+  // Substring match only for longer/unique profanity terms
+  for (const term of SUBSTRING_MATCH_TERMS) {
     if (str.includes(term)) {
       return true;
     }

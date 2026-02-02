@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getServerSession } from "@/lib/auth/session";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
-import { PortfolioStatus } from "@/components/dashboard/portfolio-status";
 import { CreatorStatsCard } from "@/components/dashboard/creator-stats-card";
 import type { Metadata } from "next";
 import { isAdmin } from "@/lib/admin";
@@ -48,9 +47,6 @@ async function MilestonesContent() {
       <div id="milestone-progress">
         <UserProgressionPath />
       </div>
-
-      {/* Portfolio Hosting Status */}
-      <PortfolioStatus />
 
       {/* Unlocked Rewards */}
       <RewardsOverview />

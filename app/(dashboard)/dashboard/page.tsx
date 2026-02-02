@@ -21,7 +21,17 @@ async function DashboardContent() {
   const showCreatorContent = !isUserAdmin;
 
   return (
-    <div className="max-w-4xl mx-auto min-h-[calc(100vh-12rem)] flex flex-col justify-center">
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
+          Dashboard
+        </h1>
+        <p className="text-warm-gray-500">
+          Welcome back! Track your progress and manage your creator journey
+        </p>
+      </div>
+
       {/* Onboarding Slides */}
       {showCreatorContent && <OnboardingSlides />}
     </div>
@@ -32,7 +42,8 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="animate-pulse max-w-4xl mx-auto min-h-[calc(100vh-12rem)] flex flex-col justify-center">
+        <div className="animate-pulse space-y-8 max-w-4xl mx-auto">
+          <div className="h-12 bg-warm-gray-200 rounded w-1/3" />
           <div className="h-[500px] bg-warm-gray-200 rounded-[--radius-xl]" />
         </div>
       }

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { DeleteAccountButton } from "@/components/dashboard/delete-account-button";
-import { ArrowLeft, User } from "lucide-react";
+import { PortfolioStatus } from "@/components/dashboard/portfolio-status";
+import { User } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -19,21 +19,14 @@ async function SettingsContent() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="flex items-center gap-4">
-        <Link
-          href="/dashboard"
-          className="w-10 h-10 rounded-full bg-warm-gray-100 hover:bg-warm-gray-200 flex items-center justify-center text-warm-gray-600 transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900">
-            Settings
-          </h1>
-          <p className="mt-1 text-warm-gray-500">
-            Manage your account
-          </p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
+          Settings
+        </h1>
+        <p className="text-warm-gray-500">
+          Manage your account settings and preferences
+        </p>
       </div>
 
       {/* Account info */}
@@ -58,18 +51,11 @@ async function SettingsContent() {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-warm-gray-100">
-          <p className="text-xs text-warm-gray-400 mb-4">
-            Your subdomain settings can be managed from the dashboard.
-          </p>
-          <Link
-            href="/dashboard"
-            className="text-sm font-medium text-lavender hover:text-purple-dark transition-colors"
-          >
-            Go to Dashboard
-          </Link>
-        </div>
+
       </div>
+
+      {/* Portfolio Hosting Status */}
+      <PortfolioStatus />
 
       {/* Sign out */}
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
@@ -100,8 +86,9 @@ export default function SettingsPage() {
     <Suspense
       fallback={
         <div className="animate-pulse space-y-8 max-w-2xl mx-auto">
-          <div className="h-12 bg-warm-gray-200 rounded w-1/4" />
+          <div className="h-12 bg-warm-gray-200 rounded w-1/3" />
           <div className="h-48 bg-warm-gray-200 rounded-[--radius-xl]" />
+          <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
           <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
           <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
         </div>
