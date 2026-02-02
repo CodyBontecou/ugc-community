@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // External packages that should not be bundled
+  serverExternalPackages: ["@ffmpeg-installer/ffmpeg"],
+
   // Image optimization configuration for external sources
   images: {
     remotePatterns: [

@@ -137,57 +137,52 @@ export const verifications = pgTable("verifications", {
 // Onboarding Questionnaires
 // =====================================================
 
-export const onboardingQuestionnaires = pgTable(
-  "onboarding_questionnaires",
+// =====================================================
+// Portfolio Templates
+// =====================================================
+
+export const templates = pgTable("templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  previewImageUrl: text("preview_image_url"),
+  sectionDefaults: jsonb("section_defaults").$type<SectionDefaults>().notNull().default({}),
+  themeDefaults: jsonb("theme_defaults").$type<ThemeConfig>().notNull().default({}),
+  availableSections: text("available_sections").array().notNull().default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// =====================================================
+// Portfolio Configs (User's portfolio settings)
+// =====================================================
+
+export const portfolioConfigs = pgTable(
+  "portfolio_configs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id")
       .notNull()
+      .unique()
       .references(() => users.id, { onDelete: "cascade" }),
-    portfolioVision: text("portfolio_vision").notNull(),
-    inspiringBrands: text("inspiring_brands"),
-    portfolioExamples: text("portfolio_examples"),
+    templateId: uuid("template_id").references(() => templates.id, {
+      onDelete: "set null",
+    }),
+    sections: jsonb("sections").$type<PortfolioSections>().notNull().default({}),
+    theme: jsonb("theme").$type<Partial<ThemeConfig>>().notNull().default({}),
+    customCss: text("custom_css"),
+    seo: jsonb("seo").$type<PortfolioSeo>().notNull().default({}),
+    isPublished: boolean("is_published").notNull().default(false),
+    publishedAt: timestamp("published_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    index("onboarding_questionnaires_user_id_idx").on(table.userId),
-    index("onboarding_questionnaires_created_at_idx").on(table.createdAt),
-  ]
-);
-
-// =====================================================
-// Portfolio Generations (Status Tracking)
-// =====================================================
-
-export const portfolioGenerations = pgTable(
-  "portfolio_generations",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    questionnaireId: uuid("questionnaire_id").references(
-      () => onboardingQuestionnaires.id,
-      { onDelete: "set null" }
-    ),
-    // Status: 'pending', 'generating', 'pushing', 'deploying', 'completed', 'failed'
-    status: text("status").notNull().default("pending"),
-    githubRepo: text("github_repo"),
-    deploymentUrl: text("deployment_url"),
-    previewUrl: text("preview_url"),
-    filesGenerated: integer("files_generated"),
-    error: text("error"),
-    errorStep: text("error_step"),
-    startedAt: timestamp("started_at").notNull().defaultNow(),
-    completedAt: timestamp("completed_at"),
-  },
-  (table) => [
-    index("portfolio_generations_user_id_idx").on(table.userId),
-    index("portfolio_generations_status_idx").on(table.status),
-    index("portfolio_generations_questionnaire_id_idx").on(
-      table.questionnaireId
-    ),
+    index("portfolio_configs_user_id_idx").on(table.userId),
+    index("portfolio_configs_template_id_idx").on(table.templateId),
+    index("portfolio_configs_is_published_idx").on(table.isPublished),
   ]
 );
 
@@ -475,30 +470,27 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   jobApplications: many(jobApplications, { relationName: "jobApplications" }),
   // Notifications
   notifications: many(notifications),
-  // Onboarding questionnaires
-  onboardingQuestionnaires: many(onboardingQuestionnaires),
-  // Portfolio generations
-  portfolioGenerations: many(portfolioGenerations),
+  // Portfolio config (1:1)
+  portfolioConfig: one(portfolioConfigs, {
+    fields: [users.id],
+    references: [portfolioConfigs.userId],
+  }),
   // Portfolio projects
   portfolioProjects: many(portfolioProjects),
 }));
 
-export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
-  user: one(users, {
-    fields: [onboardingQuestionnaires.userId],
-    references: [users.id],
-  }),
-  generations: one(portfolioGenerations),
+export const templatesRelations = relations(templates, ({ many }) => ({
+  portfolioConfigs: many(portfolioConfigs),
 }));
 
-export const portfolioGenerationsRelations = relations(portfolioGenerations, ({ one }) => ({
+export const portfolioConfigsRelations = relations(portfolioConfigs, ({ one }) => ({
   user: one(users, {
-    fields: [portfolioGenerations.userId],
+    fields: [portfolioConfigs.userId],
     references: [users.id],
   }),
-  questionnaire: one(onboardingQuestionnaires, {
-    fields: [portfolioGenerations.questionnaireId],
-    references: [onboardingQuestionnaires.id],
+  template: one(templates, {
+    fields: [portfolioConfigs.templateId],
+    references: [templates.id],
   }),
 }));
 
@@ -813,6 +805,126 @@ export const portfolioProjectMediaRelations = relations(portfolioProjectMedia, (
 // Types
 // =====================================================
 
+// Portfolio Template Types
+export type SectionVariant = string; // e.g., 'centered', 'split-left', 'grid', etc.
+
+export type SectionContent = {
+  // Hero
+  headline?: string;
+  subheadline?: string;
+  backgroundMediaId?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  showScrollIndicator?: boolean;
+  // About
+  title?: string;
+  bio?: string;
+  profileMediaId?: string;
+  // Work
+  subtitle?: string;
+  showFilters?: boolean;
+  maxItems?: number;
+  projectIds?: string[];
+  // Services
+  services?: Array<{
+    title: string;
+    description?: string;
+    icon?: string;
+    price?: string;
+  }>;
+  // Testimonials
+  testimonials?: Array<{
+    quote: string;
+    name: string;
+    company?: string;
+    avatarMediaId?: string;
+  }>;
+  // Stats
+  stats?: Array<{
+    value: string;
+    label: string;
+    prefix?: string;
+    suffix?: string;
+  }>;
+  showBackground?: boolean;
+  // Contact
+  showForm?: boolean;
+  email?: string;
+  showSocials?: boolean;
+  // Custom
+  content?: string;
+  mediaId?: string;
+  embedUrl?: string;
+};
+
+export type SectionConfig = {
+  visible?: boolean;
+  variant?: SectionVariant;
+  content?: SectionContent;
+};
+
+export type SectionDefaults = {
+  order?: string[];
+  [sectionType: string]: SectionConfig | string[] | undefined;
+};
+
+export type PortfolioSections = {
+  order?: string[];
+  hero?: SectionConfig;
+  about?: SectionConfig;
+  work?: SectionConfig;
+  services?: SectionConfig;
+  testimonials?: SectionConfig;
+  stats?: SectionConfig;
+  contact?: SectionConfig;
+  custom?: SectionConfig[];
+};
+
+export type ThemeColors = {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: {
+    primary: string;
+    secondary: string;
+    inverse: string;
+  };
+  border: string;
+};
+
+export type ThemeTypography = {
+  headingFont: string;
+  bodyFont: string;
+  baseSize: number;
+  scale: number;
+};
+
+export type ThemeSpacing = {
+  sectionGap: 'compact' | 'normal' | 'spacious';
+  contentWidth: 'narrow' | 'normal' | 'wide' | 'full';
+};
+
+export type ThemeEffects = {
+  borderRadius: 'none' | 'subtle' | 'rounded' | 'pill';
+  shadows: 'none' | 'subtle' | 'medium' | 'dramatic';
+  animations: boolean;
+};
+
+export type ThemeConfig = {
+  colors?: ThemeColors;
+  typography?: ThemeTypography;
+  spacing?: ThemeSpacing;
+  effects?: ThemeEffects;
+};
+
+export type PortfolioSeo = {
+  title?: string;
+  description?: string;
+  ogImageMediaId?: string;
+};
+
 export type MediaMetadata = {
   width?: number;
   height?: number;
@@ -903,10 +1015,10 @@ export type JobApplication = typeof jobApplications.$inferSelect;
 export type NewJobApplication = typeof jobApplications.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
-export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
-export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
-export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
-export type NewPortfolioGeneration = typeof portfolioGenerations.$inferInsert;
+export type Template = typeof templates.$inferSelect;
+export type NewTemplate = typeof templates.$inferInsert;
+export type PortfolioConfig = typeof portfolioConfigs.$inferSelect;
+export type NewPortfolioConfig = typeof portfolioConfigs.$inferInsert;
 export type PortfolioProject = typeof portfolioProjects.$inferSelect;
 export type NewPortfolioProject = typeof portfolioProjects.$inferInsert;
 export type PortfolioProjectMedia = typeof portfolioProjectMedia.$inferSelect;
