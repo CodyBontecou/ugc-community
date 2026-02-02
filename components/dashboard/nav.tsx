@@ -11,7 +11,6 @@ import {
   User,
   Shield,
   Settings,
-  FolderKanban,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
@@ -32,19 +31,11 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
-const creatorNavItems = [
-  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
-];
-
 export function DashboardNav({ user, isAdmin = false, role = "creator" }: DashboardNavProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const isCreator = role === "creator" && !isAdmin;
 
   let allNavItems = [...navItems];
-  if (isCreator) {
-    allNavItems = [...allNavItems, ...creatorNavItems];
-  }
   if (isAdmin) {
     allNavItems = [...allNavItems, { href: "/dashboard/admin", label: "Admin", icon: Shield }];
   }
