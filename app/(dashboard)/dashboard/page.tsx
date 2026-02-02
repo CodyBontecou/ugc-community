@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getServerSession } from "@/lib/auth/session";
-import { OnboardingForm } from "@/components/dashboard/onboarding-form";
+import { OnboardingSlides } from "@/components/dashboard/onboarding-slides";
 import type { Metadata } from "next";
 import { isAdmin } from "@/lib/admin";
 
@@ -34,8 +34,8 @@ async function DashboardContent() {
         </p>
       </div>
 
-      {/* Onboarding Form */}
-      {showCreatorContent && <OnboardingForm />}
+      {/* Onboarding Slides */}
+      {showCreatorContent && <OnboardingSlides />}
     </div>
   );
 }
