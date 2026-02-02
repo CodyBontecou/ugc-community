@@ -20,7 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
-import { V0ChatPanel } from "./v0-chat-panel";
+import { AIChatPanel } from "./ai-chat-panel";
 import { V0SectionNav } from "./v0-section-nav";
 import { MediaLibrary } from "@/components/media/media-library";
 import {
@@ -428,7 +428,7 @@ export function V0Editor({
           }`}
           style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
         >
-          <V0ChatPanel
+          <AIChatPanel
             selectedElement={selectedElement}
             portfolioId={portfolioId}
             fullHtml={html}
