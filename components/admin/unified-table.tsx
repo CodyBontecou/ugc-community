@@ -8,30 +8,20 @@ import {
   Shield,
   ShieldOff,
   Ban,
-  Instagram,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { RecordTypeBadge } from "./record-type-badge";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import type { RecordType, UnifiedRecord } from "@/app/api/admin/people/route";
 import type { UserStatus } from "@/lib/admin";
 
-type TypeFilter = "all" | RecordType;
 type SortOrder = "newest" | "oldest";
 
-const STATUS_OPTIONS: Record<RecordType, string[]> = {
-  user: ["active", "suspended", "banned"],
-  waitlist: ["pending", "invited"],
-};
+const STATUS_OPTIONS: string[] = ["active", "suspended", "banned"];
 
 const STATUS_STYLES: Record<string, string> = {
-  // User statuses
   active: "bg-green-100 text-green-700",
   suspended: "bg-amber-100 text-amber-700",
   banned: "bg-red-100 text-red-700",
-  // Waitlist statuses
-  pending: "bg-amber-100 text-amber-700",
-  invited: "bg-green-100 text-green-700",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -51,7 +41,6 @@ export function UnifiedTable() {
   const [error, setError] = useState<string | null>(null);
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
@@ -68,11 +57,6 @@ export function UnifiedTable() {
     fetchRecords();
   }, []);
 
-  // Reset status filter when type filter changes
-  useEffect(() => {
-    setStatusFilter("all");
-  }, [typeFilter]);
-
   async function fetchRecords() {
     try {
       const res = await fetch("/api/admin/people");
@@ -86,22 +70,9 @@ export function UnifiedTable() {
     }
   }
 
-  // Get available status options based on current type filter
-  const availableStatuses = useMemo(() => {
-    if (typeFilter === "all") {
-      return [...new Set(Object.values(STATUS_OPTIONS).flat())];
-    }
-    return STATUS_OPTIONS[typeFilter];
-  }, [typeFilter]);
-
   // Filtered and sorted records
   const filteredRecords = useMemo(() => {
     let result = records;
-
-    // Type filter
-    if (typeFilter !== "all") {
-      result = result.filter((r) => r.type === typeFilter);
-    }
 
     // Status filter
     if (statusFilter !== "all") {
@@ -116,22 +87,6 @@ export function UnifiedTable() {
         if (r.name?.toLowerCase().includes(searchLower)) return true;
         if (r.subdomain?.toLowerCase().includes(searchLower)) return true;
         if (r.displayName?.toLowerCase().includes(searchLower)) return true;
-        if (r.socials) {
-          const socials = r.socials;
-          // Helper to check if any handle in an array or single string matches
-          const matchHandle = (handle: string | string[] | null | undefined): boolean => {
-            if (!handle) return false;
-            if (Array.isArray(handle)) {
-              return handle.some(h => h.toLowerCase().includes(searchLower));
-            }
-            return handle.toLowerCase().includes(searchLower);
-          };
-          if (matchHandle(socials.instagram)) return true;
-          if (matchHandle(socials.tiktok)) return true;
-          if (matchHandle(socials.youtube)) return true;
-          if (socials.facebook?.toLowerCase().includes(searchLower)) return true;
-          if (matchHandle(socials.twitter)) return true;
-        }
         return false;
       });
     }
@@ -144,7 +99,7 @@ export function UnifiedTable() {
     });
 
     return result;
-  }, [records, typeFilter, statusFilter, search, sortOrder]);
+  }, [records, statusFilter, search, sortOrder]);
 
   // Actions
   async function updateUserStatus(userId: string, status: UserStatus) {
@@ -163,7 +118,7 @@ export function UnifiedTable() {
       const data = await res.json();
       setRecords((prev) =>
         prev.map((r) =>
-          r.id === userId && r.type === "user" ? { ...r, status: data.user.status } : r
+          r.id === userId ? { ...r, status: data.user.status } : r
         )
       );
     } catch (err) {
@@ -180,146 +135,36 @@ export function UnifiedTable() {
 
   function handleUserDeleted() {
     if (userToDelete) {
-      setRecords((prev) => prev.filter((r) => !(r.id === userToDelete.id && r.type === "user")));
+      setRecords((prev) => prev.filter((r) => r.id !== userToDelete.id));
     }
     setUserToDelete(null);
   }
 
-  async function deleteWaitlistEntry(entryId: string) {
-    if (!confirm("Are you sure you want to delete this waitlist entry? This cannot be undone.")) return;
-
-    setUpdating(entryId);
-    try {
-      const res = await fetch(`/api/admin/waitlist/${entryId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete waitlist entry");
-      }
-      setRecords((prev) => prev.filter((r) => !(r.id === entryId && r.type === "waitlist")));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete waitlist entry");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
   // Render helpers
   function renderPersonCell(record: UnifiedRecord) {
-    if (record.type === "user") {
-      return (
-        <div className="flex items-center gap-3">
-          {record.image ? (
-            <img src={record.image} alt={record.name || ""} className="w-10 h-10 rounded-full" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-sm font-medium">
-              {record.name?.charAt(0) || "U"}
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-medium text-warm-gray-900">{record.displayName || record.name}</p>
-            <p className="text-xs text-warm-gray-500">{record.email}</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Waitlist - just show email
     return (
-      <div>
-        <p className="text-sm font-mono text-warm-gray-900">{record.email}</p>
+      <div className="flex items-center gap-3">
+        {record.image ? (
+          <img src={record.image} alt={record.name || ""} className="w-10 h-10 rounded-full" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-sm font-medium">
+            {record.name?.charAt(0) || "U"}
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-medium text-warm-gray-900">{record.displayName || record.name}</p>
+          <p className="text-xs text-warm-gray-500">{record.email}</p>
+        </div>
       </div>
     );
   }
 
   function renderDetailsCell(record: UnifiedRecord) {
-    if (record.type === "user") {
-      return record.subdomain ? (
-        <span className="text-sm text-warm-gray-600 font-mono">{record.subdomain}</span>
-      ) : (
-        <span className="text-sm text-warm-gray-400">—</span>
-      );
-    }
-
-    if (record.type === "waitlist" && record.socials) {
-      const { instagram, tiktok, youtube, facebook, twitter } = record.socials;
-      const hasSocials = instagram || tiktok || youtube || facebook || twitter;
-
-      if (!hasSocials) {
-        return <span className="text-xs text-warm-gray-400">No socials</span>;
-      }
-
-      return (
-        <div className="flex items-center gap-2">
-          {instagram && (
-            <a
-              href={`https://instagram.com/${instagram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-warm-gray-400 hover:text-pink-500 transition-colors"
-              title={`@${instagram}`}
-            >
-              <Instagram size={16} />
-            </a>
-          )}
-          {tiktok && (
-            <a
-              href={`https://tiktok.com/@${tiktok}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-warm-gray-400 hover:text-black transition-colors"
-              title={`@${tiktok}`}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-              </svg>
-            </a>
-          )}
-          {youtube && (
-            <a
-              href={`https://youtube.com/@${youtube}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-warm-gray-400 hover:text-red-500 transition-colors"
-              title={`@${youtube}`}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-            </a>
-          )}
-          {facebook && (
-            <a
-              href={`https://facebook.com/${facebook}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-warm-gray-400 hover:text-blue-600 transition-colors"
-              title={facebook}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            </a>
-          )}
-          {twitter && (
-            <a
-              href={`https://twitter.com/${twitter}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-warm-gray-400 hover:text-black transition-colors"
-              title={`@${twitter}`}
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-          )}
-        </div>
-      );
-    }
-
-    return null;
+    return record.subdomain ? (
+      <span className="text-sm text-warm-gray-600 font-mono">{record.subdomain}</span>
+    ) : (
+      <span className="text-sm text-warm-gray-400">—</span>
+    );
   }
 
   function handleActionMenuToggle(recordId: string) {
@@ -351,93 +196,70 @@ export function UnifiedTable() {
   function renderActionsCell(record: UnifiedRecord) {
     const isUpdating = updating === record.id;
 
-    if (record.type === "user") {
-      return (
-        <div className="relative">
-          <button
-            ref={(el) => {
-              if (el) actionButtonRefs.current.set(record.id, el);
-            }}
-            onClick={() => handleActionMenuToggle(record.id)}
-            disabled={isUpdating}
-            className="p-1 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors disabled:opacity-50"
-          >
-            {isUpdating ? (
-              <span className="w-5 h-5 block border-2 border-warm-gray-300 border-t-warm-gray-600 rounded-full animate-spin" />
-            ) : (
-              <MoreVertical size={18} />
-            )}
-          </button>
+    return (
+      <div className="relative">
+        <button
+          ref={(el) => {
+            if (el) actionButtonRefs.current.set(record.id, el);
+          }}
+          onClick={() => handleActionMenuToggle(record.id)}
+          disabled={isUpdating}
+          className="p-1 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors disabled:opacity-50"
+        >
+          {isUpdating ? (
+            <span className="w-5 h-5 block border-2 border-warm-gray-300 border-t-warm-gray-600 rounded-full animate-spin" />
+          ) : (
+            <MoreVertical size={18} />
+          )}
+        </button>
 
-          {actionMenuOpen === record.id && actionMenuPosition && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setActionMenuPosition(null); }} />
-              <div
-                className="fixed w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50"
-                style={{ top: actionMenuPosition.top, left: actionMenuPosition.left }}
-              >
-                {record.status !== "active" && (
-                  <button
-                    onClick={() => updateUserStatus(record.id, "active")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-700 hover:bg-green-50"
-                  >
-                    <Shield size={16} />
-                    Activate
-                  </button>
-                )}
-                {record.status !== "suspended" && (
-                  <button
-                    onClick={() => updateUserStatus(record.id, "suspended")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-700 hover:bg-amber-50"
-                  >
-                    <ShieldOff size={16} />
-                    Suspend
-                  </button>
-                )}
-                {record.status !== "banned" && (
-                  <button
-                    onClick={() => updateUserStatus(record.id, "banned")}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
-                  >
-                    <Ban size={16} />
-                    Ban
-                  </button>
-                )}
-                <div className="border-t border-warm-gray-200 my-1" />
+        {actionMenuOpen === record.id && actionMenuPosition && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setActionMenuPosition(null); }} />
+            <div
+              className="fixed w-48 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1 z-50"
+              style={{ top: actionMenuPosition.top, left: actionMenuPosition.left }}
+            >
+              {record.status !== "active" && (
                 <button
-                  onClick={() => openDeleteDialog(record)}
+                  onClick={() => updateUserStatus(record.id, "active")}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-700 hover:bg-green-50"
+                >
+                  <Shield size={16} />
+                  Activate
+                </button>
+              )}
+              {record.status !== "suspended" && (
+                <button
+                  onClick={() => updateUserStatus(record.id, "suspended")}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-700 hover:bg-amber-50"
+                >
+                  <ShieldOff size={16} />
+                  Suspend
+                </button>
+              )}
+              {record.status !== "banned" && (
+                <button
+                  onClick={() => updateUserStatus(record.id, "banned")}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
                 >
-                  <Trash2 size={16} />
-                  Delete User
+                  <Ban size={16} />
+                  Ban
                 </button>
-              </div>
-            </>
-          )}
-        </div>
-      );
-    }
-
-    if (record.type === "waitlist") {
-      return (
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => deleteWaitlistEntry(record.id)}
-            disabled={isUpdating}
-            className="p-2 text-warm-gray-400 hover:text-red-600 rounded transition-colors disabled:opacity-50"
-            title="Delete"
-          >
-            {isUpdating ? (
-              <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-red-600 rounded-full animate-spin" />
-            ) : (
-              <Trash2 size={16} />
-            )}
-          </button>
-        </div>
-      );
-    }
-
-    return null;
+              )}
+              <div className="border-t border-warm-gray-200 my-1" />
+              <button
+                onClick={() => openDeleteDialog(record)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+              >
+                <Trash2 size={16} />
+                Delete User
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
   }
 
   if (loading) {
@@ -448,47 +270,24 @@ export function UnifiedTable() {
     return <div className="text-center py-12 text-red-600">Error: {error}</div>;
   }
 
-  const typeFilterTabs: { value: TypeFilter; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "user", label: "Users" },
-    { value: "waitlist", label: "Waitlist" },
-  ];
-
   return (
     <>
       {/* Header with title */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-warm-gray-900">People</h2>
-          <p className="text-sm text-warm-gray-500">Manage users and waitlist</p>
+          <h2 className="text-lg font-semibold text-warm-gray-900">Users</h2>
+          <p className="text-sm text-warm-gray-500">Manage platform users</p>
         </div>
       </div>
 
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
-        {/* Type filter tabs */}
-        <div className="flex border-b border-warm-gray-200">
-          {typeFilterTabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setTypeFilter(tab.value)}
-              className={`px-4 py-3 text-sm font-medium transition-colors ${
-                typeFilter === tab.value
-                  ? "text-coral border-b-2 border-coral -mb-px"
-                  : "text-warm-gray-500 hover:text-warm-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {/* Search and filters */}
         <div className="p-4 border-b border-warm-gray-200 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400" />
             <input
               type="text"
-              placeholder="Search by name, email, or handle..."
+              placeholder="Search by name, email, or subdomain..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-warm-gray-200 rounded-[--radius-md] text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
@@ -500,7 +299,7 @@ export function UnifiedTable() {
             className="px-3 py-2 border border-warm-gray-200 rounded-[--radius-md] text-sm focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
           >
             <option value="all">All statuses</option>
-            {availableStatuses.map((status) => (
+            {STATUS_OPTIONS.map((status) => (
               <option key={status} value={status}>
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </option>
@@ -522,19 +321,16 @@ export function UnifiedTable() {
             <thead>
               <tr className="bg-warm-gray-50 border-b border-warm-gray-200">
                 <th className="px-4 py-3 text-left text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
-                  Person
+                  User
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
-                  Date
+                  Joined
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
-                  Details
+                  Subdomain
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-warm-gray-500 uppercase tracking-wider">
                   Actions
@@ -544,24 +340,17 @@ export function UnifiedTable() {
             <tbody className="divide-y divide-warm-gray-100">
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-warm-gray-500">
-                    No records found
+                  <td colSpan={5} className="px-4 py-8 text-center text-warm-gray-500">
+                    No users found
                   </td>
                 </tr>
               ) : (
                 filteredRecords.map((record) => (
                   <tr
-                    key={`${record.type}-${record.id}`}
-                    className={`hover:bg-warm-gray-50 ${record.type === "user" ? "cursor-pointer" : ""}`}
-                    onClick={() => {
-                      if (record.type === "user") {
-                        router.push(`/dashboard/admin/users/${record.id}`);
-                      }
-                    }}
+                    key={record.id}
+                    className="hover:bg-warm-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/dashboard/admin/users/${record.id}`)}
                   >
-                    <td className="px-4 py-3">
-                      <RecordTypeBadge type={record.type} />
-                    </td>
                     <td className="px-4 py-3">{renderPersonCell(record)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={record.status} />
@@ -581,7 +370,7 @@ export function UnifiedTable() {
         {/* Footer with count */}
         <div className="px-4 py-3 border-t border-warm-gray-200 bg-warm-gray-50">
           <p className="text-sm text-warm-gray-500">
-            Showing {filteredRecords.length} of {records.length} records
+            Showing {filteredRecords.length} of {records.length} users
           </p>
         </div>
       </div>

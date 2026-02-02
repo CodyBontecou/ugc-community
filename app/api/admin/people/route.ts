@@ -2,20 +2,10 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
-import { users, waitlist } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { users } from "@/lib/db/schema";
+import { desc } from "drizzle-orm";
 
-export type RecordType = "user" | "waitlist";
-
-export interface SocialHandles {
-  // User handles are arrays (up to 5 per platform)
-  instagram?: string[] | string | null;
-  tiktok?: string[] | string | null;
-  youtube?: string[] | string | null;
-  // Waitlist uses single strings
-  facebook?: string | null;
-  twitter?: string[] | string | null;
-}
+export type RecordType = "user";
 
 export interface UnifiedRecord {
   id: string;
@@ -24,16 +14,12 @@ export interface UnifiedRecord {
   name: string | null;
   status: string;
   createdAt: string;
-  // User-specific
   image?: string | null;
   subdomain?: string | null;
   displayName?: string | null;
-  // Waitlist-specific
-  socials?: SocialHandles | null;
-  userType?: "creator" | "brand"; // User type from waitlist signup
 }
 
-// GET /api/admin/people - List all users and waitlist entries
+// GET /api/admin/people - List all users
 export async function GET() {
   try {
     const session = await requireAuth();
@@ -42,104 +28,33 @@ export async function GET() {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
-    // Fetch all data in parallel
-    const [allUsers, waitlistEntries] = await Promise.all([
-      // Users
-      db
-        .select({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          image: users.image,
-          displayName: users.displayName,
-          subdomain: users.subdomain,
-          status: users.status,
-          createdAt: users.createdAt,
-        })
-        .from(users)
-        .orderBy(desc(users.createdAt)),
-
-      // Waitlist
-      db
-        .select({
-          id: waitlist.id,
-          email: waitlist.email,
-          userType: waitlist.userType,
-          instagramHandle: waitlist.instagramHandle,
-          tiktokHandle: waitlist.tiktokHandle,
-          youtubeHandle: waitlist.youtubeHandle,
-          facebookHandle: waitlist.facebookHandle,
-          twitterHandle: waitlist.twitterHandle,
-          createdAt: waitlist.createdAt,
-          invitedAt: waitlist.invitedAt,
-          invitedBy: waitlist.invitedBy,
-        })
-        .from(waitlist)
-        .orderBy(desc(waitlist.createdAt)),
-    ]);
-
-    // Fetch inviter details for waitlist entries
-    const waitlistWithInviters = await Promise.all(
-      waitlistEntries.map(async (entry: typeof waitlistEntries[number]) => {
-        let inviter = null;
-        if (entry.invitedBy) {
-          const [user] = await db
-            .select({ id: users.id, name: users.name })
-            .from(users)
-            .where(eq(users.id, entry.invitedBy))
-            .limit(1);
-          inviter = user || null;
-        }
-        return { ...entry, inviter };
+    // Fetch all users
+    const allUsers = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        image: users.image,
+        displayName: users.displayName,
+        subdomain: users.subdomain,
+        status: users.status,
+        createdAt: users.createdAt,
       })
-    );
-
-    // Create a set of user emails to filter out related waitlist entries
-    const userEmails = new Set(allUsers.map((u: typeof allUsers[number]) => u.email.toLowerCase()));
+      .from(users)
+      .orderBy(desc(users.createdAt));
 
     // Normalize all records into unified format
-    const records: UnifiedRecord[] = [];
-
-    // Add users
-    for (const user of allUsers) {
-      records.push({
-        id: user.id,
-        type: "user",
-        email: user.email,
-        name: user.name,
-        status: user.status || "active",
-        createdAt: user.createdAt.toISOString(),
-        image: user.image,
-        subdomain: user.subdomain,
-        displayName: user.displayName,
-      });
-    }
-
-    // Add waitlist entries (skip entries where the person is now a user)
-    for (const entry of waitlistWithInviters) {
-      // Skip if this email has become a user
-      if (userEmails.has(entry.email.toLowerCase())) continue;
-
-      records.push({
-        id: entry.id,
-        type: "waitlist",
-        email: entry.email,
-        name: null,
-        status: entry.invitedAt ? "invited" : "pending",
-        createdAt: entry.createdAt.toISOString(),
-        userType: (entry.userType as "creator" | "brand") || "creator",
-        socials: {
-          instagram: entry.instagramHandle,
-          tiktok: entry.tiktokHandle,
-          youtube: entry.youtubeHandle,
-          facebook: entry.facebookHandle,
-          twitter: entry.twitterHandle,
-        },
-      });
-    }
-
-    // Sort all records by createdAt (newest first)
-    records.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const records: UnifiedRecord[] = allUsers.map((user) => ({
+      id: user.id,
+      type: "user" as const,
+      email: user.email,
+      name: user.name,
+      status: user.status || "active",
+      createdAt: user.createdAt.toISOString(),
+      image: user.image,
+      subdomain: user.subdomain,
+      displayName: user.displayName,
+    }));
 
     return NextResponse.json({ records });
   } catch (error) {
