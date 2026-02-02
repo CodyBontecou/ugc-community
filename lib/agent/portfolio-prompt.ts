@@ -1,3 +1,10 @@
+import {
+  generateStyleDirective,
+  formatStyleDirectiveForPrompt,
+  StyleDirective,
+  UserStyleInput,
+} from "./style-directives";
+
 // =====================================================
 // Types
 // =====================================================
@@ -20,6 +27,8 @@ export interface QuestionnaireData {
   creatorName: string;
   subdomain: string;
   portfolioProjects?: PortfolioProjectData[];
+  /** Optional pre-generated style directive. If not provided, one will be generated. */
+  styleDirective?: StyleDirective;
 }
 
 // =====================================================
@@ -29,10 +38,24 @@ export interface QuestionnaireData {
 export function buildPortfolioPrompt(data: QuestionnaireData): string {
   const sections: string[] = [];
 
+  // Build user style input from questionnaire data
+  const userStyleInput: UserStyleInput = {
+    portfolioVision: data.portfolioVision,
+    inspiringBrands: data.inspiringBrands,
+    portfolioExamples: data.portfolioExamples,
+  };
+
+  // Generate style directive informed by user input, or use provided one
+  const styleDirective = data.styleDirective || generateStyleDirective(userStyleInput);
+
   // Introduction - emphasize efficiency
   sections.push(`Generate a portfolio website for **${data.creatorName}**.
 
 **IMPORTANT: Be efficient.** Limit web requests to 1-2 maximum. Start creating files quickly.`);
+
+  // Inject the style directive early - this is the key personalization
+  // Pass user input so the prompt can reference that styles are tailored to their vision
+  sections.push(formatStyleDirectiveForPrompt(styleDirective, userStyleInput));
 
   // Creator's Vision
   sections.push(`## Creator's Vision
@@ -101,19 +124,21 @@ ${projectSections.join("\n\n")}
 **IMPORTANT:** Display these actual uploaded images in the portfolio. Use the provided URLs directly in \`<img>\` tags. Do not use placeholder images.`);
   }
 
-  // Combined requirements - keep concise
+  // Combined requirements - keep concise, reference style directive
   sections.push(`## Requirements
 
 **Files to create:**
 1. \`index.html\` - Complete page (Hero, Portfolio, About, Contact sections)
-2. \`styles.css\` - All styling with responsive breakpoints
-3. \`script.js\` - Interactions and smooth scrolling
+2. \`styles.css\` - All styling with responsive breakpoints (MUST use the CSS variables and fonts from Style Directive)
+3. \`script.js\` - Interactions and animations (MUST implement the animation style from Style Directive)
 
-**Design:**
-- Distinctive, non-generic look based on creator's vision
-- Creative color palette using CSS custom properties
-- Google Fonts for typography
-- Smooth CSS animations and transitions
+**Design (follow Style Directive above):**
+- Use the exact typography pairing specified
+- Use the exact color palette and CSS variables specified
+- Implement the layout archetype characteristics
+- Apply the animation techniques listed
+- Include the visual texture approaches
+- Follow the theme mode principles
 - Mobile-first responsive design
 - WCAG 2.1 AA accessibility
 
@@ -121,6 +146,9 @@ ${projectSections.join("\n\n")}
 - Semantic HTML5
 - Modern CSS (Flexbox, Grid)
 - Vanilla JavaScript (ES6+) - no frameworks
+
+**Footer:**
+- Include copyright with current year: © ${new Date().getFullYear()} ${data.creatorName}
 
 **Deployment:** https://${data.subdomain}.ugc.community`);
 

@@ -133,6 +133,11 @@ export const verifications = pgTable("verifications", {
 // Onboarding Questionnaires
 // =====================================================
 
+export type SocialMediaHandle = {
+  platform: "instagram" | "tiktok" | "youtube" | "twitter" | "linkedin" | "other";
+  handle: string;
+};
+
 export const onboardingQuestionnaires = pgTable(
   "onboarding_questionnaires",
   {
@@ -143,6 +148,9 @@ export const onboardingQuestionnaires = pgTable(
     portfolioVision: text("portfolio_vision").notNull(),
     inspiringBrands: text("inspiring_brands"),
     portfolioExamples: text("portfolio_examples"),
+    // Structured fields for better data management
+    socialMediaHandles: jsonb("social_media_handles").$type<SocialMediaHandle[]>().default([]),
+    inspirationUrls: text("inspiration_urls").array().default([]),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

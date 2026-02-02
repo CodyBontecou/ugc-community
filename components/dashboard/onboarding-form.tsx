@@ -1,14 +1,64 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, ArrowRight, Check, Loader2, Sparkles, AlertCircle, Globe } from "lucide-react";
+import {
+  Calendar,
+  ArrowRight,
+  Check,
+  Loader2,
+  Sparkles,
+  AlertCircle,
+  Globe,
+  Plus,
+  X,
+  Instagram,
+  Youtube,
+  Twitter,
+  Linkedin,
+} from "lucide-react";
 
 const CALENDLY_URL = "https://calendly.com/cody-isolated/30min";
 
 const EXAMPLE_VISION = `I want a clean, modern portfolio that showcases my lifestyle and beauty content. I'd love a grid layout for my videos with a soft, warm color palette. I want visitors to immediately see my best work and understand my style. A simple contact form would be great so brands can reach out easily.`;
 
+// Social media platforms configuration
+const SOCIAL_PLATFORMS = [
+  { id: "instagram", label: "Instagram", icon: Instagram, placeholder: "@username" },
+  { id: "tiktok", label: "TikTok", icon: null, placeholder: "@username" },
+  { id: "youtube", label: "YouTube", icon: Youtube, placeholder: "@channel or URL" },
+  { id: "twitter", label: "X / Twitter", icon: Twitter, placeholder: "@username" },
+  { id: "linkedin", label: "LinkedIn", icon: Linkedin, placeholder: "profile URL" },
+  { id: "other", label: "Other", icon: Globe, placeholder: "handle or URL" },
+] as const;
+
+type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number]["id"];
+
+interface SocialMediaHandle {
+  platform: SocialPlatform;
+  handle: string;
+}
+
 interface OnboardingFormProps {
   onSubmitSuccess?: () => void;
+}
+
+// URL validation helper
+function isValidUrl(string: string): boolean {
+  try {
+    const url = new URL(string);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+// TikTok icon component (lucide doesn't have it)
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+    </svg>
+  );
 }
 
 export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
@@ -27,7 +77,13 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   }>({ checking: false, available: null, error: null, suggestions: [] });
   const [portfolioVision, setPortfolioVision] = useState("");
   const [inspiringBrands, setInspiringBrands] = useState("");
-  const [portfolioExamples, setPortfolioExamples] = useState("");
+
+  // Structured fields
+  const [socialMediaHandles, setSocialMediaHandles] = useState<SocialMediaHandle[]>([
+    { platform: "instagram", handle: "" },
+  ]);
+  const [inspirationUrls, setInspirationUrls] = useState<string[]>([""]);
+  const [urlErrors, setUrlErrors] = useState<{ [key: number]: string }>({});
 
   // Check subdomain availability with debounce
   const checkSubdomainAvailability = useCallback(async (value: string) => {
@@ -36,7 +92,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       return;
     }
 
-    setSubdomainStatus(prev => ({ ...prev, checking: true }));
+    setSubdomainStatus((prev) => ({ ...prev, checking: true }));
 
     try {
       const response = await fetch(`/api/user/subdomain?check=${encodeURIComponent(value)}`);
@@ -96,7 +152,23 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           if (data.questionnaire) {
             setPortfolioVision(data.questionnaire.portfolioVision || "");
             setInspiringBrands(data.questionnaire.inspiringBrands || "");
-            setPortfolioExamples(data.questionnaire.portfolioExamples || "");
+
+            // Load structured fields if available
+            if (data.questionnaire.socialMediaHandles?.length > 0) {
+              setSocialMediaHandles(data.questionnaire.socialMediaHandles);
+            }
+            if (data.questionnaire.inspirationUrls?.length > 0) {
+              setInspirationUrls(data.questionnaire.inspirationUrls);
+            } else if (data.questionnaire.portfolioExamples) {
+              // Migrate old format: try to extract URLs from text
+              const urls = data.questionnaire.portfolioExamples
+                .split(/[\n,]/)
+                .map((s: string) => s.trim())
+                .filter((s: string) => s.length > 0);
+              if (urls.length > 0) {
+                setInspirationUrls(urls);
+              }
+            }
           }
         }
       } catch (err) {
@@ -107,6 +179,68 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     }
     checkStatus();
   }, []);
+
+  // Social media handle management
+  const addSocialHandle = () => {
+    setSocialMediaHandles([...socialMediaHandles, { platform: "instagram", handle: "" }]);
+  };
+
+  const removeSocialHandle = (index: number) => {
+    if (socialMediaHandles.length > 1) {
+      setSocialMediaHandles(socialMediaHandles.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateSocialHandle = (index: number, field: "platform" | "handle", value: string) => {
+    const updated = [...socialMediaHandles];
+    if (field === "platform") {
+      updated[index] = { ...updated[index], platform: value as SocialPlatform };
+    } else {
+      updated[index] = { ...updated[index], handle: value };
+    }
+    setSocialMediaHandles(updated);
+  };
+
+  // URL management
+  const addInspirationUrl = () => {
+    setInspirationUrls([...inspirationUrls, ""]);
+  };
+
+  const removeInspirationUrl = (index: number) => {
+    if (inspirationUrls.length > 1) {
+      setInspirationUrls(inspirationUrls.filter((_, i) => i !== index));
+      // Clear any errors for this index
+      const newErrors = { ...urlErrors };
+      delete newErrors[index];
+      setUrlErrors(newErrors);
+    }
+  };
+
+  const updateInspirationUrl = (index: number, value: string) => {
+    const updated = [...inspirationUrls];
+    updated[index] = value;
+    setInspirationUrls(updated);
+
+    // Validate URL
+    const newErrors = { ...urlErrors };
+    if (value && !isValidUrl(value)) {
+      newErrors[index] = "Please enter a valid URL (e.g., https://example.com)";
+    } else {
+      delete newErrors[index];
+    }
+    setUrlErrors(newErrors);
+  };
+
+  const getPlatformIcon = (platformId: string) => {
+    const platform = SOCIAL_PLATFORMS.find((p) => p.id === platformId);
+    if (!platform) return <Globe className="w-4 h-4" />;
+    if (platformId === "tiktok") return <TikTokIcon className="w-4 h-4" />;
+    if (platform.icon) {
+      const Icon = platform.icon;
+      return <Icon className="w-4 h-4" />;
+    }
+    return <Globe className="w-4 h-4" />;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +258,19 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       return;
     }
 
+    // Validate URLs
+    const nonEmptyUrls = inspirationUrls.filter((url) => url.trim().length > 0);
+    const invalidUrls = nonEmptyUrls.filter((url) => !isValidUrl(url));
+    if (invalidUrls.length > 0) {
+      setError("Please fix the invalid URLs before submitting");
+      return;
+    }
+
     setIsSubmitting(true);
+
+    // Filter out empty social handles and URLs
+    const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
+    const validUrls = inspirationUrls.filter((url) => url.trim().length > 0 && isValidUrl(url));
 
     try {
       const response = await fetch("/api/onboarding", {
@@ -134,7 +280,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           subdomain,
           portfolioVision,
           inspiringBrands,
-          portfolioExamples,
+          socialMediaHandles: validSocialHandles,
+          inspirationUrls: validUrls,
+          // Keep backwards compatibility
+          portfolioExamples: validUrls.join("\n"),
         }),
       });
 
@@ -143,7 +292,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       if (!response.ok) {
         setError(data.error || "Failed to submit");
         if (data.suggestions) {
-          setSubdomainStatus(prev => ({
+          setSubdomainStatus((prev) => ({
             ...prev,
             available: false,
             suggestions: data.suggestions,
@@ -206,10 +355,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {/* Subdomain */}
         <div>
-          <label
-            htmlFor="subdomain"
-            className="block text-sm font-medium text-warm-gray-900 mb-2"
-          >
+          <label htmlFor="subdomain" className="block text-sm font-medium text-warm-gray-900 mb-2">
             Choose your portfolio URL *
           </label>
           <div className="flex items-center gap-2">
@@ -284,18 +430,86 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             </div>
           )}
           {subdomain.length > 0 && subdomain.length < 3 && (
-            <p className="mt-1.5 text-xs text-warm-gray-500">
-              Subdomain must be at least 3 characters
-            </p>
+            <p className="mt-1.5 text-xs text-warm-gray-500">Subdomain must be at least 3 characters</p>
           )}
+        </div>
+
+        {/* Social Media Handles */}
+        <div>
+          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
+            Your social media handles
+          </label>
+          <p className="text-xs text-warm-gray-500 mb-3">
+            Add all your social media profiles to display on your portfolio
+          </p>
+
+          <div className="space-y-3">
+            {socialMediaHandles.map((handle, index) => (
+              <div key={index} className="flex items-center gap-2">
+                {/* Platform selector */}
+                <div className="relative">
+                  <select
+                    value={handle.platform}
+                    onChange={(e) => updateSocialHandle(index, "platform", e.target.value)}
+                    className="appearance-none pl-9 pr-8 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white text-sm min-w-[140px]"
+                  >
+                    {SOCIAL_PLATFORMS.map((platform) => (
+                      <option key={platform.id} value={platform.id}>
+                        {platform.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-warm-gray-500">
+                    {getPlatformIcon(handle.platform)}
+                  </div>
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+                    <svg className="w-4 h-4 text-warm-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Handle input */}
+                <input
+                  type="text"
+                  value={handle.handle}
+                  onChange={(e) => updateSocialHandle(index, "handle", e.target.value)}
+                  placeholder={SOCIAL_PLATFORMS.find((p) => p.id === handle.platform)?.placeholder || "@username"}
+                  className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                />
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() => removeSocialHandle(index)}
+                  disabled={socialMediaHandles.length === 1}
+                  className={`p-2 rounded-[--radius-md] transition-colors ${
+                    socialMediaHandles.length === 1
+                      ? "text-warm-gray-300 cursor-not-allowed"
+                      : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                  }`}
+                  title="Remove"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add another button */}
+          <button
+            type="button"
+            onClick={addSocialHandle}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add another handle
+          </button>
         </div>
 
         {/* Portfolio Vision */}
         <div>
-          <label
-            htmlFor="portfolioVision"
-            className="block text-sm font-medium text-warm-gray-900 mb-2"
-          >
+          <label htmlFor="portfolioVision" className="block text-sm font-medium text-warm-gray-900 mb-2">
             What do you want your portfolio to look like? *
           </label>
           <textarea
@@ -316,10 +530,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
         {/* Inspiring Brands */}
         <div>
-          <label
-            htmlFor="inspiringBrands"
-            className="block text-sm font-medium text-warm-gray-900 mb-2"
-          >
+          <label htmlFor="inspiringBrands" className="block text-sm font-medium text-warm-gray-900 mb-2">
             Brands that inspire you
           </label>
           <textarea
@@ -336,33 +547,80 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           </p>
         </div>
 
-        {/* Portfolio Examples */}
+        {/* Website Inspiration URLs */}
         <div>
-          <label
-            htmlFor="portfolioExamples"
-            className="block text-sm font-medium text-warm-gray-900 mb-2"
-          >
-            Portfolios you admire
+          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
+            Websites that inspire you
           </label>
-          <textarea
-            id="portfolioExamples"
-            value={portfolioExamples}
-            onChange={(e) => setPortfolioExamples(e.target.value)}
-            placeholder="Share links to creator portfolios or websites you like. What specifically do you like about them?"
-            rows={3}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
-            maxLength={1000}
-          />
-          <p className="mt-1.5 text-xs text-warm-gray-500">
-            Links to portfolios or websites you'd like yours to resemble.
+          <p className="text-xs text-warm-gray-500 mb-3">
+            Add links to portfolios or websites you'd like yours to resemble (one per field)
           </p>
+
+          <div className="space-y-3">
+            {inspirationUrls.map((url, index) => (
+              <div key={index}>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Globe className="h-4 w-4 text-warm-gray-400" />
+                    </div>
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => updateInspirationUrl(index, e.target.value)}
+                      placeholder="https://example.com"
+                      className={`w-full pl-9 pr-4 py-2.5 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm ${
+                        urlErrors[index]
+                          ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                          : "border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20"
+                      }`}
+                    />
+                    {url && !urlErrors[index] && isValidUrl(url) && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <Check className="h-4 w-4 text-green-500" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Remove button */}
+                  <button
+                    type="button"
+                    onClick={() => removeInspirationUrl(index)}
+                    disabled={inspirationUrls.length === 1}
+                    className={`p-2 rounded-[--radius-md] transition-colors ${
+                      inspirationUrls.length === 1
+                        ? "text-warm-gray-300 cursor-not-allowed"
+                        : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                {urlErrors[index] && (
+                  <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {urlErrors[index]}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add another button */}
+          <button
+            type="button"
+            onClick={addInspirationUrl}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add another website
+          </button>
         </div>
 
         {/* Error/Success Messages */}
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[--radius-md]">
-            {error}
-          </p>
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[--radius-md]">{error}</p>
         )}
         {successMessage && (
           <p className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-[--radius-md] flex items-center gap-2">
@@ -379,7 +637,8 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             portfolioVision.length < 10 ||
             subdomain.length < 3 ||
             subdomainStatus.available === false ||
-            subdomainStatus.checking
+            subdomainStatus.checking ||
+            Object.keys(urlErrors).length > 0
           }
           className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >

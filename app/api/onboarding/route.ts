@@ -4,6 +4,7 @@ import {
   onboardingQuestionnaires,
   portfolioGenerations,
   users,
+  SocialMediaHandle,
 } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
@@ -16,11 +17,19 @@ import {
   generateSubdomainSuggestions,
 } from "@/lib/validation/subdomain";
 
+const socialMediaHandleSchema = z.object({
+  platform: z.enum(["instagram", "tiktok", "youtube", "twitter", "linkedin", "other"]),
+  handle: z.string().max(200),
+});
+
 const submitQuestionnaireSchema = z.object({
   subdomain: z.string().min(3, "Subdomain must be at least 3 characters"),
   portfolioVision: z.string().min(10, "Please describe your portfolio vision (at least 10 characters)").max(2000),
   inspiringBrands: z.string().max(1000).optional(),
   portfolioExamples: z.string().max(1000).optional(),
+  // New structured fields
+  socialMediaHandles: z.array(socialMediaHandleSchema).max(20).optional(),
+  inspirationUrls: z.array(z.string().url("Invalid URL format")).max(10).optional(),
 });
 
 // GET /api/onboarding - Check if user has submitted questionnaire
@@ -41,7 +50,12 @@ export async function GET() {
 
     return NextResponse.json({
       hasSubmitted: !!existing,
-      questionnaire: existing || null,
+      questionnaire: existing ? {
+        ...existing,
+        // Ensure arrays are returned properly
+        socialMediaHandles: existing.socialMediaHandles || [],
+        inspirationUrls: existing.inspirationUrls || [],
+      } : null,
       subdomain: user?.subdomain || null,
     });
   } catch (error) {
@@ -124,6 +138,8 @@ export async function POST(request: NextRequest) {
           portfolioVision: validated.portfolioVision,
           inspiringBrands: validated.inspiringBrands || null,
           portfolioExamples: validated.portfolioExamples || null,
+          socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
+          inspirationUrls: validated.inspirationUrls || [],
           updatedAt: new Date(),
         })
         .where(eq(onboardingQuestionnaires.userId, session.user.id))
@@ -131,7 +147,11 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         message: "Questionnaire updated",
-        questionnaire: updated,
+        questionnaire: {
+          ...updated,
+          socialMediaHandles: updated.socialMediaHandles || [],
+          inspirationUrls: updated.inspirationUrls || [],
+        },
         subdomain: normalizedSubdomain,
       });
     }
@@ -213,6 +233,8 @@ export async function POST(request: NextRequest) {
         portfolioVision: validated.portfolioVision,
         inspiringBrands: validated.inspiringBrands || null,
         portfolioExamples: validated.portfolioExamples || null,
+        socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
+        inspirationUrls: validated.inspirationUrls || [],
       })
       .returning();
 

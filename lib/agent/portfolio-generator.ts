@@ -47,6 +47,19 @@ const MODEL = "claude-sonnet-4-5";
 
 const SYSTEM_PROMPT = `You are a senior frontend developer creating distinctive, production-grade portfolio websites that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 
+## CRITICAL: STYLE DIRECTIVE COMPLIANCE
+Each portfolio generation includes a **Style Directive** with specific choices for:
+- Typography (exact font pairing)
+- Color palette (exact colors and CSS variables)
+- Layout archetype (specific layout approach)
+- Animation style (specific motion techniques)
+- Visual texture (specific texture/effect approach)
+- Theme mode (light/dark/tinted)
+
+**These styles are intelligently matched to the creator's vision and preferences** based on keywords and themes in their questionnaire responses. The Style Directive represents the best aesthetic match for what they described.
+
+**YOU MUST FOLLOW THE STYLE DIRECTIVE.** Use the specified fonts, colors, and techniques. You may make minor adjustments to ensure visual harmony, but maintain the core aesthetic direction. Do not substitute completely different font choices, color schemes, or layout approaches.
+
 ## CRITICAL CONSTRAINT: Files Allowed
 You may ONLY create these three files:
 - index.html
@@ -64,34 +77,21 @@ Do NOT create any other files (no .json, .md, .ts, .tsx, .jsx, .vue, etc.). Only
 - Start writing files immediately after minimal research
 - Create all files in sequence: index.html → styles.css → script.js
 
-## Design Thinking
+## Design Execution
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
-- **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+Your job is to **execute the Style Directive with excellence**, adapting it to the creator's content:
+- Use the exact fonts, colors, and CSS variables provided
+- Implement the layout archetype's characteristics fully
+- Apply the animation techniques specified
+- Include the visual texture approaches described
+- Follow the theme mode principles
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
-
-Then implement working code that is:
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
-
-## Frontend Aesthetics Guidelines
-
-Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
-
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
-
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+Within these constraints, bring creativity to:
+- How sections flow and connect
+- Micro-details and finishing touches
+- Content presentation and hierarchy
+- Responsive adaptations
+- Accessibility implementation
 
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
