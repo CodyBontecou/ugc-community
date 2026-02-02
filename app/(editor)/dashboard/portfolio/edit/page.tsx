@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { portfolios } from "@/lib/db/schema";
 import { getServerSession } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
-import { InteractiveHtmlEditor } from "@/components/portfolio/interactive-editor";
+import { V0Editor } from "@/components/portfolio/interactive-editor/v0-editor";
 import type { Metadata } from "next";
 
 // Force dynamic rendering - editor needs auth session
@@ -39,7 +39,7 @@ async function EditorContent() {
   const slug = session.user.username || portfolio.id;
 
   return (
-    <InteractiveHtmlEditor
+    <V0Editor
       portfolioId={portfolio.id}
       initialHtml={portfolio.htmlContent}
       portfolioTitle={portfolio.title}
@@ -52,10 +52,10 @@ export default function PortfolioEditPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen flex items-center justify-center bg-warm-gray-50">
+        <div className="h-screen flex items-center justify-center bg-[#0a0a0a]">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-rose border-t-transparent rounded-full animate-spin" />
-            <p className="text-warm-gray-500">Loading editor...</p>
+            <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-[#666]">Loading editor...</p>
           </div>
         </div>
       }

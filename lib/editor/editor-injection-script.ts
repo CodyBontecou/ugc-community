@@ -531,6 +531,12 @@ export const EDITOR_INJECTION_SCRIPT = `
     if (e.data?.type === 'stop-loading') {
       hideLoading();
     }
+    if (e.data?.type === 'scroll-to' && e.data?.selector) {
+      const element = document.querySelector(e.data.selector);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   });
 
   // Notify parent that editor is ready
