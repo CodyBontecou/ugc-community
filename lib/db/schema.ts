@@ -42,8 +42,8 @@ export const users = pgTable(
     subdomain: text("subdomain").unique(),
     // Admin fields for user status management
     status: text("status").notNull().default("active"), // "active" | "suspended" | "banned"
-    // User role - determines feature access
-    role: text("role").notNull().default("creator"), // "creator" | "brand"
+    // User role - all users are creators now
+    role: text("role").notNull().default("creator"),
     statusChangedAt: timestamp("status_changed_at"),
     statusChangedBy: text("status_changed_by"),
     // Profile analytics
@@ -60,7 +60,7 @@ export const users = pgTable(
     // GitHub repository assigned to user for deployment
     githubRepoFullName: text("github_repo_full_name"),
     githubRepoId: text("github_repo_id"),
-    // Directory listing fields
+    // Directory listing fields (kept for profile use)
     directoryListed: boolean("directory_listed").notNull().default(false),
     availableForHire: boolean("available_for_hire").notNull().default(true),
     niches: text("niches").array(),
@@ -73,7 +73,6 @@ export const users = pgTable(
     directoryJoinedAt: timestamp("directory_joined_at"),
     // Milestone system fields
     lifetimePostCount: integer("lifetime_post_count").notNull().default(0),
-    trackingHashtag: text("tracking_hashtag"),
     // Milestone reward fields
     hasAdvancedAnalytics: boolean("has_advanced_analytics").notNull().default(false),
     hostingUnlockedUntil: timestamp("hosting_unlocked_until"),
@@ -83,9 +82,6 @@ export const users = pgTable(
     monthlyEditsAllowance: integer("monthly_edits_allowance").notNull().default(0),
     editsResetMonth: text("edits_reset_month"), // Format: '2026-01'
     unlimitedEditsUntil: timestamp("unlimited_edits_until"),
-    // Notification preferences
-    emailOnJobApplication: boolean("email_on_job_application").notNull().default(true),
-    emailOnApplicationUpdate: boolean("email_on_application_update").notNull().default(true),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -188,63 +184,6 @@ export const portfolioGenerations = pgTable(
     index("portfolio_generations_questionnaire_id_idx").on(
       table.questionnaireId
     ),
-  ]
-);
-
-// =====================================================
-// Invite System Tables
-// =====================================================
-
-export const invites = pgTable(
-  "invites",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    token: text("token").notNull().unique(),
-    email: text("email"), // Optional - can pre-assign to specific email
-    // Role to assign to the user when they sign up with this invite
-    role: text("role").notNull().default("creator"), // "creator" | "brand"
-    expiresAt: timestamp("expires_at").notNull(),
-    usedAt: timestamp("used_at"),
-    usedBy: text("used_by").references(() => users.id, { onDelete: "set null" }),
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    // Admin fields for invite revocation
-    revokedAt: timestamp("revoked_at"),
-    revokedBy: text("revoked_by").references(() => users.id, { onDelete: "set null" }),
-  },
-  (table) => [
-    index("invites_token_idx").on(table.token),
-    index("invites_email_idx").on(table.email),
-    index("invites_created_by_idx").on(table.createdBy),
-  ]
-);
-
-// =====================================================
-// Waitlist Tables
-// =====================================================
-
-export const waitlist = pgTable(
-  "waitlist",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    email: text("email").notNull().unique(),
-    instagramHandle: text("instagram_handle"),
-    tiktokHandle: text("tiktok_handle"),
-    youtubeHandle: text("youtube_handle"),
-    facebookHandle: text("facebook_handle"),
-    twitterHandle: text("twitter_handle"),
-    // User type: creator or brand
-    userType: text("user_type").notNull().default("creator"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    // Track if they've been invited
-    invitedAt: timestamp("invited_at"),
-    invitedBy: text("invited_by").references(() => users.id, { onDelete: "set null" }),
-  },
-  (table) => [
-    index("waitlist_email_idx").on(table.email),
-    index("waitlist_created_at_idx").on(table.createdAt),
   ]
 );
 
@@ -375,37 +314,6 @@ export const posts = pgTable(
 );
 
 // =====================================================
-// Hashtag Mentions (Incoming webhook data from monitoring)
-// =====================================================
-
-export const hashtagMentions = pgTable(
-  "hashtag_mentions",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    platform: text("platform").notNull(), // 'tiktok' | 'instagram' | 'youtube' | 'twitter' | 'facebook'
-    postUrl: text("post_url").notNull().unique(),
-    postId: text("post_id"), // Platform-specific post ID
-    authorHandle: text("author_handle").notNull(),
-    authorName: text("author_name"),
-    content: text("content"), // Post caption/description
-    engagement: jsonb("engagement").$type<HashtagMentionEngagement>().default({}),
-    postedAt: timestamp("posted_at"), // When post was made on platform
-    discoveredAt: timestamp("discovered_at").notNull().defaultNow(), // When we found it
-    processedAt: timestamp("processed_at"), // When we matched to user
-    matchedUserId: text("matched_user_id").references(() => users.id, { onDelete: "set null" }),
-    source: text("source").notNull(), // Provider name: 'apify', 'brand24', etc.
-    metadata: jsonb("metadata").$type<HashtagMentionMetadata>().default({}),
-  },
-  (table) => [
-    index("hashtag_mentions_platform_idx").on(table.platform),
-    index("hashtag_mentions_posted_at_idx").on(table.postedAt),
-    index("hashtag_mentions_author_handle_idx").on(table.authorHandle),
-    index("hashtag_mentions_matched_user_id_idx").on(table.matchedUserId),
-    index("hashtag_mentions_source_idx").on(table.source),
-  ]
-);
-
-// =====================================================
 // Milestones System
 // =====================================================
 
@@ -447,40 +355,17 @@ export const userMilestones = pgTable(
 // Relations
 // =====================================================
 
-export const usersRelations = relations(users, ({ many, one }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   media: many(media),
-  createdInvites: many(invites, { relationName: "createdInvites" }),
-  usedInvite: one(invites, {
-    fields: [users.id],
-    references: [invites.usedBy],
-    relationName: "usedInvite",
-  }),
   contactSubmissions: many(contactSubmissions),
   portfolioViewDedupe: many(portfolioViewDedupe),
   viewHistory: many(viewHistory),
   posts: many(posts),
   userMilestones: many(userMilestones),
-  hashtagMentions: many(hashtagMentions),
-  // Saved creators (brand perspective - creators this brand has saved)
-  savedCreators: many(savedCreators, { relationName: "brandSavedCreators" }),
-  // Saved by brands (creator perspective - brands that have saved this creator)
-  savedByBrands: many(savedCreators, { relationName: "creatorSavedByBrands" }),
-  // Content jobs created by this user (admin)
-  createdJobs: many(contentJobs, { relationName: "createdJobs" }),
-  // Brand jobs (jobs associated with this brand)
-  brandJobs: many(contentJobs, { relationName: "brandJobs" }),
-  // Job applications (creator perspective)
-  jobApplications: many(jobApplications, { relationName: "jobApplications" }),
-  // Notifications
-  notifications: many(notifications),
-  // Onboarding questionnaires
   onboardingQuestionnaires: many(onboardingQuestionnaires),
-  // Portfolio generations
   portfolioGenerations: many(portfolioGenerations),
-  // Portfolio projects
-  portfolioProjects: many(portfolioProjects),
 }));
 
 export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
@@ -516,24 +401,10 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   }),
 }));
 
-export const mediaRelations = relations(media, ({ one, many }) => ({
+export const mediaRelations = relations(media, ({ one }) => ({
   user: one(users, {
     fields: [media.userId],
     references: [users.id],
-  }),
-  projectMedia: many(portfolioProjectMedia),
-}));
-
-export const invitesRelations = relations(invites, ({ one }) => ({
-  creator: one(users, {
-    fields: [invites.createdBy],
-    references: [users.id],
-    relationName: "createdInvites",
-  }),
-  usedByUser: one(users, {
-    fields: [invites.usedBy],
-    references: [users.id],
-    relationName: "usedInvite",
   }),
 }));
 
@@ -580,235 +451,6 @@ export const userMilestonesRelations = relations(userMilestones, ({ one }) => ({
   }),
 }));
 
-export const hashtagMentionsRelations = relations(hashtagMentions, ({ one }) => ({
-  matchedUser: one(users, {
-    fields: [hashtagMentions.matchedUserId],
-    references: [users.id],
-  }),
-}));
-
-// =====================================================
-// Saved Creators (Brand favorites)
-// =====================================================
-
-export const savedCreators = pgTable(
-  "saved_creators",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    brandId: text("brand_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    creatorId: text("creator_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("saved_creators_brand_creator_unique").on(table.brandId, table.creatorId),
-    index("saved_creators_brand_id_idx").on(table.brandId),
-    index("saved_creators_creator_id_idx").on(table.creatorId),
-  ]
-);
-
-export const savedCreatorsRelations = relations(savedCreators, ({ one }) => ({
-  brand: one(users, {
-    fields: [savedCreators.brandId],
-    references: [users.id],
-    relationName: "brandSavedCreators",
-  }),
-  creator: one(users, {
-    fields: [savedCreators.creatorId],
-    references: [users.id],
-    relationName: "creatorSavedByBrands",
-  }),
-}));
-
-// =====================================================
-// Content Jobs (Job Listings for Creators)
-// =====================================================
-
-export const contentJobs = pgTable(
-  "content_jobs",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    title: text("title").notNull(),
-    description: text("description").notNull(),
-    hooks: jsonb("hooks").$type<string[]>().default([]),
-    compensationType: text("compensation_type").notNull().default("paid"),
-    compensationDetails: text("compensation_details"),
-    niches: text("niches").array().default([]),
-    platforms: text("platforms").array().default([]),
-    status: text("status").notNull().default("draft"),
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    brandId: text("brand_id").references(() => users.id, { onDelete: "set null" }),
-    isFeatured: boolean("is_featured").notNull().default(false),
-    deadlineAt: timestamp("deadline_at"),
-    viewCount: integer("view_count").notNull().default(0),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-    publishedAt: timestamp("published_at"),
-  },
-  (table) => [
-    index("content_jobs_status_idx").on(table.status),
-    index("content_jobs_created_by_idx").on(table.createdBy),
-    index("content_jobs_brand_id_idx").on(table.brandId),
-    index("content_jobs_created_at_idx").on(table.createdAt),
-  ]
-);
-
-export const jobApplications = pgTable(
-  "job_applications",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    jobId: uuid("job_id")
-      .notNull()
-      .references(() => contentJobs.id, { onDelete: "cascade" }),
-    creatorId: text("creator_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    status: text("status").notNull().default("interested"),
-    note: text("note"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("job_applications_job_creator_unique").on(table.jobId, table.creatorId),
-    index("job_applications_job_id_idx").on(table.jobId),
-    index("job_applications_creator_id_idx").on(table.creatorId),
-    index("job_applications_status_idx").on(table.status),
-  ]
-);
-
-export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
-  createdByUser: one(users, {
-    fields: [contentJobs.createdBy],
-    references: [users.id],
-    relationName: "createdJobs",
-  }),
-  brand: one(users, {
-    fields: [contentJobs.brandId],
-    references: [users.id],
-    relationName: "brandJobs",
-  }),
-  applications: many(jobApplications),
-}));
-
-export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
-  job: one(contentJobs, {
-    fields: [jobApplications.jobId],
-    references: [contentJobs.id],
-  }),
-  creator: one(users, {
-    fields: [jobApplications.creatorId],
-    references: [users.id],
-    relationName: "jobApplications",
-  }),
-}));
-
-// =====================================================
-// Portfolio Projects (Groups media with context)
-// =====================================================
-
-export const portfolioProjects = pgTable(
-  "portfolio_projects",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    brandName: text("brand_name"),
-    campaignDescription: text("campaign_description"),
-    contentType: text("content_type"), // 'sponsored' | 'ugc' | 'personal' | 'collab'
-    platforms: text("platforms").array(), // ['tiktok', 'instagram']
-    results: text("results"), // '2M views, 50K likes'
-    projectDate: date("project_date"),
-    displayOrder: integer("display_order").notNull().default(0),
-    featured: boolean("featured").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_projects_user_id_idx").on(table.userId),
-    index("portfolio_projects_display_order_idx").on(table.displayOrder),
-  ]
-);
-
-export const portfolioProjectMedia = pgTable(
-  "portfolio_project_media",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => portfolioProjects.id, { onDelete: "cascade" }),
-    mediaId: uuid("media_id")
-      .notNull()
-      .references(() => media.id, { onDelete: "cascade" }),
-    displayOrder: integer("display_order").notNull().default(0),
-    isCover: boolean("is_cover").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_project_media_project_id_idx").on(table.projectId),
-    index("portfolio_project_media_media_id_idx").on(table.mediaId),
-    unique("portfolio_project_media_unique").on(table.projectId, table.mediaId),
-  ]
-);
-
-// =====================================================
-// Notifications
-// =====================================================
-
-export const notifications = pgTable(
-  "notifications",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").notNull(), // 'job_application' | 'application_accepted' | 'application_rejected' | 'application_info_requested' | 'new_message'
-    title: text("title").notNull(),
-    message: text("message"),
-    link: text("link"),
-    metadata: jsonb("metadata").$type<NotificationMetadata>().default({}),
-    readAt: timestamp("read_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("notifications_user_id_idx").on(table.userId),
-    index("notifications_user_read_idx").on(table.userId, table.readAt),
-    index("notifications_created_at_idx").on(table.createdAt),
-  ]
-);
-
-export const notificationsRelations = relations(notifications, ({ one }) => ({
-  user: one(users, {
-    fields: [notifications.userId],
-    references: [users.id],
-  }),
-}));
-
-export const portfolioProjectsRelations = relations(portfolioProjects, ({ one, many }) => ({
-  user: one(users, {
-    fields: [portfolioProjects.userId],
-    references: [users.id],
-  }),
-  projectMedia: many(portfolioProjectMedia),
-}));
-
-export const portfolioProjectMediaRelations = relations(portfolioProjectMedia, ({ one }) => ({
-  project: one(portfolioProjects, {
-    fields: [portfolioProjectMedia.projectId],
-    references: [portfolioProjects.id],
-  }),
-  media: one(media, {
-    fields: [portfolioProjectMedia.mediaId],
-    references: [media.id],
-  }),
-}));
-
 // =====================================================
 // Types
 // =====================================================
@@ -842,45 +484,11 @@ export type MilestoneRewardConfig = {
   companion_boost_days?: number;
 };
 
-export type HashtagMentionEngagement = {
-  likes?: number;
-  views?: number;
-  comments?: number;
-  shares?: number;
-  saves?: number;
-};
-
-export type HashtagMentionMetadata = {
-  hashtags?: string[];
-  thumbnailUrl?: string;
-  videoUrl?: string;
-  duration?: number; // seconds for videos
-  isVerified?: boolean; // verified account
-  followerCount?: number;
-  rawData?: Record<string, unknown>; // original webhook payload
-};
-
-export type NotificationMetadata = {
-  jobId?: string;
-  jobTitle?: string;
-  applicationId?: string;
-  creatorId?: string;
-  creatorName?: string;
-  brandId?: string;
-  brandName?: string;
-  messageId?: string;
-};
-
-
 // Export types for use in application
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Media = typeof media.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;
-export type Invite = typeof invites.$inferSelect;
-export type NewInvite = typeof invites.$inferInsert;
-export type Waitlist = typeof waitlist.$inferSelect;
-export type NewWaitlist = typeof waitlist.$inferInsert;
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
 export type PortfolioView = typeof portfolioViewDedupe.$inferSelect;
@@ -893,21 +501,7 @@ export type Milestone = typeof milestones.$inferSelect;
 export type NewMilestone = typeof milestones.$inferInsert;
 export type UserMilestone = typeof userMilestones.$inferSelect;
 export type NewUserMilestone = typeof userMilestones.$inferInsert;
-export type HashtagMention = typeof hashtagMentions.$inferSelect;
-export type NewHashtagMention = typeof hashtagMentions.$inferInsert;
-export type SavedCreator = typeof savedCreators.$inferSelect;
-export type NewSavedCreator = typeof savedCreators.$inferInsert;
-export type ContentJob = typeof contentJobs.$inferSelect;
-export type NewContentJob = typeof contentJobs.$inferInsert;
-export type JobApplication = typeof jobApplications.$inferSelect;
-export type NewJobApplication = typeof jobApplications.$inferInsert;
-export type Notification = typeof notifications.$inferSelect;
-export type NewNotification = typeof notifications.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
 export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
 export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
 export type NewPortfolioGeneration = typeof portfolioGenerations.$inferInsert;
-export type PortfolioProject = typeof portfolioProjects.$inferSelect;
-export type NewPortfolioProject = typeof portfolioProjects.$inferInsert;
-export type PortfolioProjectMedia = typeof portfolioProjectMedia.$inferSelect;
-export type NewPortfolioProjectMedia = typeof portfolioProjectMedia.$inferInsert;

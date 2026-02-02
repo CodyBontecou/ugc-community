@@ -2,18 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin, type UserStatus } from "@/lib/admin";
 import { db } from "@/lib/db";
-import { users, invites, waitlist, contactSubmissions } from "@/lib/db/schema";
-import { eq, and, ne, or, desc, gte, sql } from "drizzle-orm";
+import { users, contactSubmissions } from "@/lib/db/schema";
+import { eq, and, ne, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
 import { createProject, VercelApiError } from "@/lib/vercel/client";
 
 const updateUserStatusSchema = z.object({
   status: z.enum(["active", "suspended", "banned"]),
-});
-
-const updateUserRoleSchema = z.object({
-  role: z.enum(["creator", "brand"]),
 });
 
 const updateUserSubdomainSchema = z.object({
@@ -56,7 +52,7 @@ const updateUserBioSchema = z.object({
   bio: z.string().nullable(),
 });
 
-// GET /api/admin/users/[userId] - Get user details with invite history
+// GET /api/admin/users/[userId] - Get user details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
@@ -110,83 +106,6 @@ export async function GET(
 
     const user = userResult[0];
 
-    // Get ALL invites related to this user (sent to their email OR used by them)
-    const allInvitesResult = await db
-      .select({
-        id: invites.id,
-        email: invites.email,
-        createdAt: invites.createdAt,
-        expiresAt: invites.expiresAt,
-        usedAt: invites.usedAt,
-        usedBy: invites.usedBy,
-        createdBy: invites.createdBy,
-        revokedAt: invites.revokedAt,
-      })
-      .from(invites)
-      .where(
-        or(
-          eq(invites.email, user.email),
-          eq(invites.usedBy, userId)
-        )
-      )
-      .orderBy(desc(invites.createdAt));
-
-    // Get creator details for all invites
-    const creatorIds = [...new Set(allInvitesResult.map(i => i.createdBy).filter(Boolean))];
-    const creatorsResult = creatorIds.length > 0
-      ? await db
-          .select({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-          })
-          .from(users)
-          .where(or(...creatorIds.map(id => eq(users.id, id))))
-      : [];
-
-    const creatorsMap = new Map(creatorsResult.map(c => [c.id, c]));
-
-    const allInvites = allInvitesResult.map(invite => ({
-      ...invite,
-      creator: invite.createdBy ? creatorsMap.get(invite.createdBy) || null : null,
-      isUsedByThisUser: invite.usedBy === userId,
-    }));
-
-    // Get waitlist entry for this email (if any)
-    const waitlistResult = await db
-      .select({
-        id: waitlist.id,
-        email: waitlist.email,
-        createdAt: waitlist.createdAt,
-        invitedAt: waitlist.invitedAt,
-        invitedBy: waitlist.invitedBy,
-        instagramHandle: waitlist.instagramHandle,
-        tiktokHandle: waitlist.tiktokHandle,
-        youtubeHandle: waitlist.youtubeHandle,
-        twitterHandle: waitlist.twitterHandle,
-        facebookHandle: waitlist.facebookHandle,
-      })
-      .from(waitlist)
-      .where(eq(waitlist.email, user.email))
-      .limit(1);
-
-    const waitlistEntry = waitlistResult[0] || null;
-
-    // Get who invited from waitlist (if applicable)
-    let waitlistInvitedByUser = null;
-    if (waitlistEntry?.invitedBy) {
-      const inviterResult = await db
-        .select({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-        })
-        .from(users)
-        .where(eq(users.id, waitlistEntry.invitedBy))
-        .limit(1);
-      waitlistInvitedByUser = inviterResult[0] || null;
-    }
-
     // Get who changed the status (if applicable)
     let statusChangedByUser = null;
     if (user.statusChangedBy) {
@@ -201,9 +120,6 @@ export async function GET(
         .limit(1);
       statusChangedByUser = statusChangerResult[0] || null;
     }
-
-    // Find the invite that was used to sign up (for backwards compatibility)
-    const usedInvite = allInvites.find(i => i.isUsedByThisUser) || null;
 
     // Get contact submission counts
     const now = new Date();
@@ -238,12 +154,6 @@ export async function GET(
         contactSubmissionCountLast30Days: Number(last30DaysCount?.count || 0),
         contactSubmissionCountLast7Days: Number(last7DaysCount?.count || 0),
       },
-      invite: usedInvite, // backwards compatibility
-      allInvites,
-      waitlistEntry: waitlistEntry ? {
-        ...waitlistEntry,
-        invitedByUser: waitlistInvitedByUser,
-      } : null,
       statusChangedByUser,
     });
   } catch (error) {
@@ -513,27 +423,6 @@ export async function PATCH(
       return NextResponse.json({ user: updated });
     }
 
-    // Handle role update
-    if ("role" in body) {
-      const { role } = updateUserRoleSchema.parse(body);
-
-      const [updated] = await db
-        .update(users)
-        .set({
-          role,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, userId))
-        .returning({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          role: users.role,
-        });
-
-      return NextResponse.json({ user: updated });
-    }
-
     // Handle status update
     const { status } = updateUserStatusSchema.parse(body);
 
@@ -628,8 +517,6 @@ export async function DELETE(
     }
 
     // Delete the user - cascades will handle sessions, accounts, media
-    // Invites created by this user will be deleted (cascade)
-    // Invites used by this user will have usedBy set to null (set null)
     await db.delete(users).where(eq(users.id, userId));
 
     return NextResponse.json({ success: true, deletedUser: existingUser[0] });
