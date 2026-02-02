@@ -4,7 +4,7 @@
  * Server component that renders a complete portfolio from config.
  */
 
-import { Hero, About, Work, Contact } from "./sections";
+import { Hero, About, Work, Contact, Services, Testimonials, Stats } from "./sections";
 import type { ProjectWithMedia } from "./sections";
 import {
   resolveThemeFromTemplate,
@@ -193,12 +193,29 @@ function SectionRenderer({
         />
       );
 
-    // Services, Testimonials, Stats - Coming soon
     case "services":
+      return (
+        <Services
+          variant={variant as Parameters<typeof Services>[0]["variant"]}
+          content={content}
+        />
+      );
+
     case "testimonials":
+      return (
+        <Testimonials
+          variant={variant as Parameters<typeof Testimonials>[0]["variant"]}
+          content={content}
+          mediaMap={mediaMap}
+        />
+      );
+
     case "stats":
       return (
-        <PlaceholderSection type={type} />
+        <Stats
+          variant={variant as Parameters<typeof Stats>[0]["variant"]}
+          content={content}
+        />
       );
 
     default:
@@ -206,37 +223,6 @@ function SectionRenderer({
   }
 }
 
-// =====================================================
-// Placeholder for unimplemented sections
-// =====================================================
-
-function PlaceholderSection({ type }: { type: string }) {
-  return (
-    <section
-      style={{
-        padding: "var(--section-gap) 2rem",
-        backgroundColor: "var(--color-surface)",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "var(--content-width)",
-          marginLeft: "auto",
-          marginRight: "auto",
-          padding: "3rem",
-          border: `2px dashed var(--color-border)`,
-          borderRadius: "var(--border-radius)",
-          color: "var(--color-text-secondary)",
-        }}
-      >
-        <p style={{ fontFamily: "var(--font-body)" }}>
-          {type.charAt(0).toUpperCase() + type.slice(1)} section coming soon
-        </p>
-      </div>
-    </section>
-  );
-}
 
 // =====================================================
 // Helper Functions
