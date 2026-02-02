@@ -399,3 +399,26 @@ export async function cancelDeployment(deploymentId: string): Promise<Deployment
 
   return handleResponse<Deployment>(response);
 }
+
+/**
+ * Delete a Vercel project
+ * DELETE /v9/projects/{projectId}
+ */
+export async function deleteProject(projectId: string): Promise<void> {
+  const response = await fetch(
+    buildUrl(`/v9/projects/${projectId}`),
+    {
+      method: "DELETE",
+      headers: getHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new VercelApiError(
+      error.error?.message || `Failed to delete project: ${response.status}`,
+      response.status,
+      error.error?.code
+    );
+  }
+}

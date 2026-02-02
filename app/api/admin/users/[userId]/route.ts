@@ -7,6 +7,7 @@ import { eq, and, ne, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
 import { createProject, VercelApiError } from "@/lib/vercel/client";
+import { deleteUserWithCleanup } from "@/lib/user/cleanup";
 
 const updateUserStatusSchema = z.object({
   status: z.enum(["active", "suspended", "banned"]),
@@ -516,10 +517,28 @@ export async function DELETE(
       );
     }
 
-    // Delete the user - cascades will handle sessions, accounts, media
-    await db.delete(users).where(eq(users.id, userId));
+    // Delete user with full cleanup of external resources
+    // This handles: Vercel project, GitHub repo, Vercel Blob media files
+    // Then deletes the user from DB (cascades handle related DB records)
+    const result = await deleteUserWithCleanup(userId);
 
-    return NextResponse.json({ success: true, deletedUser: existingUser[0] });
+    if (!result.userDeleted) {
+      return NextResponse.json(
+        { error: "Failed to delete user from database" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedUser: existingUser[0],
+      cleanup: {
+        vercelProject: result.cleanupResult.cleaned.vercelProject,
+        githubRepo: result.cleanupResult.cleaned.githubRepo,
+        mediaFiles: result.cleanupResult.cleaned.mediaFiles,
+        errors: result.cleanupResult.errors.length > 0 ? result.cleanupResult.errors : undefined,
+      },
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
