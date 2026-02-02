@@ -12,6 +12,7 @@ import {
   Infinity as InfinityIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 type MilestoneWithEarned = {
   id: string;
@@ -49,6 +50,7 @@ type MilestoneConfig = {
   gradientFrom: string;
   gradientTo: string;
   reward: string;
+  tooltip: string;
 };
 
 // Get visual config based on threshold position in the track
@@ -65,6 +67,8 @@ function getMilestoneConfig(
         gradientFrom: "#8b5cf6",
         gradientTo: "#a78bfa",
         reward: "Verified Badge",
+        tooltip:
+          "A verified checkmark on your profile showing you're an established creator in the community.",
       },
       {
         icon: <Trophy size={24} />,
@@ -72,6 +76,8 @@ function getMilestoneConfig(
         gradientFrom: "#f97316",
         gradientTo: "#fb923c",
         reward: "Featured Status",
+        tooltip:
+          "Get highlighted in our featured creators section, driving more visibility to your portfolio.",
       },
       {
         icon: <Crown size={24} />,
@@ -79,6 +85,8 @@ function getMilestoneConfig(
         gradientFrom: "#e11d48",
         gradientTo: "#f43f5e",
         reward: "Custom Domain",
+        tooltip:
+          "Connect your own domain name (e.g., yourname.com) to your portfolio for a professional presence.",
       },
     ];
     return configs[index % configs.length];
@@ -91,6 +99,8 @@ function getMilestoneConfig(
       gradientFrom: "#10b981",
       gradientTo: "#34d399",
       reward: "Free Hosting",
+      tooltip:
+        "Your portfolio stays live and accessible to brands for free as long as you maintain activity.",
     },
     {
       icon: <Star size={24} />,
@@ -98,6 +108,8 @@ function getMilestoneConfig(
       gradientFrom: "#8b5cf6",
       gradientTo: "#a78bfa",
       reward: "Directory Boost",
+      tooltip:
+        "Rank higher in search results when brands browse the creator directory.",
     },
     {
       icon: <Trophy size={24} />,
@@ -105,6 +117,8 @@ function getMilestoneConfig(
       gradientFrom: "#f97316",
       gradientTo: "#fb923c",
       reward: "Unlimited Edits",
+      tooltip:
+        "Edit your portfolio content as many times as you want with no monthly limits.",
     },
   ];
   return configs[index % configs.length];
@@ -181,13 +195,14 @@ function ProgressNode({
         {milestone.threshold}
       </div>
 
-      {/* Reward label */}
+      {/* Reward label with info tooltip */}
       <div
-        className={`mt-1 text-xs text-center max-w-[80px] ${
+        className={`mt-1 text-xs text-center max-w-[100px] flex items-center justify-center gap-1 ${
           isUnlocked ? "text-warm-gray-600" : "text-warm-gray-400"
         }`}
       >
-        {config.reward}
+        <span>{config.reward}</span>
+        <InfoTooltip content={config.tooltip} />
       </div>
     </motion.div>
   );
@@ -311,15 +326,11 @@ function ProgressionTrack({
         </div>
       </motion.div>
 
-      {/* Scrollable track container for mobile */}
+      {/* Scrollable track container */}
       <div className="relative">
-        {/* Fade edges for mobile scroll indication */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none md:hidden" />
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none md:hidden" />
-
         {/* Horizontal scroll container */}
-        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          <div className="flex items-start snap-x snap-mandatory md:snap-none min-w-max md:min-w-0">
+        <div className="overflow-x-auto overflow-y-visible scrollbar-hide -mx-4 px-4 py-4">
+          <div className="flex items-start snap-x snap-mandatory min-w-max">
             {sortedMilestones.map((milestone, i) => {
               const config = getMilestoneConfig(milestone.threshold, i, isLifetime);
               const isUnlocked = milestone.earned;
