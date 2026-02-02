@@ -5,6 +5,11 @@ import { requireAuth } from "@/lib/auth/session";
 import { buildElementEditPrompt } from "@/lib/ai/edit-prompts";
 import type { QuickAction } from "@/lib/editor/types";
 
+const imageSchema = z.object({
+  mediaType: z.string(),
+  data: z.string(), // base64 encoded image data
+});
+
 const editElementSchema = z.object({
   portfolioId: z.string().uuid(),
   selector: z.string().min(1),
@@ -21,6 +26,8 @@ const editElementSchema = z.object({
     .optional(),
   fullHtml: z.string().min(1),
   tagName: z.string().min(1),
+  model: z.string().optional(),
+  images: z.array(imageSchema).optional(),
 });
 
 // POST /api/ai/edit-element - Stream AI-generated element edits
@@ -63,12 +70,34 @@ export async function POST(request: NextRequest) {
       fullHtml: data.fullHtml,
     });
 
-    // Use faster model for element edits (lower latency)
+    // Build message content with optional images
+    const messageContent: Anthropic.MessageParam["content"] = [];
+    
+    // Add images first if provided
+    if (data.images && data.images.length > 0) {
+      for (const image of data.images) {
+        messageContent.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: image.mediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+            data: image.data,
+          },
+        });
+      }
+    }
+    
+    // Add text prompt
+    messageContent.push({ type: "text", text: userPrompt });
+
+    // Use model from request or default
+    const model = data.model || "claude-sonnet-4-20250514";
+    
     const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-20250514",
+      model,
       max_tokens: 1000,
       system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      messages: [{ role: "user", content: messageContent }],
     });
 
     // Create a ReadableStream that emits text chunks

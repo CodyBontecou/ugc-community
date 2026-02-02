@@ -4,14 +4,23 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
 import { buildHtmlPrompt, buildHtmlRefinePrompt } from "@/lib/ai/prompts";
 
+const imageSchema = z.object({
+  mediaType: z.string(),
+  data: z.string(), // base64 encoded image data
+});
+
 const generateSchema = z.object({
   description: z.string().min(10).max(2000),
   niche: z.string().optional(),
+  model: z.string().optional(),
+  images: z.array(imageSchema).optional(),
 });
 
 const htmlRefineSchema = z.object({
   currentHtml: z.string(),
   feedback: z.string().min(1).max(1000),
+  model: z.string().optional(),
+  images: z.array(imageSchema).optional(),
 });
 
 // POST /api/ai/generate - Generate HTML portfolio content
@@ -37,32 +46,57 @@ export async function POST(request: NextRequest) {
     let systemPrompt: string;
     let userPrompt: string;
     const maxTokens = 16000;
-    const model = "claude-sonnet-4-5";
+    let selectedModel = "claude-sonnet-4-5";
+    let images: { mediaType: string; data: string }[] | undefined;
 
     if (action === "refine-html") {
       // HTML refinement
-      const { currentHtml, feedback } = htmlRefineSchema.parse(body);
-      const prompts = buildHtmlRefinePrompt(currentHtml, feedback);
+      const parsed = htmlRefineSchema.parse(body);
+      const prompts = buildHtmlRefinePrompt(parsed.currentHtml, parsed.feedback);
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
+      selectedModel = parsed.model || selectedModel;
+      images = parsed.images;
     } else {
       // Default to HTML generation
-      const { description, niche } = generateSchema.parse(body);
-      const prompts = buildHtmlPrompt(description, niche);
+      const parsed = generateSchema.parse(body);
+      const prompts = buildHtmlPrompt(parsed.description, parsed.niche);
       systemPrompt = prompts.systemPrompt;
       userPrompt = prompts.userPrompt;
+      selectedModel = parsed.model || selectedModel;
+      images = parsed.images;
     }
 
     console.log(
       `Generating portfolio (${action}) for user ${session.user.id}`
     );
 
+    // Build message content with optional images
+    const messageContent: Anthropic.MessageParam["content"] = [];
+    
+    // Add images first if provided
+    if (images && images.length > 0) {
+      for (const image of images) {
+        messageContent.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: image.mediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+            data: image.data,
+          },
+        });
+      }
+    }
+    
+    // Add text prompt
+    messageContent.push({ type: "text", text: userPrompt });
+
     // Create streaming response
     const stream = anthropic.messages.stream({
-      model,
+      model: selectedModel,
       max_tokens: maxTokens,
       system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      messages: [{ role: "user", content: messageContent }],
     });
 
     // Create a ReadableStream that emits text chunks
