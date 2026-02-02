@@ -20,7 +20,7 @@ export default async function AdminLayout({
           Admin Panel
         </h1>
         <p className="mt-1 text-warm-gray-500">
-          Manage users, invites, and waitlist in one place
+          Manage users and platform settings
         </p>
       </div>
 

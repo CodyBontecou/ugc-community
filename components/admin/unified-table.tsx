@@ -3,23 +3,15 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
-  Plus,
-  Copy,
-  Check,
   Trash2,
-  Send,
-  Mail,
   MoreVertical,
   Shield,
   ShieldOff,
   Ban,
   Instagram,
-  UserPlus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RecordTypeBadge } from "./record-type-badge";
-import { CreateInviteDialog } from "./create-invite-dialog";
-import { ConvertInviteDialog } from "./convert-invite-dialog";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import type { RecordType, UnifiedRecord } from "@/app/api/admin/people/route";
 import type { UserStatus } from "@/lib/admin";
@@ -29,7 +21,6 @@ type SortOrder = "newest" | "oldest";
 
 const STATUS_OPTIONS: Record<RecordType, string[]> = {
   user: ["active", "suspended", "banned"],
-  invite: ["active", "expired", "revoked"],
   waitlist: ["pending", "invited"],
 };
 
@@ -38,9 +29,6 @@ const STATUS_STYLES: Record<string, string> = {
   active: "bg-green-100 text-green-700",
   suspended: "bg-amber-100 text-amber-700",
   banned: "bg-red-100 text-red-700",
-  // Invite statuses
-  revoked: "bg-red-100 text-red-700",
-  expired: "bg-warm-gray-100 text-warm-gray-600",
   // Waitlist statuses
   pending: "bg-amber-100 text-amber-700",
   invited: "bg-green-100 text-green-700",
@@ -69,13 +57,10 @@ export function UnifiedTable() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
   // UI state
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [actionMenuPosition, setActionMenuPosition] = useState<{ top: number; left: number; flip: boolean } | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
-  const [inviteToConvert, setInviteToConvert] = useState<UnifiedRecord | null>(null);
   const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
 
@@ -200,87 +185,6 @@ export function UnifiedTable() {
     setUserToDelete(null);
   }
 
-  async function revokeInvite(inviteId: string) {
-    if (!confirm("Are you sure you want to revoke this invite?")) return;
-
-    setUpdating(inviteId);
-    setActionMenuOpen(null);
-    try {
-      const res = await fetch(`/api/admin/invites/${inviteId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to revoke invite");
-      }
-      setRecords((prev) =>
-        prev.map((r) => (r.id === inviteId && r.type === "invite" ? { ...r, status: "revoked" } : r))
-      );
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to revoke invite");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
-  async function resendInviteEmail(inviteId: string) {
-    setUpdating(inviteId);
-    try {
-      const res = await fetch(`/api/admin/invites/${inviteId}/resend`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to resend email");
-      }
-      alert("Invitation email sent successfully");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to resend email");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
-  async function sendWaitlistInvite(record: UnifiedRecord) {
-    setUpdating(record.id);
-    try {
-      // Create invite - use the waitlist user's type as the invite role
-      const res = await fetch("/api/admin/invites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: record.email,
-          role: record.userType || "creator",
-          expirationDays: 7,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create invite");
-      }
-
-      // Mark as invited
-      const markRes = await fetch(`/api/admin/waitlist/${record.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markInvited: true }),
-      });
-
-      if (markRes.ok) {
-        setRecords((prev) =>
-          prev.map((r) => (r.id === record.id && r.type === "waitlist" ? { ...r, status: "invited" } : r))
-        );
-      }
-
-      // Refresh to get new invite in the list
-      fetchRecords();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to send invite");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
   async function deleteWaitlistEntry(entryId: string) {
     if (!confirm("Are you sure you want to delete this waitlist entry? This cannot be undone.")) return;
 
@@ -298,34 +202,6 @@ export function UnifiedTable() {
       alert(err instanceof Error ? err.message : "Failed to delete waitlist entry");
     } finally {
       setUpdating(null);
-    }
-  }
-
-  async function permanentlyDeleteInvite(inviteId: string) {
-    if (!confirm("Are you sure you want to permanently delete this invite? This cannot be undone.")) return;
-
-    setUpdating(inviteId);
-    try {
-      const res = await fetch(`/api/admin/invites/${inviteId}?permanent=true`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to delete invite");
-      }
-      setRecords((prev) => prev.filter((r) => !(r.id === inviteId && r.type === "invite")));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete invite");
-    } finally {
-      setUpdating(null);
-    }
-  }
-
-  function copyLink(record: UnifiedRecord) {
-    if (record.inviteUrl) {
-      navigator.clipboard.writeText(record.inviteUrl);
-      setCopiedId(record.id);
-      setTimeout(() => setCopiedId(null), 2000);
     }
   }
 
@@ -349,16 +225,10 @@ export function UnifiedTable() {
       );
     }
 
-    // Invites and waitlist - just show email
+    // Waitlist - just show email
     return (
       <div>
         <p className="text-sm font-mono text-warm-gray-900">{record.email}</p>
-        {record.type === "invite" && record.usedBy && (
-          <p className="text-xs text-green-600">Used by: {record.usedBy.name}</p>
-        )}
-        {record.type === "invite" && record.creator && (
-          <p className="text-xs text-warm-gray-500">Created by: {record.creator.name}</p>
-        )}
       </div>
     );
   }
@@ -369,14 +239,6 @@ export function UnifiedTable() {
         <span className="text-sm text-warm-gray-600 font-mono">{record.subdomain}</span>
       ) : (
         <span className="text-sm text-warm-gray-400">—</span>
-      );
-    }
-
-    if (record.type === "invite") {
-      return (
-        <span className="text-sm text-warm-gray-600">
-          Expires: {new Date(record.expiresAt!).toLocaleDateString()}
-        </span>
       );
     }
 
@@ -556,94 +418,9 @@ export function UnifiedTable() {
       );
     }
 
-    if (record.type === "invite") {
-      const isActive = record.status === "active";
-      const hasEmail = !!record.email;
-      return (
-        <div className="flex items-center justify-end gap-1">
-          {isActive ? (
-            <>
-              {hasEmail && (
-                <>
-                  <button
-                    onClick={() => setInviteToConvert(record)}
-                    disabled={isUpdating}
-                    className="p-2 text-warm-gray-400 hover:text-green-600 rounded transition-colors disabled:opacity-50"
-                    title="Convert to user"
-                  >
-                    <UserPlus size={16} />
-                  </button>
-                  <button
-                    onClick={() => resendInviteEmail(record.id)}
-                    disabled={isUpdating}
-                    className="p-2 text-warm-gray-400 hover:text-coral rounded transition-colors disabled:opacity-50"
-                    title="Resend email"
-                  >
-                    {isUpdating ? (
-                      <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-coral rounded-full animate-spin" />
-                    ) : (
-                      <Mail size={16} />
-                    )}
-                  </button>
-                </>
-              )}
-              <button
-                onClick={() => copyLink(record)}
-                className="p-2 text-warm-gray-400 hover:text-warm-gray-600 rounded transition-colors"
-                title="Copy link"
-              >
-                {copiedId === record.id ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-              </button>
-              <button
-                onClick={() => revokeInvite(record.id)}
-                disabled={isUpdating}
-                className="p-2 text-warm-gray-400 hover:text-red-600 rounded transition-colors disabled:opacity-50"
-                title="Revoke"
-              >
-                {isUpdating ? (
-                  <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-red-600 rounded-full animate-spin" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => permanentlyDeleteInvite(record.id)}
-              disabled={isUpdating}
-              className="p-2 text-warm-gray-400 hover:text-red-600 rounded transition-colors disabled:opacity-50"
-              title="Delete permanently"
-            >
-              {isUpdating ? (
-                <span className="w-4 h-4 block border-2 border-warm-gray-300 border-t-red-600 rounded-full animate-spin" />
-              ) : (
-                <Trash2 size={16} />
-              )}
-            </button>
-          )}
-        </div>
-      );
-    }
-
     if (record.type === "waitlist") {
       return (
         <div className="flex items-center justify-end gap-2">
-          {record.status === "pending" && (
-            <button
-              onClick={() => sendWaitlistInvite(record)}
-              disabled={isUpdating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors disabled:opacity-50"
-              style={{ backgroundColor: "#1A1614", color: "#FFFFFF" }}
-              title="Send invite"
-            >
-              {isUpdating ? (
-                <span className="w-4 h-4 block border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
-              Invite
-            </button>
-          )}
           <button
             onClick={() => deleteWaitlistEntry(record.id)}
             disabled={isUpdating}
@@ -674,26 +451,17 @@ export function UnifiedTable() {
   const typeFilterTabs: { value: TypeFilter; label: string }[] = [
     { value: "all", label: "All" },
     { value: "user", label: "Users" },
-    { value: "invite", label: "Invites" },
     { value: "waitlist", label: "Waitlist" },
   ];
 
   return (
     <>
-      {/* Header with title and create button */}
+      {/* Header with title */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-warm-gray-900">People</h2>
-          <p className="text-sm text-warm-gray-500">Manage users, invites, and waitlist</p>
+          <p className="text-sm text-warm-gray-500">Manage users and waitlist</p>
         </div>
-        <button
-          onClick={() => setShowCreateDialog(true)}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-full transition-colors shadow-sm"
-          style={{ backgroundColor: "#1A1614", color: "#FFFFFF" }}
-        >
-          <Plus size={18} />
-          Create Invite
-        </button>
       </div>
 
       <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
@@ -818,25 +586,11 @@ export function UnifiedTable() {
         </div>
       </div>
 
-      <CreateInviteDialog isOpen={showCreateDialog} onClose={() => setShowCreateDialog(false)} onCreated={fetchRecords} />
-
       <DeleteUserDialog
         isOpen={userToDelete !== null}
         onClose={() => setUserToDelete(null)}
         onDeleted={handleUserDeleted}
         user={userToDelete ? { id: userToDelete.id, name: userToDelete.name, email: userToDelete.email } : null}
-      />
-
-      <ConvertInviteDialog
-        isOpen={inviteToConvert !== null}
-        onClose={() => setInviteToConvert(null)}
-        onConverted={fetchRecords}
-        invite={inviteToConvert ? {
-          id: inviteToConvert.id,
-          email: inviteToConvert.email,
-          role: inviteToConvert.role,
-          socials: inviteToConvert.socials,
-        } : null}
       />
     </>
   );

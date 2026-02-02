@@ -3,10 +3,9 @@ import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { users, waitlist } from "@/lib/db/schema";
-import { listAllInvites, getInviteUrl } from "@/lib/invites";
 import { desc, eq } from "drizzle-orm";
 
-export type RecordType = "user" | "invite" | "waitlist";
+export type RecordType = "user" | "waitlist";
 
 export interface SocialHandles {
   // User handles are arrays (up to 5 per platform)
@@ -32,16 +31,9 @@ export interface UnifiedRecord {
   // Waitlist-specific
   socials?: SocialHandles | null;
   userType?: "creator" | "brand"; // User type from waitlist signup
-  // Invite-specific
-  inviteUrl?: string;
-  expiresAt?: string;
-  usedBy?: { name: string } | null;
-  creator?: { name: string } | null;
-  token?: string;
-  role?: "creator" | "brand"; // Invite role
 }
 
-// GET /api/admin/people - List all users, invites, and waitlist entries
+// GET /api/admin/people - List all users and waitlist entries
 export async function GET() {
   try {
     const session = await requireAuth();
@@ -51,7 +43,7 @@ export async function GET() {
     }
 
     // Fetch all data in parallel
-    const [allUsers, allInvites, waitlistEntries] = await Promise.all([
+    const [allUsers, waitlistEntries] = await Promise.all([
       // Users
       db
         .select({
@@ -66,9 +58,6 @@ export async function GET() {
         })
         .from(users)
         .orderBy(desc(users.createdAt)),
-
-      // Invites
-      listAllInvites(),
 
       // Waitlist
       db
@@ -91,7 +80,7 @@ export async function GET() {
 
     // Fetch inviter details for waitlist entries
     const waitlistWithInviters = await Promise.all(
-      waitlistEntries.map(async (entry) => {
+      waitlistEntries.map(async (entry: typeof waitlistEntries[number]) => {
         let inviter = null;
         if (entry.invitedBy) {
           const [user] = await db
@@ -105,9 +94,8 @@ export async function GET() {
       })
     );
 
-    // Create a set of user emails to filter out related waitlist/invite entries
-    // When someone becomes a user, their waitlist entry and used invite are consolidated
-    const userEmails = new Set(allUsers.map((u) => u.email.toLowerCase()));
+    // Create a set of user emails to filter out related waitlist entries
+    const userEmails = new Set(allUsers.map((u: typeof allUsers[number]) => u.email.toLowerCase()));
 
     // Normalize all records into unified format
     const records: UnifiedRecord[] = [];
@@ -127,38 +115,9 @@ export async function GET() {
       });
     }
 
-    // Add invites (skip used invites since they're now represented by the user)
-    for (const invite of allInvites) {
-      const isExpired = new Date(invite.expiresAt) < new Date();
-      const isUsed = !!invite.usedAt;
-      const isRevoked = !!invite.revokedAt;
-
-      // Skip used invites - they've converted to users and are visible in user detail pages
-      if (isUsed) continue;
-
-      let status = "active";
-      if (isRevoked) status = "revoked";
-      else if (isExpired) status = "expired";
-
-      records.push({
-        id: invite.id,
-        type: "invite",
-        email: invite.email || "Open invite",
-        name: null,
-        status,
-        createdAt: invite.createdAt.toISOString(),
-        inviteUrl: getInviteUrl(invite.token),
-        expiresAt: invite.expiresAt.toISOString(),
-        usedBy: null,
-        creator: invite.creator ? { name: invite.creator.name } : null,
-        token: invite.token,
-        role: (invite.role as "creator" | "brand") || "creator",
-      });
-    }
-
     // Add waitlist entries (skip entries where the person is now a user)
     for (const entry of waitlistWithInviters) {
-      // Skip if this email has become a user - their journey is consolidated in the user view
+      // Skip if this email has become a user
       if (userEmails.has(entry.email.toLowerCase())) continue;
 
       records.push({
