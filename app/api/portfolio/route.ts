@@ -47,7 +47,7 @@ export async function GET() {
   }
 }
 
-// PATCH /api/portfolio - Update user's portfolio
+// PATCH /api/portfolio - Update user's portfolio (creates if doesn't exist)
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth();
@@ -60,11 +60,28 @@ export async function PATCH(request: NextRequest) {
       where: eq(portfolios.userId, session.user.id),
     });
 
+    // If no portfolio exists, create one
     if (!existing) {
-      return NextResponse.json(
-        { error: "Portfolio not found" },
-        { status: 404 }
-      );
+      const [created] = await db
+        .insert(portfolios)
+        .values({
+          userId: session.user.id,
+          title: data.title || "My Portfolio",
+          tagline: data.tagline || "",
+          templateId: data.templateId || "default",
+          theme: data.theme || {},
+          htmlContent: data.htmlContent || null,
+          portfolioType: data.htmlContent ? "html" : "json",
+          isPublished: data.isPublished || false,
+          publishedAt: data.isPublished ? new Date() : null,
+          content: {
+            headline: data.title || "My Portfolio",
+            subheadline: data.tagline || "",
+          },
+        })
+        .returning();
+
+      return NextResponse.json(created, { status: 201 });
     }
 
     // Build update object
