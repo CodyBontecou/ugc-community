@@ -9,6 +9,11 @@ import {
 // Types
 // =====================================================
 
+export interface SocialMediaHandle {
+  platform: "instagram" | "tiktok" | "youtube" | "twitter" | "linkedin" | "other";
+  handle: string;
+}
+
 export interface PortfolioProjectData {
   title: string;
   brandName?: string | null;
@@ -24,7 +29,9 @@ export interface QuestionnaireData {
   portfolioVision: string;
   inspiringBrands: string | null;
   portfolioExamples: string | null;
+  socialMediaHandles?: SocialMediaHandle[];
   creatorName: string;
+  creatorEmail?: string;
   subdomain: string;
   portfolioProjects?: PortfolioProjectData[];
   /** Optional pre-generated style directive. If not provided, one will be generated. */
@@ -61,6 +68,45 @@ export function buildPortfolioPrompt(data: QuestionnaireData): string {
   sections.push(`## Creator's Vision
 
 ${data.portfolioVision}`);
+
+  // Creator Contact & Social Media
+  const contactParts: string[] = [];
+  
+  if (data.creatorEmail) {
+    contactParts.push(`- **Email:** ${data.creatorEmail}`);
+  }
+  
+  if (data.socialMediaHandles && data.socialMediaHandles.length > 0) {
+    const socialLinks = data.socialMediaHandles
+      .filter(h => h.handle.trim())
+      .map(h => {
+        const platformLabels: Record<string, string> = {
+          instagram: "Instagram",
+          tiktok: "TikTok",
+          youtube: "YouTube",
+          twitter: "X/Twitter",
+          linkedin: "LinkedIn",
+          other: "Other",
+        };
+        return `- **${platformLabels[h.platform] || h.platform}:** ${h.handle}`;
+      });
+    contactParts.push(...socialLinks);
+  }
+  
+  if (contactParts.length > 0) {
+    sections.push(`## Creator Contact & Social Links
+
+**Include these in the portfolio's contact section and/or footer. Add clickable social media icons that link to these profiles:**
+
+${contactParts.join("\n")}
+
+**Social Link URLs:**
+- Instagram: https://instagram.com/{handle} (remove @ if present)
+- TikTok: https://tiktok.com/@{handle}
+- YouTube: https://youtube.com/@{handle} or use full URL if provided
+- X/Twitter: https://twitter.com/{handle} (remove @ if present)
+- LinkedIn: use full URL if provided, otherwise https://linkedin.com/in/{handle}`);
+  }
 
   // Only include inspiration if provided, and keep it brief
   if (data.inspiringBrands || data.portfolioExamples) {

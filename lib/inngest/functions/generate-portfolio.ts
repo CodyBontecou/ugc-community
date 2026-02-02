@@ -48,6 +48,7 @@ export const generatePortfolioFunction = inngest.createFunction(
             portfolioVision: onboardingQuestionnaires.portfolioVision,
             inspiringBrands: onboardingQuestionnaires.inspiringBrands,
             portfolioExamples: onboardingQuestionnaires.portfolioExamples,
+            socialMediaHandles: onboardingQuestionnaires.socialMediaHandles,
           })
           .from(onboardingQuestionnaires)
           .where(eq(onboardingQuestionnaires.id, questionnaireId));
@@ -55,6 +56,7 @@ export const generatePortfolioFunction = inngest.createFunction(
         const [user] = await db
           .select({
             name: users.name,
+            email: users.email,
             subdomain: users.subdomain,
             vercelProjectId: users.vercelProjectId,
             githubRepoFullName: users.githubRepoFullName,
@@ -113,7 +115,9 @@ export const generatePortfolioFunction = inngest.createFunction(
             portfolioVision: data.questionnaire.portfolioVision,
             inspiringBrands: data.questionnaire.inspiringBrands,
             portfolioExamples: data.questionnaire.portfolioExamples,
+            socialMediaHandles: data.questionnaire.socialMediaHandles || [],
             creatorName: data.user.name,
+            creatorEmail: data.user.email,
             subdomain: data.user.subdomain!,
           };
 
