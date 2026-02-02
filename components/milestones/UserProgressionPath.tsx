@@ -197,11 +197,11 @@ function ProgressNode({
 
       {/* Reward label with info tooltip */}
       <div
-        className={`mt-1 text-xs text-center max-w-[100px] flex items-center justify-center gap-1 ${
+        className={`mt-1 text-xs text-center flex items-center justify-center gap-0.5 ${
           isUnlocked ? "text-warm-gray-600" : "text-warm-gray-400"
         }`}
       >
-        <span>{config.reward}</span>
+        <span className="whitespace-nowrap">{config.reward}</span>
         <InfoTooltip content={config.tooltip} />
       </div>
     </motion.div>
