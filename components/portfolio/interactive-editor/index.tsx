@@ -14,10 +14,13 @@ import {
   Check,
   Image as ImageIcon,
   Video,
+  Sparkles,
+  Type,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
 import { AIEditPanel } from "./ai-edit-panel";
 import { MediaEditPanel } from "./media-edit-panel";
+import { TextEditPanel } from "./text-edit-panel";
 import { HistoryControls } from "./history-controls";
 import { SectionReorderer } from "./section-reorderer";
 import { MediaLibrary } from "@/components/media/media-library";
@@ -40,6 +43,7 @@ interface InteractiveHtmlEditorProps {
 }
 
 type DeviceSize = "desktop" | "tablet" | "mobile";
+type EditMode = "ai" | "text";
 
 const DEVICE_WIDTHS: Record<DeviceSize, string> = {
   desktop: "100%",
@@ -67,6 +71,10 @@ export function InteractiveHtmlEditor({
   const [isRefreshLoading, setIsRefreshLoading] = useState(false);
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
+  const [editMode, setEditMode] = useState<EditMode>("text");
+
+  // Track HTML state before live editing started (for proper history)
+  const htmlBeforeLiveEditRef = useRef<string | null>(null);
 
   // History state
   const [history, setHistory] = useState<HistoryState>({
@@ -123,7 +131,7 @@ export function InteractiveHtmlEditor({
     setSelectedElement(null);
   }, []);
 
-  // Apply AI edit
+  // Apply AI edit (commits to history)
   const handleApplyEdit = useCallback(
     (newContent: string, isOuterHtml: boolean = false) => {
       if (!selectedElement) return;
@@ -145,6 +153,63 @@ export function InteractiveHtmlEditor({
     },
     [html, selectedElement, updateHtml]
   );
+
+  // Live update for real-time preview (does NOT add to history yet)
+  const handleLiveUpdate = useCallback(
+    (newOuterHtml: string) => {
+      if (!selectedElement) return;
+
+      const newHtml = replaceElementOuter(html, selectedElement.selector, newOuterHtml);
+      if (newHtml !== html) {
+        // Capture the "before" state on first live update
+        if (htmlBeforeLiveEditRef.current === null) {
+          htmlBeforeLiveEditRef.current = html;
+        }
+        // Update HTML for preview without adding to history
+        setHtml(newHtml);
+        setHasUnsavedChanges(true);
+      }
+    },
+    [html, selectedElement]
+  );
+
+  // Commit live edits to history (called when TextEditPanel closes or switching modes)
+  const commitLiveEdit = useCallback(() => {
+    if (htmlBeforeLiveEditRef.current !== null && htmlBeforeLiveEditRef.current !== html) {
+      // Add the "before" state to history, making current html the new present
+      setHistory((prev) => ({
+        past: [...prev.past.slice(-MAX_HISTORY_SIZE + 1), htmlBeforeLiveEditRef.current!],
+        present: html,
+        future: [],
+      }));
+    }
+    // Reset the ref
+    htmlBeforeLiveEditRef.current = null;
+  }, [html]);
+
+  // Called when TextEditPanel closes
+  const handleCommitLiveEdit = useCallback(() => {
+    commitLiveEdit();
+    setSelectedElement(null);
+  }, [commitLiveEdit]);
+
+  // Handle switching edit modes
+  const handleSwitchEditMode = useCallback((mode: EditMode) => {
+    if (editMode === "text" && mode === "ai") {
+      // Commit any pending live edits before switching to AI mode
+      commitLiveEdit();
+    }
+    setEditMode(mode);
+  }, [editMode, commitLiveEdit]);
+
+  // Handle element selection (commits pending live edits if switching elements)
+  const handleElementSelect = useCallback((element: SelectedElement) => {
+    // Commit any pending live edits from previous element
+    if (selectedElement && selectedElement.selector !== element.selector) {
+      commitLiveEdit();
+    }
+    setSelectedElement(element);
+  }, [selectedElement, commitLiveEdit]);
 
   // Handle section reorder
   const handleReorder = useCallback(
@@ -455,7 +520,7 @@ export function InteractiveHtmlEditor({
           >
             <EditableIframe
               html={html}
-              onElementSelect={setSelectedElement}
+              onElementSelect={handleElementSelect}
               onElementRefresh={handleElementRefresh}
               selectedSelector={selectedElement?.selector}
               isRefreshLoading={isRefreshLoading}
@@ -465,6 +530,34 @@ export function InteractiveHtmlEditor({
 
         {/* Side panel */}
         <div className="w-80 bg-white border-l border-warm-gray-200 flex flex-col shrink-0">
+          {/* Edit mode tabs - only show for text elements */}
+          {selectedElement && !selectedElement.mediaData && (
+            <div className="flex border-b border-warm-gray-200 shrink-0">
+              <button
+                onClick={() => handleSwitchEditMode("text")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  editMode === "text"
+                    ? "text-warm-gray-900 border-b-2 border-warm-gray-900 bg-warm-gray-50"
+                    : "text-warm-gray-500 hover:text-warm-gray-700 hover:bg-warm-gray-50"
+                }`}
+              >
+                <Type size={16} />
+                Text
+              </button>
+              <button
+                onClick={() => handleSwitchEditMode("ai")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                  editMode === "ai"
+                    ? "text-warm-gray-900 border-b-2 border-warm-gray-900 bg-warm-gray-50"
+                    : "text-warm-gray-500 hover:text-warm-gray-700 hover:bg-warm-gray-50"
+                }`}
+              >
+                <Sparkles size={16} />
+                AI Edit
+              </button>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto">
             {selectedElement?.mediaData ? (
               <MediaEditPanel
@@ -473,6 +566,13 @@ export function InteractiveHtmlEditor({
                 fullHtml={html}
                 onApplyEdit={handleApplyEdit}
                 onDeselect={() => setSelectedElement(null)}
+              />
+            ) : selectedElement && editMode === "text" ? (
+              <TextEditPanel
+                selectedElement={selectedElement}
+                onApplyEdit={handleApplyEdit}
+                onLiveUpdate={handleLiveUpdate}
+                onClose={handleCommitLiveEdit}
               />
             ) : (
               <AIEditPanel
