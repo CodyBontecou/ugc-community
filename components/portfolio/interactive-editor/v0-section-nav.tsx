@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface Section {
   id: string;
@@ -14,8 +14,14 @@ interface V0SectionNavProps {
 }
 
 export function V0SectionNav({ html, onSectionClick }: V0SectionNavProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const sections = useMemo(() => {
-    if (typeof window === "undefined") return [];
+    if (!mounted) return [];
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
