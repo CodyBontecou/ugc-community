@@ -415,7 +415,7 @@ function DesignPanelContent({
                       }`}
                     >
                       <div className="w-6 h-4 bg-muted-foreground/20 rounded-sm" />
-                      <span className="text-xs capitalize">{preset}</span>
+                      <span className="text-xs capitalize text-gray-300">{preset}</span>
                     </button>
                   ))}
                   {(["none", "glow", "solid"] as const).map((preset) => (
@@ -429,7 +429,7 @@ function DesignPanelContent({
                       }`}
                     >
                       <div className="w-6 h-4 bg-muted-foreground/20 rounded-sm" />
-                      <span className="text-xs capitalize">{preset}</span>
+                      <span className="text-xs capitalize text-gray-300">{preset}</span>
                     </button>
                   ))}
                 </div>
@@ -443,25 +443,19 @@ function DesignPanelContent({
                     onClick={onAddImage}
                     className="flex items-center justify-center gap-2 p-3 rounded-lg border border-border hover:border-blue-500 hover:bg-blue-500/10 transition-colors"
                   >
-                    <ImageIcon size={18} className="text-muted-foreground" />
-                    <span className="text-sm">Add Image</span>
+                    <ImageIcon size={18} className="text-gray-400" />
+                    <span className="text-sm text-gray-300">Add Image</span>
                   </button>
                   <button
                     onClick={onAddVideo}
                     className="flex items-center justify-center gap-2 p-3 rounded-lg border border-border hover:border-blue-500 hover:bg-blue-500/10 transition-colors"
                   >
-                    <Video size={18} className="text-muted-foreground" />
-                    <span className="text-sm">Add Video</span>
+                    <Video size={18} className="text-gray-400" />
+                    <span className="text-sm text-gray-300">Add Video</span>
                   </button>
                 </div>
               </div>
 
-              {/* Select Component Button */}
-              <div className="pt-4">
-                <button className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
-                  Select a component
-                </button>
-              </div>
             </div>
           </motion.div>
         ) : activePanel === "fonts" ? (

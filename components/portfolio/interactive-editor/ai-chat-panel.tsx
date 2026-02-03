@@ -88,6 +88,8 @@ interface AIChatPanelProps {
   onDeselect: () => void;
   isStreaming: boolean;
   onStreamingChange: (streaming: boolean) => void;
+  pendingMessage?: string | null;
+  onPendingMessageHandled?: () => void;
 }
 
 // Inner component that uses the provider hooks
@@ -100,6 +102,8 @@ function AIChatPanelContent({
   onDeselect,
   isStreaming,
   onStreamingChange,
+  pendingMessage,
+  onPendingMessageHandled,
 }: AIChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamedContent, setStreamedContent] = useState("");
@@ -428,6 +432,14 @@ function AIChatPanelContent({
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion);
   };
+
+  // Handle pending message from design panel
+  useEffect(() => {
+    if (pendingMessage && !isStreaming) {
+      sendMessage(pendingMessage);
+      onPendingMessageHandled?.();
+    }
+  }, [pendingMessage, isStreaming, sendMessage, onPendingMessageHandled]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

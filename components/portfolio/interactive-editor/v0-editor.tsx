@@ -114,6 +114,9 @@ export function V0Editor({
 
   // Publish dialog state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  
+  // Pending message for cross-panel chat (design -> chat)
+  const [pendingChatMessage, setPendingChatMessage] = useState<string | null>(null);
 
   // Version tracking state
   const [versionInfo, setVersionInfo] = useState<VersionInfo>({
@@ -424,57 +427,14 @@ export function V0Editor({
     }
   }, [html, updateHtml]);
 
-  // Handle element chat from design panel
-  const handleElementChat = useCallback(async (message: string) => {
+  // Handle element chat from design panel - switch to chat and send message there
+  const handleElementChat = useCallback((message: string) => {
     if (!selectedElement) return;
-    // Reuse the same AI edit logic as the chat panel
-    setIsStreaming(true);
-    try {
-      const response = await fetch("/api/ai/edit-element", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          portfolioId,
-          selector: selectedElement.selector,
-          currentContent: selectedElement.content,
-          outerHtml: selectedElement.outerHtml,
-          instruction: message,
-          fullHtml: html,
-          tagName: selectedElement.tagName,
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Failed to generate edit");
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("No response stream");
-
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-      }
-
-      if (accumulated.trim()) {
-        const trimmed = accumulated.trim();
-        const tagName = selectedElement.tagName.toLowerCase();
-        const isOuterHtml =
-          trimmed.startsWith(`<${tagName}`) ||
-          trimmed.startsWith(`<${tagName.toUpperCase()}`);
-        handleApplyEdit(trimmed, isOuterHtml);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to edit element");
-    } finally {
-      setIsStreaming(false);
-    }
-  }, [selectedElement, portfolioId, html, handleApplyEdit]);
+    // Set pending message and switch to chat view
+    // The chat panel will pick up and send this message
+    setPendingChatMessage(message);
+    setSidebarView("chat");
+  }, [selectedElement]);
 
   // Fetch version info on mount and after deployments
   const fetchVersionInfo = useCallback(async () => {
@@ -676,6 +636,8 @@ export function V0Editor({
                   onDeselect={() => setSelectedElement(null)}
                   isStreaming={isStreaming}
                   onStreamingChange={setIsStreaming}
+                  pendingMessage={pendingChatMessage}
+                  onPendingMessageHandled={() => setPendingChatMessage(null)}
                 />
               </motion.div>
             ) : sidebarView === "design" ? (
