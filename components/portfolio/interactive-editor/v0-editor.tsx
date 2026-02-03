@@ -20,6 +20,7 @@ import {
   Sparkles,
   Eye,
   Code,
+  Globe,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
 import { AIChatPanel } from "./ai-chat-panel";
@@ -561,8 +562,9 @@ export function V0Editor({
           </button>
           <button
             onClick={() => setShowPublishDialog(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-black bg-white hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-white bg-[#1f1f1f] hover:bg-[#2a2a2a] rounded-lg transition-colors"
           >
+            <Globe size={14} />
             Publish
           </button>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>

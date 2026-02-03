@@ -341,11 +341,11 @@ export function PublishDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg bg-[#0a0a0a] border-[#1f1f1f] text-white p-0 gap-0">
         <DialogHeader className="p-6 pb-4">
-          <DialogTitle className="flex items-center gap-2 text-white">
+          <DialogTitle className="flex items-center gap-2 text-white/90">
             <Globe className="h-5 w-5" />
-            Publish & Deploy
+            <span className="text-white">Publish & Deploy</span>
           </DialogTitle>
-          <DialogDescription className="text-[#999]">
+          <DialogDescription className="text-zinc-400">
             Deploy your portfolio to your subdomain or rollback to a previous version.
           </DialogDescription>
         </DialogHeader>
@@ -357,7 +357,7 @@ export function PublishDialog({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "deploy"
                 ? "text-white border-b-2 border-white"
-                : "text-[#666] hover:text-white"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             <Rocket className="h-4 w-4" />
@@ -368,13 +368,13 @@ export function PublishDialog({
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               activeTab === "versions"
                 ? "text-white border-b-2 border-white"
-                : "text-[#666] hover:text-white"
+                : "text-zinc-400 hover:text-white"
             }`}
           >
             <History className="h-4 w-4" />
             Versions
             {versions.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-[#1f1f1f] rounded">
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-[#1f1f1f] text-zinc-300 rounded">
                 {versions.length}
               </span>
             )}
@@ -417,7 +417,7 @@ export function PublishDialog({
 
                 {/* Subdomain input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#999]">
+                  <label className="text-sm font-medium text-zinc-300">
                     Subdomain
                   </label>
                   <div className="flex items-center gap-2">
@@ -426,13 +426,13 @@ export function PublishDialog({
                         value={subdomain}
                         onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                         placeholder="yourname"
-                        className="pr-8 bg-[#1f1f1f] border-[#333] text-white placeholder:text-[#666] focus-visible:ring-white/20"
+                        className="pr-8 bg-[#1f1f1f] border-[#333] text-white placeholder:text-zinc-500 focus-visible:ring-white/20"
                       />
                       <div className="absolute right-2 top-1/2 -translate-y-1/2">
                         {getStatusIcon()}
                       </div>
                     </div>
-                    <span className="text-sm text-[#666] whitespace-nowrap">
+                    <span className="text-sm text-zinc-400 whitespace-nowrap">
                       .{domain}
                     </span>
                   </div>
@@ -466,7 +466,7 @@ export function PublishDialog({
                 {/* Preview URL */}
                 {subdomain && availabilityStatus === "available" && (
                   <div className="p-3 bg-[#1f1f1f] rounded-lg border border-[#333]">
-                    <p className="text-xs text-[#666] mb-1">
+                    <p className="text-xs text-zinc-400 mb-1">
                       {isPublished ? "Your portfolio is live at:" : "Your portfolio will be live at:"}
                     </p>
                     <div className="flex items-center justify-between gap-2">
@@ -487,7 +487,7 @@ export function PublishDialog({
                         {copied ? (
                           <Check className="h-4 w-4 text-green-500" />
                         ) : (
-                          <Copy className="h-4 w-4 text-[#666]" />
+                          <Copy className="h-4 w-4 text-zinc-400" />
                         )}
                       </button>
                     </div>
@@ -505,7 +505,7 @@ export function PublishDialog({
                 <Button
                   onClick={handleDeploy}
                   disabled={!subdomain || availabilityStatus !== "available" || isPublishing}
-                  className="w-full bg-white text-black hover:bg-gray-100"
+                  className="w-full bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-700 disabled:text-zinc-400"
                 >
                   {isPublishing ? (
                     <>
