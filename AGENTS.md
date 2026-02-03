@@ -1,14 +1,5 @@
 # Agent Instructions
 
-## 🚨 ACTIVE REFACTOR IN PROGRESS
-
-**Read `REFACTOR.md` before making ANY changes.** It tracks which features to keep/remove.
-
-- Check feature decisions before modifying code
-- Update status checkboxes as you complete work
-- Follow the removal order guidelines
-- Don't leave dead code - remove completely
-
 ---
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.

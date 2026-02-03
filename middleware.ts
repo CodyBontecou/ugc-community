@@ -17,6 +17,39 @@ const BLOCKED_USER_AGENTS = [
   "Diffbot",
 ];
 
+const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || "ugc.community";
+const RESERVED_SUBDOMAINS = new Set(["www", "app", "admin", "dashboard"]);
+
+function getSubdomain(host: string | null): string | null {
+  if (!host) return null;
+  const hostname = host.toLowerCase().split(":")[0];
+
+  if (hostname === DOMAIN || hostname === `www.${DOMAIN}`) {
+    return null;
+  }
+
+  if (hostname.endsWith(`.${DOMAIN}`)) {
+    const subdomain = hostname.slice(0, -`.${DOMAIN}`.length);
+    return subdomain && !RESERVED_SUBDOMAINS.has(subdomain) ? subdomain : null;
+  }
+
+  if (hostname.endsWith(".localhost")) {
+    const subdomain = hostname.replace(".localhost", "");
+    return subdomain && !RESERVED_SUBDOMAINS.has(subdomain) ? subdomain : null;
+  }
+
+  return null;
+}
+
+function shouldRewrite(pathname: string): boolean {
+  if (pathname.startsWith("/api")) return false;
+  if (pathname.startsWith("/_next")) return false;
+  if (pathname.startsWith("/portfolio")) return false;
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return false;
+  if (pathname.includes(".")) return false;
+  return true;
+}
+
 export function middleware(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "";
   const pathname = request.nextUrl.pathname;
@@ -39,7 +72,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next();
+  const subdomain = getSubdomain(request.headers.get("host"));
+  let response: NextResponse;
+
+  if (subdomain && shouldRewrite(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/portfolio/${subdomain}`;
+    response = NextResponse.rewrite(url);
+  } else {
+    response = NextResponse.next();
+  }
 
   // Security headers
   response.headers.set("X-Content-Type-Options", "nosniff");

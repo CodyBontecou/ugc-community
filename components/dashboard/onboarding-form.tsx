@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   ArrowRight,
@@ -150,6 +151,8 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
+  const router = useRouter();
+  const domain = process.env.NEXT_PUBLIC_DOMAIN || "ugc.community";
 
   // Basic info
   const [name, setName] = useState("");
@@ -476,9 +479,18 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         return;
       }
 
+      const wasSubmitted = hasSubmitted;
       setHasSubmitted(true);
-      setSuccessMessage(hasSubmitted ? "Updated!" : "Submitted - your portfolio is being generated!");
+      setSuccessMessage(
+        wasSubmitted
+          ? "Updated!"
+          : `Submitted! Your portfolio is live at ${subdomain}.${domain}.`
+      );
       onSubmitSuccess?.();
+
+      if (!wasSubmitted) {
+        router.push("/dashboard/portfolio");
+      }
 
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch {
@@ -639,6 +651,9 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
                 minLength={10}
                 maxLength={1000}
               />
+              <div className="mt-1 flex items-center justify-end text-xs text-warm-gray-500">
+                <span>{bio.length}/10 characters</span>
+              </div>
             </div>
 
             {/* Location */}

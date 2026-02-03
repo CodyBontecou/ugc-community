@@ -153,6 +153,9 @@ export async function POST(request: NextRequest) {
       tagline: validated.tagline || null,
       bio: validated.bio,
       location: validated.location || null,
+      portfolioVision:
+        existing?.portfolioVision ??
+        (validated.tagline?.trim() ? validated.tagline.trim() : validated.bio),
       socialMediaHandles: validated.socialMediaHandles as SocialMediaHandle[],
       brandPartnerships: validated.brandPartnerships as BrandPartnership[],
       videos: validated.videos as VideoEntry[],

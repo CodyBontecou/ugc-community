@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { UnifiedTable } from "@/components/admin/unified-table";
-import { GitHubConnection } from "@/components/admin/github-connection";
 
 export default function AdminPage() {
   return (
@@ -24,7 +23,6 @@ export default function AdminPage() {
       </div>
 
       <UnifiedTable />
-      <GitHubConnection />
     </div>
   );
 }

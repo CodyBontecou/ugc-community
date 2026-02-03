@@ -6,7 +6,6 @@ import { users, contactSubmissions } from "@/lib/db/schema";
 import { eq, and, ne, gte, sql } from "drizzle-orm";
 import { z } from "zod";
 import { validateSubdomain } from "@/lib/validation/subdomain";
-import { createProject, VercelApiError } from "@/lib/vercel/client";
 import { deleteUserWithCleanup } from "@/lib/user/cleanup";
 
 const updateUserStatusSchema = z.object({
@@ -15,15 +14,6 @@ const updateUserStatusSchema = z.object({
 
 const updateUserSubdomainSchema = z.object({
   subdomain: z.string().nullable(),
-});
-
-const updateUserVercelProjectIdSchema = z.object({
-  vercelProjectId: z.string().nullable(),
-});
-
-const updateUserGitHubRepoSchema = z.object({
-  githubRepoFullName: z.string().nullable(),
-  githubRepoId: z.string().nullable(),
 });
 
 // Helper to clean social handles: trim, remove @ prefix, filter empty strings
@@ -90,10 +80,6 @@ export async function GET(
         statusChangedBy: users.statusChangedBy,
         profileViewCount: users.profileViewCount,
         portfolioViewCount: users.portfolioViewCount,
-        vercelProjectId: users.vercelProjectId,
-        siteEnabled: users.siteEnabled,
-        githubRepoFullName: users.githubRepoFullName,
-        githubRepoId: users.githubRepoId,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -252,122 +238,6 @@ export async function PATCH(
       return NextResponse.json({ user: updated });
     }
 
-    // Handle vercelProjectId update
-    if ("vercelProjectId" in body) {
-      const { vercelProjectId } = updateUserVercelProjectIdSchema.parse(body);
-
-      const [updated] = await db
-        .update(users)
-        .set({
-          vercelProjectId: vercelProjectId === "" ? null : vercelProjectId,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, userId))
-        .returning({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          vercelProjectId: users.vercelProjectId,
-        });
-
-      return NextResponse.json({ user: updated });
-    }
-
-    // Handle GitHub repo update
-    if ("githubRepoFullName" in body || "githubRepoId" in body) {
-      const { githubRepoFullName, githubRepoId } = updateUserGitHubRepoSchema.parse(body);
-
-      // If clearing the repo, just update the database
-      if (!githubRepoFullName || githubRepoFullName === "") {
-        const [updated] = await db
-          .update(users)
-          .set({
-            githubRepoFullName: null,
-            githubRepoId: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, userId))
-          .returning({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-            githubRepoFullName: users.githubRepoFullName,
-            githubRepoId: users.githubRepoId,
-            vercelProjectId: users.vercelProjectId,
-          });
-
-        return NextResponse.json({ user: updated });
-      }
-
-      // Check if user already has a Vercel project
-      const currentUser = await db
-        .select({ vercelProjectId: users.vercelProjectId })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
-
-      let vercelProjectId = currentUser[0]?.vercelProjectId;
-
-      // If no Vercel project exists, create one with the GitHub repo linked
-      if (!vercelProjectId) {
-        try {
-          // Use the repo name as the project name (e.g., "org/repo-name" -> "repo-name")
-          const repoName = githubRepoFullName.split("/").pop() || githubRepoFullName;
-          // Add a unique suffix to avoid naming conflicts
-          const projectName = `${repoName}-${userId.slice(0, 8)}`;
-
-          const project = await createProject({
-            name: projectName,
-            framework: "nextjs",
-            gitRepository: {
-              type: "github",
-              repo: githubRepoFullName,
-            },
-          });
-
-          vercelProjectId = project.id;
-        } catch (error) {
-          console.error("Failed to create Vercel project:", error);
-
-          // Extract error details for better debugging
-          let errorMessage = "Failed to create Vercel project. Please try again or set the project ID manually.";
-          if (error instanceof VercelApiError) {
-            errorMessage = `Vercel API error: ${error.message}`;
-            if (error.code) {
-              errorMessage += ` (code: ${error.code})`;
-            }
-          } else if (error instanceof Error) {
-            errorMessage = `Failed to create Vercel project: ${error.message}`;
-          }
-
-          return NextResponse.json(
-            { error: errorMessage },
-            { status: 500 }
-          );
-        }
-      }
-
-      const [updated] = await db
-        .update(users)
-        .set({
-          githubRepoFullName,
-          githubRepoId: githubRepoId === "" ? null : githubRepoId,
-          vercelProjectId,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, userId))
-        .returning({
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          githubRepoFullName: users.githubRepoFullName,
-          githubRepoId: users.githubRepoId,
-          vercelProjectId: users.vercelProjectId,
-        });
-
-      return NextResponse.json({ user: updated, vercelProjectCreated: !currentUser[0]?.vercelProjectId });
-    }
-
     // Handle bio update
     if ("bio" in body) {
       const { bio } = updateUserBioSchema.parse(body);
@@ -518,7 +388,7 @@ export async function DELETE(
     }
 
     // Delete user with full cleanup of external resources
-    // This handles: Vercel project, GitHub repo, Vercel Blob media files
+    // This handles media file cleanup before removing the user
     // Then deletes the user from DB (cascades handle related DB records)
     const result = await deleteUserWithCleanup(userId);
 
@@ -533,8 +403,6 @@ export async function DELETE(
       success: true,
       deletedUser: existingUser[0],
       cleanup: {
-        vercelProject: result.cleanupResult.cleaned.vercelProject,
-        githubRepo: result.cleanupResult.cleaned.githubRepo,
         mediaFiles: result.cleanupResult.cleaned.mediaFiles,
         errors: result.cleanupResult.errors.length > 0 ? result.cleanupResult.errors : undefined,
       },

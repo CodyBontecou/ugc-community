@@ -49,17 +49,6 @@ export const users = pgTable(
     // Profile analytics
     profileViewCount: integer("profile_view_count").notNull().default(0),
     portfolioViewCount: integer("portfolio_view_count").notNull().default(0),
-    // Vercel subdomain integration
-    vercelProjectId: text("vercel_project_id"),
-    siteEnabled: boolean("site_enabled").notNull().default(false),
-    // Admin GitHub connection for deployment management
-    githubAccessToken: text("github_access_token"),
-    githubRefreshToken: text("github_refresh_token"),
-    githubUsername: text("github_username"),
-    githubConnectedAt: timestamp("github_connected_at"),
-    // GitHub repository assigned to user for deployment
-    githubRepoFullName: text("github_repo_full_name"),
-    githubRepoId: text("github_repo_id"),
     // Directory listing fields (kept for profile use)
     directoryListed: boolean("directory_listed").notNull().default(false),
     availableForHire: boolean("available_for_hire").notNull().default(true),
@@ -191,41 +180,6 @@ export const onboardingQuestionnaires = pgTable(
   (table) => [
     index("onboarding_questionnaires_user_id_idx").on(table.userId),
     index("onboarding_questionnaires_created_at_idx").on(table.createdAt),
-  ]
-);
-
-// =====================================================
-// Portfolio Generations (Status Tracking)
-// =====================================================
-
-export const portfolioGenerations = pgTable(
-  "portfolio_generations",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    questionnaireId: uuid("questionnaire_id").references(
-      () => onboardingQuestionnaires.id,
-      { onDelete: "set null" }
-    ),
-    // Status: 'pending', 'generating', 'pushing', 'deploying', 'completed', 'failed'
-    status: text("status").notNull().default("pending"),
-    githubRepo: text("github_repo"),
-    deploymentUrl: text("deployment_url"),
-    previewUrl: text("preview_url"),
-    filesGenerated: integer("files_generated"),
-    error: text("error"),
-    errorStep: text("error_step"),
-    startedAt: timestamp("started_at").notNull().defaultNow(),
-    completedAt: timestamp("completed_at"),
-  },
-  (table) => [
-    index("portfolio_generations_user_id_idx").on(table.userId),
-    index("portfolio_generations_status_idx").on(table.status),
-    index("portfolio_generations_questionnaire_id_idx").on(
-      table.questionnaireId
-    ),
   ]
 );
 
@@ -407,25 +361,12 @@ export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
   userMilestones: many(userMilestones),
   onboardingQuestionnaires: many(onboardingQuestionnaires),
-  portfolioGenerations: many(portfolioGenerations),
 }));
 
 export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
   user: one(users, {
     fields: [onboardingQuestionnaires.userId],
     references: [users.id],
-  }),
-  generations: one(portfolioGenerations),
-}));
-
-export const portfolioGenerationsRelations = relations(portfolioGenerations, ({ one }) => ({
-  user: one(users, {
-    fields: [portfolioGenerations.userId],
-    references: [users.id],
-  }),
-  questionnaire: one(onboardingQuestionnaires, {
-    fields: [portfolioGenerations.questionnaireId],
-    references: [onboardingQuestionnaires.id],
   }),
 }));
 
@@ -545,5 +486,3 @@ export type UserMilestone = typeof userMilestones.$inferSelect;
 export type NewUserMilestone = typeof userMilestones.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;
 export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
-export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
-export type NewPortfolioGeneration = typeof portfolioGenerations.$inferInsert;

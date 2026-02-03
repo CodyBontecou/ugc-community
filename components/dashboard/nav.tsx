@@ -12,6 +12,7 @@ import {
   Shield,
   Trophy,
   Settings,
+  Globe,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import type { UserRole } from "@/lib/roles";
@@ -29,6 +30,7 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/portfolio", label: "Portfolio", icon: Globe },
   { href: "/dashboard/milestones", label: "Milestones", icon: Trophy },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];

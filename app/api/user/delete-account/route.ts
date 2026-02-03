@@ -22,8 +22,7 @@ export async function DELETE() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Delete user with full cleanup of external resources
-    // This handles: Vercel project, GitHub repo, Vercel Blob media files
+    // Delete user with cleanup of external resources (media files)
     // Then deletes the user from DB (cascades handle related DB records)
     const result = await deleteUserWithCleanup(userId);
 
@@ -39,8 +38,6 @@ export async function DELETE() {
     return NextResponse.json({
       success: true,
       cleanup: {
-        vercelProject: result.cleanupResult.cleaned.vercelProject,
-        githubRepo: result.cleanupResult.cleaned.githubRepo,
         mediaFiles: result.cleanupResult.cleaned.mediaFiles,
         errors: result.cleanupResult.errors.length > 0 ? result.cleanupResult.errors : undefined,
       },
