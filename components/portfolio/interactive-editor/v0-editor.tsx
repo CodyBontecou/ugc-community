@@ -77,8 +77,15 @@ export function V0Editor({
   const [isRefreshLoading, setIsRefreshLoading] = useState(false);
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(384); // Default w-96 = 384px
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("editor-sidebar-collapsed") === "true";
+  });
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    if (typeof window === "undefined") return 384;
+    const saved = localStorage.getItem("editor-sidebar-width");
+    return saved ? Math.min(Math.max(Number(saved), 280), 600) : 384;
+  });
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   
@@ -455,6 +462,18 @@ export function V0Editor({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  // Persist sidebar width to localStorage
+  useEffect(() => {
+    if (!isResizing) {
+      localStorage.setItem("editor-sidebar-width", String(sidebarWidth));
+    }
+  }, [sidebarWidth, isResizing]);
+
+  // Persist sidebar collapsed state to localStorage
+  useEffect(() => {
+    localStorage.setItem("editor-sidebar-collapsed", String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
 
   // Handle sidebar resize
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
