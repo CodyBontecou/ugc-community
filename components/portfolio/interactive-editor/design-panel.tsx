@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ArrowLeft, Settings2, Sparkles } from "lucide-react";
+import { ChevronRight, ArrowLeft, Settings2, Sparkles, ImageIcon, Video, Plus } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -29,7 +29,21 @@ import {
   PromptInputTextarea,
   PromptInputFooter,
   PromptInputSubmit,
+  PromptInputTools,
+  PromptInputActionMenu,
+  PromptInputActionMenuTrigger,
+  PromptInputActionMenuContent,
+  PromptInputActionAddAttachments,
+  PromptInputHeader,
 } from "@/components/ai-elements/prompt-input";
+import {
+  Attachments,
+  Attachment,
+  AttachmentPreview,
+  AttachmentInfo,
+  AttachmentRemove,
+  type AttachmentData,
+} from "@/components/ai-elements/attachments";
 
 type Panel = "main" | "fonts" | "colors" | "shadows";
 
@@ -42,6 +56,8 @@ interface DesignPanelProps {
   onDeselect: () => void;
   onElementChat: (message: string) => void;
   isStreaming: boolean;
+  onAddImage?: () => void;
+  onAddVideo?: () => void;
 }
 
 export function DesignPanel({
@@ -53,9 +69,69 @@ export function DesignPanel({
   onDeselect,
   onElementChat,
   isStreaming,
+  onAddImage,
+  onAddVideo,
 }: DesignPanelProps) {
   const [activePanel, setActivePanel] = useState<Panel>("main");
   const [elementChatInput, setElementChatInput] = useState("");
+  const [chatAttachments, setChatAttachments] = useState<AttachmentData[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  const generateId = () => Math.random().toString(36).substring(7);
+
+  const handleRemoveAttachment = useCallback((id: string) => {
+    setChatAttachments((prev) => {
+      const found = prev.find((a) => a.id === id);
+      if (found?.type === "file" && found.url) {
+        URL.revokeObjectURL(found.url);
+      }
+      return prev.filter((a) => a.id !== id);
+    });
+  }, []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer?.types?.includes("Files")) {
+      setIsDraggingOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX <= rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY <= rect.top ||
+      e.clientY >= rect.bottom
+    ) {
+      setIsDraggingOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+      if (imageFiles.length > 0) {
+        const newAttachments: AttachmentData[] = imageFiles.map((file) => ({
+          id: generateId(),
+          type: "file" as const,
+          url: URL.createObjectURL(file),
+          mediaType: file.type,
+          filename: file.name,
+        }));
+        setChatAttachments((prev) => [...prev, ...newAttachments]);
+      }
+    }
+  }, []);
 
   const handleFontChange = (fonts: DesignSystem["fonts"]) => {
     onDesignSystemChange({ ...designSystem, fonts });
@@ -94,7 +170,30 @@ export function DesignPanel({
   // If element is selected, show element properties panel
   if (selectedElement) {
     return (
-      <div className="flex flex-col h-full dark">
+      <div 
+        className="flex flex-col h-full dark relative"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {/* Drop overlay */}
+        <AnimatePresence>
+          {isDraggingOver && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none"
+            >
+              <div className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <ImageIcon size={20} />
+                <span>Drop images here</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         <ElementPropertiesPanel
           selectedElement={selectedElement}
           designSystem={designSystem}
@@ -120,14 +219,50 @@ export function DesignPanel({
           <p className="text-xs text-muted-foreground mb-3 px-1">
             Save before refining this element
           </p>
+          
+          {/* Attachments Preview */}
+          {chatAttachments.length > 0 && (
+            <div className="mb-3">
+              <Attachments variant="inline">
+                {chatAttachments.map((attachment) => (
+                  <Attachment
+                    key={attachment.id}
+                    data={attachment}
+                    onRemove={() => handleRemoveAttachment(attachment.id)}
+                  >
+                    <AttachmentPreview />
+                    <AttachmentInfo />
+                    <AttachmentRemove />
+                  </Attachment>
+                ))}
+              </Attachments>
+            </div>
+          )}
+          
           <PromptInput
-            onSubmit={({ text }) => {
+            onSubmit={({ text, files }) => {
+              // Handle any additional files from paste
+              if (files && files.length > 0) {
+                const newAttachments: AttachmentData[] = files.map((file) => ({
+                  id: generateId(),
+                  type: "file" as const,
+                  url: file.url || "",
+                  mediaType: file.mediaType,
+                  filename: file.filename,
+                }));
+                setChatAttachments((prev) => [...prev, ...newAttachments]);
+              }
               if (text?.trim()) {
                 onElementChat(text);
+                setElementChatInput("");
+                setChatAttachments([]);
               }
             }}
+            accept="image/*"
+            multiple
             className="bg-secondary rounded-xl"
           >
+            <PromptInputHeader />
             <PromptInputTextarea
               placeholder="Refine this element..."
               disabled={isStreaming}
@@ -136,12 +271,14 @@ export function DesignPanel({
               className="min-h-[40px] bg-transparent border-none focus:ring-0 text-sm"
             />
             <PromptInputFooter>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">+</span>
-                <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center">
-                  <Sparkles size={14} className="text-white" />
-                </div>
-              </div>
+              <PromptInputTools>
+                <PromptInputActionMenu>
+                  <PromptInputActionMenuTrigger />
+                  <PromptInputActionMenuContent>
+                    <PromptInputActionAddAttachments label="Add images" />
+                  </PromptInputActionMenuContent>
+                </PromptInputActionMenu>
+              </PromptInputTools>
               <PromptInputSubmit />
             </PromptInputFooter>
           </PromptInput>
@@ -151,7 +288,29 @@ export function DesignPanel({
   }
 
   return (
-    <div className="flex flex-col h-full dark overflow-hidden">
+    <div 
+      className="flex flex-col h-full dark overflow-hidden relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay */}
+      <AnimatePresence>
+        {isDraggingOver && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none"
+          >
+            <div className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+              <ImageIcon size={20} />
+              <span>Drop images here</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait">
         {activePanel === "main" ? (
           <motion.div
@@ -302,6 +461,27 @@ export function DesignPanel({
                 </div>
               </div>
 
+              {/* Add Media Section */}
+              <div>
+                <label className="text-sm text-foreground mb-3 block">Add Media</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={onAddImage}
+                    className="flex items-center justify-center gap-2 p-3 rounded-lg border border-border hover:border-blue-500 hover:bg-blue-500/10 transition-colors"
+                  >
+                    <ImageIcon size={18} className="text-muted-foreground" />
+                    <span className="text-sm">Add Image</span>
+                  </button>
+                  <button
+                    onClick={onAddVideo}
+                    className="flex items-center justify-center gap-2 p-3 rounded-lg border border-border hover:border-blue-500 hover:bg-blue-500/10 transition-colors"
+                  >
+                    <Video size={18} className="text-muted-foreground" />
+                    <span className="text-sm">Add Video</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Select Component Button */}
               <div className="pt-4">
                 <button className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
@@ -337,26 +517,62 @@ export function DesignPanel({
       {/* Bottom Chat Input (when no element selected) */}
       {!selectedElement && activePanel === "main" && (
         <div className="p-4 border-t border-border mt-auto">
+          {/* Attachments Preview */}
+          {chatAttachments.length > 0 && (
+            <div className="mb-3">
+              <Attachments variant="inline">
+                {chatAttachments.map((attachment) => (
+                  <Attachment
+                    key={attachment.id}
+                    data={attachment}
+                    onRemove={() => handleRemoveAttachment(attachment.id)}
+                  >
+                    <AttachmentPreview />
+                    <AttachmentInfo />
+                    <AttachmentRemove />
+                  </Attachment>
+                ))}
+              </Attachments>
+            </div>
+          )}
+          
           <PromptInput
-            onSubmit={({ text }) => {
+            onSubmit={({ text, files }) => {
+              // Handle any additional files from paste
+              if (files && files.length > 0) {
+                const newAttachments: AttachmentData[] = files.map((file) => ({
+                  id: generateId(),
+                  type: "file" as const,
+                  url: file.url || "",
+                  mediaType: file.mediaType,
+                  filename: file.filename,
+                }));
+                setChatAttachments((prev) => [...prev, ...newAttachments]);
+              }
               if (text?.trim()) {
                 onElementChat(text);
+                setChatAttachments([]);
               }
             }}
+            accept="image/*"
+            multiple
             className="bg-secondary rounded-xl"
           >
+            <PromptInputHeader />
             <PromptInputTextarea
-              placeholder="Refine this element..."
+              placeholder="Describe your changes..."
               disabled={isStreaming}
               className="min-h-[40px] bg-transparent border-none focus:ring-0 text-sm"
             />
             <PromptInputFooter>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">+</span>
-                <div className="w-7 h-7 rounded bg-blue-600 flex items-center justify-center">
-                  <Sparkles size={14} className="text-white" />
-                </div>
-              </div>
+              <PromptInputTools>
+                <PromptInputActionMenu>
+                  <PromptInputActionMenuTrigger />
+                  <PromptInputActionMenuContent>
+                    <PromptInputActionAddAttachments label="Add images" />
+                  </PromptInputActionMenuContent>
+                </PromptInputActionMenu>
+              </PromptInputTools>
               <PromptInputSubmit />
             </PromptInputFooter>
           </PromptInput>

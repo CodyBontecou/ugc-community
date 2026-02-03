@@ -592,6 +592,8 @@ export function V0Editor({
                   onDeselect={() => setSelectedElement(null)}
                   onElementChat={handleElementChat}
                   isStreaming={isStreaming}
+                  onAddImage={() => setShowMediaLibrary("image")}
+                  onAddVideo={() => setShowMediaLibrary("video")}
                 />
               </motion.div>
             ) : sidebarView === "history" ? (

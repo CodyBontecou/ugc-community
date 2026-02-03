@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, Copy, Check, X, Loader2 } from "lucide-react";
+import { Sparkles, Copy, Check, X, Loader2, ImageIcon } from "lucide-react";
 
 // AI Elements
 import {
@@ -102,6 +102,7 @@ export function AIChatPanel({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<AttachmentData[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -435,8 +436,76 @@ export function AIChatPanel({
     setMessages((prev) => prev.filter((m) => !m.isThinking));
   };
 
+  // Handle drag events for visual feedback
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer?.types?.includes("Files")) {
+      setIsDraggingOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    // Only set to false if leaving the main container
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (
+      e.clientX <= rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY <= rect.top ||
+      e.clientY >= rect.bottom
+    ) {
+      setIsDraggingOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
+      if (imageFiles.length > 0) {
+        const newAttachments: AttachmentData[] = imageFiles.map((file) => ({
+          id: generateId(),
+          type: "file" as const,
+          url: URL.createObjectURL(file),
+          mediaType: file.type,
+          filename: file.name,
+        }));
+        setAttachments((prev) => [...prev, ...newAttachments]);
+      }
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col h-full dark">
+    <div 
+      className="flex flex-col h-full dark relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay */}
+      <AnimatePresence>
+        {isDraggingOver && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center pointer-events-none"
+          >
+            <div className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+              <ImageIcon size={20} />
+              <span>Drop images here</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Selected Element Indicator */}
       <AnimatePresence>
         {selectedElement && (
@@ -683,7 +752,7 @@ export function AIChatPanel({
           }}
           accept="image/*"
           multiple
-          className="bg-secondary rounded-xl"
+          className="bg-secondary rounded-xl [&_[data-slot=input-group]]:ring-0 [&_[data-slot=input-group]]:has-[:focus-visible]:ring-0 [&_[data-slot=input-group]]:has-[:focus-visible]:border-border [&_[data-slot=input-group]]:focus-within:ring-0 [&_[data-slot=input-group]]:outline-none"
         >
           <PromptInputHeader>
             {/* File input handler for PromptInputActionAddAttachments */}
