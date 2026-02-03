@@ -4,7 +4,17 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init to avoid build-time errors when env vars aren't set
+let resend: Resend | null = null;
+function getResend(): Resend {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY is required");
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@ugc.community";
 const FROM_NAME = process.env.FROM_NAME || "ugc.community";
 
@@ -164,7 +174,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: user.email,
         subject: "Reset your password",
@@ -174,7 +184,7 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: user.email,
         subject: "Verify your email",
