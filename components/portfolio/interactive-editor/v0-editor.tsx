@@ -143,7 +143,8 @@ export function V0Editor({
   });
 
   const initialHtmlRef = useRef(initialHtml);
-  const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingContentChangeRef = useRef<{ selector: string; content: string } | null>(null);
+  const pendingStyleChangesRef = useRef<{ selector: string; styles: Record<string, string> } | null>(null);
 
   // Update HTML and track history
   const updateHtml = useCallback((newHtml: string) => {
@@ -402,6 +403,7 @@ export function V0Editor({
 
   // Handle element style changes from design panel
   const handleElementStyleChange = useCallback((selector: string, styles: Record<string, string>) => {
+    // Send to iframe for immediate visual update (no reload)
     const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
     if (iframe?.contentWindow) {
       iframe.contentWindow.postMessage({
@@ -410,20 +412,19 @@ export function V0Editor({
         styles,
       }, "*");
     }
-    // Also update the HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const element = doc.querySelector(selector) as HTMLElement;
-    if (element) {
-      Object.entries(styles).forEach(([key, value]) => {
-        element.style[key as any] = value;
-      });
-      const newHtml = `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
-      if (newHtml !== html) {
-        updateHtml(newHtml);
-      }
-    }
-  }, [html, updateHtml]);
+    
+    // Mark as having unsaved changes immediately
+    setHasUnsavedChanges(true);
+    
+    // Accumulate style changes - will be committed to HTML when element is deselected
+    const currentStyles = pendingStyleChangesRef.current?.selector === selector 
+      ? pendingStyleChangesRef.current.styles 
+      : {};
+    pendingStyleChangesRef.current = { 
+      selector, 
+      styles: { ...currentStyles, ...styles } 
+    };
+  }, []);
 
   // Handle element content changes from design panel
   const handleElementContentChange = useCallback((selector: string, content: string) => {
@@ -440,23 +441,43 @@ export function V0Editor({
     // Mark as having unsaved changes immediately
     setHasUnsavedChanges(true);
     
-    // Debounce the HTML state update to prevent iframe reload on every keystroke
-    if (contentUpdateTimeoutRef.current) {
-      clearTimeout(contentUpdateTimeoutRef.current);
-    }
-    contentUpdateTimeoutRef.current = setTimeout(() => {
-      const newHtml = replaceElementContent(html, selector, content);
-      if (newHtml !== html) {
-        // Update history without triggering setHasUnsavedChanges again
-        setHistory((prev) => ({
-          past: [...prev.past.slice(-MAX_HISTORY_SIZE + 1), prev.present],
-          present: newHtml,
-          future: [],
-        }));
-        setHtml(newHtml);
+    // Store pending change - will be committed to HTML when element is deselected
+    pendingContentChangeRef.current = { selector, content };
+  }, []);
+
+  // Handle element deselection - commit any pending changes to HTML
+  const handleDeselect = useCallback(() => {
+    let currentHtml = html;
+    
+    // Commit pending style changes to HTML state
+    if (pendingStyleChangesRef.current) {
+      const { selector, styles } = pendingStyleChangesRef.current;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(currentHtml, "text/html");
+      const element = doc.querySelector(selector) as HTMLElement;
+      if (element) {
+        Object.entries(styles).forEach(([key, value]) => {
+          element.style[key as any] = value;
+        });
+        currentHtml = `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
       }
-    }, 500);
-  }, [html]);
+      pendingStyleChangesRef.current = null;
+    }
+    
+    // Commit pending content changes to HTML state
+    if (pendingContentChangeRef.current) {
+      const { selector, content } = pendingContentChangeRef.current;
+      currentHtml = replaceElementContent(currentHtml, selector, content);
+      pendingContentChangeRef.current = null;
+    }
+    
+    // Update HTML if changed
+    if (currentHtml !== html) {
+      updateHtml(currentHtml);
+    }
+    
+    setSelectedElement(null);
+  }, [html, updateHtml]);
 
   // Handle element chat from design panel - switch to chat and send message there
   const handleElementChat = useCallback((message: string) => {
@@ -512,15 +533,6 @@ export function V0Editor({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
-
-  // Cleanup content update timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (contentUpdateTimeoutRef.current) {
-        clearTimeout(contentUpdateTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Persist sidebar width to localStorage
   useEffect(() => {
@@ -673,7 +685,7 @@ export function V0Editor({
                   fullHtml={html}
                   onApplyEdit={handleApplyEdit}
                   onFullPageGenerate={handleFullPageGenerate}
-                  onDeselect={() => setSelectedElement(null)}
+                  onDeselect={handleDeselect}
                   isStreaming={isStreaming}
                   onStreamingChange={setIsStreaming}
                   pendingMessage={pendingChatMessage}
@@ -694,7 +706,7 @@ export function V0Editor({
                   selectedElement={selectedElement}
                   onElementStyleChange={handleElementStyleChange}
                   onElementContentChange={handleElementContentChange}
-                  onDeselect={() => setSelectedElement(null)}
+                  onDeselect={handleDeselect}
                   onElementChat={handleElementChat}
                   isStreaming={isStreaming}
                   onAddImage={() => setShowMediaLibrary("image")}
