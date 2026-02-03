@@ -236,6 +236,24 @@ export const creatorDirectory = pgTable(
 // Portfolio View Tracking
 // =====================================================
 
+export const portfolioVersions = pgTable(
+  "portfolio_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    portfolioId: uuid("portfolio_id")
+      .notNull()
+      .references(() => portfolios.id, { onDelete: "cascade" }),
+    htmlContent: text("html_content").notNull(),
+    versionNumber: integer("version_number").notNull(),
+    title: text("title"), // Optional label for the version
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("portfolio_versions_portfolio_id_idx").on(table.portfolioId),
+    index("portfolio_versions_created_at_idx").on(table.createdAt),
+  ]
+);
+
 export const portfolioViews = pgTable(
   "portfolio_views",
   {
@@ -332,6 +350,7 @@ export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
   media: many(media),
   contactSubmissions: many(contactSubmissions),
   views: many(portfolioViews),
+  versions: many(portfolioVersions),
   directoryListing: one(creatorDirectory, {
     fields: [portfolios.id],
     references: [creatorDirectory.portfolioId],
@@ -386,6 +405,13 @@ export const contactSubmissionsRelations = relations(
 export const portfolioViewsRelations = relations(portfolioViews, ({ one }) => ({
   portfolio: one(portfolios, {
     fields: [portfolioViews.portfolioId],
+    references: [portfolios.id],
+  }),
+}));
+
+export const portfolioVersionsRelations = relations(portfolioVersions, ({ one }) => ({
+  portfolio: one(portfolios, {
+    fields: [portfolioVersions.portfolioId],
     references: [portfolios.id],
   }),
 }));
@@ -467,5 +493,7 @@ export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type NewContactSubmission = typeof contactSubmissions.$inferInsert;
 export type PortfolioView = typeof portfolioViews.$inferSelect;
 export type NewPortfolioView = typeof portfolioViews.$inferInsert;
+export type PortfolioVersion = typeof portfolioVersions.$inferSelect;
+export type NewPortfolioVersion = typeof portfolioVersions.$inferInsert;
 export type Invite = typeof invites.$inferSelect;
 export type NewInvite = typeof invites.$inferInsert;

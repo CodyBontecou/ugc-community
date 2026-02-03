@@ -27,6 +27,7 @@ import { V0SectionNav } from "./v0-section-nav";
 import { MediaLibrary } from "@/components/media/media-library";
 import { EditorSidebarNav, type SidebarView } from "./editor-sidebar-nav";
 import { DesignPanel } from "./design-panel";
+import { HistoryPanel } from "./history-panel";
 import {
   replaceElementContent,
   replaceElementOuter,
@@ -299,7 +300,7 @@ export function V0Editor({
     [html, updateHtml]
   );
 
-  // Save to server
+  // Save to server and create a version
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
@@ -316,6 +317,13 @@ export function V0Editor({
         const err = await response.json();
         throw new Error(err.error || "Failed to save");
       }
+
+      // Create a version snapshot when saving
+      await fetch(`/api/portfolios/${portfolioId}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ htmlContent: html }),
+      });
 
       setHasUnsavedChanges(false);
       initialHtmlRef.current = html;
@@ -584,6 +592,25 @@ export function V0Editor({
                   onDeselect={() => setSelectedElement(null)}
                   onElementChat={handleElementChat}
                   isStreaming={isStreaming}
+                />
+              </motion.div>
+            ) : sidebarView === "history" ? (
+              <motion.div
+                key="history"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <HistoryPanel
+                  portfolioId={portfolioId}
+                  currentHtml={html}
+                  onRestore={(restoredHtml) => {
+                    updateHtml(restoredHtml);
+                  }}
+                  onPreview={(previewHtml) => {
+                    setHtml(previewHtml);
+                  }}
                 />
               </motion.div>
             ) : (
