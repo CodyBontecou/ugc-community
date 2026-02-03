@@ -138,6 +138,23 @@ export type SocialMediaHandle = {
   handle: string;
 };
 
+export type BrandPartnership = {
+  name: string;
+  type: "paid" | "gifted" | "ambassador" | "affiliate" | "collaboration";
+};
+
+export type VideoEntry = {
+  url: string;
+  title: string;
+  platform: "tiktok" | "instagram" | "youtube";
+};
+
+export type ImageEntry = {
+  url: string;
+  title: string;
+  category: string;
+};
+
 export const onboardingQuestionnaires = pgTable(
   "onboarding_questionnaires",
   {
@@ -145,13 +162,29 @@ export const onboardingQuestionnaires = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    portfolioVision: text("portfolio_vision").notNull(),
+    
+    // Basic info
+    name: text("name"),
+    email: text("email"),
+    niche: text("niche"),
+    tagline: text("tagline"),
+    bio: text("bio"),
+    location: text("location"),
+    
+    // Legacy fields (kept for backwards compatibility)
+    portfolioVision: text("portfolio_vision"),
     inspiringBrands: text("inspiring_brands"),
     portfolioExamples: text("portfolio_examples"),
-    // Structured fields for better data management
-    socialMediaHandles: jsonb("social_media_handles").$type<SocialMediaHandle[]>().default([]),
     inspirationUrls: text("inspiration_urls").array().default([]),
     inspiringBrandsList: text("inspiring_brands_list").array().default([]),
+    
+    // Structured fields for media kit
+    socialMediaHandles: jsonb("social_media_handles").$type<SocialMediaHandle[]>().default([]),
+    brandPartnerships: jsonb("brand_partnerships").$type<BrandPartnership[]>().default([]),
+    videos: jsonb("videos").$type<VideoEntry[]>().default([]),
+    images: jsonb("images").$type<ImageEntry[]>().default([]),
+    selectedServices: text("selected_services").array().default([]),
+    
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

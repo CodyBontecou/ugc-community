@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   onboardingQuestionnaires,
-  portfolioGenerations,
   users,
   SocialMediaHandle,
+  BrandPartnership,
+  VideoEntry,
+  ImageEntry,
 } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { Octokit } from "@octokit/rest";
-import { createPortfolioRepo, waitForRepoInitialized } from "@/lib/github/push-portfolio";
-import { inngest } from "@/lib/inngest/client";
 import {
   validateSubdomain,
   generateSubdomainSuggestions,
@@ -22,15 +21,40 @@ const socialMediaHandleSchema = z.object({
   handle: z.string().min(1, "Handle is required").max(200),
 });
 
+const brandPartnershipSchema = z.object({
+  name: z.string().min(1).max(200),
+  type: z.enum(["paid", "gifted", "ambassador", "affiliate", "collaboration"]),
+});
+
+const videoEntrySchema = z.object({
+  url: z.string().url("Invalid URL"),
+  title: z.string().min(1).max(200),
+  platform: z.enum(["tiktok", "instagram", "youtube"]),
+});
+
+const imageEntrySchema = z.object({
+  url: z.string().url("Invalid URL"),
+  title: z.string().max(200).optional().default(""),
+  category: z.string().max(100).optional().default(""),
+});
+
 const submitQuestionnaireSchema = z.object({
   subdomain: z.string().min(3, "Subdomain must be at least 3 characters"),
-  portfolioVision: z.string().min(10, "Please describe your portfolio vision (at least 10 characters)").max(2000),
-  inspiringBrands: z.string().max(1000).optional(),
-  portfolioExamples: z.string().max(1000).optional(),
-  // Structured fields - all required with at least one entry
+  
+  // Basic info
+  name: z.string().min(1, "Name is required").max(200),
+  email: z.string().email("Invalid email address"),
+  niche: z.string().min(1, "Please select a niche"),
+  tagline: z.string().max(100).optional().default(""),
+  bio: z.string().min(10, "Bio must be at least 10 characters").max(1000),
+  location: z.string().max(200).optional().default(""),
+  
+  // Social & content
   socialMediaHandles: z.array(socialMediaHandleSchema).min(1, "Please add at least one social media handle").max(20),
-  inspirationUrls: z.array(z.string().url("Invalid URL format")).min(1, "Please add at least one website").max(10),
-  inspiringBrandsList: z.array(z.string().min(1).max(200)).min(1, "Please add at least one brand").max(20),
+  brandPartnerships: z.array(brandPartnershipSchema).max(50).optional().default([]),
+  videos: z.array(videoEntrySchema).max(20).optional().default([]),
+  images: z.array(imageEntrySchema).max(50).optional().default([]),
+  selectedServices: z.array(z.string()).min(1, "Please select at least one service").max(20),
 });
 
 // GET /api/onboarding - Check if user has submitted questionnaire
@@ -53,10 +77,11 @@ export async function GET() {
       hasSubmitted: !!existing,
       questionnaire: existing ? {
         ...existing,
-        // Ensure arrays are returned properly
         socialMediaHandles: existing.socialMediaHandles || [],
-        inspirationUrls: existing.inspirationUrls || [],
-        inspiringBrandsList: existing.inspiringBrandsList || [],
+        brandPartnerships: existing.brandPartnerships || [],
+        videos: existing.videos || [],
+        images: existing.images || [],
+        selectedServices: existing.selectedServices || [],
       } : null,
       subdomain: user?.subdomain || null,
     });
@@ -90,12 +115,11 @@ export async function POST(request: NextRequest) {
     }
     const normalizedSubdomain = subdomainValidation.normalized!;
 
-    // Get user info for GitHub repo creation
+    // Get user info
     const [user] = await db
       .select({
         subdomain: users.subdomain,
         name: users.name,
-        githubRepoFullName: users.githubRepoFullName,
       })
       .from(users)
       .where(eq(users.id, session.user.id));
@@ -121,9 +145,24 @@ export async function POST(request: NextRequest) {
       where: eq(onboardingQuestionnaires.userId, session.user.id),
     });
 
+    // Prepare data for insert/update
+    const questionnaireData = {
+      name: validated.name,
+      email: validated.email,
+      niche: validated.niche,
+      tagline: validated.tagline || null,
+      bio: validated.bio,
+      location: validated.location || null,
+      socialMediaHandles: validated.socialMediaHandles as SocialMediaHandle[],
+      brandPartnerships: validated.brandPartnerships as BrandPartnership[],
+      videos: validated.videos as VideoEntry[],
+      images: validated.images as ImageEntry[],
+      selectedServices: validated.selectedServices,
+      updatedAt: new Date(),
+    };
+
     if (existing) {
-      // Update existing - don't re-trigger generation
-      // But do update subdomain if changed
+      // Update existing questionnaire
       if (user?.subdomain !== normalizedSubdomain) {
         await db
           .update(users)
@@ -136,25 +175,19 @@ export async function POST(request: NextRequest) {
 
       const [updated] = await db
         .update(onboardingQuestionnaires)
-        .set({
-          portfolioVision: validated.portfolioVision,
-          inspiringBrands: validated.inspiringBrands || null,
-          portfolioExamples: validated.portfolioExamples || null,
-          socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
-          inspirationUrls: validated.inspirationUrls || [],
-          inspiringBrandsList: validated.inspiringBrandsList || [],
-          updatedAt: new Date(),
-        })
+        .set(questionnaireData)
         .where(eq(onboardingQuestionnaires.userId, session.user.id))
         .returning();
 
       return NextResponse.json({
-        message: "Questionnaire updated",
+        message: "Media kit updated",
         questionnaire: {
           ...updated,
           socialMediaHandles: updated.socialMediaHandles || [],
-          inspirationUrls: updated.inspirationUrls || [],
-          inspiringBrandsList: updated.inspiringBrandsList || [],
+          brandPartnerships: updated.brandPartnerships || [],
+          videos: updated.videos || [],
+          images: updated.images || [],
+          selectedServices: updated.selectedServices || [],
         },
         subdomain: normalizedSubdomain,
       });
@@ -171,123 +204,26 @@ export async function POST(request: NextRequest) {
         .where(eq(users.id, session.user.id));
     }
 
-    const githubToken = process.env.GITHUB_SERVICE_TOKEN;
-    const githubUsername = process.env.GITHUB_SERVICE_USERNAME;
-
-    if (!githubToken || !githubUsername) {
-      console.error("Missing GITHUB_SERVICE_TOKEN or GITHUB_SERVICE_USERNAME env vars");
-      return NextResponse.json(
-        { error: "Portfolio generation is not configured. Please contact support." },
-        { status: 500 }
-      );
-    }
-
-    // Create or verify GitHub repo
-    let repoFullName = user.githubRepoFullName;
-    let repoId: string | null = null;
-
-    try {
-      const octokit = new Octokit({ auth: githubToken });
-      const { repoExists, getRepoInfo } = await import("@/lib/github/push-portfolio");
-      const expectedRepoName = `${normalizedSubdomain}-portfolio`;
-      const expectedRepoFullName = `${process.env.GITHUB_SERVICE_USERNAME}/${expectedRepoName}`;
-
-      // Check if existing repo still exists
-      let needsNewRepo = !repoFullName;
-      if (repoFullName) {
-        const exists = await repoExists(octokit, repoFullName);
-        if (!exists) {
-          console.log(`Repo ${repoFullName} no longer exists, checking for expected repo`);
-          needsNewRepo = true;
-        }
-      }
-
-      if (needsNewRepo) {
-        // Before creating, check if the expected repo already exists (from a previous failed attempt)
-        const expectedExists = await repoExists(octokit, expectedRepoFullName);
-        
-        if (expectedExists) {
-          // Repo already exists - use it instead of failing
-          console.log(`Found existing repo ${expectedRepoFullName}, linking to user`);
-          const repoInfo = await getRepoInfo(octokit, expectedRepoFullName);
-          repoFullName = expectedRepoFullName;
-          repoId = String(repoInfo.id);
-        } else {
-          // Create new repo
-          const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
-            description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
-            isPrivate: true,
-          });
-
-          repoFullName = repoResult.repoFullName;
-          repoId = String(repoResult.repoId);
-
-          // Wait for repo to be initialized (auto_init creates commit asynchronously)
-          await waitForRepoInitialized(octokit, repoFullName);
-        }
-
-        // Update user with repo info
-        await db
-          .update(users)
-          .set({
-            githubRepoFullName: repoFullName,
-            githubRepoId: repoId,
-          })
-          .where(eq(users.id, session.user.id));
-      }
-    } catch (repoError) {
-      console.error("Failed to create/verify GitHub repo:", repoError);
-      return NextResponse.json(
-        { error: "Failed to create portfolio repository. Please try again." },
-        { status: 500 }
-      );
-    }
-
     // Create new questionnaire
     const [created] = await db
       .insert(onboardingQuestionnaires)
       .values({
         userId: session.user.id,
-        portfolioVision: validated.portfolioVision,
-        inspiringBrands: validated.inspiringBrands || null,
-        portfolioExamples: validated.portfolioExamples || null,
-        socialMediaHandles: (validated.socialMediaHandles as SocialMediaHandle[]) || [],
-        inspirationUrls: validated.inspirationUrls || [],
-        inspiringBrandsList: validated.inspiringBrandsList || [],
+        ...questionnaireData,
       })
       .returning();
 
-    // Create generation record and trigger Inngest
-    const [generation] = await db
-      .insert(portfolioGenerations)
-      .values({
-        userId: session.user.id,
-        questionnaireId: created.id,
-        status: "pending",
-        githubRepo: repoFullName,
-      })
-      .returning({ id: portfolioGenerations.id });
-
-    // Dispatch to Inngest for portfolio generation
-    try {
-      await inngest.send({
-        name: "portfolio/generate.requested",
-        data: {
-          generationId: generation.id,
-          questionnaireId: created.id,
-          userId: session.user.id,
-          githubRepoFullName: repoFullName || undefined,
-        },
-      });
-    } catch (inngestError) {
-      // Log but don't fail the request - generation can be triggered manually
-      console.error("Failed to dispatch to Inngest (portfolio generation won't auto-start):", inngestError);
-    }
-
     return NextResponse.json({
-      message: "Questionnaire submitted - your portfolio is being generated!",
-      questionnaire: created,
-      generationId: generation.id,
+      message: "Media kit created successfully!",
+      questionnaire: {
+        ...created,
+        socialMediaHandles: created.socialMediaHandles || [],
+        brandPartnerships: created.brandPartnerships || [],
+        videos: created.videos || [],
+        images: created.images || [],
+        selectedServices: created.selectedServices || [],
+      },
+      subdomain: normalizedSubdomain,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -302,7 +238,7 @@ export async function POST(request: NextRequest) {
     console.error("Error submitting questionnaire:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: `Failed to submit questionnaire: ${errorMessage}` },
+      { error: `Failed to submit: ${errorMessage}` },
       { status: 500 }
     );
   }

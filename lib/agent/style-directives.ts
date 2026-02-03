@@ -14,7 +14,7 @@ export interface StyleDirective {
 }
 
 export interface UserStyleInput {
-  portfolioVision: string;
+  portfolioVision: string | null;
   inspiringBrands?: string | null;
   portfolioExamples?: string | null;
 }
@@ -773,7 +773,7 @@ export function generateStyleDirective(userInput?: UserStyleInput): StyleDirecti
 
   // Combine all user input into a single searchable string
   const combinedInput = [
-    userInput.portfolioVision,
+    userInput.portfolioVision || "",
     userInput.inspiringBrands || "",
     userInput.portfolioExamples || "",
   ].join(" ");

@@ -15,11 +15,16 @@ import {
   Youtube,
   Twitter,
   Linkedin,
+  Video,
+  Image as ImageIcon,
+  Building2,
+  User,
+  Mail,
+  MapPin,
+  Briefcase,
 } from "lucide-react";
 
 const CALENDLY_URL = "https://calendly.com/cody-isolated/30min";
-
-const EXAMPLE_VISION = `I want a clean, modern portfolio that showcases my lifestyle and beauty content. I'd love a grid layout for my videos with a soft, warm color palette. I want visitors to immediately see my best work and understand my style. A simple contact form would be great so brands can reach out easily.`;
 
 // Social media platforms configuration
 const SOCIAL_PLATFORMS = [
@@ -31,11 +36,87 @@ const SOCIAL_PLATFORMS = [
   { id: "other", label: "Other", icon: Globe, placeholder: "handle or URL" },
 ] as const;
 
+// Niche options
+const NICHE_OPTIONS = [
+  "Beauty & Skincare",
+  "Fashion & Style",
+  "Lifestyle",
+  "Fitness & Wellness",
+  "Food & Cooking",
+  "Travel",
+  "Tech & Gaming",
+  "Home & Decor",
+  "Parenting & Family",
+  "Pets & Animals",
+  "Finance & Business",
+  "Health & Medical",
+  "Entertainment",
+  "Education",
+  "DIY & Crafts",
+  "Automotive",
+  "Sports & Outdoors",
+  "Music",
+  "Art & Design",
+  "Other",
+] as const;
+
+// Partnership types
+const PARTNERSHIP_TYPES = [
+  { id: "paid", label: "Paid Partnership" },
+  { id: "gifted", label: "Gifted" },
+  { id: "ambassador", label: "Brand Ambassador" },
+  { id: "affiliate", label: "Affiliate" },
+  { id: "collaboration", label: "Collaboration" },
+] as const;
+
+// Available services
+const AVAILABLE_SERVICES = [
+  { id: "ugc-videos", title: "UGC Video Creation", description: "Video content for brand marketing" },
+  { id: "ugc-photos", title: "UGC Photo Content", description: "Product photography and lifestyle images" },
+  { id: "sponsored-posts", title: "Sponsored Posts", description: "Integrated content on my platforms" },
+  { id: "product-reviews", title: "Product Reviews", description: "Honest, in-depth product reviews" },
+  { id: "brand-ambassador", title: "Brand Ambassador", description: "Long-term partnership opportunities" },
+  { id: "whitelisting", title: "Ad Whitelisting", description: "Run ads through my social accounts" },
+  { id: "live-streaming", title: "Live Streaming", description: "Real-time product demonstrations" },
+  { id: "tutorials", title: "Tutorials & How-To", description: "Educational content showing product use" },
+  { id: "unboxing", title: "Unboxing & First Impressions", description: "Authentic first-look content" },
+  { id: "testimonials", title: "Testimonials", description: "Direct-to-camera testimonials" },
+  { id: "voiceover", title: "Voiceover Content", description: "Professional voiceover for content" },
+  { id: "event-coverage", title: "Event Coverage", description: "On-location content creation" },
+] as const;
+
+// Video platforms
+const VIDEO_PLATFORMS = [
+  { id: "tiktok", label: "TikTok" },
+  { id: "instagram", label: "Instagram Reels" },
+  { id: "youtube", label: "YouTube" },
+] as const;
+
 type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number]["id"];
+type Niche = (typeof NICHE_OPTIONS)[number];
+type PartnershipType = (typeof PARTNERSHIP_TYPES)[number]["id"];
+type VideoPlatform = (typeof VIDEO_PLATFORMS)[number]["id"];
 
 interface SocialMediaHandle {
   platform: SocialPlatform;
   handle: string;
+}
+
+interface BrandPartnership {
+  name: string;
+  type: PartnershipType;
+}
+
+interface VideoEntry {
+  url: string;
+  title: string;
+  platform: VideoPlatform;
+}
+
+interface ImageEntry {
+  url: string;
+  title: string;
+  category: string;
 }
 
 interface OnboardingFormProps {
@@ -52,7 +133,7 @@ function isValidUrl(string: string): boolean {
   }
 }
 
-// TikTok icon component (lucide doesn't have it)
+// TikTok icon component
 function TikTokIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -67,7 +148,18 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
 
+  // Basic info
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [niche, setNiche] = useState<Niche>("Lifestyle");
+  const [tagline, setTagline] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+
+  // Subdomain
   const [subdomain, setSubdomain] = useState("");
   const [subdomainStatus, setSubdomainStatus] = useState<{
     checking: boolean;
@@ -75,15 +167,32 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     error: string | null;
     suggestions: string[];
   }>({ checking: false, available: null, error: null, suggestions: [] });
-  const [portfolioVision, setPortfolioVision] = useState("");
 
-  // Structured fields
+  // Social handles
   const [socialMediaHandles, setSocialMediaHandles] = useState<SocialMediaHandle[]>([
     { platform: "instagram", handle: "" },
   ]);
-  const [inspirationUrls, setInspirationUrls] = useState<string[]>([""]);
-  const [urlErrors, setUrlErrors] = useState<{ [key: number]: string }>({});
-  const [inspiringBrandsList, setInspiringBrandsList] = useState<string[]>([""]);
+
+  // Brand partnerships
+  const [brandPartnerships, setBrandPartnerships] = useState<BrandPartnership[]>([
+    { name: "", type: "paid" },
+  ]);
+
+  // Videos
+  const [videos, setVideos] = useState<VideoEntry[]>([
+    { url: "", title: "", platform: "tiktok" },
+  ]);
+
+  // Images
+  const [images, setImages] = useState<ImageEntry[]>([
+    { url: "", title: "", category: "" },
+  ]);
+
+  // Services
+  const [selectedServices, setSelectedServices] = useState<string[]>([
+    "ugc-videos",
+    "sponsored-posts",
+  ]);
 
   // Check subdomain availability with debounce
   const checkSubdomainAvailability = useCallback(async (value: string) => {
@@ -150,37 +259,19 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             setSubdomainStatus({ checking: false, available: true, error: null, suggestions: [] });
           }
           if (data.questionnaire) {
-            setPortfolioVision(data.questionnaire.portfolioVision || "");
-
-            // Load structured fields if available
-            if (data.questionnaire.socialMediaHandles?.length > 0) {
-              setSocialMediaHandles(data.questionnaire.socialMediaHandles);
-            }
-            if (data.questionnaire.inspirationUrls?.length > 0) {
-              setInspirationUrls(data.questionnaire.inspirationUrls);
-            } else if (data.questionnaire.portfolioExamples) {
-              // Migrate old format: try to extract URLs from text
-              const urls = data.questionnaire.portfolioExamples
-                .split(/[\n,]/)
-                .map((s: string) => s.trim())
-                .filter((s: string) => s.length > 0);
-              if (urls.length > 0) {
-                setInspirationUrls(urls);
-              }
-            }
-            // Load inspiring brands list
-            if (data.questionnaire.inspiringBrandsList?.length > 0) {
-              setInspiringBrandsList(data.questionnaire.inspiringBrandsList);
-            } else if (data.questionnaire.inspiringBrands) {
-              // Migrate old format: try to extract brands from text
-              const brands = data.questionnaire.inspiringBrands
-                .split(/[,\n]/)
-                .map((s: string) => s.trim())
-                .filter((s: string) => s.length > 0);
-              if (brands.length > 0) {
-                setInspiringBrandsList(brands);
-              }
-            }
+            const q = data.questionnaire;
+            // Load all fields
+            if (q.name) setName(q.name);
+            if (q.email) setEmail(q.email);
+            if (q.niche) setNiche(q.niche);
+            if (q.tagline) setTagline(q.tagline);
+            if (q.bio) setBio(q.bio);
+            if (q.location) setLocation(q.location);
+            if (q.socialMediaHandles?.length > 0) setSocialMediaHandles(q.socialMediaHandles);
+            if (q.brandPartnerships?.length > 0) setBrandPartnerships(q.brandPartnerships);
+            if (q.videos?.length > 0) setVideos(q.videos);
+            if (q.images?.length > 0) setImages(q.images);
+            if (q.selectedServices?.length > 0) setSelectedServices(q.selectedServices);
           }
         }
       } catch (err) {
@@ -213,51 +304,68 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     setSocialMediaHandles(updated);
   };
 
-  // URL management
-  const addInspirationUrl = () => {
-    setInspirationUrls([...inspirationUrls, ""]);
+  // Brand partnership management
+  const addBrandPartnership = () => {
+    setBrandPartnerships([...brandPartnerships, { name: "", type: "paid" }]);
   };
 
-  const removeInspirationUrl = (index: number) => {
-    if (inspirationUrls.length > 1) {
-      setInspirationUrls(inspirationUrls.filter((_, i) => i !== index));
-      // Clear any errors for this index
-      const newErrors = { ...urlErrors };
-      delete newErrors[index];
-      setUrlErrors(newErrors);
+  const removeBrandPartnership = (index: number) => {
+    if (brandPartnerships.length > 1) {
+      setBrandPartnerships(brandPartnerships.filter((_, i) => i !== index));
     }
   };
 
-  const updateInspirationUrl = (index: number, value: string) => {
-    const updated = [...inspirationUrls];
-    updated[index] = value;
-    setInspirationUrls(updated);
-
-    // Validate URL
-    const newErrors = { ...urlErrors };
-    if (value && !isValidUrl(value)) {
-      newErrors[index] = "Please enter a valid URL (e.g., https://example.com)";
+  const updateBrandPartnership = (index: number, field: "name" | "type", value: string) => {
+    const updated = [...brandPartnerships];
+    if (field === "type") {
+      updated[index] = { ...updated[index], type: value as PartnershipType };
     } else {
-      delete newErrors[index];
+      updated[index] = { ...updated[index], name: value };
     }
-    setUrlErrors(newErrors);
+    setBrandPartnerships(updated);
   };
 
-  // Inspiring brands management
-  const addInspiringBrand = () => {
-    setInspiringBrandsList([...inspiringBrandsList, ""]);
+  // Video management
+  const addVideo = () => {
+    setVideos([...videos, { url: "", title: "", platform: "tiktok" }]);
   };
 
-  const removeInspiringBrand = (index: number) => {
-    if (inspiringBrandsList.length > 1) {
-      setInspiringBrandsList(inspiringBrandsList.filter((_, i) => i !== index));
+  const removeVideo = (index: number) => {
+    if (videos.length > 1) {
+      setVideos(videos.filter((_, i) => i !== index));
     }
   };
 
-  const updateInspiringBrand = (index: number, value: string) => {
-    const updated = [...inspiringBrandsList];
-    updated[index] = value;
-    setInspiringBrandsList(updated);
+  const updateVideo = (index: number, field: keyof VideoEntry, value: string) => {
+    const updated = [...videos];
+    updated[index] = { ...updated[index], [field]: value };
+    setVideos(updated);
+  };
+
+  // Image management
+  const addImage = () => {
+    setImages([...images, { url: "", title: "", category: "" }]);
+  };
+
+  const removeImage = (index: number) => {
+    if (images.length > 1) {
+      setImages(images.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateImage = (index: number, field: keyof ImageEntry, value: string) => {
+    const updated = [...images];
+    updated[index] = { ...updated[index], [field]: value };
+    setImages(updated);
+  };
+
+  // Service toggle
+  const toggleService = (serviceId: string) => {
+    if (selectedServices.includes(serviceId)) {
+      setSelectedServices(selectedServices.filter((id) => id !== serviceId));
+    } else {
+      setSelectedServices([...selectedServices, serviceId]);
+    }
   };
 
   const getPlatformIcon = (platformId: string) => {
@@ -271,50 +379,68 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
     return <Globe className="w-4 h-4" />;
   };
 
+  const validateStep = (step: number): string | null => {
+    switch (step) {
+      case 1:
+        if (!name.trim()) return "Please enter your name";
+        if (!email.trim()) return "Please enter your email";
+        if (!bio.trim() || bio.length < 10) return "Please write a bio (at least 10 characters)";
+        if (!subdomain || subdomain.length < 3) return "Please enter a subdomain (at least 3 characters)";
+        if (subdomainStatus.available === false) return "Please choose an available subdomain";
+        return null;
+      case 2:
+        const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
+        if (validSocialHandles.length === 0) return "Please add at least one social media handle";
+        return null;
+      case 3:
+        // Brand partnerships are optional
+        // Videos are optional
+        return null;
+      case 4:
+        if (selectedServices.length === 0) return "Please select at least one service you offer";
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  const nextStep = () => {
+    const error = validateStep(currentStep);
+    if (error) {
+      setError(error);
+      return;
+    }
+    setError(null);
+    setCurrentStep(Math.min(currentStep + 1, totalSteps));
+  };
+
+  const prevStep = () => {
+    setError(null);
+    setCurrentStep(Math.max(currentStep - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
 
-    // Validate subdomain before submitting
-    if (!subdomain || subdomain.length < 3) {
-      setError("Please enter a subdomain (at least 3 characters)");
-      return;
-    }
-
-    if (subdomainStatus.available === false) {
-      setError("Please choose an available subdomain");
-      return;
-    }
-
-    // Validate at least one social media handle
-    const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
-    if (validSocialHandles.length === 0) {
-      setError("Please add at least one social media handle");
-      return;
-    }
-
-    // Validate at least one inspiring brand
-    const validBrands = inspiringBrandsList.filter((brand) => brand.trim().length > 0);
-    if (validBrands.length === 0) {
-      setError("Please add at least one brand that inspires you");
-      return;
-    }
-
-    // Validate URLs - at least one required
-    const nonEmptyUrls = inspirationUrls.filter((url) => url.trim().length > 0);
-    if (nonEmptyUrls.length === 0) {
-      setError("Please add at least one website that inspires you");
-      return;
-    }
-    const invalidUrls = nonEmptyUrls.filter((url) => !isValidUrl(url));
-    if (invalidUrls.length > 0) {
-      setError("Please fix the invalid URLs before submitting");
-      return;
+    // Validate all steps
+    for (let step = 1; step <= totalSteps; step++) {
+      const stepError = validateStep(step);
+      if (stepError) {
+        setCurrentStep(step);
+        setError(stepError);
+        return;
+      }
     }
 
     setIsSubmitting(true);
-    const validUrls = nonEmptyUrls.filter((url) => isValidUrl(url));
+
+    // Filter out empty entries
+    const validSocialHandles = socialMediaHandles.filter((h) => h.handle.trim().length > 0);
+    const validBrandPartnerships = brandPartnerships.filter((b) => b.name.trim().length > 0);
+    const validVideos = videos.filter((v) => v.url.trim().length > 0 && v.title.trim().length > 0);
+    const validImages = images.filter((i) => i.url.trim().length > 0);
 
     try {
       const response = await fetch("/api/onboarding", {
@@ -322,13 +448,17 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subdomain,
-          portfolioVision,
+          name,
+          email,
+          niche,
+          tagline,
+          bio,
+          location,
           socialMediaHandles: validSocialHandles,
-          inspirationUrls: validUrls,
-          inspiringBrandsList: validBrands,
-          // Keep backwards compatibility
-          portfolioExamples: validUrls.join("\n"),
-          inspiringBrands: validBrands.join(", "),
+          brandPartnerships: validBrandPartnerships,
+          videos: validVideos,
+          images: validImages,
+          selectedServices,
         }),
       });
 
@@ -350,7 +480,6 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       setSuccessMessage(hasSubmitted ? "Updated!" : "Submitted - your portfolio is being generated!");
       onSubmitSuccess?.();
 
-      // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -379,12 +508,12 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
-              {hasSubmitted ? "Your Portfolio Vision" : "Tell me about your dream portfolio"}
+              {hasSubmitted ? "Your Media Kit" : "Create Your Media Kit"}
             </h2>
             <p className="text-warm-gray-600">
               {hasSubmitted
-                ? "You can update your responses anytime. I'll use this to design your portfolio."
-                : "Help me understand what you're looking for so I can build your perfect portfolio."}
+                ? "Update your information anytime."
+                : "Tell us about yourself to generate your professional media kit."}
             </p>
           </div>
           {hasSubmitted && (
@@ -394,353 +523,576 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             </span>
           )}
         </div>
+
+        {/* Progress bar */}
+        <div className="mt-6 flex items-center gap-2">
+          {Array.from({ length: totalSteps }, (_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                i + 1 <= currentStep ? "bg-coral" : "bg-warm-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-warm-gray-500">
+          Step {currentStep} of {totalSteps}
+        </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {/* Subdomain */}
-        <div>
-          <label htmlFor="subdomain" className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Choose your portfolio URL *
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Globe className="h-5 w-5 text-warm-gray-400" />
-              </div>
+      <form onSubmit={handleSubmit} className="p-6">
+        {/* Step 1: Basic Info */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Basic Information
+            </h3>
+
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Your Name *
+              </label>
               <input
-                id="subdomain"
+                id="name"
                 type="text"
-                value={subdomain}
-                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                placeholder="yourname"
-                className={`w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 ${
-                  subdomainStatus.available === true
-                    ? "border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-                    : subdomainStatus.available === false
-                    ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                    : "border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20"
-                }`}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Smith"
+                className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400"
                 required
-                minLength={3}
-                maxLength={63}
               />
-              {subdomainStatus.checking && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <Loader2 className="h-4 w-4 animate-spin text-warm-gray-400" />
-                </div>
-              )}
-              {!subdomainStatus.checking && subdomainStatus.available === true && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <Check className="h-4 w-4 text-green-500" />
-                </div>
-              )}
-              {!subdomainStatus.checking && subdomainStatus.available === false && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                </div>
-              )}
             </div>
-            <span className="text-warm-gray-500 text-sm whitespace-nowrap">.ugc.community</span>
-          </div>
-          {subdomainStatus.available === true && subdomain.length >= 3 && (
-            <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              Available! Your portfolio will be at {subdomain}.ugc.community
-            </p>
-          )}
-          {subdomainStatus.available === false && (
-            <div className="mt-1.5">
-              <p className="text-xs text-red-600 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                {subdomainStatus.error}
-              </p>
-              {subdomainStatus.suggestions.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs text-warm-gray-500 mb-1">Try one of these instead:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {subdomainStatus.suggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => setSubdomain(suggestion)}
-                        className="text-xs px-2 py-1 rounded-full bg-warm-gray-100 text-warm-gray-700 hover:bg-coral/10 hover:text-coral transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Contact Email *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-warm-gray-400" />
                 </div>
-              )}
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400"
+                  required
+                />
+              </div>
             </div>
-          )}
-          {subdomain.length > 0 && subdomain.length < 3 && (
-            <p className="mt-1.5 text-xs text-warm-gray-500">Subdomain must be at least 3 characters</p>
-          )}
-        </div>
 
-        {/* Social Media Handles */}
-        <div>
-          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Your social media handles *
-          </label>
-          <p className="text-xs text-warm-gray-500 mb-3">
-            Add at least one social media profile to display on your portfolio
-          </p>
+            {/* Niche */}
+            <div>
+              <label htmlFor="niche" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Your Niche *
+              </label>
+              <select
+                id="niche"
+                value={niche}
+                onChange={(e) => setNiche(e.target.value as Niche)}
+                className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white"
+              >
+                {NICHE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="space-y-3">
-            {socialMediaHandles.map((handle, index) => (
-              <div key={index} className="flex items-center gap-2">
-                {/* Platform selector */}
-                <div className="relative">
-                  <select
-                    value={handle.platform}
-                    onChange={(e) => updateSocialHandle(index, "platform", e.target.value)}
-                    className="appearance-none pl-9 pr-8 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white text-sm min-w-[140px]"
-                  >
-                    {SOCIAL_PLATFORMS.map((platform) => (
-                      <option key={platform.id} value={platform.id}>
-                        {platform.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-warm-gray-500">
-                    {getPlatformIcon(handle.platform)}
-                  </div>
-                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                    <svg className="w-4 h-4 text-warm-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+            {/* Tagline */}
+            <div>
+              <label htmlFor="tagline" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Tagline (optional)
+              </label>
+              <input
+                id="tagline"
+                type="text"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                placeholder="e.g., Skincare Creator • Beauty Enthusiast"
+                className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400"
+                maxLength={100}
+              />
+              <p className="mt-1 text-xs text-warm-gray-500">A short description that appears under your name</p>
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label htmlFor="bio" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                About You *
+              </label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell brands about yourself, your content style, and what makes you unique..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
+                required
+                minLength={10}
+                maxLength={1000}
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Location (optional)
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-5 w-5 text-warm-gray-400" />
                 </div>
-
-                {/* Handle input */}
                 <input
+                  id="location"
                   type="text"
-                  value={handle.handle}
-                  onChange={(e) => updateSocialHandle(index, "handle", e.target.value)}
-                  placeholder={SOCIAL_PLATFORMS.find((p) => p.id === handle.platform)?.placeholder || "@username"}
-                  className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g., Los Angeles, CA"
+                  className="w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400"
                 />
-
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => removeSocialHandle(index)}
-                  disabled={socialMediaHandles.length === 1}
-                  className={`p-2 rounded-[--radius-md] transition-colors ${
-                    socialMediaHandles.length === 1
-                      ? "text-warm-gray-300 cursor-not-allowed"
-                      : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
-                  }`}
-                  title="Remove"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Add another button */}
-          <button
-            type="button"
-            onClick={addSocialHandle}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add another handle
-          </button>
-        </div>
-
-        {/* Portfolio Vision */}
-        <div>
-          <label htmlFor="portfolioVision" className="block text-sm font-medium text-warm-gray-900 mb-2">
-            What do you want your portfolio to look like? *
-          </label>
-          <textarea
-            id="portfolioVision"
-            value={portfolioVision}
-            onChange={(e) => setPortfolioVision(e.target.value)}
-            placeholder={EXAMPLE_VISION}
-            rows={5}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
-            required
-            minLength={10}
-            maxLength={2000}
-          />
-          <p className="mt-1.5 text-xs text-warm-gray-500">
-            Describe your ideal layout, colors, vibe, or any specific features you'd love to have.
-          </p>
-        </div>
-
-        {/* Inspiring Brands */}
-        <div>
-          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Brands that inspire you *
-          </label>
-          <p className="text-xs text-warm-gray-500 mb-3">
-            Add at least one brand whose look and feel resonates with you
-          </p>
-
-          <div className="space-y-3">
-            {inspiringBrandsList.map((brand, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={brand}
-                  onChange={(e) => updateInspiringBrand(index, e.target.value)}
-                  placeholder="e.g., Glossier's minimalist aesthetic"
-                  className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
-                  maxLength={200}
-                />
-
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => removeInspiringBrand(index)}
-                  disabled={inspiringBrandsList.length === 1}
-                  className={`p-2 rounded-[--radius-md] transition-colors ${
-                    inspiringBrandsList.length === 1
-                      ? "text-warm-gray-300 cursor-not-allowed"
-                      : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
-                  }`}
-                  title="Remove"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Add another button */}
-          <button
-            type="button"
-            onClick={addInspiringBrand}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add another brand
-          </button>
-        </div>
-
-        {/* Website Inspiration URLs */}
-        <div>
-          <label className="block text-sm font-medium text-warm-gray-900 mb-2">
-            Websites that inspire you *
-          </label>
-          <p className="text-xs text-warm-gray-500 mb-3">
-            Add at least one link to a portfolio or website you'd like yours to resemble
-          </p>
-
-          <div className="space-y-3">
-            {inspirationUrls.map((url, index) => (
-              <div key={index}>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Globe className="h-4 w-4 text-warm-gray-400" />
+            {/* Subdomain */}
+            <div>
+              <label htmlFor="subdomain" className="block text-sm font-medium text-warm-gray-900 mb-2">
+                Your Portfolio URL *
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Globe className="h-5 w-5 text-warm-gray-400" />
+                  </div>
+                  <input
+                    id="subdomain"
+                    type="text"
+                    value={subdomain}
+                    onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    placeholder="yourname"
+                    className={`w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 ${
+                      subdomainStatus.available === true
+                        ? "border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                        : subdomainStatus.available === false
+                        ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+                        : "border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20"
+                    }`}
+                    required
+                    minLength={3}
+                    maxLength={63}
+                  />
+                  {subdomainStatus.checking && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin text-warm-gray-400" />
                     </div>
-                    <input
-                      type="url"
-                      value={url}
-                      onChange={(e) => updateInspirationUrl(index, e.target.value)}
-                      placeholder="https://example.com"
-                      className={`w-full pl-9 pr-4 py-2.5 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm ${
-                        urlErrors[index]
-                          ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                          : "border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20"
-                      }`}
-                    />
-                    {url && !urlErrors[index] && isValidUrl(url) && (
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                        <Check className="h-4 w-4 text-green-500" />
+                  )}
+                  {!subdomainStatus.checking && subdomainStatus.available === true && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <Check className="h-4 w-4 text-green-500" />
+                    </div>
+                  )}
+                  {!subdomainStatus.checking && subdomainStatus.available === false && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                    </div>
+                  )}
+                </div>
+                <span className="text-warm-gray-500 text-sm whitespace-nowrap">.ugc.community</span>
+              </div>
+              {subdomainStatus.available === true && subdomain.length >= 3 && (
+                <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  Available! Your portfolio will be at {subdomain}.ugc.community
+                </p>
+              )}
+              {subdomainStatus.available === false && (
+                <div className="mt-1.5">
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {subdomainStatus.error}
+                  </p>
+                  {subdomainStatus.suggestions.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-warm-gray-500 mb-1">Try one of these instead:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {subdomainStatus.suggestions.map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            onClick={() => setSubdomain(suggestion)}
+                            className="text-xs px-2 py-1 rounded-full bg-warm-gray-100 text-warm-gray-700 hover:bg-coral/10 hover:text-coral transition-colors"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-                  {/* Remove button */}
+        {/* Step 2: Social Media */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+              <Instagram className="w-4 h-4" />
+              Social Media Handles
+            </h3>
+            <p className="text-xs text-warm-gray-500">Add your social media profiles to display on your media kit</p>
+
+            <div className="space-y-3">
+              {socialMediaHandles.map((handle, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="relative">
+                    <select
+                      value={handle.platform}
+                      onChange={(e) => updateSocialHandle(index, "platform", e.target.value)}
+                      className="appearance-none pl-9 pr-8 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white text-sm min-w-[140px]"
+                    >
+                      {SOCIAL_PLATFORMS.map((platform) => (
+                        <option key={platform.id} value={platform.id}>
+                          {platform.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-warm-gray-500">
+                      {getPlatformIcon(handle.platform)}
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={handle.handle}
+                    onChange={(e) => updateSocialHandle(index, "handle", e.target.value)}
+                    placeholder={SOCIAL_PLATFORMS.find((p) => p.id === handle.platform)?.placeholder || "@username"}
+                    className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                  />
                   <button
                     type="button"
-                    onClick={() => removeInspirationUrl(index)}
-                    disabled={inspirationUrls.length === 1}
+                    onClick={() => removeSocialHandle(index)}
+                    disabled={socialMediaHandles.length === 1}
                     className={`p-2 rounded-[--radius-md] transition-colors ${
-                      inspirationUrls.length === 1
+                      socialMediaHandles.length === 1
                         ? "text-warm-gray-300 cursor-not-allowed"
                         : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
                     }`}
-                    title="Remove"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                {urlErrors[index] && (
-                  <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {urlErrors[index]}
-                  </p>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addSocialHandle}
+              className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add another handle
+            </button>
           </div>
+        )}
 
-          {/* Add another button */}
-          <button
-            type="button"
-            onClick={addInspirationUrl}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add another website
-          </button>
-        </div>
+        {/* Step 3: Portfolio Content */}
+        {currentStep === 3 && (
+          <div className="space-y-8">
+            {/* Brand Partnerships */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Brand Partnerships (optional)
+              </h3>
+              <p className="text-xs text-warm-gray-500">Add brands you've worked with to showcase your experience</p>
+
+              <div className="space-y-3">
+                {brandPartnerships.map((partnership, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={partnership.name}
+                      onChange={(e) => updateBrandPartnership(index, "name", e.target.value)}
+                      placeholder="Brand name"
+                      className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                    />
+                    <select
+                      value={partnership.type}
+                      onChange={(e) => updateBrandPartnership(index, "type", e.target.value)}
+                      className="px-3 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white text-sm"
+                    >
+                      {PARTNERSHIP_TYPES.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeBrandPartnership(index)}
+                      disabled={brandPartnerships.length === 1}
+                      className={`p-2 rounded-[--radius-md] transition-colors ${
+                        brandPartnerships.length === 1
+                          ? "text-warm-gray-300 cursor-not-allowed"
+                          : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                      }`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addBrandPartnership}
+                className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add another brand
+              </button>
+            </div>
+
+            {/* Videos */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Featured Videos (optional)
+              </h3>
+              <p className="text-xs text-warm-gray-500">Add links to your best-performing videos</p>
+
+              <div className="space-y-3">
+                {videos.map((video, index) => (
+                  <div key={index} className="p-4 border border-warm-gray-200 rounded-[--radius-lg] space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={video.url}
+                        onChange={(e) => updateVideo(index, "url", e.target.value)}
+                        placeholder="https://tiktok.com/..."
+                        className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeVideo(index)}
+                        disabled={videos.length === 1}
+                        className={`p-2 rounded-[--radius-md] transition-colors ${
+                          videos.length === 1
+                            ? "text-warm-gray-300 cursor-not-allowed"
+                            : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={video.title}
+                        onChange={(e) => updateVideo(index, "title", e.target.value)}
+                        placeholder="Video title"
+                        className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                      />
+                      <select
+                        value={video.platform}
+                        onChange={(e) => updateVideo(index, "platform", e.target.value)}
+                        className="px-3 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 bg-white text-sm"
+                      >
+                        {VIDEO_PLATFORMS.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addVideo}
+                className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add another video
+              </button>
+            </div>
+
+            {/* Images */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Featured Images (optional)
+              </h3>
+              <p className="text-xs text-warm-gray-500">Add links to your best product photos or content images</p>
+
+              <div className="space-y-3">
+                {images.map((image, index) => (
+                  <div key={index} className="p-4 border border-warm-gray-200 rounded-[--radius-lg] space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={image.url}
+                        onChange={(e) => updateImage(index, "url", e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        disabled={images.length === 1}
+                        className={`p-2 rounded-[--radius-md] transition-colors ${
+                          images.length === 1
+                            ? "text-warm-gray-300 cursor-not-allowed"
+                            : "text-warm-gray-400 hover:text-red-500 hover:bg-red-50"
+                        }`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={image.title}
+                        onChange={(e) => updateImage(index, "title", e.target.value)}
+                        placeholder="Image title"
+                        className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={image.category}
+                        onChange={(e) => updateImage(index, "category", e.target.value)}
+                        placeholder="Category (e.g., Product Shot)"
+                        className="flex-1 px-4 py-2.5 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addImage}
+                className="inline-flex items-center gap-1.5 text-sm text-coral hover:text-coral/80 font-medium transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add another image
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Services */}
+        {currentStep === 4 && (
+          <div className="space-y-6">
+            <h3 className="text-sm font-medium text-warm-gray-900 flex items-center gap-2">
+              <Briefcase className="w-4 h-4" />
+              Services You Offer
+            </h3>
+            <p className="text-xs text-warm-gray-500">Select the services you want to offer to brands</p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {AVAILABLE_SERVICES.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => toggleService(service.id)}
+                  className={`p-4 text-left border rounded-[--radius-lg] transition-all ${
+                    selectedServices.includes(service.id)
+                      ? "border-coral bg-coral/5 ring-1 ring-coral"
+                      : "border-warm-gray-200 hover:border-warm-gray-300"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
+                        selectedServices.includes(service.id)
+                          ? "bg-coral border-coral text-white"
+                          : "border-warm-gray-300"
+                      }`}
+                    >
+                      {selectedServices.includes(service.id) && <Check className="w-3 h-3" />}
+                    </div>
+                    <div>
+                      <p className="font-medium text-warm-gray-900 text-sm">{service.title}</p>
+                      <p className="text-xs text-warm-gray-500 mt-0.5">{service.description}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Error/Success Messages */}
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[--radius-md]">{error}</p>
+          <p className="mt-6 text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[--radius-md]">{error}</p>
         )}
         {successMessage && (
-          <p className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-[--radius-md] flex items-center gap-2">
+          <p className="mt-6 text-sm text-green-600 bg-green-50 px-4 py-2 rounded-[--radius-md] flex items-center gap-2">
             <Check className="w-4 h-4" />
             {successMessage}
           </p>
         )}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={
-            isSubmitting ||
-            portfolioVision.length < 10 ||
-            subdomain.length < 3 ||
-            subdomainStatus.available === false ||
-            subdomainStatus.checking ||
-            Object.keys(urlErrors).length > 0
-          }
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {hasSubmitted ? "Updating..." : "Creating your portfolio..."}
-            </>
-          ) : hasSubmitted ? (
-            "Update Responses"
+        {/* Navigation Buttons */}
+        <div className="mt-8 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+              currentStep === 1
+                ? "text-warm-gray-300 cursor-not-allowed"
+                : "text-warm-gray-600 hover:text-warm-gray-900 hover:bg-warm-gray-100"
+            }`}
+          >
+            Back
+          </button>
+
+          {currentStep < totalSteps ? (
+            <button
+              type="button"
+              onClick={nextStep}
+              className="px-6 py-2.5 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity flex items-center gap-2"
+            >
+              Continue
+              <ArrowRight className="w-4 h-4" />
+            </button>
           ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Generate My Portfolio
-            </>
+            <button
+              type="submit"
+              disabled={isSubmitting || subdomainStatus.checking}
+              className="px-6 py-2.5 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {hasSubmitted ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  {hasSubmitted ? "Update Media Kit" : "Generate My Media Kit"}
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       </form>
 
-      {/* Calendly Link - Now secondary */}
-      <div className="px-6 pb-6 pt-2">
+      {/* Calendly Link */}
+      <div className="px-6 pb-6">
         <div className="border-t border-warm-gray-100 pt-6">
           <div className="flex items-center gap-3 text-warm-gray-600">
             <Calendar className="w-5 h-5 text-warm-gray-400 flex-shrink-0" />
             <p className="text-sm">
-              Want to chat about your portfolio?{" "}
+              Have questions?{" "}
               <a
                 href={CALENDLY_URL}
                 target="_blank"

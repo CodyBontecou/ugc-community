@@ -100,9 +100,11 @@ async function main() {
     subdomain: q.userSubdomain || "creator",
   };
 
-  console.log("Portfolio Vision:");
-  console.log(`  ${q.portfolioVision.substring(0, 100)}...`);
-  console.log("");
+  if (q.portfolioVision) {
+    console.log("Portfolio Vision:");
+    console.log(`  ${q.portfolioVision.substring(0, 100)}...`);
+    console.log("");
+  }
 
   if (q.inspiringBrands) {
     console.log("Inspiring Brands:");

@@ -26,7 +26,7 @@ export interface PortfolioProjectData {
 }
 
 export interface QuestionnaireData {
-  portfolioVision: string;
+  portfolioVision: string | null;
   inspiringBrands: string | null;
   portfolioExamples: string | null;
   socialMediaHandles?: SocialMediaHandle[];
@@ -65,9 +65,11 @@ export function buildPortfolioPrompt(data: QuestionnaireData): string {
   sections.push(formatStyleDirectiveForPrompt(styleDirective, userStyleInput));
 
   // Creator's Vision
-  sections.push(`## Creator's Vision
+  if (data.portfolioVision) {
+    sections.push(`## Creator's Vision
 
 ${data.portfolioVision}`);
+  }
 
   // Creator Contact & Social Media
   const contactParts: string[] = [];

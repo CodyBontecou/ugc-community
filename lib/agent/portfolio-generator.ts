@@ -666,7 +666,7 @@ export async function generatePortfolio(
     console.log("Generating favicon...");
     const faviconResult = await generatePortfolioFavicon(
       questionnaire.creatorName,
-      questionnaire.portfolioVision
+      questionnaire.portfolioVision || ""
     );
 
     // Inject tracking pixel, contact form handler, and favicon links
