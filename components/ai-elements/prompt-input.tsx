@@ -339,6 +339,8 @@ export type PromptInputProps = Omit<
   // Minimal constraints
   maxFiles?: number;
   maxFileSize?: number; // bytes
+  // Disable focus ring on the input group
+  noFocusRing?: boolean;
   onError?: (err: {
     code: "max_files" | "max_file_size" | "accept";
     message: string;
@@ -357,6 +359,7 @@ export const PromptInput = ({
   syncHiddenInput,
   maxFiles,
   maxFileSize,
+  noFocusRing,
   onError,
   onSubmit,
   children,
@@ -770,7 +773,7 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup className="overflow-hidden" noFocusRing={noFocusRing}>{children}</InputGroup>
       </form>
     </>
   );

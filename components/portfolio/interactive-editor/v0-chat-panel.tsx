@@ -427,7 +427,7 @@ export function V0ChatPanel({
               placeholder="Ask a follow-up..."
               disabled={isStreaming}
               rows={1}
-              className="w-full px-4 py-3 pr-24 bg-[#1f1f1f] text-white placeholder-[#666] rounded-xl resize-none focus:outline-none focus:ring-1 focus:ring-[#333] text-sm"
+              className="w-full px-4 py-3 pr-24 bg-[#1f1f1f] text-white placeholder-[#999] rounded-xl resize-none focus:outline-none focus:ring-0 text-sm"
             />
             <div className="absolute right-2 bottom-2 flex items-center gap-1">
               <button
@@ -462,7 +462,7 @@ export function V0ChatPanel({
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="p-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-2 !bg-white !text-black rounded-lg hover:!bg-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Send size={18} />
                 </button>

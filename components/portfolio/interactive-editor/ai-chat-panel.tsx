@@ -714,7 +714,14 @@ export function AIChatPanel({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border">
+      <div 
+        className="p-4 border-t border-border" 
+        style={{ 
+          ['--ring' as string]: 'transparent', 
+          ['--tw-ring-color' as string]: 'transparent',
+          ['--color-ring' as string]: 'transparent'
+        }}
+      >
         {/* Attachments Preview */}
         {attachments.length > 0 && (
           <div className="mb-3">
@@ -752,7 +759,8 @@ export function AIChatPanel({
           }}
           accept="image/*"
           multiple
-          className="bg-secondary rounded-xl [&_[data-slot=input-group]]:ring-0 [&_[data-slot=input-group]]:has-[:focus-visible]:ring-0 [&_[data-slot=input-group]]:has-[:focus-visible]:border-border [&_[data-slot=input-group]]:focus-within:ring-0 [&_[data-slot=input-group]]:outline-none"
+          noFocusRing={true}
+          className="bg-secondary rounded-xl [&_[data-slot=input-group]]:border-[#333] [&_[data-slot=input-group]]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:border-[#333]"
         >
           <PromptInputHeader>
             {/* File input handler for PromptInputActionAddAttachments */}
@@ -766,7 +774,7 @@ export function AIChatPanel({
             disabled={isStreaming}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="min-h-[60px] bg-transparent border-none focus:ring-0"
+            className="min-h-[60px] bg-transparent !border-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-transparent focus-visible:!border-transparent focus-visible:!shadow-none !outline-none"
           />
           <PromptInputFooter>
             <PromptInputTools>
@@ -786,7 +794,7 @@ export function AIChatPanel({
                 <X size={16} />
               </PromptInputButton>
             ) : (
-              <PromptInputSubmit />
+              <PromptInputSubmit className="!bg-white !text-black hover:!bg-gray-200" />
             )}
           </PromptInputFooter>
         </PromptInput>
