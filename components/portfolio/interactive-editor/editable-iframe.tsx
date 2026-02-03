@@ -12,6 +12,7 @@ interface EditableIframeProps {
   selectedSelector?: string | null;
   isRefreshLoading?: boolean;
   isDesignMode?: boolean;
+  isResizing?: boolean;
   className?: string;
 }
 
@@ -23,6 +24,7 @@ export function EditableIframe({
   selectedSelector,
   isRefreshLoading = false,
   isDesignMode = false,
+  isResizing = false,
   className = "",
 }: EditableIframeProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -116,6 +118,7 @@ export function EditableIframe({
       ref={iframeRef}
       title="Portfolio Preview"
       className={`w-full h-full border-0 ${className}`}
+      style={{ pointerEvents: isResizing ? "none" : "auto" }}
       sandbox="allow-scripts allow-same-origin"
     />
   );

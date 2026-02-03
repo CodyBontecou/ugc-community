@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ArrowLeft, Settings2, Sparkles, ImageIcon, Video, Plus } from "lucide-react";
+import { ChevronRight, Settings2, ImageIcon, Video } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -35,6 +35,9 @@ import {
   PromptInputActionMenuContent,
   PromptInputActionAddAttachments,
   PromptInputHeader,
+  PromptInputProvider,
+  useProviderAttachments,
+  usePromptInputController,
 } from "@/components/ai-elements/prompt-input";
 import {
   Attachments,
@@ -60,7 +63,8 @@ interface DesignPanelProps {
   onAddVideo?: () => void;
 }
 
-export function DesignPanel({
+// Inner component that uses the provider hooks
+function DesignPanelContent({
   designSystem,
   onDesignSystemChange,
   selectedElement,
@@ -73,21 +77,11 @@ export function DesignPanel({
   onAddVideo,
 }: DesignPanelProps) {
   const [activePanel, setActivePanel] = useState<Panel>("main");
-  const [elementChatInput, setElementChatInput] = useState("");
-  const [chatAttachments, setChatAttachments] = useState<AttachmentData[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
-  const generateId = () => Math.random().toString(36).substring(7);
-
-  const handleRemoveAttachment = useCallback((id: string) => {
-    setChatAttachments((prev) => {
-      const found = prev.find((a) => a.id === id);
-      if (found?.type === "file" && found.url) {
-        URL.revokeObjectURL(found.url);
-      }
-      return prev.filter((a) => a.id !== id);
-    });
-  }, []);
+  // Use provider for attachments and text input
+  const { files: attachments, add: addAttachments, remove: removeAttachment, clear: clearAttachments } = useProviderAttachments();
+  const { textInput } = usePromptInputController();
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -121,17 +115,10 @@ export function DesignPanel({
     if (files && files.length > 0) {
       const imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
       if (imageFiles.length > 0) {
-        const newAttachments: AttachmentData[] = imageFiles.map((file) => ({
-          id: generateId(),
-          type: "file" as const,
-          url: URL.createObjectURL(file),
-          mediaType: file.type,
-          filename: file.name,
-        }));
-        setChatAttachments((prev) => [...prev, ...newAttachments]);
+        addAttachments(imageFiles);
       }
     }
-  }, []);
+  }, [addAttachments]);
 
   const handleFontChange = (fonts: DesignSystem["fonts"]) => {
     onDesignSystemChange({ ...designSystem, fonts });
@@ -158,13 +145,6 @@ export function DesignPanel({
         ...presetValues,
       },
     });
-  };
-
-  const handleElementChatSubmit = () => {
-    if (elementChatInput.trim() && selectedElement) {
-      onElementChat(elementChatInput);
-      setElementChatInput("");
-    }
   };
 
   // If element is selected, show element properties panel
@@ -220,15 +200,21 @@ export function DesignPanel({
             Save before refining this element
           </p>
           
-          {/* Attachments Preview */}
-          {chatAttachments.length > 0 && (
+          {/* Attachments Preview - using provider state */}
+          {attachments.length > 0 && (
             <div className="mb-3">
               <Attachments variant="inline">
-                {chatAttachments.map((attachment) => (
+                {attachments.map((attachment) => (
                   <Attachment
                     key={attachment.id}
-                    data={attachment}
-                    onRemove={() => handleRemoveAttachment(attachment.id)}
+                    data={{
+                      id: attachment.id,
+                      type: "file",
+                      url: attachment.url || "",
+                      mediaType: attachment.mediaType,
+                      filename: attachment.filename,
+                    }}
+                    onRemove={() => removeAttachment(attachment.id)}
                   >
                     <AttachmentPreview />
                     <AttachmentInfo />
@@ -240,35 +226,23 @@ export function DesignPanel({
           )}
           
           <PromptInput
-            onSubmit={({ text, files }) => {
-              // Handle any additional files from paste
-              if (files && files.length > 0) {
-                const newAttachments: AttachmentData[] = files.map((file) => ({
-                  id: generateId(),
-                  type: "file" as const,
-                  url: file.url || "",
-                  mediaType: file.mediaType,
-                  filename: file.filename,
-                }));
-                setChatAttachments((prev) => [...prev, ...newAttachments]);
-              }
+            onSubmit={({ text }) => {
               if (text?.trim()) {
                 onElementChat(text);
-                setElementChatInput("");
-                setChatAttachments([]);
+                clearAttachments();
+                textInput.clear();
               }
             }}
             accept="image/*"
             multiple
-            className="bg-secondary rounded-xl"
+            noFocusRing={true}
+            className="bg-secondary rounded-xl [&_[data-slot=input-group]]:border-[#333] [&_[data-slot=input-group]]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:border-[#333]"
           >
             <PromptInputHeader />
             <PromptInputTextarea
               placeholder="Refine this element..."
               disabled={isStreaming}
-              value={elementChatInput}
-              onChange={(e) => setElementChatInput(e.target.value)}
-              className="min-h-[40px] bg-transparent border-none focus:ring-0 text-sm"
+              className="min-h-[40px] bg-transparent !border-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-transparent focus-visible:!border-transparent focus-visible:!shadow-none !outline-none text-sm"
             />
             <PromptInputFooter>
               <PromptInputTools>
@@ -279,7 +253,7 @@ export function DesignPanel({
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
               </PromptInputTools>
-              <PromptInputSubmit />
+              <PromptInputSubmit className="!bg-white !text-black hover:!bg-gray-200" />
             </PromptInputFooter>
           </PromptInput>
         </div>
@@ -517,15 +491,21 @@ export function DesignPanel({
       {/* Bottom Chat Input (when no element selected) */}
       {!selectedElement && activePanel === "main" && (
         <div className="p-4 border-t border-border mt-auto">
-          {/* Attachments Preview */}
-          {chatAttachments.length > 0 && (
+          {/* Attachments Preview - using provider state */}
+          {attachments.length > 0 && (
             <div className="mb-3">
               <Attachments variant="inline">
-                {chatAttachments.map((attachment) => (
+                {attachments.map((attachment) => (
                   <Attachment
                     key={attachment.id}
-                    data={attachment}
-                    onRemove={() => handleRemoveAttachment(attachment.id)}
+                    data={{
+                      id: attachment.id,
+                      type: "file",
+                      url: attachment.url || "",
+                      mediaType: attachment.mediaType,
+                      filename: attachment.filename,
+                    }}
+                    onRemove={() => removeAttachment(attachment.id)}
                   >
                     <AttachmentPreview />
                     <AttachmentInfo />
@@ -537,32 +517,23 @@ export function DesignPanel({
           )}
           
           <PromptInput
-            onSubmit={({ text, files }) => {
-              // Handle any additional files from paste
-              if (files && files.length > 0) {
-                const newAttachments: AttachmentData[] = files.map((file) => ({
-                  id: generateId(),
-                  type: "file" as const,
-                  url: file.url || "",
-                  mediaType: file.mediaType,
-                  filename: file.filename,
-                }));
-                setChatAttachments((prev) => [...prev, ...newAttachments]);
-              }
+            onSubmit={({ text }) => {
               if (text?.trim()) {
                 onElementChat(text);
-                setChatAttachments([]);
+                clearAttachments();
+                textInput.clear();
               }
             }}
             accept="image/*"
             multiple
-            className="bg-secondary rounded-xl"
+            noFocusRing={true}
+            className="bg-secondary rounded-xl [&_[data-slot=input-group]]:border-[#333] [&_[data-slot=input-group]]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:shadow-none [&_[data-slot=input-group]:has(:focus-visible)]:border-[#333]"
           >
             <PromptInputHeader />
             <PromptInputTextarea
               placeholder="Describe your changes..."
               disabled={isStreaming}
-              className="min-h-[40px] bg-transparent border-none focus:ring-0 text-sm"
+              className="min-h-[40px] bg-transparent !border-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-transparent focus-visible:!border-transparent focus-visible:!shadow-none !outline-none text-sm"
             />
             <PromptInputFooter>
               <PromptInputTools>
@@ -573,11 +544,20 @@ export function DesignPanel({
                   </PromptInputActionMenuContent>
                 </PromptInputActionMenu>
               </PromptInputTools>
-              <PromptInputSubmit />
+              <PromptInputSubmit className="!bg-white !text-black hover:!bg-gray-200" />
             </PromptInputFooter>
           </PromptInput>
         </div>
       )}
     </div>
+  );
+}
+
+// Main export wraps everything in PromptInputProvider
+export function DesignPanel(props: DesignPanelProps) {
+  return (
+    <PromptInputProvider>
+      <DesignPanelContent {...props} />
+    </PromptInputProvider>
   );
 }

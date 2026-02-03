@@ -502,7 +502,7 @@ export function V0Editor({
         <div className="flex items-center gap-3">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <span className="text-white font-semibold text-lg">v0</span>
+            <span className="text-white font-semibold text-lg">ugc.community</span>
             <span className="text-[#666]">/</span>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
@@ -758,6 +758,7 @@ export function V0Editor({
                 selectedSelector={selectedElement?.selector}
                 isRefreshLoading={isRefreshLoading}
                 isDesignMode={sidebarView === "design"}
+                isResizing={isResizing}
               />
             </div>
             {/* Section Navigation */}
@@ -800,7 +801,7 @@ export function V0Editor({
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-3 py-1 text-sm text-black bg-white hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+              className="px-3 py-1 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors disabled:opacity-50"
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
