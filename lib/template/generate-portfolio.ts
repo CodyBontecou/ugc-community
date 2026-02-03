@@ -1,12 +1,26 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import {
-  OnboardingQuestionnaire,
   SocialMediaHandle,
   BrandPartnership,
   VideoEntry,
   ImageEntry,
 } from "@/lib/db/schema";
+
+// Questionnaire data type - flexible to accept both Date and string for timestamps
+export interface QuestionnaireInput {
+  name: string | null;
+  email: string | null;
+  niche: string | null;
+  tagline: string | null;
+  bio: string | null;
+  location: string | null;
+  socialMediaHandles: SocialMediaHandle[] | null;
+  brandPartnerships: BrandPartnership[] | null;
+  videos: VideoEntry[] | null;
+  images: ImageEntry[] | null;
+  selectedServices: string[] | null;
+}
 
 // =====================================================
 // Types
@@ -335,7 +349,7 @@ export function getSocialUrl(handle: SocialHandle): string {
  * Returns an array of files ready to be pushed to GitHub
  */
 export async function generatePortfolioFromTemplate(
-  questionnaire: OnboardingQuestionnaire
+  questionnaire: QuestionnaireInput
 ): Promise<GenerationResult> {
   try {
     // Extract portfolio data from questionnaire
@@ -413,7 +427,7 @@ This site is designed to be deployed on Vercel.
  * Helper to convert questionnaire to portfolio data
  */
 export function questionnaireToPortfolioData(
-  questionnaire: OnboardingQuestionnaire
+  questionnaire: QuestionnaireInput
 ): PortfolioData {
   return {
     name: questionnaire.name || "Creator",
