@@ -353,11 +353,44 @@ export function V0Editor({
     setError(null);
     setSaveSuccess(false);
 
+    // Commit any pending changes before saving
+    let htmlToSave = html;
+    
+    if (pendingStyleChangesRef.current) {
+      const { selector, styles } = pendingStyleChangesRef.current;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlToSave, "text/html");
+      const element = doc.querySelector(selector) as HTMLElement;
+      if (element) {
+        Object.entries(styles).forEach(([key, value]) => {
+          element.style[key as any] = value;
+        });
+        htmlToSave = `<!DOCTYPE html>${doc.documentElement.outerHTML}`;
+      }
+      pendingStyleChangesRef.current = null;
+    }
+    
+    if (pendingContentChangeRef.current) {
+      const { selector, content } = pendingContentChangeRef.current;
+      htmlToSave = replaceElementContent(htmlToSave, selector, content);
+      pendingContentChangeRef.current = null;
+    }
+    
+    // Update HTML state if there were pending changes
+    if (htmlToSave !== html) {
+      setHtml(htmlToSave);
+      setHistory((prev) => ({
+        past: [...prev.past.slice(-MAX_HISTORY_SIZE + 1), prev.present],
+        present: htmlToSave,
+        future: [],
+      }));
+    }
+
     try {
       const response = await fetch(`/api/portfolios/${portfolioId}/html`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ htmlContent: html }),
+        body: JSON.stringify({ htmlContent: htmlToSave }),
       });
 
       if (!response.ok) {
@@ -369,13 +402,20 @@ export function V0Editor({
       await fetch(`/api/portfolios/${portfolioId}/versions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ htmlContent: html }),
+        body: JSON.stringify({ htmlContent: htmlToSave }),
       });
 
       setHasUnsavedChanges(false);
-      initialHtmlRef.current = html;
+      initialHtmlRef.current = htmlToSave;
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
+      
+      // Deselect element after successful save
+      setSelectedElement(null);
+      const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({ type: "deselect" }, "*");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
