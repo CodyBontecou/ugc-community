@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Palette, Mail, History } from "lucide-react";
+import { MessageCircle, Palette, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SidebarView = "chat" | "design" | "history";
@@ -43,16 +43,6 @@ export function EditorSidebarNav({ activeView, onViewChange }: EditorSidebarNavP
           </button>
         ))}
       </nav>
-      
-      {/* Bottom section */}
-      <div className="flex flex-col items-center gap-1 pt-2 border-t border-[#1f1f1f] mx-2">
-        <button
-          className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-md text-[#666] hover:text-white hover:bg-[#1f1f1f]/50 transition-colors"
-          title="Contact"
-        >
-          <Mail size={20} />
-        </button>
-      </div>
     </div>
   );
 }

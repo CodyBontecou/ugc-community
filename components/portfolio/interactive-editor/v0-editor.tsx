@@ -18,8 +18,6 @@ import {
   Redo2,
   ChevronDown,
   Sparkles,
-  Eye,
-  Code,
   Globe,
 } from "lucide-react";
 import { EditableIframe } from "./editable-iframe";
@@ -46,6 +44,8 @@ import {
   applyDesignSystemToHtml,
 } from "@/lib/editor/design-system";
 import { EditorUserMenu } from "./editor-user-menu";
+import { VersionDropdown } from "./version-dropdown";
+import type { PortfolioVersion } from "@/lib/db/schema";
 
 interface V0EditorProps {
   portfolioId: string;
@@ -131,6 +131,11 @@ export function V0Editor({
     latestVersionNumber: null,
   });
   const [deployedHtml, setDeployedHtml] = useState<string | null>(null);
+
+  // Version list and preview state
+  const [versions, setVersions] = useState<PortfolioVersion[]>([]);
+  const [previewingVersionId, setPreviewingVersionId] = useState<string | null>(null);
+  const draftHtmlRef = useRef<string | null>(null);
 
   // Track HTML state before live editing started
   const htmlBeforeLiveEditRef = useRef<string | null>(null);
@@ -544,6 +549,8 @@ export function V0Editor({
           isPublished: data.isPublished,
           latestVersionNumber: data.versions?.[0]?.versionNumber ?? null,
         });
+        // Store full versions list for dropdown
+        setVersions(data.versions || []);
       }
       
       if (portfolioRes.ok) {
@@ -556,6 +563,25 @@ export function V0Editor({
       console.error("Failed to fetch version info:", err);
     }
   }, [portfolioId]);
+
+  // Handle version selection for preview
+  const handleVersionSelect = useCallback((version: PortfolioVersion) => {
+    // Store current draft if not already previewing
+    if (!previewingVersionId) {
+      draftHtmlRef.current = html;
+    }
+    setPreviewingVersionId(version.id);
+    setHtml(version.htmlContent);
+  }, [html, previewingVersionId]);
+
+  // Handle exiting version preview
+  const handleExitVersionPreview = useCallback(() => {
+    if (draftHtmlRef.current) {
+      setHtml(draftHtmlRef.current);
+      draftHtmlRef.current = null;
+    }
+    setPreviewingVersionId(null);
+  }, []);
 
   useEffect(() => {
     fetchVersionInfo();
@@ -810,16 +836,6 @@ export function V0Editor({
               >
                 {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
               </button>
-              
-              {/* View/Code toggle */}
-              <div className="flex items-center bg-[#1f1f1f] rounded-lg p-0.5 ml-2">
-                <button className="p-1.5 rounded-md bg-[#2a2a2a] text-white">
-                  <Eye size={14} />
-                </button>
-                <button className="p-1.5 rounded-md text-[#666] hover:text-white transition-colors">
-                  <Code size={14} />
-                </button>
-              </div>
             </div>
 
             {/* URL Bar */}
@@ -840,8 +856,14 @@ export function V0Editor({
 
             {/* Right controls */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[#666]">Latest</span>
-              <ChevronDown size={14} className="text-[#666]" />
+              <VersionDropdown
+                versions={versions}
+                currentVersionId={previewingVersionId}
+                liveVersionId={versionInfo.liveVersionId}
+                isPreviewingVersion={!!previewingVersionId}
+                onSelectVersion={handleVersionSelect}
+                onExitPreview={handleExitVersionPreview}
+              />
               
               {/* Device toggles */}
               <div className="flex items-center gap-1 ml-4">
