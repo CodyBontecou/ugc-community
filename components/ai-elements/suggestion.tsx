@@ -1,12 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   ScrollArea,
   ScrollBar,
 } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ButtonHTMLAttributes } from "react";
 
 export type SuggestionsProps = ComponentProps<typeof ScrollArea>;
 
@@ -23,16 +22,18 @@ export const Suggestions = ({
   </ScrollArea>
 );
 
-export type SuggestionProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
+export type SuggestionProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
+  variant?: string;
+  size?: string;
 };
 
 export const Suggestion = ({
   suggestion,
   onClick,
   className,
-  variant = "outline",
+  variant,
   size = "sm",
   children,
   ...props
@@ -42,15 +43,22 @@ export const Suggestion = ({
   };
 
   return (
-    <Button
-      className={cn("cursor-pointer rounded-full px-4", className)}
+    <button
+      className={cn(
+        "cursor-pointer rounded-full px-4 py-2 text-sm font-medium",
+        "border border-solid border-[#444] bg-[#1a1a1a]",
+        "shadow-sm hover:shadow-md",
+        "hover:bg-[#2a2a2a] hover:border-[#666]",
+        "active:scale-[0.98]",
+        "transition-all duration-150 ease-in-out",
+        "disabled:pointer-events-none disabled:opacity-50",
+        className
+      )}
       onClick={handleClick}
-      size={size}
       type="button"
-      variant={variant}
       {...props}
     >
       {children || suggestion}
-    </Button>
+    </button>
   );
 };

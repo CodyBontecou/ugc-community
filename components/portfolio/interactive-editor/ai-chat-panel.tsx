@@ -553,21 +553,21 @@ function AIChatPanelContent({
             
             {/* Initial suggestions */}
             <div className="mt-6">
-              <Suggestions className="justify-center">
+              <Suggestions className="justify-center flex-wrap gap-3">
                 <Suggestion
                   suggestion="Improve the design"
                   onClick={handleSuggestionClick}
-                  className="bg-secondary text-secondary-foreground border-border"
+                  className="!border !border-solid !border-[#555] !bg-[#2a2a2a] hover:!bg-[#3a3a3a] hover:!border-[#777] text-white"
                 />
                 <Suggestion
                   suggestion="Add a testimonials section"
                   onClick={handleSuggestionClick}
-                  className="bg-secondary text-secondary-foreground border-border"
+                  className="!border !border-solid !border-[#555] !bg-[#2a2a2a] hover:!bg-[#3a3a3a] hover:!border-[#777] text-white"
                 />
                 <Suggestion
                   suggestion="Make it more modern"
                   onClick={handleSuggestionClick}
-                  className="bg-secondary text-secondary-foreground border-border"
+                  className="!border !border-solid !border-[#555] !bg-[#2a2a2a] hover:!bg-[#3a3a3a] hover:!border-[#777] text-white"
                 />
               </Suggestions>
             </div>
@@ -661,14 +661,14 @@ function AIChatPanelContent({
                   {/* Suggestions */}
                   {message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-border">
-                      <Suggestions>
+                      <Suggestions className="flex-wrap gap-3">
                         {message.suggestions.map((suggestion, i) => (
                           <Suggestion
                             key={i}
                             suggestion={suggestion.title}
                             onClick={handleSuggestionClick}
                             disabled={isStreaming}
-                            className="bg-secondary text-secondary-foreground border-border hover:bg-accent"
+                            className="!border !border-solid !border-[#555] !bg-[#2a2a2a] hover:!bg-[#3a3a3a] hover:!border-[#777] text-white"
                           />
                         ))}
                       </Suggestions>
