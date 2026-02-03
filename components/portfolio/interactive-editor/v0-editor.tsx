@@ -426,6 +426,16 @@ export function V0Editor({
 
   // Handle element content changes from design panel
   const handleElementContentChange = useCallback((selector: string, content: string) => {
+    // Send to iframe for immediate visual update
+    const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: "apply-element-content",
+        selector,
+        content,
+      }, "*");
+    }
+    // Also update the HTML state
     const newHtml = replaceElementContent(html, selector, content);
     if (newHtml !== html) {
       updateHtml(newHtml);

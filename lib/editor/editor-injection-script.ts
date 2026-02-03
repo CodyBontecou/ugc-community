@@ -472,6 +472,14 @@ export const EDITOR_INJECTION_SCRIPT = `
     }
   }
 
+  // Apply content to a specific element (real-time text update)
+  function applyElementContent(selector, content) {
+    const element = document.querySelector(selector);
+    if (element) {
+      element.textContent = content;
+    }
+  }
+
   // Listen for messages from parent
   window.addEventListener('message', (e) => {
     if (e.data?.type === 'set-design-mode') {
@@ -515,6 +523,9 @@ export const EDITOR_INJECTION_SCRIPT = `
     }
     if (e.data?.type === 'apply-element-styles' && e.data?.selector && e.data?.styles) {
       applyElementStyles(e.data.selector, e.data.styles);
+    }
+    if (e.data?.type === 'apply-element-content' && e.data?.selector && e.data?.content !== undefined) {
+      applyElementContent(e.data.selector, e.data.content);
     }
   });
 

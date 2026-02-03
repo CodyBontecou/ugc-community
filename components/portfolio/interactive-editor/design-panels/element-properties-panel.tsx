@@ -130,10 +130,9 @@ export function ElementPropertiesPanel({
     onStyleChange({ backgroundColor: value });
   };
 
-  const handleContentBlur = () => {
-    if (content !== selectedElement.content) {
-      onContentChange(content);
-    }
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    onContentChange(newContent);
   };
 
   const toggleDecoration = (decoration: string) => {
@@ -181,8 +180,7 @@ export function ElementPropertiesPanel({
           <label className="text-sm text-foreground mb-2 block">Content</label>
           <Textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onBlur={handleContentBlur}
+            onChange={(e) => handleContentChange(e.target.value)}
             className="min-h-[80px] bg-[#1f1f1f] border-[#333] text-white resize-none"
             placeholder="Element content..."
           />
