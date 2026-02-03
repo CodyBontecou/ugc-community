@@ -125,8 +125,8 @@ img {
   border: 2px solid var(--color-warm-gray-100);
 }
 
-/* Focus styles */
-:focus-visible {
+/* Focus styles - exclude form controls that handle their own focus */
+:focus-visible:not(input):not(textarea):not(select):not(button):not([data-slot]) {
   outline: 2px solid var(--color-rose);
   outline-offset: 2px;
 }
