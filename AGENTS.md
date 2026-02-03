@@ -2,6 +2,15 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
+## Test Credentials
+
+Test user credentials are stored in `.pi/test-credentials.md`. Quick reference:
+
+- **Email:** `test@example.com`
+- **Password:** `testpassword123`
+
+Recreate with: `npx tsx scripts/seed-test-user.ts`
+
 ## Quick Reference
 
 ```bash
