@@ -153,15 +153,9 @@ export function V0ChatPanel({
           const assistantMessage: Message = {
             id: generateId(),
             role: "assistant",
-            content: `That looks great! I've updated the ${getElementTypeName(selectedElement.tagName).toLowerCase()} based on your request.\n\nWhat would you like me to help you with next? Here are some ideas:`,
+            content: `That looks great! I've updated the ${getElementTypeName(selectedElement.tagName).toLowerCase()} based on your request. What would you like to change next?`,
             timestamp: new Date(),
             thinkingTime,
-            question: "What would you like me to help you build?",
-            suggestions: [
-              { title: "Make it more prominent", description: "Increase size, add emphasis, or use bolder colors" },
-              { title: "Add some animation", description: "Subtle transitions or hover effects" },
-              { title: "Change the color scheme", description: "Try different colors or gradients" },
-            ],
           };
 
           setMessages((prev) =>
@@ -215,15 +209,9 @@ export function V0ChatPanel({
           const assistantMessage: Message = {
             id: generateId(),
             role: "assistant",
-            content: `I've made the requested changes to your portfolio. The updates have been applied to the preview.\n\nWhat would you like me to help you with next? Here are some ideas based on your portfolio:`,
+            content: `I've made the requested changes to your portfolio. What would you like me to help you with next?`,
             timestamp: new Date(),
             thinkingTime,
-            question: "What would you like me to help you build?",
-            suggestions: [
-              { title: "Media Kit / Portfolio Site", description: "Showcase your work, brand partnerships, and audience stats" },
-              { title: "Link-in-Bio Page", description: "A custom landing page with links to your content and products" },
-              { title: "Personal Brand Website", description: "A full site with your story, services, and contact form" },
-            ],
           };
 
           setMessages((prev) =>
@@ -291,37 +279,6 @@ export function V0ChatPanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Selected Element Indicator */}
-      <AnimatePresence>
-        {selectedElement && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 bg-[#1a2f1a] border-b border-[#1f1f1f]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-sm text-green-400">
-                  Editing: {getElementTypeName(selectedElement.tagName)}
-                </span>
-              </div>
-              <button
-                onClick={onDeselect}
-                className="p-1 text-[#666] hover:text-white transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <p className="text-xs text-[#666] mt-1 truncate">
-              {selectedElement.content?.slice(0, 100)}
-              {(selectedElement.content?.length || 0) > 100 ? "..." : ""}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && (

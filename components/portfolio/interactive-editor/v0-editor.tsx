@@ -94,15 +94,20 @@ export function V0Editor({
   const [isRefreshLoading, setIsRefreshLoading] = useState(false);
   const refreshAbortControllerRef = useRef<AbortController | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState<"image" | "video" | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("editor-sidebar-collapsed") === "true";
-  });
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    if (typeof window === "undefined") return 384;
-    const saved = localStorage.getItem("editor-sidebar-width");
-    return saved ? Math.min(Math.max(Number(saved), 280), 600) : 384;
-  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(384);
+  
+  // Hydrate sidebar state from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    const savedCollapsed = localStorage.getItem("editor-sidebar-collapsed");
+    if (savedCollapsed === "true") {
+      setIsSidebarCollapsed(true);
+    }
+    const savedWidth = localStorage.getItem("editor-sidebar-width");
+    if (savedWidth) {
+      setSidebarWidth(Math.min(Math.max(Number(savedWidth), 280), 600));
+    }
+  }, []);
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   

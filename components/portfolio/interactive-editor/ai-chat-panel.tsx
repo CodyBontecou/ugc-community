@@ -297,11 +297,6 @@ function AIChatPanelContent({
                 output: { status: "success", changes: "Applied edits" },
               },
             ],
-            suggestions: [
-              { title: "Make it more prominent", description: "Increase size or emphasis" },
-              { title: "Add animation", description: "Subtle transitions" },
-              { title: "Change colors", description: "Try different colors" },
-            ],
           };
 
           setMessages((prev) =>
@@ -388,11 +383,6 @@ function AIChatPanelContent({
                 state: "output-available",
                 output: { status: "success", action: "Page updated" },
               },
-            ],
-            suggestions: [
-              { title: "Add a new section", description: "Testimonials, FAQ, etc." },
-              { title: "Update the hero", description: "Change headline or layout" },
-              { title: "Improve the design", description: "Colors, spacing, typography" },
             ],
           };
 
@@ -516,37 +506,6 @@ function AIChatPanelContent({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Selected Element Indicator */}
-      <AnimatePresence>
-        {selectedElement && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-3 bg-green-950/50 border-b border-border"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-sm text-green-400">
-                  Editing: {getElementTypeName(selectedElement.tagName)}
-                </span>
-              </div>
-              <button
-                onClick={onDeselect}
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 truncate">
-              {selectedElement.content?.slice(0, 100)}
-              {(selectedElement.content?.length || 0) > 100 ? "..." : ""}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {messages.length === 0 && (
@@ -780,12 +739,14 @@ function AIChatPanelContent({
           />
           <PromptInputFooter>
             <PromptInputTools>
-              <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger />
-                <PromptInputActionMenuContent>
-                  <PromptInputActionAddAttachments label="Add images" />
-                </PromptInputActionMenuContent>
-              </PromptInputActionMenu>
+              {attachments.length === 0 && (
+                <PromptInputActionMenu>
+                  <PromptInputActionMenuTrigger />
+                  <PromptInputActionMenuContent>
+                    <PromptInputActionAddAttachments label="Add images" />
+                  </PromptInputActionMenuContent>
+                </PromptInputActionMenu>
+              )}
             </PromptInputTools>
             {isStreaming ? (
               <PromptInputButton
