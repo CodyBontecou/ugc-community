@@ -6,8 +6,7 @@ import {
   onboardingQuestionnaires,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { generatePortfolio } from "@/lib/agent/portfolio-generator";
-import { QuestionnaireData } from "@/lib/agent/portfolio-prompt";
+import { generatePortfolioFromTemplate } from "@/lib/template/generate-portfolio";
 import {
   createPortfolioRepo,
   pushFilesToRepo,
@@ -26,7 +25,7 @@ import { Octokit } from "@octokit/rest";
 export const generatePortfolioFunction = inngest.createFunction(
   {
     id: "generate-portfolio",
-    retries: 1, // Only retry once - generation is expensive
+    retries: 1,
   },
   { event: "portfolio/generate.requested" },
   async ({ event, step }) => {
@@ -44,12 +43,7 @@ export const generatePortfolioFunction = inngest.createFunction(
       // Step 1: Load data and validate
       const data = await step.run("load-data", async () => {
         const [questionnaire] = await db
-          .select({
-            portfolioVision: onboardingQuestionnaires.portfolioVision,
-            inspiringBrands: onboardingQuestionnaires.inspiringBrands,
-            portfolioExamples: onboardingQuestionnaires.portfolioExamples,
-            socialMediaHandles: onboardingQuestionnaires.socialMediaHandles,
-          })
+          .select()
           .from(onboardingQuestionnaires)
           .where(eq(onboardingQuestionnaires.id, questionnaireId));
 
@@ -103,25 +97,15 @@ export const generatePortfolioFunction = inngest.createFunction(
         };
       });
 
-      // Step 2: Generate portfolio with Claude
+      // Step 2: Generate portfolio from template
       await step.run("update-status-generating", async () => {
         await updateStatus({ status: "generating" });
       });
 
       const generationResult = await step.run(
-        "generate-with-claude",
+        "generate-from-template",
         async () => {
-          const questionnaireData: QuestionnaireData = {
-            portfolioVision: data.questionnaire.portfolioVision,
-            inspiringBrands: data.questionnaire.inspiringBrands,
-            portfolioExamples: data.questionnaire.portfolioExamples,
-            socialMediaHandles: data.questionnaire.socialMediaHandles || [],
-            creatorName: data.user.name,
-            creatorEmail: data.user.email,
-            subdomain: data.user.subdomain!,
-          };
-
-          const result = await generatePortfolio(questionnaireData);
+          const result = await generatePortfolioFromTemplate(data.questionnaire);
           if (!result.success) {
             throw new Error(result.error || "Generation failed");
           }
@@ -222,9 +206,10 @@ export const generatePortfolioFunction = inngest.createFunction(
         let vercelProjectId = data.user.vercelProjectId;
 
         if (!vercelProjectId) {
+          // Create Vercel project with Next.js framework (not static)
           const vercelProject = await createProject({
             name: `${data.user.subdomain}-portfolio`,
-            framework: null, // Static site - no framework/build step
+            framework: "nextjs",
             gitRepository: {
               type: "github",
               repo: githubResult.repoFullName,

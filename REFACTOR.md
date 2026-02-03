@@ -60,31 +60,29 @@ This document tracks features for the major refactor. Coding agents should read 
 
 | Feature | Decision | Status | Notes |
 |---------|----------|--------|-------|
-| AI Portfolio Generation | ❓ | [ ] | Claude API, ~$cost per generation |
-| Onboarding Questionnaire | ❓ | [ ] | Depends on AI generation |
-| Portfolio Projects | ❓ | [ ] | |
-| Project Metadata | ❓ | [ ] | |
-| Project Ordering | ❓ | [ ] | |
-| Featured Projects | ❓ | [ ] | |
-| Vercel Deployment | ❓ | [ ] | |
+| AI Portfolio Generation | ❌ REMOVE | [x] | Replaced with template-based system |
+| Inngest Portfolio Generation | ❌ REMOVE | [x] | No longer needed |
+| Claude API Integration | ❌ REMOVE | [x] | No longer needed for portfolios |
+| Template-Based Portfolios | ✅ KEEP | [x] | New system using ugc-template/media-kit |
+| Onboarding Questionnaire | 🔄 REPLACE | [x] | Updated for template data collection |
+| GitHub Integration | ✅ KEEP | [ ] | Used for template deployment |
+| Vercel Deployment | ✅ KEEP | [ ] | For portfolio hosting |
 | Site Enable/Disable | ❓ | [ ] | |
-| GitHub Integration | ❓ | [ ] | Admin-only, for deployments |
+| Portfolio Projects | ❓ | [ ] | May be deprecated |
 
 **Files affected:**
-- `lib/agent/`
-- `lib/inngest/functions/generate-portfolio.ts`
-- `lib/vercel/`
-- `lib/github/`
-- `app/api/admin/github/`
-- `app/api/admin/creators/`
-- `app/api/admin/questionnaires/`
-- `app/api/portfolio-projects/`
-- `app/api/onboarding/`
-- `components/portfolio/`
-- `components/dashboard/onboarding-form.tsx`
-- `components/dashboard/portfolio-status.tsx`
+- `lib/agent/` - ❌ TO REMOVE (legacy AI generation)
+- `lib/inngest/functions/generate-portfolio.ts` - ❌ TO REMOVE
+- `lib/template/` - ✅ NEW (template-based generation)
+- `lib/vercel/` - Keep for deployment
+- `lib/github/` - Keep for repo management
+- `app/api/onboarding/` - Updated for new schema
+- `components/dashboard/onboarding-form.tsx` - Updated for template data
 
-**Dependencies:** If removing AI generation, also remove questionnaires.
+**Migration Notes:**
+- Template repo: `ugc-template/media-kit`
+- Template populates `lib/data/creator.ts` with user data
+- No AI costs, deterministic generation
 
 ---
 
