@@ -28,6 +28,7 @@ import { MediaLibrary } from "@/components/media/media-library";
 import { EditorSidebarNav, type SidebarView } from "./editor-sidebar-nav";
 import { DesignPanel } from "./design-panel";
 import { HistoryPanel } from "./history-panel";
+import { PublishDialog } from "./publish-dialog";
 import {
   replaceElementContent,
   replaceElementOuter,
@@ -86,6 +87,9 @@ export function V0Editor({
   
   // Design system state
   const [designSystem, setDesignSystem] = useState<DesignSystem>(DEFAULT_DESIGN_SYSTEM);
+
+  // Publish dialog state
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
 
   // Track HTML state before live editing started
   const htmlBeforeLiveEditRef = useRef<string | null>(null);
@@ -525,7 +529,7 @@ export function V0Editor({
           <button
             onClick={handleSave}
             disabled={isSaving || !hasUnsavedChanges}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-black bg-white hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-white bg-[#1f1f1f] hover:bg-[#2a2a2a] rounded-lg transition-colors disabled:opacity-50"
           >
             {isSaving ? (
               <Loader2 size={14} className="animate-spin" />
@@ -534,7 +538,13 @@ export function V0Editor({
             ) : (
               <Save size={14} />
             )}
-            {isSaving ? "Saving..." : saveSuccess ? "Saved!" : "Publish"}
+            {isSaving ? "Saving..." : saveSuccess ? "Saved!" : "Save"}
+          </button>
+          <button
+            onClick={() => setShowPublishDialog(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-black bg-white hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Publish
           </button>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
         </div>
@@ -843,6 +853,23 @@ export function V0Editor({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Publish Dialog */}
+      <PublishDialog
+        open={showPublishDialog}
+        onOpenChange={setShowPublishDialog}
+        portfolioId={portfolioId}
+        html={html}
+        onPublishSuccess={() => {
+          setHasUnsavedChanges(false);
+          initialHtmlRef.current = html;
+        }}
+        onHtmlChange={(newHtml) => {
+          updateHtml(newHtml);
+          initialHtmlRef.current = newHtml;
+          setHasUnsavedChanges(false);
+        }}
+      />
     </div>
   );
 }
