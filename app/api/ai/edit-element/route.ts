@@ -28,6 +28,7 @@ const editElementSchema = z.object({
   tagName: z.string().min(1),
   model: z.string().optional(),
   images: z.array(imageSchema).optional(),
+  imageUrls: z.array(z.string().url()).optional(),
 });
 
 // POST /api/ai/edit-element - Stream AI-generated element edits
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
       tagName: data.tagName,
       quickAction: data.quickAction as QuickAction | undefined,
       fullHtml: data.fullHtml,
+      imageUrls: data.imageUrls,
     });
 
     // Build message content with optional images

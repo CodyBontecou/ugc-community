@@ -170,8 +170,9 @@ export function buildElementEditPrompt(params: {
   quickAction?: QuickAction;
   surroundingContext?: string;
   fullHtml?: string;
+  imageUrls?: string[];
 }): { systemPrompt: string; userPrompt: string } {
-  const { currentContent, outerHtml, instruction, tagName, quickAction, surroundingContext, fullHtml } = params;
+  const { currentContent, outerHtml, instruction, tagName, quickAction, surroundingContext, fullHtml, imageUrls } = params;
 
   let systemPrompt = ELEMENT_EDIT_SYSTEM_PROMPT;
 
@@ -214,6 +215,18 @@ ${currentContent}`;
     userPrompt += `\n\nInstruction: ${refreshPrompt}`;
   } else if (instruction) {
     userPrompt += `\n\nInstruction: ${instruction}`;
+  }
+
+  // Add image URL instructions if images were provided
+  if (imageUrls && imageUrls.length > 0) {
+    userPrompt += `\n\n## Uploaded Image${imageUrls.length > 1 ? 's' : ''}
+The user has uploaded ${imageUrls.length} image${imageUrls.length > 1 ? 's' : ''} that ${imageUrls.length > 1 ? 'are' : 'is'} now stored and ready to use.
+${imageUrls.map((url, i) => `Image ${i + 1} URL: ${url}`).join('\n')}
+
+**IMPORTANT**: If the user wants to replace an image or use the uploaded image, you MUST use the exact URL${imageUrls.length > 1 ? 's' : ''} provided above in the src attribute. Do NOT try to embed base64 data or use any other URL.
+
+Example for replacing an <img> element:
+<img src="${imageUrls[0]}" alt="Descriptive alt text" style="..." />`;
   }
 
   userPrompt += `\n\nReturn the complete ${tagName.toLowerCase()} element with your changes applied. Include the opening and closing tags.`;

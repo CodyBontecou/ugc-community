@@ -144,6 +144,34 @@ function AIChatPanelContent({
     }
   };
 
+  // Upload an image to blob storage and return the URL
+  const uploadImageToBlob = async (blobUrl: string, filename: string, mediaType: string): Promise<string | null> => {
+    try {
+      const response = await fetch(blobUrl);
+      const blob = await response.blob();
+      
+      const formData = new FormData();
+      formData.append("file", blob, filename);
+      formData.append("portfolioId", portfolioId);
+      
+      const uploadResponse = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        console.error("Failed to upload image:", await uploadResponse.text());
+        return null;
+      }
+      
+      const mediaRecord = await uploadResponse.json();
+      return mediaRecord.url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  };
+
   const sendMessage = useCallback(
     async (message: string) => {
       if (!message.trim() && attachments.length === 0) return;
@@ -157,19 +185,31 @@ function AIChatPanelContent({
         filename: a.filename,
       }));
 
-      // Convert attachments to base64 for API
-      const imageAttachments = await Promise.all(
-        attachments
-          .filter((a) => a.mediaType?.startsWith("image/"))
-          .map(async (a) => {
-            if (a.url) {
-              const base64 = await convertBlobUrlToBase64(a.url);
-              return base64 ? { mediaType: a.mediaType, data: base64 } : null;
-            }
-            return null;
-          })
-      );
-      const validImages = imageAttachments.filter((img): img is { mediaType: string; data: string } => img !== null);
+      // Upload images to blob storage and get URLs
+      const imageUrls: string[] = [];
+      const imageAttachments: { mediaType: string; data: string }[] = [];
+      
+      for (const attachment of attachments.filter((a) => a.mediaType?.startsWith("image/"))) {
+        if (attachment.url) {
+          // First, upload to blob storage to get a permanent URL
+          const uploadedUrl = await uploadImageToBlob(
+            attachment.url,
+            attachment.filename || "image.png",
+            attachment.mediaType || "image/png"
+          );
+          
+          if (uploadedUrl) {
+            imageUrls.push(uploadedUrl);
+          }
+          
+          // Also convert to base64 for Claude to see the image (for context)
+          const base64 = await convertBlobUrlToBase64(attachment.url);
+          if (base64) {
+            imageAttachments.push({ mediaType: attachment.mediaType || "image/png", data: base64 });
+          }
+        }
+      }
+      const validImages = imageAttachments;
 
       const userMessage: ChatMessage = {
         id: generateId(),
@@ -233,6 +273,7 @@ function AIChatPanelContent({
               fullHtml,
               tagName: selectedElement.tagName,
               images: validImages.length > 0 ? validImages : undefined,
+              imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
             }),
             signal: abortControllerRef.current.signal,
           });
