@@ -502,33 +502,33 @@ export function PublishDialog({
                 )}
 
                 {/* Deploy Button */}
-                <Button
+                <button
                   onClick={handleDeploy}
                   disabled={!subdomain || availabilityStatus !== "available" || isPublishing}
-                  className="w-full bg-white text-black font-semibold hover:bg-zinc-200 disabled:opacity-100 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border disabled:border-zinc-700"
+                  className="w-full h-10 px-4 rounded-md font-semibold transition-colors flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border disabled:border-zinc-700"
                 >
                   {isPublishing ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       Deploying...
                     </>
                   ) : isPublished && !hasUndeployedChanges ? (
                     <>
-                      <Check className="h-4 w-4 mr-2" />
+                      <Check className="h-4 w-4" />
                       Up to date
                     </>
                   ) : isPublished ? (
                     <>
-                      <Rocket className="h-4 w-4 mr-2" />
+                      <Rocket className="h-4 w-4" />
                       Deploy Changes
                     </>
                   ) : (
                     <>
-                      <Rocket className="h-4 w-4 mr-2" />
+                      <Rocket className="h-4 w-4" />
                       Deploy
                     </>
                   )}
-                </Button>
+                </button>
               </div>
             )}
 
