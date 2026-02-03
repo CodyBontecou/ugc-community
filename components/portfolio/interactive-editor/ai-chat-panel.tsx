@@ -24,6 +24,9 @@ import {
   PromptInputActionMenuContent,
   PromptInputActionAddAttachments,
   PromptInputHeader,
+  PromptInputProvider,
+  useProviderAttachments,
+  usePromptInputController,
 } from "@/components/ai-elements/prompt-input";
 import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
 import {
@@ -87,7 +90,8 @@ interface AIChatPanelProps {
   onStreamingChange: (streaming: boolean) => void;
 }
 
-export function AIChatPanel({
+// Inner component that uses the provider hooks
+function AIChatPanelContent({
   selectedElement,
   portfolioId,
   fullHtml,
@@ -100,9 +104,11 @@ export function AIChatPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streamedContent, setStreamedContent] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<AttachmentData[]>([]);
-  const [inputValue, setInputValue] = useState("");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  
+  // Use provider for attachments and text input
+  const { files: attachments, add: addAttachments, remove: removeAttachment, clear: clearAttachments } = useProviderAttachments();
+  const { textInput } = usePromptInputController();
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -113,16 +119,6 @@ export function AIChatPanel({
   }, [messages, streamedContent]);
 
   const generateId = () => Math.random().toString(36).substring(7);
-
-  const handleRemoveAttachment = useCallback((id: string) => {
-    setAttachments((prev) => {
-      const found = prev.find((a) => a.id === id);
-      if (found?.type === "file" && found.url) {
-        URL.revokeObjectURL(found.url);
-      }
-      return prev.filter((a) => a.id !== id);
-    });
-  }, []);
 
   const convertBlobUrlToBase64 = async (url: string): Promise<string | null> => {
     try {
@@ -148,12 +144,21 @@ export function AIChatPanel({
     async (message: string) => {
       if (!message.trim() && attachments.length === 0) return;
 
+      // Convert attachments to AttachmentData format for storing in message
+      const messageAttachments: AttachmentData[] = attachments.map((a) => ({
+        id: a.id,
+        type: "file" as const,
+        url: a.url || "",
+        mediaType: a.mediaType,
+        filename: a.filename,
+      }));
+
       // Convert attachments to base64 for API
       const imageAttachments = await Promise.all(
         attachments
-          .filter((a) => a.type === "file" && a.mediaType?.startsWith("image/"))
+          .filter((a) => a.mediaType?.startsWith("image/"))
           .map(async (a) => {
-            if (a.type === "file" && a.url) {
+            if (a.url) {
               const base64 = await convertBlobUrlToBase64(a.url);
               return base64 ? { mediaType: a.mediaType, data: base64 } : null;
             }
@@ -167,7 +172,7 @@ export function AIChatPanel({
         role: "user",
         content: message,
         timestamp: new Date(),
-        attachments: attachments.length > 0 ? [...attachments] : undefined,
+        attachments: messageAttachments.length > 0 ? messageAttachments : undefined,
       };
 
       const thinkingMessage: ChatMessage = {
@@ -180,8 +185,8 @@ export function AIChatPanel({
 
       setMessages((prev) => [...prev, userMessage, thinkingMessage]);
       setStreamedContent("");
-      setAttachments([]); // Clear attachments after sending
-      setInputValue("");
+      clearAttachments(); // Clear attachments after sending
+      textInput.clear(); // Clear text input
       onStreamingChange(true);
 
       abortControllerRef.current = new AbortController();
@@ -417,7 +422,7 @@ export function AIChatPanel({
         abortControllerRef.current = null;
       }
     },
-    [selectedElement, portfolioId, fullHtml, onApplyEdit, onFullPageGenerate, onStreamingChange, attachments]
+    [selectedElement, portfolioId, fullHtml, onApplyEdit, onFullPageGenerate, onStreamingChange, attachments, clearAttachments, textInput]
   );
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -470,17 +475,10 @@ export function AIChatPanel({
     if (files && files.length > 0) {
       const imageFiles = Array.from(files).filter(file => file.type.startsWith("image/"));
       if (imageFiles.length > 0) {
-        const newAttachments: AttachmentData[] = imageFiles.map((file) => ({
-          id: generateId(),
-          type: "file" as const,
-          url: URL.createObjectURL(file),
-          mediaType: file.type,
-          filename: file.name,
-        }));
-        setAttachments((prev) => [...prev, ...newAttachments]);
+        addAttachments(imageFiles);
       }
     }
-  }, []);
+  }, [addAttachments]);
 
   return (
     <div 
@@ -722,15 +720,21 @@ export function AIChatPanel({
           ['--color-ring' as string]: 'transparent'
         }}
       >
-        {/* Attachments Preview */}
+        {/* Attachments Preview - now using provider state */}
         {attachments.length > 0 && (
           <div className="mb-3">
             <Attachments variant="inline">
               {attachments.map((attachment) => (
                 <Attachment
                   key={attachment.id}
-                  data={attachment}
-                  onRemove={() => handleRemoveAttachment(attachment.id)}
+                  data={{
+                    id: attachment.id,
+                    type: "file",
+                    url: attachment.url || "",
+                    mediaType: attachment.mediaType,
+                    filename: attachment.filename,
+                  }}
+                  onRemove={() => removeAttachment(attachment.id)}
                 >
                   <AttachmentPreview />
                   <AttachmentInfo />
@@ -742,20 +746,8 @@ export function AIChatPanel({
         )}
 
         <PromptInput
-          onSubmit={({ text, files }) => {
-            // Handle any additional files from drag/drop or paste
-            if (files && files.length > 0) {
-              // Files are already converted, add them to our attachments
-              const newAttachments: AttachmentData[] = files.map((file) => ({
-                id: generateId(),
-                type: "file" as const,
-                url: file.url || "",
-                mediaType: file.mediaType,
-                filename: file.filename,
-              }));
-              setAttachments((prev) => [...prev, ...newAttachments]);
-            }
-            sendMessage(text || inputValue);
+          onSubmit={({ text }) => {
+            sendMessage(text);
           }}
           accept="image/*"
           multiple
@@ -772,8 +764,6 @@ export function AIChatPanel({
                 : "Ask a follow-up..."
             }
             disabled={isStreaming}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
             className="min-h-[60px] bg-transparent !border-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-transparent focus-visible:!border-transparent focus-visible:!shadow-none !outline-none"
           />
           <PromptInputFooter>
@@ -800,5 +790,14 @@ export function AIChatPanel({
         </PromptInput>
       </div>
     </div>
+  );
+}
+
+// Main export wraps everything in PromptInputProvider
+export function AIChatPanel(props: AIChatPanelProps) {
+  return (
+    <PromptInputProvider>
+      <AIChatPanelContent {...props} />
+    </PromptInputProvider>
   );
 }
