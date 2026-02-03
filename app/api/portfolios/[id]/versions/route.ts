@@ -39,7 +39,24 @@ export async function GET(
       orderBy: [desc(portfolioVersions.versionNumber)],
     });
 
-    return NextResponse.json({ versions });
+    // Determine which version is live (matches current deployed htmlContent)
+    let liveVersionId: string | null = null;
+    let liveVersionNumber: number | null = null;
+    
+    if (portfolio.isPublished && portfolio.htmlContent) {
+      const liveVersion = versions.find(v => v.htmlContent === portfolio.htmlContent);
+      if (liveVersion) {
+        liveVersionId = liveVersion.id;
+        liveVersionNumber = liveVersion.versionNumber;
+      }
+    }
+
+    return NextResponse.json({
+      versions,
+      liveVersionId,
+      liveVersionNumber,
+      isPublished: portfolio.isPublished,
+    });
   } catch (error) {
     console.error("Error fetching versions:", error);
     return NextResponse.json(

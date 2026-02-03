@@ -12,6 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Loader2,
   Check,
   X,
@@ -73,6 +78,7 @@ export function PublishDialog({
   const [versions, setVersions] = useState<Version[]>([]);
   const [isLoadingVersions, setIsLoadingVersions] = useState(false);
   const [deployingVersionId, setDeployingVersionId] = useState<string | null>(null);
+  const [liveVersionId, setLiveVersionId] = useState<string | null>(null);
 
   const domain = process.env.NEXT_PUBLIC_DOMAIN || "ugc.community";
   const publishedUrl = currentSubdomain ? `https://${currentSubdomain}.${domain}` : null;
@@ -120,6 +126,9 @@ export function PublishDialog({
       const data = await response.json();
       if (data.versions) {
         setVersions(data.versions);
+      }
+      if (data.liveVersionId) {
+        setLiveVersionId(data.liveVersionId);
       }
     } catch (err) {
       console.error("Error fetching versions:", err);
@@ -218,7 +227,7 @@ export function PublishDialog({
       }
 
       // Step 4: Create a version snapshot
-      await fetch(`/api/portfolios/${portfolioId}/versions`, {
+      const versionResponse = await fetch(`/api/portfolios/${portfolioId}/versions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,6 +235,13 @@ export function PublishDialog({
           title: `Deployed ${new Date().toLocaleDateString()}`,
         }),
       });
+
+      if (versionResponse.ok) {
+        const versionData = await versionResponse.json();
+        if (versionData.version?.id) {
+          setLiveVersionId(versionData.version.id);
+        }
+      }
 
       setDeployedHtml(html);
       setIsPublished(true);
@@ -277,7 +293,7 @@ export function PublishDialog({
       }
 
       // Step 3: Create a new version snapshot for this deployment
-      await fetch(`/api/portfolios/${portfolioId}/versions`, {
+      const versionResponse = await fetch(`/api/portfolios/${portfolioId}/versions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -285,6 +301,13 @@ export function PublishDialog({
           title: `Rolled back to v${version.versionNumber}`,
         }),
       });
+
+      if (versionResponse.ok) {
+        const versionData = await versionResponse.json();
+        if (versionData.version?.id) {
+          setLiveVersionId(versionData.version.id);
+        }
+      }
 
       setDeployedHtml(version.htmlContent);
       setIsPublished(true);
@@ -334,6 +357,10 @@ export function PublishDialog({
   };
 
   const isVersionDeployed = (version: Version) => {
+    // Use liveVersionId if available (more reliable), fallback to HTML comparison
+    if (liveVersionId) {
+      return version.id === liveVersionId;
+    }
     return deployedHtml === version.htmlContent;
   };
 
@@ -593,15 +620,19 @@ export function PublishDialog({
                               <div className="flex items-center gap-1">
                                 {!isDeployed && (
                                   <>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleLoadVersion(version)}
-                                      className="h-8 px-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-700 border border-zinc-700"
-                                      title="Load into editor"
-                                    >
-                                      <ChevronRight className="h-4 w-4" />
-                                    </Button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleLoadVersion(version)}
+                                          className="h-8 px-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-700 border border-zinc-700"
+                                        >
+                                          <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Load into editor</TooltipContent>
+                                    </Tooltip>
                                     <Button
                                       variant="ghost"
                                       size="sm"

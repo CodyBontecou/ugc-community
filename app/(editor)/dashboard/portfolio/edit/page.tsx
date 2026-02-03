@@ -44,6 +44,13 @@ async function EditorContent() {
       initialHtml={portfolio.htmlContent}
       portfolioTitle={portfolio.title}
       portfolioSlug={slug}
+      user={{
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        image: session.user.image,
+        username: session.user.username,
+      }}
     />
   );
 }

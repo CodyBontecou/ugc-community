@@ -45,12 +45,27 @@ import {
   DEFAULT_DESIGN_SYSTEM,
   applyDesignSystemToHtml,
 } from "@/lib/editor/design-system";
+import { EditorUserMenu } from "./editor-user-menu";
 
 interface V0EditorProps {
   portfolioId: string;
   initialHtml: string;
   portfolioTitle: string;
   portfolioSlug: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+    username?: string | null;
+  };
+}
+
+interface VersionInfo {
+  liveVersionId: string | null;
+  liveVersionNumber: number | null;
+  isPublished: boolean;
+  latestVersionNumber: number | null;
 }
 
 type DeviceSize = "desktop" | "mobile";
@@ -65,6 +80,7 @@ export function V0Editor({
   initialHtml,
   portfolioTitle,
   portfolioSlug,
+  user,
 }: V0EditorProps) {
   const router = useRouter();
   const [html, setHtml] = useState(initialHtml);
@@ -98,6 +114,15 @@ export function V0Editor({
 
   // Publish dialog state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+
+  // Version tracking state
+  const [versionInfo, setVersionInfo] = useState<VersionInfo>({
+    liveVersionId: null,
+    liveVersionNumber: null,
+    isPublished: false,
+    latestVersionNumber: null,
+  });
+  const [deployedHtml, setDeployedHtml] = useState<string | null>(null);
 
   // Track HTML state before live editing started
   const htmlBeforeLiveEditRef = useRef<string | null>(null);
@@ -451,6 +476,39 @@ export function V0Editor({
     }
   }, [selectedElement, portfolioId, html, handleApplyEdit]);
 
+  // Fetch version info on mount and after deployments
+  const fetchVersionInfo = useCallback(async () => {
+    try {
+      const [versionsRes, portfolioRes] = await Promise.all([
+        fetch(`/api/portfolios/${portfolioId}/versions`),
+        fetch(`/api/portfolios/${portfolioId}`),
+      ]);
+      
+      if (versionsRes.ok) {
+        const data = await versionsRes.json();
+        setVersionInfo({
+          liveVersionId: data.liveVersionId,
+          liveVersionNumber: data.liveVersionNumber,
+          isPublished: data.isPublished,
+          latestVersionNumber: data.versions?.[0]?.versionNumber ?? null,
+        });
+      }
+      
+      if (portfolioRes.ok) {
+        const portfolioData = await portfolioRes.json();
+        if (portfolioData.isPublished && portfolioData.htmlContent) {
+          setDeployedHtml(portfolioData.htmlContent);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch version info:", err);
+    }
+  }, [portfolioId]);
+
+  useEffect(() => {
+    fetchVersionInfo();
+  }, [fetchVersionInfo]);
+
   // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -520,22 +578,36 @@ export function V0Editor({
       {/* Top Header Bar */}
       <header className="flex items-center justify-between h-12 px-4 bg-[#0a0a0a] border-b border-[#1f1f1f]">
         <div className="flex items-center gap-3">
-          {/* Logo */}
+          {/* Logo with Version Indicator */}
           <div className="flex items-center gap-2">
             <span className="text-white font-semibold text-lg">ugc.community</span>
             <span className="text-[#666]">/</span>
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            {versionInfo.isPublished ? (
+              <div className="relative group">
+                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse cursor-help" />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-[#1f1f1f] border border-[#333] rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  {versionInfo.liveVersionNumber 
+                    ? `v${versionInfo.liveVersionNumber} Live`
+                    : "Published"}
+                  {deployedHtml && html !== deployedHtml && (
+                    <span className="text-yellow-400 ml-1">• Draft</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="w-3 h-3 rounded-full bg-[#666] cursor-help" />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 bg-[#1f1f1f] border border-[#333] rounded text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Not published
+                </div>
+              </div>
+            )}
           </div>
-          <button className="p-1 text-[#666] hover:text-white transition-colors">
-            <RotateCw size={14} />
-          </button>
         </div>
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm">
           <Sparkles size={14} className="text-[#666]" />
-          <span className="text-[#999]">Drafts</span>
-          <span className="text-[#666]">/</span>
           <span className="text-white">{portfolioTitle}</span>
           <ChevronDown size={14} className="text-[#666]" />
         </div>
@@ -567,7 +639,7 @@ export function V0Editor({
             <Globe size={14} />
             Publish
           </button>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500"></div>
+          <EditorUserMenu user={user} />
         </div>
       </header>
 
@@ -885,11 +957,16 @@ export function V0Editor({
         onPublishSuccess={() => {
           setHasUnsavedChanges(false);
           initialHtmlRef.current = html;
+          setDeployedHtml(html);
+          // Refresh version info to update the live version indicator
+          fetchVersionInfo();
         }}
         onHtmlChange={(newHtml) => {
           updateHtml(newHtml);
           initialHtmlRef.current = newHtml;
           setHasUnsavedChanges(false);
+          // Refresh version info after loading a different version
+          fetchVersionInfo();
         }}
       />
     </div>
