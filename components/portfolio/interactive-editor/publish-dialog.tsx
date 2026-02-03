@@ -505,7 +505,7 @@ export function PublishDialog({
                 <button
                   onClick={handleDeploy}
                   disabled={!subdomain || availabilityStatus !== "available" || isPublishing}
-                  className="w-full h-10 px-4 rounded-md font-semibold transition-colors flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border disabled:border-zinc-700"
+                  className="w-full h-10 px-4 rounded-md font-semibold transition-colors flex items-center justify-center gap-2 bg-white text-black border border-white hover:bg-zinc-100 disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-600"
                 >
                   {isPublishing ? (
                     <>
