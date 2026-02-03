@@ -447,13 +447,13 @@ export function PublishDialog({
                   {/* Suggestions */}
                   {suggestions.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-xs text-[#666]">Suggestions:</p>
+                      <p className="text-xs text-zinc-400">Suggestions:</p>
                       <div className="flex flex-wrap gap-1">
                         {suggestions.map((s) => (
                           <button
                             key={s}
                             onClick={() => setSubdomain(s)}
-                            className="px-2 py-1 text-xs bg-[#1f1f1f] hover:bg-[#2a2a2a] rounded text-[#999] hover:text-white transition-colors"
+                            className="px-2 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded text-zinc-300 hover:text-white transition-colors"
                           >
                             {s}
                           </button>
@@ -505,7 +505,7 @@ export function PublishDialog({
                 <Button
                   onClick={handleDeploy}
                   disabled={!subdomain || availabilityStatus !== "available" || isPublishing}
-                  className="w-full bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-700 disabled:text-zinc-400"
+                  className="w-full bg-white text-black font-semibold hover:bg-zinc-200 disabled:opacity-100 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border disabled:border-zinc-700"
                 >
                   {isPublishing ? (
                     <>
@@ -541,9 +541,9 @@ export function PublishDialog({
                   </div>
                 ) : versions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-                    <History className="h-10 w-10 text-[#333] mb-3" />
-                    <p className="text-sm text-[#666]">No versions yet</p>
-                    <p className="text-xs text-[#444] mt-1">
+                    <History className="h-10 w-10 text-zinc-600 mb-3" />
+                    <p className="text-sm text-zinc-400">No versions yet</p>
+                    <p className="text-xs text-zinc-500 mt-1">
                       Versions are created when you deploy your portfolio
                     </p>
                   </div>
@@ -581,11 +581,11 @@ export function PublishDialog({
                                   )}
                                 </div>
                                 {version.title && (
-                                  <p className="text-xs text-[#999] mt-0.5 truncate">
+                                  <p className="text-xs text-zinc-400 mt-0.5 truncate">
                                     {version.title}
                                   </p>
                                 )}
-                                <p className="text-xs text-[#666] mt-1 flex items-center gap-1">
+                                <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {formatDistanceToNow(new Date(version.createdAt), { addSuffix: true })}
                                 </p>
@@ -597,7 +597,7 @@ export function PublishDialog({
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleLoadVersion(version)}
-                                      className="h-8 px-2 text-xs text-[#999] hover:text-white hover:bg-[#333]"
+                                      className="h-8 px-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-700 border border-zinc-700"
                                       title="Load into editor"
                                     >
                                       <ChevronRight className="h-4 w-4" />
@@ -607,7 +607,7 @@ export function PublishDialog({
                                       size="sm"
                                       onClick={() => handleDeployVersion(version)}
                                       disabled={isDeploying || !currentSubdomain}
-                                      className="h-8 px-2 text-xs text-[#999] hover:text-white hover:bg-[#333]"
+                                      className="h-8 px-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-700 border border-zinc-700 disabled:opacity-100 disabled:text-zinc-500 disabled:border-zinc-800"
                                       title={currentSubdomain ? "Deploy this version" : "Set subdomain first"}
                                     >
                                       {isDeploying ? (
