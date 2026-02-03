@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Settings2, ImageIcon, Video, Check } from "lucide-react";
+import { ChevronRight, Settings2, ImageIcon, Video } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -186,17 +186,6 @@ function DesignPanelContent({
           onDeselect={onDeselect}
         />
         
-        {/* Apply Changes Button */}
-        <div className="px-4 py-3 border-t border-border">
-          <button
-            onClick={onDeselect}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Check size={18} />
-            Apply Changes
-          </button>
-        </div>
-        
         {/* Element Chat Input */}
         <div className="p-4 border-t border-border mt-auto">
           <div className="flex items-center gap-2 mb-2 px-1">
@@ -208,7 +197,7 @@ function DesignPanelContent({
             </span>
           </div>
           <p className="text-xs text-muted-foreground mb-3 px-1">
-            Or use AI to refine this element
+            Save before refining this element
           </p>
           
           {/* Attachments Preview - using provider state */}
