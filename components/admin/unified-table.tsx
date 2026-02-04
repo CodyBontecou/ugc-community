@@ -15,9 +15,6 @@ import {
   Ban,
   Instagram,
   UserPlus,
-  Eye,
-  Briefcase,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RecordTypeBadge } from "./record-type-badge";
@@ -29,21 +26,6 @@ import type { UserStatus } from "@/lib/admin";
 
 type TypeFilter = "all" | RecordType;
 type SortOrder = "newest" | "oldest";
-
-interface UserStatsPanelData {
-  id: string;
-  name: string | null;
-  displayName: string | null;
-  email: string;
-  image: string | null;
-  subdomain: string | null;
-  status: string;
-  profileViewCount: number;
-  portfolioViewCount: number;
-  contactSubmissionCount: number;
-  contactSubmissionCountLast30Days: number;
-  contactSubmissionCountLast7Days: number;
-}
 
 const STATUS_OPTIONS: Record<RecordType, string[]> = {
   user: ["active", "suspended", "banned"],
@@ -94,14 +76,6 @@ export function UnifiedTable() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UnifiedRecord | null>(null);
   const [inviteToConvert, setInviteToConvert] = useState<UnifiedRecord | null>(null);
-  const [activeUserId, setActiveUserId] = useState<string | null>(null);
-  const [activeUser, setActiveUser] = useState<UserStatsPanelData | null>(null);
-  const [userPanelLoading, setUserPanelLoading] = useState(false);
-  const [userPanelError, setUserPanelError] = useState<string | null>(null);
-  const [panelWidth, setPanelWidth] = useState(420);
-  const [panelResizing, setPanelResizing] = useState(false);
-  const resizeStartXRef = useRef(0);
-  const resizeStartWidthRef = useRef(0);
   const actionButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
 
@@ -113,75 +87,6 @@ export function UnifiedTable() {
   useEffect(() => {
     setStatusFilter("all");
   }, [typeFilter]);
-
-  useEffect(() => {
-    if (!activeUserId) {
-      setActiveUser(null);
-      setUserPanelLoading(false);
-      setUserPanelError(null);
-      return;
-    }
-
-    let isActive = true;
-
-    async function fetchUserStats() {
-      setUserPanelLoading(true);
-      setUserPanelError(null);
-      setActiveUser(null);
-
-      try {
-        const res = await fetch(`/api/admin/users/${activeUserId}`);
-        if (!res.ok) throw new Error("Failed to load user details");
-        const data = await res.json();
-        if (!isActive) return;
-        setActiveUser(data.user as UserStatsPanelData);
-      } catch (err) {
-        if (!isActive) return;
-        setUserPanelError(err instanceof Error ? err.message : "Failed to load user details");
-      } finally {
-        if (isActive) {
-          setUserPanelLoading(false);
-        }
-      }
-    }
-
-    fetchUserStats();
-
-    return () => {
-      isActive = false;
-    };
-  }, [activeUserId]);
-
-  useEffect(() => {
-    if (!panelResizing) return;
-
-    const handlePointerMove = (event: PointerEvent) => {
-      const delta = resizeStartXRef.current - event.clientX;
-      const maxWidth = Math.min(720, window.innerWidth - 80);
-      const nextWidth = Math.min(Math.max(resizeStartWidthRef.current + delta, 320), maxWidth);
-      setPanelWidth(nextWidth);
-    };
-
-    const handlePointerUp = () => {
-      setPanelResizing(false);
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    document.body.style.cursor = "col-resize";
-
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      document.body.style.cursor = "";
-    };
-  }, [panelResizing]);
-
-  useEffect(() => {
-    if (!activeUserId) return;
-    const maxWidth = Math.min(720, window.innerWidth - 80);
-    setPanelWidth((prev) => Math.min(prev, maxWidth));
-  }, [activeUserId]);
 
   async function fetchRecords() {
     try {
@@ -291,9 +196,6 @@ export function UnifiedTable() {
   function handleUserDeleted() {
     if (userToDelete) {
       setRecords((prev) => prev.filter((r) => !(r.id === userToDelete.id && r.type === "user")));
-      if (activeUserId === userToDelete.id) {
-        setActiveUserId(null);
-      }
     }
     setUserToDelete(null);
   }
@@ -425,25 +327,6 @@ export function UnifiedTable() {
       setCopiedId(record.id);
       setTimeout(() => setCopiedId(null), 2000);
     }
-  }
-
-  function handleOpenUserPanel(record: UnifiedRecord) {
-    if (record.type !== "user") return;
-    setActionMenuOpen(null);
-    setActionMenuPosition(null);
-    setActiveUserId(record.id);
-  }
-
-  function handleCloseUserPanel() {
-    setActiveUserId(null);
-  }
-
-  function handleResizeStart(event: React.PointerEvent<HTMLDivElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    setPanelResizing(true);
-    resizeStartXRef.current = event.clientX;
-    resizeStartWidthRef.current = panelWidth;
   }
 
   // Render helpers
@@ -813,8 +696,7 @@ export function UnifiedTable() {
         </button>
       </div>
 
-      <div className="relative">
-        <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
+      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
         {/* Type filter tabs */}
         <div className="flex border-b border-warm-gray-200">
           {typeFilterTabs.map((tab) => (
@@ -903,7 +785,11 @@ export function UnifiedTable() {
                   <tr
                     key={`${record.type}-${record.id}`}
                     className={`hover:bg-warm-gray-50 ${record.type === "user" ? "cursor-pointer" : ""}`}
-                    onClick={() => handleOpenUserPanel(record)}
+                    onClick={() => {
+                      if (record.type === "user") {
+                        router.push(`/dashboard/admin/users/${record.id}`);
+                      }
+                    }}
                   >
                     <td className="px-4 py-3">
                       <RecordTypeBadge type={record.type} />
@@ -930,149 +816,6 @@ export function UnifiedTable() {
             Showing {filteredRecords.length} of {records.length} records
           </p>
         </div>
-        </div>
-
-        {activeUserId && (
-          <aside
-            className="absolute inset-y-0 right-0 z-40 flex flex-col bg-white border-l border-warm-gray-200 shadow-xl"
-            style={{ width: panelWidth }}
-          >
-            <div
-              className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize touch-none"
-              onPointerDown={handleResizeStart}
-            >
-              <div
-                className={`h-full w-0.5 mx-auto transition-colors ${
-                  panelResizing ? "bg-warm-gray-300" : "bg-transparent hover:bg-warm-gray-200"
-                }`}
-              />
-            </div>
-            <div className="flex items-start justify-between px-5 py-4 border-b border-warm-gray-100">
-              <div className="flex items-center gap-3">
-                {activeUser?.image ? (
-                  <img
-                    src={activeUser.image}
-                    alt={activeUser.displayName || activeUser.name || "User"}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-warm-gray-100 flex items-center justify-center text-warm-gray-500 text-sm font-semibold">
-                    {(activeUser?.displayName || activeUser?.name || "U").charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-semibold text-warm-gray-900">
-                    {activeUser?.displayName || activeUser?.name || "Loading user"}
-                  </p>
-                  <p className="text-xs text-warm-gray-500">
-                    {activeUser?.email || "Fetching stats..."}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCloseUserPanel}
-                className="p-1 rounded-full text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 transition-colors"
-                aria-label="Close panel"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {userPanelLoading && (
-                <div className="flex items-center gap-2 text-sm text-warm-gray-500">
-                  <span className="w-4 h-4 border-2 border-warm-gray-200 border-t-warm-gray-500 rounded-full animate-spin" />
-                  Loading stats...
-                </div>
-              )}
-              {userPanelError && (
-                <p className="text-sm text-red-600">{userPanelError}</p>
-              )}
-              {!userPanelLoading && !userPanelError && activeUser && (
-                <>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge status={activeUser.status} />
-                    {activeUser.subdomain && (
-                      <a
-                        href={`https://${activeUser.subdomain}.ugc.community`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-medium text-coral hover:text-coral/80"
-                      >
-                        {activeUser.subdomain}.ugc.community
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="grid gap-3">
-                    <div className="rounded-[--radius-lg] border border-warm-gray-100 bg-warm-gray-50 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-lavender-soft/30 flex items-center justify-center">
-                          <Eye size={18} className="text-lavender" />
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-warm-gray-500">Profile views</p>
-                          <p className="text-2xl font-semibold text-warm-gray-900">
-                            {activeUser.profileViewCount.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-[--radius-lg] border border-warm-gray-100 bg-warm-gray-50 p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-mint-soft/30 flex items-center justify-center">
-                          <Briefcase size={18} className="text-mint" />
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-warm-gray-500">Portfolio views</p>
-                          <p className="text-2xl font-semibold text-warm-gray-900">
-                            {(activeUser.portfolioViewCount || 0).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-[--radius-lg] border border-warm-gray-100 bg-warm-gray-50 p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
-                          <Mail size={18} className="text-coral" />
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-warm-gray-500">Total inquiries</p>
-                          <p className="text-2xl font-semibold text-warm-gray-900">
-                            {activeUser.contactSubmissionCount.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-warm-gray-200">
-                        <div>
-                          <p className="text-sm font-semibold text-warm-gray-900">
-                            {activeUser.contactSubmissionCountLast30Days}
-                          </p>
-                          <p className="text-xs text-warm-gray-500">Last 30 days</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-warm-gray-900">
-                            {activeUser.contactSubmissionCountLast7Days}
-                          </p>
-                          <p className="text-xs text-warm-gray-500">Last 7 days</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => router.push(`/dashboard/admin/users/${activeUser.id}`)}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors"
-                    style={{ backgroundColor: "#1A1614", color: "#FFFFFF" }}
-                  >
-                    Open full profile
-                  </button>
-                </>
-              )}
-            </div>
-          </aside>
-        )}
       </div>
 
       <CreateInviteDialog isOpen={showCreateDialog} onClose={() => setShowCreateDialog(false)} onCreated={fetchRecords} />
