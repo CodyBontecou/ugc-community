@@ -14,12 +14,14 @@ import {
   FolderOpen,
 } from "lucide-react";
 import type { Media } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 
 interface MediaLibraryProps {
   onSelect?: (media: Media) => void;
   selectionMode?: boolean;
   filterType?: "all" | "image" | "video";
   onClose?: () => void;
+  variant?: "light" | "dark";
 }
 
 export function MediaLibrary({
@@ -27,6 +29,7 @@ export function MediaLibrary({
   selectionMode = false,
   filterType = "all",
   onClose,
+  variant = "light",
 }: MediaLibraryProps) {
   const [activeTab, setActiveTab] = useState<"all" | "image" | "video">(filterType);
   const [items, setItems] = useState<Media[]>([]);
@@ -41,6 +44,98 @@ export function MediaLibrary({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const isDark = variant === "dark";
+  const styles = {
+    container: cn(
+      "relative flex flex-col h-full rounded-[--radius-lg] overflow-hidden",
+      isDark ? "bg-[#0a0a0a] text-white" : "bg-white"
+    ),
+    header: cn(
+      "flex items-center justify-between p-4 border-b",
+      isDark ? "border-[#1f1f1f]" : "border-warm-gray-200"
+    ),
+    headerTitle: isDark ? "text-white" : "text-warm-gray-900",
+    headerSubtitle: isDark ? "text-[#666]" : "text-warm-gray-500",
+    closeButton: cn(
+      "p-2 rounded-[--radius-sm] transition-colors",
+      isDark
+        ? "text-[#666] hover:text-white hover:bg-[#1f1f1f]"
+        : "text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100"
+    ),
+    tabs: cn(
+      "flex items-center gap-1 p-2 border-b",
+      isDark ? "border-[#1f1f1f]" : "border-warm-gray-100"
+    ),
+    tab: (active: boolean) =>
+      cn(
+        "flex items-center gap-2 px-3 py-1.5 text-sm rounded-[--radius-md] transition-colors",
+        active
+          ? isDark
+            ? "bg-blue-500/15 text-blue-300"
+            : "bg-purple-100 text-purple-700"
+          : isDark
+            ? "text-[#666] hover:bg-[#1f1f1f]/60 hover:text-white"
+            : "text-warm-gray-600 hover:bg-warm-gray-100"
+      ),
+    uploadSection: cn(
+      "p-4 border-b",
+      isDark ? "border-[#1f1f1f]" : "border-warm-gray-100"
+    ),
+    dropZone: cn(
+      "flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[--radius-md] cursor-pointer transition-colors",
+      isDragging
+        ? isDark
+          ? "border-blue-500 bg-blue-500/10"
+          : "border-purple-500 bg-purple-50"
+        : isDark
+          ? "border-[#333] hover:border-[#444] hover:bg-[#141414]"
+          : "border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
+    ),
+    uploadIcon: isDark ? "text-[#666]" : "text-warm-gray-400",
+    uploadText: isDark ? "text-[#999]" : "text-warm-gray-600",
+    uploadSubtext: isDark ? "text-[#555]" : "text-warm-gray-400",
+    uploadingIcon: isDark ? "text-blue-400" : "text-purple-500",
+    uploadingText: isDark ? "text-[#999]" : "text-warm-gray-600",
+    errorWrapper: cn(
+      "p-4 border-b",
+      isDark ? "border-[#1f1f1f]" : "border-warm-gray-100"
+    ),
+    errorBox: cn(
+      "flex items-center gap-2 p-3 rounded-[--radius-md] text-sm",
+      isDark
+        ? "bg-red-500/10 border border-red-500/30 text-red-300"
+        : "bg-red-50 border border-red-200 text-red-700"
+    ),
+    errorClose: cn("ml-auto p-1 rounded", isDark ? "hover:bg-red-500/10" : "hover:bg-red-100"),
+    loadingIcon: isDark ? "text-blue-400" : "text-purple-500",
+    emptyState: isDark ? "text-[#666]" : "text-warm-gray-500",
+    pagination: cn(
+      "flex items-center justify-center gap-2 p-4 border-t",
+      isDark ? "border-[#1f1f1f]" : "border-warm-gray-100"
+    ),
+    paginationButton: cn(
+      "px-3 py-1 text-sm rounded-[--radius-md] disabled:opacity-50 transition-colors",
+      isDark
+        ? "text-[#999] hover:bg-[#1f1f1f] hover:text-white"
+        : "text-warm-gray-600 hover:bg-warm-gray-100"
+    ),
+    paginationText: isDark ? "text-[#666]" : "text-warm-gray-500",
+    deleteModal: cn(
+      "rounded-[--radius-lg] p-6 max-w-sm w-full shadow-xl",
+      isDark ? "bg-[#1f1f1f] text-white border border-[#333]" : "bg-white"
+    ),
+    deleteTitle: isDark ? "text-white" : "text-warm-gray-900",
+    deleteSubtitle: isDark ? "text-[#999]" : "text-warm-gray-600",
+    deleteCancel: cn(
+      "flex-1 px-4 py-2 text-sm rounded-[--radius-md] transition-colors",
+      isDark
+        ? "text-[#ddd] bg-[#2a2a2a] hover:bg-[#333]"
+        : "text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200"
+    ),
+    deleteConfirm:
+      "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-[--radius-md] transition-colors",
+  };
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
@@ -151,27 +246,24 @@ export function MediaLibrary({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-[--radius-lg] overflow-hidden">
+    <div className={styles.container}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-warm-gray-200">
+      <div className={styles.header}>
         <div>
-          <h2 className="font-semibold text-warm-gray-900">Media Library</h2>
-          <p className="text-xs text-warm-gray-500">
+          <h2 className={cn("font-semibold", styles.headerTitle)}>Media Library</h2>
+          <p className={cn("text-xs", styles.headerSubtitle)}>
             {selectionMode ? "Select a file to use" : "Manage your uploaded media"}
           </p>
         </div>
         {onClose && (
-          <button
-            onClick={onClose}
-            className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-sm] transition-colors"
-          >
+          <button onClick={onClose} className={styles.closeButton}>
             <X size={20} />
           </button>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-warm-gray-100">
+      <div className={styles.tabs}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -179,11 +271,7 @@ export function MediaLibrary({
               setActiveTab(tab.id);
               setPage(1);
             }}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-[--radius-md] transition-colors ${
-              activeTab === tab.id
-                ? "bg-purple-100 text-purple-700"
-                : "text-warm-gray-600 hover:bg-warm-gray-100"
-            }`}
+            className={styles.tab(activeTab === tab.id)}
           >
             <tab.icon size={16} />
             {tab.label}
@@ -192,31 +280,27 @@ export function MediaLibrary({
       </div>
 
       {/* Upload Zone */}
-      <div className="p-4 border-b border-warm-gray-100">
+      <div className={styles.uploadSection}>
         <div
           ref={dropZoneRef}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[--radius-md] cursor-pointer transition-colors ${
-            isDragging
-              ? "border-purple-500 bg-purple-50"
-              : "border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
-          }`}
+          className={styles.dropZone}
         >
           {uploading ? (
             <>
-              <Loader2 size={24} className="text-purple-500 animate-spin mb-2" />
-              <p className="text-sm text-warm-gray-600">{uploadProgress}</p>
+              <Loader2 size={24} className={cn("animate-spin mb-2", styles.uploadingIcon)} />
+              <p className={cn("text-sm", styles.uploadingText)}>{uploadProgress}</p>
             </>
           ) : (
             <>
-              <Upload size={24} className="text-warm-gray-400 mb-2" />
-              <p className="text-sm text-warm-gray-600">
+              <Upload size={24} className={cn("mb-2", styles.uploadIcon)} />
+              <p className={cn("text-sm", styles.uploadText)}>
                 Drop files here or click to upload
               </p>
-              <p className="text-xs text-warm-gray-400 mt-1">
+              <p className={cn("text-xs mt-1", styles.uploadSubtext)}>
                 Images or videos (up to 50MB)
               </p>
             </>
@@ -239,15 +323,12 @@ export function MediaLibrary({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-4 border-b border-warm-gray-100"
+            className={styles.errorWrapper}
           >
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-[--radius-md] text-sm text-red-700">
+            <div className={styles.errorBox}>
               <AlertCircle size={16} />
               {error}
-              <button
-                onClick={() => setError(null)}
-                className="ml-auto p-1 hover:bg-red-100 rounded"
-              >
+              <button onClick={() => setError(null)} className={styles.errorClose}>
                 <X size={14} />
               </button>
             </div>
@@ -259,10 +340,10 @@ export function MediaLibrary({
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <Loader2 size={24} className="text-purple-500 animate-spin" />
+            <Loader2 size={24} className={cn("animate-spin", styles.loadingIcon)} />
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-warm-gray-500">
+          <div className={cn("flex flex-col items-center justify-center h-32", styles.emptyState)}>
             <FolderOpen size={32} className="mb-2 opacity-50" />
             <p className="text-sm">No media uploaded yet</p>
           </div>
@@ -276,6 +357,7 @@ export function MediaLibrary({
                 onSelect={onSelect}
                 onDelete={(id) => setDeleteConfirm(id)}
                 isDeleting={deleteConfirm === item.id}
+                variant={variant}
               />
             ))}
           </div>
@@ -284,21 +366,21 @@ export function MediaLibrary({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 p-4 border-t border-warm-gray-100">
+        <div className={styles.pagination}>
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
-            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] disabled:opacity-50"
+            className={styles.paginationButton}
           >
             Previous
           </button>
-          <span className="text-sm text-warm-gray-500">
+          <span className={cn("text-sm", styles.paginationText)}>
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || loading}
-            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] disabled:opacity-50"
+            className={styles.paginationButton}
           >
             Next
           </button>
@@ -318,26 +400,24 @@ export function MediaLibrary({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-white rounded-[--radius-lg] p-6 max-w-sm w-full shadow-xl"
+              className={styles.deleteModal}
             >
-              <h3 className="font-semibold text-warm-gray-900 mb-2">
-                Delete Media?
-              </h3>
-              <p className="text-sm text-warm-gray-600 mb-4">
+              <h3 className={cn("font-semibold mb-2", styles.deleteTitle)}>Delete Media?</h3>
+              <p className={cn("text-sm mb-4", styles.deleteSubtitle)}>
                 This action cannot be undone. The file will be permanently deleted.
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 text-sm text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-[--radius-md] transition-colors"
+                  className={styles.deleteCancel}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
                   disabled={deleting}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-[--radius-md] transition-colors"
+                  className={styles.deleteConfirm}
                 >
                   {deleting ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -361,6 +441,7 @@ interface MediaItemProps {
   onSelect?: (media: Media) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
+  variant: "light" | "dark";
 }
 
 function MediaItem({
@@ -369,14 +450,23 @@ function MediaItem({
   onSelect,
   onDelete,
   isDeleting,
+  variant,
 }: MediaItemProps) {
   const [loaded, setLoaded] = useState(false);
+  const isDark = variant === "dark";
+  const actionBase = cn(
+    "p-2 rounded-full transition-colors",
+    isDark ? "bg-[#1f1f1f]" : "bg-white"
+  );
 
   return (
     <div
-      className={`group relative aspect-square bg-warm-gray-100 rounded-[--radius-md] overflow-hidden ${
-        selectionMode ? "cursor-pointer" : ""
-      } ${isDeleting ? "opacity-50" : ""}`}
+      className={cn(
+        "group relative aspect-square rounded-[--radius-md] overflow-hidden",
+        isDark ? "bg-[#1f1f1f]" : "bg-warm-gray-100",
+        selectionMode ? "cursor-pointer" : "",
+        isDeleting ? "opacity-50" : ""
+      )}
       onClick={() => selectionMode && onSelect?.(item)}
     >
       {/* Thumbnail */}
@@ -391,27 +481,31 @@ function MediaItem({
           onLoad={() => setLoaded(true)}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-warm-gray-200">
-          <Video size={32} className="text-warm-gray-400" />
+        <div
+          className={cn(
+            "w-full h-full flex items-center justify-center",
+            isDark ? "bg-[#141414]" : "bg-warm-gray-200"
+          )}
+        >
+          <Video size={32} className={isDark ? "text-[#555]" : "text-warm-gray-400"} />
         </div>
       )}
 
       {/* Loading placeholder */}
       {!loaded && item.type === "image" && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 size={20} className="text-warm-gray-400 animate-spin" />
+          <Loader2
+            size={20}
+            className={cn("animate-spin", isDark ? "text-[#555]" : "text-warm-gray-400")}
+          />
         </div>
       )}
 
       {/* Hover overlay */}
-      <div
-        className={`absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity ${
-          selectionMode ? "opacity-0 group-hover:opacity-100" : "opacity-0 group-hover:opacity-100"
-        }`}
-      >
+      <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 transition-opacity opacity-0 group-hover:opacity-100">
         {selectionMode ? (
-          <div className="p-2 bg-white rounded-full">
-            <Check size={20} className="text-purple-600" />
+          <div className={actionBase}>
+            <Check size={20} className={isDark ? "text-blue-400" : "text-purple-600"} />
           </div>
         ) : (
           <button
@@ -419,7 +513,10 @@ function MediaItem({
               e.stopPropagation();
               onDelete(item.id);
             }}
-            className="p-2 bg-white rounded-full text-red-500 hover:bg-red-50 transition-colors"
+            className={cn(
+              actionBase,
+              isDark ? "text-red-400 hover:bg-red-500/20" : "text-red-500 hover:bg-red-50"
+            )}
           >
             <Trash2 size={16} />
           </button>
