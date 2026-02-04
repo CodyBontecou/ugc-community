@@ -118,6 +118,7 @@ export function V0Editor({
   
   // Design system state
   const [designSystem, setDesignSystem] = useState<DesignSystem>(DEFAULT_DESIGN_SYSTEM);
+  const [hasDesignSystemChanges, setHasDesignSystemChanges] = useState(false);
 
   // Publish dialog state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -382,6 +383,10 @@ export function V0Editor({
       htmlToSave = replaceElementContent(htmlToSave, selector, content);
       pendingContentChangeRef.current = null;
     }
+
+    if (hasDesignSystemChanges) {
+      htmlToSave = applyDesignSystemToHtml(htmlToSave, designSystem);
+    }
     
     // Update HTML state if there were pending changes
     if (htmlToSave !== html) {
@@ -413,6 +418,7 @@ export function V0Editor({
       });
 
       setHasUnsavedChanges(false);
+      setHasDesignSystemChanges(false);
       initialHtmlRef.current = htmlToSave;
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -438,6 +444,8 @@ export function V0Editor({
   // Handle design system changes - apply to HTML in real-time
   const handleDesignSystemChange = useCallback((newDesign: DesignSystem) => {
     setDesignSystem(newDesign);
+    setHasDesignSystemChanges(true);
+    setHasUnsavedChanges(true);
     // Apply design system CSS to iframe in real-time
     const iframe = document.querySelector('iframe[title="Portfolio Preview"]') as HTMLIFrameElement;
     if (iframe?.contentWindow) {
@@ -753,7 +761,6 @@ export function V0Editor({
                   fullHtml={html}
                   onApplyEdit={handleApplyEdit}
                   onFullPageGenerate={handleFullPageGenerate}
-                  onDeselect={handleDeselect}
                   isStreaming={isStreaming}
                   onStreamingChange={setIsStreaming}
                   pendingMessage={pendingChatMessage}
@@ -769,7 +776,7 @@ export function V0Editor({
                 className="flex-1 flex flex-col min-h-0"
               >
                 {selectedElement?.mediaData ? (
-                  <div className="flex-1 flex flex-col min-h-0 bg-white">
+                  <div className="flex-1 flex flex-col min-h-0 bg-[#0a0a0a] dark">
                     <MediaEditPanel
                       selectedElement={selectedElement}
                       mediaData={selectedElement.mediaData}
@@ -1042,6 +1049,7 @@ export function V0Editor({
                 selectionMode={true}
                 filterType={showMediaLibrary}
                 onClose={() => setShowMediaLibrary(null)}
+                variant="dark"
               />
             </motion.div>
           </motion.div>

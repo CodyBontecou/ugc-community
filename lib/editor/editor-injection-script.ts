@@ -445,11 +445,365 @@ export const EDITOR_INJECTION_SCRIPT = `
         background-color: var(--background);
         color: var(--foreground);
       }
-      img, .card, [class*='card'] {
+      :where(a) {
+        color: var(--primary);
+      }
+      :where(a:hover) {
+        color: var(--accent);
+      }
+      :where(button, [role="button"], .btn, .button, [class*="btn"], [class*="button"], [type="submit"]) {
+        background-color: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
+      }
+      :where(.card, [class*='card']) {
+        background-color: var(--card);
+        color: var(--card-foreground);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      :where(img) {
         border-radius: var(--radius);
       }
     \`;
   }
+
+  const COLOR_TOKEN_REGEX = /#(?:[0-9a-fA-F]{3,8})(?![0-9a-fA-F])|rgba?\([^)]*\)/g;
+
+  function parseRgbValue(value) {
+    const trimmed = value.trim();
+    if (trimmed.endsWith('%')) {
+      const percent = parseFloat(trimmed.replace('%', ''));
+      if (Number.isNaN(percent)) return null;
+      return Math.round((percent / 100) * 255);
+    }
+    const numeric = parseFloat(trimmed);
+    return Number.isNaN(numeric) ? null : numeric;
+  }
+
+  function parseColorToken(token) {
+    const trimmed = token.trim().toLowerCase();
+    if (trimmed.startsWith('#')) {
+      let hex = trimmed.slice(1);
+      if (hex.length === 3 || hex.length === 4) {
+        hex = hex
+          .split('')
+          .map(function(char) {
+            return char + char;
+          })
+          .join('');
+      }
+      if (hex.length !== 6 && hex.length !== 8) return null;
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const a = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+      return { r: r, g: g, b: b, a: a };
+    }
+
+    if (trimmed.startsWith('rgb')) {
+      const match = trimmed.match(/rgba?\(([^)]+)\)/);
+      if (!match) return null;
+      const parts = match[1].split(',').map(function(part) {
+        return part.trim();
+      });
+      if (parts.length < 3) return null;
+      const r = parseRgbValue(parts[0]);
+      const g = parseRgbValue(parts[1]);
+      const b = parseRgbValue(parts[2]);
+      if (r === null || g === null || b === null) return null;
+      const alpha = parts[3] !== undefined ? parseFloat(parts[3]) : 1;
+      return { r: r, g: g, b: b, a: Number.isNaN(alpha) ? 1 : alpha };
+    }
+
+    return null;
+  }
+
+  function normalizeColorToken(token) {
+    const parsed = parseColorToken(token);
+    if (!parsed) return null;
+    function toHex(value) {
+      return Math.round(value).toString(16).padStart(2, '0');
+    }
+    return '#' + toHex(parsed.r) + toHex(parsed.g) + toHex(parsed.b);
+  }
+
+  function rgbToHsl(r, g, b) {
+    const rn = r / 255;
+    const gn = g / 255;
+    const bn = b / 255;
+    const max = Math.max(rn, gn, bn);
+    const min = Math.min(rn, gn, bn);
+    const delta = max - min;
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (delta !== 0) {
+      s = delta / (1 - Math.abs(2 * l - 1));
+      switch (max) {
+        case rn:
+          h = ((gn - bn) / delta) % 6;
+          break;
+        case gn:
+          h = (bn - rn) / delta + 2;
+          break;
+        default:
+          h = (rn - gn) / delta + 4;
+          break;
+      }
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+
+    return { h: h, s: s, l: l };
+  }
+
+  function getLuminance(r, g, b) {
+    function toLinear(value) {
+      const scaled = value / 255;
+      return scaled <= 0.03928 ? scaled / 12.92 : Math.pow((scaled + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  }
+
+  function registerColorUsage(stats, token, type) {
+    const normalized = normalizeColorToken(token);
+    if (!normalized) return;
+    if (!stats[normalized]) {
+      stats[normalized] = { hex: normalized, count: 0, background: 0, text: 0, border: 0 };
+    }
+    const entry = stats[normalized];
+    entry.count += 1;
+    if (type === 'background') entry.background += 1;
+    if (type === 'text') entry.text += 1;
+    if (type === 'border') entry.border += 1;
+  }
+
+  function collectColorUsageFromCss(cssText, stats) {
+    const propertyRegex = /([a-zA-Z-]+)\s*:\s*([^;]+);/g;
+    let match;
+    while ((match = propertyRegex.exec(cssText)) !== null) {
+      const property = match[1].toLowerCase();
+      const value = match[2];
+      const tokens = value.match(COLOR_TOKEN_REGEX) || [];
+      if (tokens.length === 0) continue;
+      let type = 'other';
+      if (property.indexOf('background') !== -1) {
+        type = 'background';
+      } else if (
+        property === 'color' ||
+        property.indexOf('color') !== -1 ||
+        property.indexOf('fill') !== -1 ||
+        property.indexOf('stroke') !== -1
+      ) {
+        type = 'text';
+      } else if (
+        property.indexOf('border') !== -1 ||
+        property.indexOf('outline') !== -1 ||
+        property.indexOf('shadow') !== -1
+      ) {
+        type = 'border';
+      }
+      tokens.forEach(function(token) {
+        registerColorUsage(stats, token, type);
+      });
+    }
+  }
+
+  function buildColorRoleMap() {
+    const stats = {};
+    document.querySelectorAll('style').forEach(function(styleEl) {
+      if (styleEl.id === 'design-system-live' || styleEl.id === 'design-system') return;
+      collectColorUsageFromCss(styleEl.textContent || '', stats);
+    });
+    document.querySelectorAll('[style]').forEach(function(el) {
+      const styleAttr = el.getAttribute('style');
+      if (styleAttr) {
+        collectColorUsageFromCss(styleAttr, stats);
+      }
+    });
+
+    const colors = Object.values(stats)
+      .map(function(entry) {
+        const parsed = parseColorToken(entry.hex);
+        if (!parsed) return null;
+        const hsl = rgbToHsl(parsed.r, parsed.g, parsed.b);
+        return Object.assign({}, entry, {
+          saturation: hsl.s,
+          luminance: getLuminance(parsed.r, parsed.g, parsed.b),
+        });
+      })
+      .filter(Boolean);
+
+    if (colors.length === 0) return {};
+
+    const byBackground = colors
+      .filter(function(color) {
+        return color.background > 0;
+      })
+      .sort(function(a, b) {
+        return b.background - a.background || b.luminance - a.luminance;
+      });
+    const byText = colors
+      .filter(function(color) {
+        return color.text > 0;
+      })
+      .sort(function(a, b) {
+        return b.text - a.text || a.luminance - b.luminance;
+      });
+    const lightest = colors.slice().sort(function(a, b) {
+      return b.luminance - a.luminance;
+    });
+    const darkest = colors.slice().sort(function(a, b) {
+      return a.luminance - b.luminance;
+    });
+
+    const background = byBackground[0] || lightest[0];
+    const card = byBackground[1] || lightest[1] || background;
+    const muted =
+      byBackground.find(function(color) {
+        return (
+          color.hex !== background.hex &&
+          color.hex !== card.hex &&
+          color.saturation < 0.2
+        );
+      }) ||
+      byBackground[2] ||
+      lightest[2] ||
+      card;
+    const foreground = byText[0] || darkest[0];
+    const mutedForeground =
+      byText.find(function(color) {
+        return color.hex !== foreground.hex;
+      }) ||
+      darkest[1] ||
+      foreground;
+
+    const excluded = {};
+    excluded[background.hex] = true;
+    excluded[card.hex] = true;
+    excluded[muted.hex] = true;
+    excluded[foreground.hex] = true;
+    excluded[mutedForeground.hex] = true;
+
+    const accents = colors
+      .filter(function(color) {
+        return !excluded[color.hex];
+      })
+      .sort(function(a, b) {
+        return b.saturation - a.saturation || b.count - a.count;
+      });
+    const primary =
+      accents[0] ||
+      colors.find(function(color) {
+        return !excluded[color.hex];
+      }) ||
+      background;
+    const secondary = accents[1] || primary;
+    const accent = accents[2] || primary;
+
+    const roleMap = {};
+    roleMap[background.hex] = 'background';
+    roleMap[card.hex] = 'card';
+    roleMap[muted.hex] = 'muted';
+    roleMap[foreground.hex] = 'foreground';
+    roleMap[mutedForeground.hex] = 'mutedForeground';
+    roleMap[primary.hex] = 'primary';
+    roleMap[secondary.hex] = 'secondary';
+    roleMap[accent.hex] = 'accent';
+
+    colors.forEach(function(color) {
+      if (roleMap[color.hex]) return;
+      if (color.text >= color.background && color.luminance < 0.5) {
+        roleMap[color.hex] = 'foreground';
+        return;
+      }
+      if (color.text >= color.background && color.luminance >= 0.5) {
+        roleMap[color.hex] = 'mutedForeground';
+        return;
+      }
+      if (color.luminance > 0.85) {
+        roleMap[color.hex] = 'background';
+        return;
+      }
+      if (color.luminance < 0.25) {
+        roleMap[color.hex] = 'foreground';
+        return;
+      }
+      if (color.saturation > 0.4) {
+        roleMap[color.hex] = 'accent';
+        return;
+      }
+      roleMap[color.hex] = 'muted';
+    });
+
+    return roleMap;
+  }
+
+  function replaceColorTokens(input, roleMap, roleToColor) {
+    return input.replace(COLOR_TOKEN_REGEX, function(match) {
+      const normalized = normalizeColorToken(match);
+      if (!normalized) return match;
+      const role = roleMap[normalized];
+      if (!role) return match;
+      const replacement = roleToColor[role];
+      if (!replacement) return match;
+      const original = parseColorToken(match);
+      const nextColor = parseColorToken(replacement);
+      if (!original || !nextColor) return replacement;
+      if (original.a < 1) {
+        return (
+          'rgba(' +
+          Math.round(nextColor.r) +
+          ', ' +
+          Math.round(nextColor.g) +
+          ', ' +
+          Math.round(nextColor.b) +
+          ', ' +
+          original.a +
+          ')'
+        );
+      }
+      return replacement;
+    });
+  }
+
+  function applyColorSwap(design, roleMap) {
+    if (!roleMap || Object.keys(roleMap).length === 0) return;
+    const roleToColor = {
+      background: design.colors.colors.background,
+      foreground: design.colors.colors.foreground,
+      card: design.colors.colors.card,
+      muted: design.colors.colors.muted,
+      mutedForeground: design.colors.colors.mutedForeground,
+      primary: design.colors.colors.primary,
+      secondary: design.colors.colors.secondary,
+      accent: design.colors.colors.accent,
+    };
+
+    document.querySelectorAll('style').forEach(function(styleEl) {
+      if (styleEl.id === 'design-system-live' || styleEl.id === 'design-system') return;
+      if (!styleEl.dataset.originalCss) {
+        styleEl.dataset.originalCss = styleEl.textContent || '';
+      }
+      const baseCss = styleEl.dataset.originalCss || '';
+      styleEl.textContent = replaceColorTokens(baseCss, roleMap, roleToColor);
+    });
+
+    document.querySelectorAll('[style]').forEach(function(el) {
+      if (!el.dataset.originalStyle) {
+        el.dataset.originalStyle = el.getAttribute('style') || '';
+      }
+      const baseStyle = el.dataset.originalStyle || '';
+      const updatedStyle = replaceColorTokens(baseStyle, roleMap, roleToColor);
+      if (updatedStyle !== baseStyle) {
+        el.setAttribute('style', updatedStyle);
+      }
+    });
+  }
+
+  const colorRoleMap = buildColorRoleMap();
 
   // Apply design system to page
   function applyDesignSystem(design) {
@@ -460,6 +814,7 @@ export const EDITOR_INJECTION_SCRIPT = `
       document.head.appendChild(styleEl);
     }
     styleEl.textContent = generateDesignSystemCSS(design);
+    applyColorSwap(design, colorRoleMap);
   }
 
   // Apply styles to a specific element
@@ -469,6 +824,7 @@ export const EDITOR_INJECTION_SCRIPT = `
       Object.keys(styles).forEach(function(key) {
         element.style[key] = styles[key];
       });
+      element.dataset.originalStyle = element.getAttribute('style') || '';
     }
   }
 
