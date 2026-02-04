@@ -244,9 +244,9 @@ export function MediaEditPanel({
       <div className="flex items-center justify-between p-4 border-b border-warm-gray-200">
         <div className="flex items-center gap-2">
           {isVideo ? (
-            <Video size={18} className="text-purple-600" />
+            <Video size={18} className="text-rose" />
           ) : (
-            <ImageIcon size={18} className="text-purple-600" />
+            <ImageIcon size={18} className="text-rose" />
           )}
           <div>
             <h3 className="font-medium text-warm-gray-900">Edit Media</h3>
@@ -386,12 +386,12 @@ export function MediaEditPanel({
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://example.com/image.jpg"
-                  className="flex-1 px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                  className="flex-1 px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose"
                 />
                 <button
                   onClick={handleUrlSubmit}
                   disabled={!urlInput.trim()}
-                  className="p-2 text-white bg-purple-600 hover:bg-purple-700 rounded-[--radius-md] disabled:opacity-50 transition-colors"
+                  className="p-2 text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-[--radius-md] disabled:opacity-50 transition-colors"
                 >
                   <Check size={16} />
                 </button>
@@ -412,13 +412,13 @@ export function MediaEditPanel({
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
               placeholder="Describe the image for accessibility..."
-              className="flex-1 px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              className="flex-1 px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] resize-none focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose"
               rows={2}
             />
             <button
               onClick={handleSaveAltText}
               disabled={altText === mediaData.alt}
-              className="p-2 text-white bg-purple-600 hover:bg-purple-700 rounded-[--radius-md] disabled:opacity-50 transition-colors"
+              className="p-2 text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-[--radius-md] disabled:opacity-50 transition-colors"
             >
               <Check size={16} />
             </button>
@@ -438,7 +438,7 @@ export function MediaEditPanel({
                 type="checkbox"
                 checked={autoplay}
                 onChange={(e) => setAutoplay(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-warm-gray-300 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-rose border-warm-gray-300 rounded focus:ring-rose/20"
               />
               Autoplay
             </label>
@@ -447,7 +447,7 @@ export function MediaEditPanel({
                 type="checkbox"
                 checked={loop}
                 onChange={(e) => setLoop(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-warm-gray-300 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-rose border-warm-gray-300 rounded focus:ring-rose/20"
               />
               Loop
             </label>
@@ -456,14 +456,14 @@ export function MediaEditPanel({
                 type="checkbox"
                 checked={muted}
                 onChange={(e) => setMuted(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-warm-gray-300 rounded focus:ring-purple-500"
+                className="w-4 h-4 text-rose border-warm-gray-300 rounded focus:ring-rose/20"
               />
               Muted
             </label>
           </div>
           <button
             onClick={handleSaveVideoSettings}
-            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-[--radius-md] transition-colors"
+            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-warm-gray-900 hover:bg-warm-gray-800 rounded-[--radius-md] transition-colors"
           >
             <Check size={16} />
             Save Settings
