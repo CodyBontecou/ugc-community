@@ -1,9 +1,9 @@
 "use client";
 
-import { MessageCircle, Palette, History } from "lucide-react";
+import { MessageCircle, Palette, History, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SidebarView = "chat" | "design" | "history";
+export type SidebarView = "chat" | "design" | "media" | "history";
 
 interface NavItem {
   id: SidebarView;
@@ -14,6 +14,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "chat", icon: <MessageCircle size={20} />, label: "Chat" },
   { id: "design", icon: <Palette size={20} />, label: "Design" },
+  { id: "media", icon: <ImageIcon size={20} />, label: "Media" },
   { id: "history", icon: <History size={20} />, label: "History" },
 ];
 

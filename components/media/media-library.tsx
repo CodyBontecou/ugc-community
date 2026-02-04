@@ -217,7 +217,7 @@ export function MediaLibrary({
                 Drop files here or click to upload
               </p>
               <p className="text-xs text-warm-gray-400 mt-1">
-                Images (up to 10MB) or videos (up to 100MB)
+                Images or videos (up to 50MB)
               </p>
             </>
           )}

@@ -26,6 +26,7 @@ import { V0SectionNav } from "./v0-section-nav";
 import { MediaLibrary } from "@/components/media/media-library";
 import { EditorSidebarNav, type SidebarView } from "./editor-sidebar-nav";
 import { DesignPanel } from "./design-panel";
+import { MediaPanel } from "./media-panel";
 import { HistoryPanel } from "./history-panel";
 import { PublishDialog } from "./publish-dialog";
 import {
@@ -778,6 +779,16 @@ export function V0Editor({
                   onAddImage={() => setShowMediaLibrary("image")}
                   onAddVideo={() => setShowMediaLibrary("video")}
                 />
+              </motion.div>
+            ) : sidebarView === "media" ? (
+              <motion.div
+                key="media"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <MediaPanel />
               </motion.div>
             ) : sidebarView === "history" ? (
               <motion.div

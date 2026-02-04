@@ -10,8 +10,8 @@ export const ALLOWED_IMAGE_TYPES = [
 export const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 export const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
-export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+export const MAX_IMAGE_SIZE = 50 * 1024 * 1024; // 50MB
+export const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
 /**
  * Get file extension from mime type
