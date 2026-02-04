@@ -73,6 +73,10 @@ export default function AdminQuestionnairesPage() {
   const [generationResults, setGenerationResults] = useState<Map<string, GenerationResult>>(new Map());
   const [generationStatuses, setGenerationStatuses] = useState<Map<string, GenerationStatus>>(new Map());
   const [pollingId, setPollingId] = useState<string | null>(null);
+  const [promptPreviewId, setPromptPreviewId] = useState<string | null>(null);
+  const [promptPreviewText, setPromptPreviewText] = useState("");
+  const [promptPreviewError, setPromptPreviewError] = useState<string | null>(null);
+  const [isPromptPreviewLoading, setIsPromptPreviewLoading] = useState(false);
 
   const fetchGenerationStatus = useCallback(async (questionnaireId: string) => {
     try {
@@ -155,6 +159,46 @@ export default function AdminQuestionnairesPage() {
     });
   };
 
+  const closePromptPreview = () => {
+    setPromptPreviewId(null);
+    setPromptPreviewText("");
+    setPromptPreviewError(null);
+    setIsPromptPreviewLoading(false);
+  };
+
+  const openPromptPreview = async (questionnaireId: string) => {
+    setPromptPreviewId(questionnaireId);
+    setPromptPreviewText("");
+    setPromptPreviewError(null);
+    setIsPromptPreviewLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/admin/questionnaires/${questionnaireId}/generate/prompt`
+      );
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setPromptPreviewError(data?.error || "Failed to load prompt preview");
+        return;
+      }
+
+      setPromptPreviewText(data?.prompt || "");
+    } catch (err) {
+      console.error("Prompt preview error:", err);
+      setPromptPreviewError("Failed to load prompt preview. Please try again.");
+    } finally {
+      setIsPromptPreviewLoading(false);
+    }
+  };
+
+  const handleConfirmGenerate = async () => {
+    if (!promptPreviewId) return;
+    const questionnaireId = promptPreviewId;
+    closePromptPreview();
+    await handleGenerate(questionnaireId);
+  };
+
   const handleGenerate = async (questionnaireId: string) => {
     if (generatingId) return; // Prevent double-clicks
 
@@ -218,6 +262,17 @@ export default function AdminQuestionnairesPage() {
       q.portfolioExamples?.toLowerCase().includes(searchLower)
     );
   });
+
+  const promptPreviewQuestionnaire = promptPreviewId
+    ? questionnaires.find((q) => q.id === promptPreviewId)
+    : null;
+  const promptPreviewStatus = promptPreviewId
+    ? generationStatuses.get(promptPreviewId)
+    : null;
+  const promptPreviewActionLabel =
+    promptPreviewStatus?.status === "completed"
+      ? "Regenerate Website"
+      : "Generate Website";
 
   if (error) {
     return (
@@ -540,7 +595,7 @@ export default function AdminQuestionnairesPage() {
                         )}
                         {questionnaire.userSubdomain && (
                           <button
-                            onClick={() => handleGenerate(questionnaire.id)}
+                            onClick={() => openPromptPreview(questionnaire.id)}
                             disabled={generatingId !== null || isActiveGeneration}
                             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                               generatingId === questionnaire.id || isActiveGeneration
@@ -574,6 +629,80 @@ export default function AdminQuestionnairesPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {promptPreviewId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={closePromptPreview}
+          />
+          <div className="relative w-full max-w-4xl bg-white rounded-[--radius-xl] border border-warm-gray-200 shadow-xl overflow-hidden">
+            <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-warm-gray-200">
+              <div>
+                <h2 className="text-lg font-semibold text-warm-gray-900">
+                  Prompt Preview
+                </h2>
+                <p className="text-sm text-warm-gray-500">
+                  Review the prompt for{" "}
+                  {promptPreviewQuestionnaire?.userName || "this creator"} before
+                  generating.
+                </p>
+              </div>
+              <button
+                onClick={closePromptPreview}
+                className="text-warm-gray-400 hover:text-warm-gray-600"
+                aria-label="Close prompt preview"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 max-h-[60vh] overflow-auto">
+              {isPromptPreviewLoading ? (
+                <div className="flex items-center gap-2 text-warm-gray-500 text-sm">
+                  <Loader2 size={16} className="animate-spin" />
+                  Loading prompt...
+                </div>
+              ) : promptPreviewError ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-red-600">{promptPreviewError}</p>
+                  <button
+                    onClick={() => promptPreviewId && openPromptPreview(promptPreviewId)}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-full hover:bg-red-100"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : (
+                <pre className="text-xs text-warm-gray-700 whitespace-pre-wrap font-mono bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] p-4">
+                  {promptPreviewText || "No prompt available."}
+                </pre>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-warm-gray-200 bg-warm-gray-50 flex items-center justify-end gap-3">
+              <button
+                onClick={closePromptPreview}
+                className="px-4 py-2 text-sm font-medium text-warm-gray-600 hover:text-warm-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmGenerate}
+                disabled={
+                  isPromptPreviewLoading ||
+                  !!promptPreviewError ||
+                  !promptPreviewText.trim()
+                }
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Sparkles size={16} />
+                {promptPreviewActionLabel}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
