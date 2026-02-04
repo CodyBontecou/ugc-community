@@ -56,6 +56,35 @@ export function HistoryPanel({
     setRestoringId(version.id);
     try {
       onRestore(version.htmlContent);
+
+      const response = await fetch(`/api/portfolios/${portfolioId}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          htmlContent: version.htmlContent,
+          title: `Restored from v${version.versionNumber}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || "Failed to set latest version");
+      }
+
+      const data = await response.json();
+      if (data?.version) {
+        setVersions((prev) => {
+          const updated = [
+            data.version,
+            ...prev.filter((item) => item.id !== data.version.id),
+          ];
+          return updated.sort((a, b) => b.versionNumber - a.versionNumber);
+        });
+      } else {
+        await fetchVersions();
+      }
+    } catch (err) {
+      console.error("Failed to restore version:", err);
     } finally {
       setRestoringId(null);
       setPreviewingId(null);
