@@ -97,13 +97,40 @@ export function ElementPropertiesPanel({
     textDecoration: "none" as "none" | "underline" | "line-through" | "overline",
     fontStyle: "normal" as "normal" | "italic",
   });
-  const [color, setColor] = useState("var(--muted-foreground)");
+  const [color, setColor] = useState("inherit");
   const [background, setBackground] = useState("transparent");
   const [margin, setMargin] = useState({ top: "0", right: "0", bottom: "0", left: "0" });
+
+  const colorTokenMap: Record<string, string> = {
+    "var(--foreground)": designSystem.colors.colors.foreground,
+    "var(--muted-foreground)": designSystem.colors.colors.mutedForeground,
+    "var(--primary)": designSystem.colors.colors.primary,
+    "var(--secondary)": designSystem.colors.colors.secondary,
+    "var(--accent)": designSystem.colors.colors.accent,
+    "var(--background)": designSystem.colors.colors.background,
+    "var(--card)": designSystem.colors.colors.card,
+    "var(--muted)": designSystem.colors.colors.muted,
+  };
+
+  const resolveTokenColor = (value: string, fallback?: string) => {
+    if (value === "inherit") return fallback ?? value;
+    if (value === "transparent") return "transparent";
+    return colorTokenMap[value] ?? value;
+  };
 
   // Update content when element changes
   useEffect(() => {
     setContent(selectedElement.content || "");
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(selectedElement.outerHtml, "text/html");
+    const element = doc.body.firstElementChild as HTMLElement | null;
+    const inlineColor = element?.style.color || "inherit";
+    const inlineBackground =
+      element?.style.backgroundColor || element?.style.background || "transparent";
+
+    setColor(inlineColor || "inherit");
+    setBackground(inlineBackground || "transparent");
   }, [selectedElement]);
 
   const handleTypographyChange = (key: string, value: string) => {
@@ -387,7 +414,12 @@ export function ElementPropertiesPanel({
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 rounded border border-border"
-                  style={{ backgroundColor: color.includes("var") ? "#888" : color }}
+                  style={{
+                    backgroundColor: resolveTokenColor(
+                      color,
+                      designSystem.colors.colors.foreground
+                    ),
+                  }}
                 />
                 <SelectValue />
               </div>
@@ -399,7 +431,10 @@ export function ElementPropertiesPanel({
                     <div
                       className="w-4 h-4 rounded border border-border"
                       style={{
-                        backgroundColor: option.value.includes("var") ? "#888" : option.value,
+                        backgroundColor: resolveTokenColor(
+                          option.value,
+                          designSystem.colors.colors.foreground
+                        ),
                       }}
                     />
                     {option.label}
@@ -419,7 +454,13 @@ export function ElementPropertiesPanel({
                 <div
                   className="w-4 h-4 rounded border border-border bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"
                   style={{
-                    backgroundColor: background === "transparent" ? undefined : background,
+                    backgroundColor:
+                      background === "transparent"
+                        ? undefined
+                        : resolveTokenColor(
+                            background,
+                            designSystem.colors.colors.background
+                          ),
                   }}
                 />
                 <SelectValue />
@@ -433,7 +474,12 @@ export function ElementPropertiesPanel({
                       className="w-4 h-4 rounded border border-border bg-[repeating-conic-gradient(#808080_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]"
                       style={{
                         backgroundColor:
-                          option.value === "transparent" ? undefined : option.value,
+                          option.value === "transparent"
+                            ? undefined
+                            : resolveTokenColor(
+                                option.value,
+                                designSystem.colors.colors.background
+                              ),
                       }}
                     />
                     {option.label}
