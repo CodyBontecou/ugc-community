@@ -27,6 +27,7 @@ import { MediaLibrary } from "@/components/media/media-library";
 import { EditorSidebarNav, type SidebarView } from "./editor-sidebar-nav";
 import { DesignPanel } from "./design-panel";
 import { MediaPanel } from "./media-panel";
+import { MediaEditPanel } from "./media-edit-panel";
 import { HistoryPanel } from "./history-panel";
 import { PublishDialog } from "./publish-dialog";
 import {
@@ -767,18 +768,30 @@ export function V0Editor({
                 exit={{ opacity: 0 }}
                 className="flex-1 flex flex-col min-h-0"
               >
-                <DesignPanel
-                  designSystem={designSystem}
-                  onDesignSystemChange={handleDesignSystemChange}
-                  selectedElement={selectedElement}
-                  onElementStyleChange={handleElementStyleChange}
-                  onElementContentChange={handleElementContentChange}
-                  onDeselect={handleDeselect}
-                  onElementChat={handleElementChat}
-                  isStreaming={isStreaming}
-                  onAddImage={() => setShowMediaLibrary("image")}
-                  onAddVideo={() => setShowMediaLibrary("video")}
-                />
+                {selectedElement?.mediaData ? (
+                  <div className="flex-1 flex flex-col min-h-0 bg-white">
+                    <MediaEditPanel
+                      selectedElement={selectedElement}
+                      mediaData={selectedElement.mediaData}
+                      fullHtml={html}
+                      onApplyEdit={handleApplyEdit}
+                      onDeselect={handleDeselect}
+                    />
+                  </div>
+                ) : (
+                  <DesignPanel
+                    designSystem={designSystem}
+                    onDesignSystemChange={handleDesignSystemChange}
+                    selectedElement={selectedElement}
+                    onElementStyleChange={handleElementStyleChange}
+                    onElementContentChange={handleElementContentChange}
+                    onDeselect={handleDeselect}
+                    onElementChat={handleElementChat}
+                    isStreaming={isStreaming}
+                    onAddImage={() => setShowMediaLibrary("image")}
+                    onAddVideo={() => setShowMediaLibrary("video")}
+                  />
+                )}
               </motion.div>
             ) : sidebarView === "media" ? (
               <motion.div
