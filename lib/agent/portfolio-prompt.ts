@@ -2,24 +2,12 @@
 // Types
 // =====================================================
 
-export interface PortfolioProjectData {
-  title: string;
-  brandName?: string | null;
-  campaignDescription?: string | null;
-  contentType?: string | null;
-  platforms?: string[] | null;
-  results?: string | null;
-  mediaUrls: string[]; // Vercel Blob URLs
-  coverUrl?: string;
-}
-
 export interface QuestionnaireData {
   portfolioVision: string;
   inspiringBrands: string | null;
   portfolioExamples: string | null;
   creatorName: string;
   subdomain: string;
-  portfolioProjects?: PortfolioProjectData[];
 }
 
 // =====================================================
@@ -55,50 +43,6 @@ ${data.portfolioVision}`);
     sections.push(`## Inspiration (Optional Reference)
 
 ${parts.join("\n\n")}`);
-  }
-
-  // Portfolio Projects with real images
-  if (data.portfolioProjects && data.portfolioProjects.length > 0) {
-    const projectSections: string[] = [];
-
-    data.portfolioProjects.forEach((project, index) => {
-      const projectParts: string[] = [];
-      projectParts.push(`### Project ${index + 1}: ${project.title}`);
-
-      if (project.brandName) {
-        projectParts.push(`- **Brand:** ${project.brandName}`);
-      }
-      if (project.contentType) {
-        projectParts.push(`- **Type:** ${project.contentType}`);
-      }
-      if (project.platforms && project.platforms.length > 0) {
-        projectParts.push(`- **Platforms:** ${project.platforms.join(", ")}`);
-      }
-      if (project.results) {
-        projectParts.push(`- **Results:** ${project.results}`);
-      }
-      if (project.campaignDescription) {
-        projectParts.push(`- **Description:** ${project.campaignDescription}`);
-      }
-
-      if (project.mediaUrls.length > 0) {
-        projectParts.push(`- **Media:**`);
-        project.mediaUrls.forEach((url, mediaIndex) => {
-          const isCover = project.coverUrl === url ? " (Cover)" : "";
-          projectParts.push(`  - Image ${mediaIndex + 1}${isCover}: ${url}`);
-        });
-      }
-
-      projectSections.push(projectParts.join("\n"));
-    });
-
-    sections.push(`## Creator's Portfolio Work
-
-The creator has uploaded the following projects. **Use these REAL images** in the portfolio section:
-
-${projectSections.join("\n\n")}
-
-**IMPORTANT:** Display these actual uploaded images in the portfolio. Use the provided URLs directly in \`<img>\` tags. Do not use placeholder images.`);
   }
 
   // Combined requirements - keep concise

@@ -11,7 +11,6 @@ import {
   User,
   Shield,
   Briefcase,
-  FolderKanban,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 
@@ -27,7 +26,6 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
 ];
 

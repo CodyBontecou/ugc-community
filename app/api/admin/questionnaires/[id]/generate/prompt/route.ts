@@ -5,14 +5,11 @@ import { db } from "@/lib/db";
 import {
   onboardingQuestionnaires,
   users,
-  portfolioProjects,
-  portfolioProjectMedia,
 } from "@/lib/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   buildPortfolioPrompt,
   QuestionnaireData,
-  PortfolioProjectData,
 } from "@/lib/agent/portfolio-prompt";
 
 interface PromptResponse {
@@ -66,43 +63,12 @@ export async function GET(
       );
     }
 
-    const projects = await db.query.portfolioProjects.findMany({
-      where: eq(portfolioProjects.userId, questionnaire.userId),
-      orderBy: [asc(portfolioProjects.displayOrder)],
-      with: {
-        projectMedia: {
-          orderBy: [asc(portfolioProjectMedia.displayOrder)],
-          with: {
-            media: true,
-          },
-        },
-      },
-    });
-
-    const portfolioProjectsData: PortfolioProjectData[] = projects.map((project) => {
-      const mediaUrls = project.projectMedia.map((pm) => pm.media.url);
-      const coverMedia = project.projectMedia.find((pm) => pm.isCover);
-      const coverUrl = coverMedia?.media.url || mediaUrls[0];
-
-      return {
-        title: project.title,
-        brandName: project.brandName,
-        campaignDescription: project.campaignDescription,
-        contentType: project.contentType,
-        platforms: project.platforms,
-        results: project.results,
-        mediaUrls,
-        coverUrl,
-      };
-    });
-
     const questionnaireData: QuestionnaireData = {
       portfolioVision: questionnaire.portfolioVision,
       inspiringBrands: questionnaire.inspiringBrands,
       portfolioExamples: questionnaire.portfolioExamples,
       creatorName: questionnaire.creatorName,
       subdomain: questionnaire.subdomain,
-      portfolioProjects: portfolioProjectsData,
     };
 
     const prompt = buildPortfolioPrompt(questionnaireData);

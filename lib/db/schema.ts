@@ -483,8 +483,6 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   onboardingQuestionnaires: many(onboardingQuestionnaires),
   // Portfolio generations
   portfolioGenerations: many(portfolioGenerations),
-  // Portfolio projects
-  portfolioProjects: many(portfolioProjects),
 }));
 
 export const onboardingQuestionnairesRelations = relations(onboardingQuestionnaires, ({ one }) => ({
@@ -520,12 +518,11 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   }),
 }));
 
-export const mediaRelations = relations(media, ({ one, many }) => ({
+export const mediaRelations = relations(media, ({ one }) => ({
   user: one(users, {
     fields: [media.userId],
     references: [users.id],
   }),
-  projectMedia: many(portfolioProjectMedia),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -711,55 +708,7 @@ export const jobApplicationsRelations = relations(jobApplications, ({ one }) => 
   }),
 }));
 
-// =====================================================
-// Portfolio Projects (Groups media with context)
-// =====================================================
 
-export const portfolioProjects = pgTable(
-  "portfolio_projects",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    title: text("title").notNull(),
-    brandName: text("brand_name"),
-    campaignDescription: text("campaign_description"),
-    contentType: text("content_type"), // 'sponsored' | 'ugc' | 'personal' | 'collab'
-    platforms: text("platforms").array(), // ['tiktok', 'instagram']
-    results: text("results"), // '2M views, 50K likes'
-    projectDate: date("project_date"),
-    displayOrder: integer("display_order").notNull().default(0),
-    featured: boolean("featured").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_projects_user_id_idx").on(table.userId),
-    index("portfolio_projects_display_order_idx").on(table.displayOrder),
-  ]
-);
-
-export const portfolioProjectMedia = pgTable(
-  "portfolio_project_media",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    projectId: uuid("project_id")
-      .notNull()
-      .references(() => portfolioProjects.id, { onDelete: "cascade" }),
-    mediaId: uuid("media_id")
-      .notNull()
-      .references(() => media.id, { onDelete: "cascade" }),
-    displayOrder: integer("display_order").notNull().default(0),
-    isCover: boolean("is_cover").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("portfolio_project_media_project_id_idx").on(table.projectId),
-    index("portfolio_project_media_media_id_idx").on(table.mediaId),
-    unique("portfolio_project_media_unique").on(table.projectId, table.mediaId),
-  ]
-);
 
 // =====================================================
 // Notifications
@@ -794,24 +743,7 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
-export const portfolioProjectsRelations = relations(portfolioProjects, ({ one, many }) => ({
-  user: one(users, {
-    fields: [portfolioProjects.userId],
-    references: [users.id],
-  }),
-  projectMedia: many(portfolioProjectMedia),
-}));
 
-export const portfolioProjectMediaRelations = relations(portfolioProjectMedia, ({ one }) => ({
-  project: one(portfolioProjects, {
-    fields: [portfolioProjectMedia.projectId],
-    references: [portfolioProjects.id],
-  }),
-  media: one(media, {
-    fields: [portfolioProjectMedia.mediaId],
-    references: [media.id],
-  }),
-}));
 
 // =====================================================
 // Types
@@ -911,7 +843,4 @@ export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSele
 export type NewOnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferInsert;
 export type PortfolioGeneration = typeof portfolioGenerations.$inferSelect;
 export type NewPortfolioGeneration = typeof portfolioGenerations.$inferInsert;
-export type PortfolioProject = typeof portfolioProjects.$inferSelect;
-export type NewPortfolioProject = typeof portfolioProjects.$inferInsert;
-export type PortfolioProjectMedia = typeof portfolioProjectMedia.$inferSelect;
-export type NewPortfolioProjectMedia = typeof portfolioProjectMedia.$inferInsert;
+
