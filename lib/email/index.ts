@@ -793,4 +793,275 @@ export async function sendMilestoneEarnedEmail(params: MilestoneEarnedParams) {
   }
 }
 
+// =====================================================
+// Portfolio Enforcement Emails
+// =====================================================
+
+interface PortfolioDisabledParams {
+  creatorName: string;
+  creatorEmail: string;
+  subdomain: string;
+  currentPostCount: number;
+  requiredPostCount: number;
+}
+
+export async function sendPortfolioDisabledEmail(params: PortfolioDisabledParams) {
+  const { creatorName, creatorEmail, subdomain, currentPostCount, requiredPostCount } = params;
+  const firstName = creatorName.split(" ")[0] || "there";
+  const postsNeeded = requiredPostCount - currentPostCount;
+  const portfolioUrl = `https://${subdomain}.ugc.community`;
+
+  const { error } = await getResend().emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: creatorEmail,
+    subject: "Your portfolio has been paused",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFFBF9; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBF9;">
+    <tr>
+      <td align="center" style="padding: 48px 20px;">
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.08);">
+
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #D4CBC4 0%, #A69B91 100%); border-radius: 24px 24px 0 0;"></td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 48px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
+                    ugc.community
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <div style="font-size: 48px; line-height: 1;">⏸️</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 24px 40px 0 40px;">
+              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; line-height: 1.2; color: #1A1614;">
+                Portfolio paused
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <p style="margin: 0 0 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Hey ${firstName}, your portfolio at <strong style="color: #1A1614;">${portfolioUrl}</strong> has been temporarily paused because the monthly posting requirement wasn't met.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FAF7F5; border-radius: 16px; border: 1px solid #E8E2DD;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #A69B91; text-transform: uppercase; letter-spacing: 0.05em;">
+                      This month's progress
+                    </p>
+                    <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 24px; font-weight: 600; color: #1A1614;">
+                      ${currentPostCount} / ${requiredPostCount} posts
+                    </p>
+                    <p style="margin: 8px 0 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #625850;">
+                      ${postsNeeded} more post${postsNeeded === 1 ? "" : "s"} needed to reactivate
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 32px 40px 0 40px;">
+              <p style="margin: 0 0 20px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 400; color: #1A1614;">
+                How to reactivate
+              </p>
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Just post ${postsNeeded} more time${postsNeeded === 1 ? "" : "s"} this month tagging <strong style="color: #1A1614;">@ugc.community</strong> and your portfolio will come back online automatically. No action needed on your end — just keep creating.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius: 50px; background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%); box-shadow: 0 4px 16px rgba(255, 107, 149, 0.3);">
+                    <a href="https://ugc.community/dashboard" style="display: inline-block; padding: 14px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;">
+                      View Dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 40px 48px 40px;">
+              <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1A1614;">
+                — The ugc.community team
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px;">
+          <tr>
+            <td align="center" style="padding: 28px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #A69B91;">
+                Your portfolio data is safe. Only public access is paused until the posting requirement is met.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    console.error("Failed to send portfolio disabled email:", error);
+    throw error;
+  }
+}
+
+interface PortfolioReenabledParams {
+  creatorName: string;
+  creatorEmail: string;
+  subdomain: string;
+}
+
+export async function sendPortfolioReenabledEmail(params: PortfolioReenabledParams) {
+  const { creatorName, creatorEmail, subdomain } = params;
+  const firstName = creatorName.split(" ")[0] || "there";
+  const portfolioUrl = `https://${subdomain}.ugc.community`;
+
+  const { error } = await getResend().emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: creatorEmail,
+    subject: "Your portfolio is back online!",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFFBF9; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #FFFBF9;">
+    <tr>
+      <td align="center" style="padding: 48px 20px;">
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #FFFFFF; border-radius: 24px; box-shadow: 0 8px 40px rgba(26, 22, 20, 0.08);">
+
+          <tr>
+            <td style="height: 4px; background: linear-gradient(90deg, #34D399 0%, #10B981 50%, #059669 100%); border-radius: 24px 24px 0 0;"></td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 48px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
+                    ugc.community
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <div style="font-size: 48px; line-height: 1;">🎉</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 24px 40px 0 40px;">
+              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; line-height: 1.2; color: #1A1614;">
+                You're back online!
+              </h1>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 40px 0 40px;">
+              <p style="margin: 0 0 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Hey ${firstName}, great work! You've met the monthly posting requirement and your portfolio at <strong style="color: #1A1614;">${portfolioUrl}</strong> is live again.
+              </p>
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #625850;">
+                Brands can discover and contact you through your portfolio. Keep posting to stay visible!
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding: 32px 40px 0 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius: 50px; background: linear-gradient(135deg, #34D399 0%, #10B981 100%); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);">
+                    <a href="${portfolioUrl}" style="display: inline-block; padding: 14px 32px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; color: #FFFFFF; text-decoration: none;">
+                      View Your Portfolio
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 40px 40px 48px 40px;">
+              <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #1A1614;">
+                — The ugc.community team
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px;">
+          <tr>
+            <td align="center" style="padding: 28px 40px 0 40px;">
+              <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #A69B91;">
+                Keep tagging @ugc.community in your posts to maintain your portfolio each month.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  });
+
+  if (error) {
+    console.error("Failed to send portfolio re-enabled email:", error);
+    throw error;
+  }
+}
+
 
