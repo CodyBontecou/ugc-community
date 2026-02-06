@@ -10,9 +10,7 @@ import {
 } from "lucide-react";
 
 import { OverviewTab } from "./overview-tab";
-import { CreatorStatsCard } from "./creator-stats-card";
-import { AdvancedAnalytics } from "./advanced-analytics";
-import { PostMetrics } from "./post-metrics";
+import { AnalyticsTab } from "./analytics-tab";
 import { OnboardingForm } from "./onboarding-form";
 import { PortfolioStatus } from "./portfolio-status";
 import { RewardsOverview } from "@/components/milestones/RewardsOverview";
@@ -94,12 +92,7 @@ export function DashboardShell({ userName }: DashboardShellProps) {
           )}
 
           {activeTab === "analytics" && (
-            <div className="space-y-6">
-              <CreatorStatsCard />
-              <AdvancedAnalytics />
-              <PostMetrics />
-              <AnalyticsEmptyHint />
-            </div>
+            <AnalyticsTab onNavigate={handleNavigate} />
           )}
 
           {activeTab === "portfolio" && (
@@ -127,17 +120,5 @@ export function DashboardShell({ userName }: DashboardShellProps) {
         </motion.div>
       </AnimatePresence>
     </div>
-  );
-}
-
-/**
- * Shows a helpful hint when the analytics tab has no content
- * (all child components conditionally render based on their own data)
- */
-function AnalyticsEmptyHint() {
-  return (
-    <noscript>
-      {/* Rendered only if JS is off; the real empty hint is handled inside overview */}
-    </noscript>
   );
 }
