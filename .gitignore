@@ -44,9 +44,6 @@ next-env.d.ts
 *.sln
 *.sw?
 
-# Drizzle
-drizzle/
-
 # Misc
 *.local
 .env*.local
