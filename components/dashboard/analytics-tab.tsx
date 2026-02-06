@@ -20,6 +20,7 @@ import { FEATURE_REQUIREMENTS } from "@/lib/types/analytics";
 import { CreatorStatsCard } from "./creator-stats-card";
 import { AdvancedAnalytics } from "./advanced-analytics";
 import { PostMetrics } from "./post-metrics";
+import { ContentPostsTable } from "./content-posts-table";
 import type { TabId } from "./dashboard-shell";
 
 interface AnalyticsTabProps {
@@ -60,11 +61,12 @@ export function AnalyticsTab({ onNavigate }: AnalyticsTabProps) {
   const hasAdvanced = stats.analyticsFeatures?.engagementTrends ?? false;
 
   // Features are locked → show a single consolidated locked state
-  // but still show the basic stats card (it renders independently)
+  // but still show the basic stats card and recognized posts (always visible)
   if (!hasAdvanced) {
     return (
       <div className="space-y-6">
         <CreatorStatsCard />
+        <ContentPostsTable />
         <LockedAnalyticsCard />
       </div>
     );
@@ -74,6 +76,7 @@ export function AnalyticsTab({ onNavigate }: AnalyticsTabProps) {
   return (
     <div className="space-y-6">
       <CreatorStatsCard />
+      <ContentPostsTable />
       <AdvancedAnalytics />
       <PostMetrics />
     </div>

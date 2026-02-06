@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { Stats, PortfolioStatus } from "@/lib/types/analytics";
 import type { TabId } from "./dashboard-shell";
+import { ContentPostsTable } from "./content-posts-table";
 
 /* ──────────────────────────────────────────────
    Types
@@ -172,6 +173,15 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
       {/* ─── Next Action Card ─── */}
       <motion.div variants={fadeUp}>
         <NextActionCard {...nextAction} />
+      </motion.div>
+
+      {/* ─── Recent Recognized Posts ─── */}
+      <motion.div variants={fadeUp}>
+        <ContentPostsTable
+          limit={3}
+          compact
+          onViewAll={() => onNavigate("analytics")}
+        />
       </motion.div>
 
       {/* ─── Compact Milestones ─── */}
