@@ -88,40 +88,63 @@ export interface TikTokProfileVideosResponse {
 
 // ─── Instagram Types ──────────────────────────────────────────
 
-export interface InstagramBasicProfileResponse {
+/**
+ * Response from GET /v1/instagram/profile
+ * Wrapped in { data: { user: ... } }
+ */
+export interface InstagramProfileApiResponse {
+  success?: boolean;
+  credits_remaining?: number;
+  data: {
+    user: {
+      username: string;
+      full_name: string;
+      biography: string;
+      edge_followed_by: { count: number };
+      edge_follow: { count: number };
+      edge_owner_to_timeline_media: { count: number };
+      is_verified: boolean;
+      is_private: boolean;
+      id: string;
+      profile_pic_url?: string;
+    };
+  };
+}
+
+/** Normalized profile data extracted from the API response */
+export interface InstagramProfileData {
   username: string;
   full_name: string;
-  biography: string;
   follower_count: number;
   following_count: number;
   media_count: number;
   is_verified: boolean;
   is_private: boolean;
-  profile_pic_url?: string;
+  user_id: string;
 }
 
+/**
+ * Instagram post item from GET /v2/instagram/user/posts
+ * Uses Instagram's internal API format (not Graph API)
+ */
 export interface InstagramPostItem {
   id: string;
-  shortcode: string;
-  display_url: string;
-  is_video: boolean;
+  code: string; // shortcode for URL construction
   caption?: {
     text: string;
   };
-  edge_media_to_caption?: {
-    edges: Array<{ node: { text: string } }>;
+  like_count?: number;
+  comment_count?: number;
+  play_count?: number;
+  taken_at?: number; // Unix timestamp in seconds
+  media_type?: number; // 1=photo, 2=video, 8=carousel
+  image_versions2?: {
+    candidates?: Array<{ url: string; width: number; height: number }>;
   };
-  edge_media_to_comment?: {
-    count: number;
+  user?: {
+    username: string;
+    full_name?: string;
   };
-  edge_liked_by?: {
-    count: number;
-  };
-  edge_media_preview_like?: {
-    count: number;
-  };
-  video_view_count?: number;
-  taken_at_timestamp?: number;
   owner?: {
     username: string;
     full_name?: string;
@@ -189,14 +212,15 @@ export async function getTikTokProfileVideos(
 }
 
 /**
- * Get Instagram basic profile info (1 credit)
- * Use to check media_count before fetching all posts
+ * Get Instagram profile info (1 credit)
+ * Uses /v1/instagram/profile which accepts a handle.
+ * Returns normalized profile data including media_count for peek optimization.
  */
-export async function getInstagramBasicProfile(
+export async function getInstagramProfile(
   handle: string
-): Promise<InstagramBasicProfileResponse> {
+): Promise<InstagramProfileData> {
   const apiKey = getApiKey();
-  const url = `${API_BASE}/v1/instagram/basic-profile?handle=${encodeURIComponent(handle)}`;
+  const url = `${API_BASE}/v1/instagram/profile?handle=${encodeURIComponent(handle)}`;
 
   const response = await fetch(url, {
     headers: { "x-api-key": apiKey },
@@ -209,7 +233,23 @@ export async function getInstagramBasicProfile(
     );
   }
 
-  return response.json();
+  const raw: InstagramProfileApiResponse = await response.json();
+  const user = raw.data?.user;
+
+  if (!user) {
+    throw new Error(`Instagram profile not found for handle: ${handle}`);
+  }
+
+  return {
+    username: user.username,
+    full_name: user.full_name,
+    follower_count: user.edge_followed_by?.count ?? 0,
+    following_count: user.edge_follow?.count ?? 0,
+    media_count: user.edge_owner_to_timeline_media?.count ?? 0,
+    is_verified: user.is_verified,
+    is_private: user.is_private,
+    user_id: user.id,
+  };
 }
 
 /**

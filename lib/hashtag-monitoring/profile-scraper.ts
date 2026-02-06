@@ -17,7 +17,7 @@ import { sql, eq } from "drizzle-orm";
 import {
   getTikTokProfile,
   getTikTokProfileVideos,
-  getInstagramBasicProfile,
+  getInstagramProfile,
   getInstagramPosts,
   type TikTokVideoItem,
   type InstagramPostItem,
@@ -279,7 +279,7 @@ async function scrapeInstagramProfile(
 
   try {
     // Step 1: PEEK — check post count (1 credit)
-    const profile = await getInstagramBasicProfile(handle);
+    const profile = await getInstagramProfile(handle);
     const currentPostCount = profile.media_count;
 
     console.log(
@@ -338,16 +338,14 @@ function parseInstagramPost(
   handle: string,
   fullName: string
 ): ParsedPost | null {
-  const shortcode = post.shortcode;
+  // Instagram's internal API uses "code" as the shortcode
+  const shortcode = post.code;
   if (!shortcode) return null;
 
   const postUrl = `https://www.instagram.com/p/${shortcode}/`;
 
   // Extract caption text
-  const caption =
-    post.caption?.text ||
-    post.edge_media_to_caption?.edges?.[0]?.node?.text ||
-    "";
+  const caption = post.caption?.text || "";
 
   // Extract hashtags from caption
   const hashtagMatches = caption.match(/#(\w+)/g);
@@ -355,29 +353,31 @@ function parseInstagramPost(
     ? hashtagMatches.map((h) => h.replace("#", ""))
     : undefined;
 
-  const likes =
-    post.edge_liked_by?.count ??
-    post.edge_media_preview_like?.count;
-  const comments = post.edge_media_to_comment?.count;
+  // Get the best thumbnail URL
+  const thumbnailUrl = post.image_versions2?.candidates?.[0]?.url;
+
+  // Get author from user or owner objects
+  const authorHandle = post.user?.username || post.owner?.username || handle;
+  const authorName = post.user?.full_name || post.owner?.full_name || fullName;
 
   return {
     platform: "instagram",
     postUrl,
     postId: post.id || shortcode,
-    authorHandle: post.owner?.username || handle,
-    authorName: post.owner?.full_name || fullName,
+    authorHandle,
+    authorName,
     content: caption,
     engagement: {
-      likes,
-      comments,
-      views: post.video_view_count,
+      likes: post.like_count,
+      comments: post.comment_count,
+      views: post.play_count,
     },
-    postedAt: post.taken_at_timestamp
-      ? new Date(post.taken_at_timestamp * 1000)
+    postedAt: post.taken_at
+      ? new Date(post.taken_at * 1000)
       : undefined,
     metadata: {
       hashtags,
-      thumbnailUrl: post.display_url,
+      thumbnailUrl,
     },
   };
 }
