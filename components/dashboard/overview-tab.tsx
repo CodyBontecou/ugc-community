@@ -10,8 +10,6 @@ import {
   ArrowRight,
   TrendingUp,
   Globe,
-  BarChart3,
-  Image as ImageIcon,
   Sparkles,
   Target,
   CheckCircle2,
@@ -206,44 +204,7 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
         </motion.div>
       )}
 
-      {/* ─── Quick Navigation ─── */}
-      <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3">
-        <QuickNavCard
-          icon={BarChart3}
-          label="Analytics"
-          description="Detailed stats & trends"
-          onClick={() => onNavigate("analytics")}
-          color="coral"
-        />
-        <QuickNavCard
-          icon={ImageIcon}
-          label="Media Library"
-          description="Upload & manage files"
-          onClick={() => onNavigate("media")}
-          color="rose"
-        />
-      </motion.div>
 
-      {/* ─── Jobs CTA ─── */}
-      <motion.div variants={fadeUp}>
-        <Link href="/dashboard/jobs" className="block group">
-          <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-coral/[0.04] via-rose/[0.04] to-coral/[0.02] rounded-[--radius-xl] border border-warm-gray-200 hover:border-coral/30 hover:shadow-sm transition-all">
-            <div className="w-11 h-11 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
-              <Briefcase size={20} className="text-coral" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-warm-gray-900">Content Jobs</p>
-              <p className="text-sm text-warm-gray-500 truncate">
-                Browse active opportunities &amp; grow your career
-              </p>
-            </div>
-            <ArrowRight
-              size={18}
-              className="text-warm-gray-300 group-hover:text-coral group-hover:translate-x-0.5 transition-all flex-shrink-0"
-            />
-          </div>
-        </Link>
-      </motion.div>
     </motion.div>
   );
 }
@@ -609,45 +570,4 @@ function CompactPortfolioStatus({
   );
 }
 
-/* ── Quick Nav Card ── */
 
-const NAV_COLORS: Record<string, { bg: string; text: string }> = {
-  coral: { bg: "bg-coral/10", text: "text-coral" },
-  rose: { bg: "bg-rose/10", text: "text-rose" },
-  warm: { bg: "bg-warm-gray-100", text: "text-warm-gray-600" },
-};
-
-function QuickNavCard({
-  icon: Icon,
-  label,
-  description,
-  onClick,
-  color,
-}: {
-  icon: typeof BarChart3;
-  label: string;
-  description: string;
-  onClick: () => void;
-  color: string;
-}) {
-  const c = NAV_COLORS[color] ?? NAV_COLORS.coral;
-
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 p-4 bg-white rounded-[--radius-lg] border border-warm-gray-200 hover:border-warm-gray-300 hover:shadow-sm transition-all text-left group"
-    >
-      <div
-        className={`w-10 h-10 rounded-full ${c.bg} flex items-center justify-center flex-shrink-0`}
-      >
-        <Icon size={18} className={c.text} />
-      </div>
-      <div className="min-w-0">
-        <p className="font-medium text-warm-gray-900 group-hover:text-warm-gray-800">
-          {label}
-        </p>
-        <p className="text-xs text-warm-gray-500 truncate">{description}</p>
-      </div>
-    </button>
-  );
-}

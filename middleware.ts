@@ -17,7 +17,75 @@ const BLOCKED_USER_AGENTS = [
   "Diffbot",
 ];
 
+// Hosts that are NOT portfolio subdomains
+const NON_PORTFOLIO_HOSTS = new Set(["www", "ugc", "app"]);
+
+/**
+ * Extract portfolio subdomain from the Host header.
+ * Returns null if this is a main app request (apex, www, localhost, etc.)
+ *
+ * Examples:
+ *   johndoe.ugc.community → "johndoe"
+ *   www.ugc.community → null
+ *   ugc.community → null
+ *   localhost:3000 → null (use ?subdomain= for dev testing)
+ */
+function getPortfolioSubdomain(request: NextRequest): string | null {
+  const host = request.headers.get("host") || "";
+
+  // Dev mode: support ?subdomain=johndoe on localhost
+  if (host.startsWith("localhost") || host.startsWith("127.0.0.1")) {
+    const subdomain = request.nextUrl.searchParams.get("subdomain");
+    return subdomain || null;
+  }
+
+  // Production: parse subdomain from host
+  // Expected format: {subdomain}.ugc.community
+  const parts = host.split(".");
+
+  // Apex domain (ugc.community) or bare host → no subdomain
+  if (parts.length <= 2) return null;
+
+  // Extract subdomain (first segment)
+  const subdomain = parts[0].toLowerCase();
+
+  // Skip known non-portfolio subdomains
+  if (NON_PORTFOLIO_HOSTS.has(subdomain)) return null;
+
+  // Skip empty subdomains
+  if (!subdomain) return null;
+
+  return subdomain;
+}
+
 export function middleware(request: NextRequest) {
+  // =====================================================
+  // Portfolio Subdomain Detection (must be first)
+  // =====================================================
+  const portfolioSubdomain = getPortfolioSubdomain(request);
+
+  if (portfolioSubdomain) {
+    // Rewrite to the portfolio serving route
+    let pathname = request.nextUrl.pathname;
+
+    // Default to index.html for root requests
+    if (pathname === "/" || pathname === "") {
+      pathname = "/index.html";
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = `/api/portfolio-serve/${portfolioSubdomain}${pathname}`;
+
+    // Strip the subdomain query param in dev mode so it doesn't pass through
+    url.searchParams.delete("subdomain");
+
+    // Return early — don't apply main app middleware to portfolio requests
+    return NextResponse.rewrite(url);
+  }
+
+  // =====================================================
+  // Main App Middleware (non-portfolio requests)
+  // =====================================================
   const userAgent = request.headers.get("user-agent") || "";
   const pathname = request.nextUrl.pathname;
 
@@ -61,9 +129,12 @@ export const config = {
      * Match all request paths except:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files
+     *
+     * NOTE: We intentionally DO NOT exclude favicon.ico, .png, .ico etc.
+     * because portfolio subdomains need those to be routed through middleware
+     * to the blob serving route. The main app's favicon.ico is served directly
+     * by Next.js from /public before middleware runs.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image).*)",
   ],
 };
