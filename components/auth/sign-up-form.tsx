@@ -1,67 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Loader2, Eye, EyeOff, AtSign, CheckCircle } from "lucide-react";
-import { signUp, signIn } from "@/lib/auth/client";
+import { Mail, Loader2, CheckCircle } from "lucide-react";
+import { signIn } from "@/lib/auth/client";
 
 export function SignUpForm() {
-  const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    // Basic validation
-    if (username && !/^[a-z0-9_-]+$/i.test(username)) {
-      setError(
-        "Username can only contain letters, numbers, underscores, and hyphens"
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Create account
-      const result = await signUp.email({
+      const result = await signIn.magicLink({
         email,
-        password,
-        name,
+        callbackURL: "/dashboard",
       });
 
       if (result.error) {
-        setError(result.error.message || "Failed to create account");
+        setError(result.error.message || "Failed to send sign-up link");
         return;
       }
 
-      // If username provided, update user profile via API
-      if (username.trim()) {
-        await fetch("/api/user/username", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: username.toLowerCase() }),
-        });
-      }
-
-      // Show verification message instead of redirecting
-      setVerificationSent(true);
+      setMagicLinkSent(true);
     } catch {
       setError("An unexpected error occurred");
     } finally {
@@ -71,7 +39,7 @@ export function SignUpForm() {
 
   const handleGoogleSignUp = async () => {
     setError(null);
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     try {
       const result = await signIn.social({
         provider: "google",
@@ -80,17 +48,15 @@ export function SignUpForm() {
 
       if (result?.error) {
         setError(result.error.message || "Failed to sign up with Google");
-        setIsLoading(false);
+        setIsGoogleLoading(false);
       }
-      // If successful, browser redirects to Google OAuth - no need to reset loading
     } catch {
       setError("Failed to sign up with Google");
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
-  // Show verification success screen
-  if (verificationSent) {
+  if (magicLinkSent) {
     return (
       <div className="w-full max-w-md mx-auto">
         <motion.div
@@ -107,23 +73,29 @@ export function SignUpForm() {
               Check your email
             </h1>
             <p className="text-warm-gray-500 mb-6">
-              We sent a verification link to{" "}
+              We sent a sign-in link to{" "}
               <span className="font-medium text-warm-gray-700">{email}</span>
             </p>
             <p className="text-sm text-warm-gray-400 mb-6">
-              Click the link in the email to verify your account and get started.
+              Click the link in the email to create your account. It expires in 5
+              minutes.
             </p>
-            <Link
-              href="/sign-in"
+            <button
+              onClick={() => {
+                setMagicLinkSent(false);
+                setEmail("");
+              }}
               className="text-rose hover:text-rose/80 font-medium transition-colors text-sm"
             >
-              Back to sign in
-            </Link>
+              Use a different email
+            </button>
           </div>
         </motion.div>
       </div>
     );
   }
+
+  const anyLoading = isLoading || isGoogleLoading;
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -151,64 +123,6 @@ export function SignUpForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
-              htmlFor="name"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              Full name
-            </label>
-            <div className="relative">
-              <User
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400"
-              />
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-                placeholder="Your name"
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              Username{" "}
-              <span className="text-warm-gray-400 font-normal">(optional)</span>
-            </label>
-            <div className="relative">
-              <AtSign
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400"
-              />
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                className="w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-                placeholder="yourname"
-                disabled={isLoading}
-              />
-            </div>
-            {username && (
-              <p className="mt-1.5 text-xs text-warm-gray-500">
-                Your profile will be at{" "}
-                <span className="text-rose font-medium">
-                  {username}.ugc.community
-                </span>
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
               htmlFor="email"
               className="block text-sm font-medium text-warm-gray-700 mb-1.5"
             >
@@ -227,58 +141,25 @@ export function SignUpForm() {
                 className="w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
                 placeholder="you@example.com"
                 required
-                disabled={isLoading}
+                disabled={anyLoading}
               />
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-warm-gray-700 mb-1.5"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <Lock
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400"
-              />
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-12 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
-                placeholder="Minimum 8 characters"
-                required
-                minLength={8}
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-warm-gray-400 hover:text-warm-gray-600 transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
           </div>
 
           <motion.button
             type="submit"
-            disabled={isLoading}
+            disabled={anyLoading}
             className="w-full py-3 px-4 bg-gradient-to-r from-coral to-rose font-medium rounded-[--radius-md] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
-            whileHover={{ scale: isLoading ? 1 : 1.01 }}
-            whileTap={{ scale: isLoading ? 1 : 0.99 }}
+            whileHover={{ scale: anyLoading ? 1 : 1.01 }}
+            whileTap={{ scale: anyLoading ? 1 : 1.01 }}
           >
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
-                Creating account...
+                Sending link...
               </>
             ) : (
-              "Create account"
+              "Continue with email"
             )}
           </motion.button>
         </form>
@@ -292,29 +173,33 @@ export function SignUpForm() {
         <motion.button
           type="button"
           onClick={handleGoogleSignUp}
-          disabled={isLoading}
+          disabled={anyLoading}
           className="w-full py-3 px-4 bg-white border border-warm-gray-200 text-warm-gray-700 font-medium rounded-[--radius-md] hover:bg-warm-gray-50 hover:border-warm-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-3"
-          whileHover={{ scale: isLoading ? 1 : 1.01 }}
-          whileTap={{ scale: isLoading ? 1 : 0.99 }}
+          whileHover={{ scale: anyLoading ? 1 : 1.01 }}
+          whileTap={{ scale: anyLoading ? 1 : 0.99 }}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18">
-            <path
-              fill="#4285F4"
-              d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-            />
-            <path
-              fill="#34A853"
-              d="M9.003 18c2.43 0 4.467-.806 5.956-2.18l-2.909-2.26c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9.002 18z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M3.964 10.712A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.33z"
-            />
-            <path
-              fill="#EA4335"
-              d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.428 0 9.002 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z"
-            />
-          </svg>
+          {isGoogleLoading ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 18 18">
+              <path
+                fill="#4285F4"
+                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+              />
+              <path
+                fill="#34A853"
+                d="M9.003 18c2.43 0 4.467-.806 5.956-2.18l-2.909-2.26c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9.002 18z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M3.964 10.712A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.33z"
+              />
+              <path
+                fill="#EA4335"
+                d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.428 0 9.002 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z"
+              />
+            </svg>
+          )}
           Continue with Google
         </motion.button>
 
