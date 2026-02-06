@@ -14,6 +14,7 @@ import {
   Eye,
   Globe,
   Mail,
+  Info,
 } from "lucide-react";
 import type { Stats } from "@/lib/types/analytics";
 import { FEATURE_REQUIREMENTS } from "@/lib/types/analytics";
@@ -146,10 +147,19 @@ function LockedAnalyticsCard() {
           <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
             <Lock size={18} className="text-coral" />
           </div>
-          <div>
-            <h3 className="font-semibold text-warm-gray-900">
-              Advanced Analytics
-            </h3>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-warm-gray-900">
+                Advanced Analytics
+              </h3>
+              <Link
+                href="/dashboard/analytics/example"
+                className="text-warm-gray-400 hover:text-coral transition-colors"
+                title="See an example of Advanced Analytics"
+              >
+                <Info size={16} />
+              </Link>
+            </div>
             <p className="text-sm text-warm-gray-500">
               {FEATURE_REQUIREMENTS.engagementTrends.label} to unlock
             </p>
