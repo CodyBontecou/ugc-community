@@ -14,7 +14,6 @@ interface StatusResponse {
   generation?: {
     id: string;
     status: string;
-    githubRepo: string | null;
     deploymentUrl: string | null;
     previewUrl: string | null;
     filesGenerated: number | null;
@@ -79,7 +78,6 @@ export async function GET(
       generation: {
         id: generation.id,
         status: generation.status,
-        githubRepo: generation.githubRepo,
         deploymentUrl: generation.deploymentUrl,
         previewUrl: generation.previewUrl,
         filesGenerated: generation.filesGenerated,

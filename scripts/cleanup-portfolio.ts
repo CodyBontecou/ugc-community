@@ -1,6 +1,7 @@
 import { db } from "../lib/db";
 import { users, portfolioGenerations } from "../lib/db/schema";
 import { eq } from "drizzle-orm";
+import { deletePortfolio } from "../lib/portfolio/storage";
 
 const subdomain = process.argv[2];
 
@@ -32,18 +33,19 @@ async function cleanup() {
 
   console.log(`Deleted ${deleted.length} portfolio generation records`);
 
-  // Clear GitHub repo fields on user
+  // Delete blob files for this subdomain
+  const deletedBlobCount = await deletePortfolio(subdomain);
+  console.log(`Deleted ${deletedBlobCount} blob files`);
+
+  // Disable site
   await db
     .update(users)
     .set({
-      githubRepoFullName: null,
-      githubRepoId: null,
-      vercelProjectId: null,
       siteEnabled: false,
     })
     .where(eq(users.id, user.id));
 
-  console.log("Cleared GitHub repo and Vercel fields on user record");
+  console.log("Set siteEnabled to false");
   console.log("Cleanup complete!");
 }
 

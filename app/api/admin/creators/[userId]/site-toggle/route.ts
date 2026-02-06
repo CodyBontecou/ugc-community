@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { addDomain, removeDomain, VercelApiError } from "@/lib/vercel";
 
 const siteToggleSchema = z.object({
   enabled: z.boolean(),
@@ -32,7 +31,6 @@ export async function POST(
       .select({
         id: users.id,
         subdomain: users.subdomain,
-        vercelProjectId: users.vercelProjectId,
         siteEnabled: users.siteEnabled,
       })
       .from(users)
@@ -45,14 +43,6 @@ export async function POST(
 
     const user = userResult[0];
 
-    // Validate required fields
-    if (!user.vercelProjectId) {
-      return NextResponse.json(
-        { error: "User does not have a Vercel project ID configured" },
-        { status: 400 }
-      );
-    }
-
     if (!user.subdomain) {
       return NextResponse.json(
         { error: "User does not have a subdomain configured" },
@@ -61,15 +51,6 @@ export async function POST(
     }
 
     const domain = `${user.subdomain}.ugc.community`;
-
-    // Toggle domain based on enabled flag
-    if (enabled) {
-      // Add domain to Vercel project
-      await addDomain(user.vercelProjectId, domain);
-    } else {
-      // Remove domain from Vercel project
-      await removeDomain(user.vercelProjectId, domain);
-    }
 
     // Update user's siteEnabled field
     const [updated] = await db
@@ -94,12 +75,6 @@ export async function POST(
       return NextResponse.json(
         { error: error.issues[0]?.message || "Invalid input" },
         { status: 400 }
-      );
-    }
-    if (error instanceof VercelApiError) {
-      return NextResponse.json(
-        { error: `Vercel API error: ${error.message}` },
-        { status: error.statusCode >= 500 ? 502 : 400 }
       );
     }
     if (error instanceof Error && error.message === "Unauthorized") {

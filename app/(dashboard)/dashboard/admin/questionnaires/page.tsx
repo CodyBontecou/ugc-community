@@ -33,8 +33,6 @@ interface Questionnaire {
 interface GenerationResult {
   success: boolean;
   generationId?: string;
-  githubRepo?: string;
-  githubRepoUrl?: string;
   deploymentUrl?: string;
   previewUrl?: string;
   filesGenerated?: number;
@@ -44,7 +42,6 @@ interface GenerationResult {
 interface GenerationStatus {
   id: string;
   status: string;
-  githubRepo: string | null;
   deploymentUrl: string | null;
   previewUrl: string | null;
   filesGenerated: number | null;
@@ -512,17 +509,6 @@ export default function AdminQuestionnairesPage() {
                                   >
                                     <ExternalLink size={14} />
                                     View Site
-                                  </a>
-                                )}
-                                {status.githubRepo && (
-                                  <a
-                                    href={`https://github.com/${status.githubRepo}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-green-700 hover:text-green-900"
-                                  >
-                                    <FileText size={14} />
-                                    View Code
                                   </a>
                                 )}
                               </div>

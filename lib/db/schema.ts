@@ -49,17 +49,7 @@ export const users = pgTable(
     // Profile analytics
     profileViewCount: integer("profile_view_count").notNull().default(0),
     portfolioViewCount: integer("portfolio_view_count").notNull().default(0),
-    // Vercel subdomain integration
-    vercelProjectId: text("vercel_project_id"),
     siteEnabled: boolean("site_enabled").notNull().default(false),
-    // Admin GitHub connection for deployment management
-    githubAccessToken: text("github_access_token"),
-    githubRefreshToken: text("github_refresh_token"),
-    githubUsername: text("github_username"),
-    githubConnectedAt: timestamp("github_connected_at"),
-    // GitHub repository assigned to user for deployment
-    githubRepoFullName: text("github_repo_full_name"),
-    githubRepoId: text("github_repo_id"),
     // Directory listing fields
     directoryListed: boolean("directory_listed").notNull().default(false),
     availableForHire: boolean("available_for_hire").notNull().default(true),
@@ -177,7 +167,6 @@ export const portfolioGenerations = pgTable(
     ),
     // Status: 'pending', 'generating', 'pushing', 'deploying', 'completed', 'failed'
     status: text("status").notNull().default("pending"),
-    githubRepo: text("github_repo"),
     deploymentUrl: text("deployment_url"),
     previewUrl: text("preview_url"),
     filesGenerated: integer("files_generated"),

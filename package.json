@@ -23,7 +23,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@neondatabase/serverless": "^0.10.4",
-    "@octokit/rest": "^22.0.1",
+
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.0.1",
     "better-auth": "^1.2.8",
