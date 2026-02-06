@@ -65,7 +65,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <Sparkles size={14} className="text-coral" />
-          <span>Trusted by creators</span>
+          <span>Free custom websites for creators</span>
         </motion.div>
 
         <motion.h1
@@ -74,9 +74,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          Free for creators
+          We build your website.
           <br />
-          <span className="gradient-text">who create</span>
+          <span className="gradient-text">You create content.</span>
         </motion.h1>
 
         <motion.p
@@ -85,9 +85,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Your content is your subscription.
+          Get a stunning, custom-built website — completely free.
           <br />
-          <span className="text-rose font-medium">Post more, unlock more rewards.</span>
+          <span className="text-rose font-medium">All we ask in return is UGC content.</span>
         </motion.p>
 
         <motion.div
@@ -102,7 +102,7 @@ export function Hero() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Become a Creator Partner
+            Get Your Free Website
             <ArrowRight size={18} />
           </motion.a>
           <motion.a
