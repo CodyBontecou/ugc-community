@@ -19,12 +19,15 @@ import {
   getTikTokProfileVideos,
   getInstagramProfile,
   getInstagramPosts,
+  getYouTubeChannel,
+  getYouTubeChannelShorts,
   type TikTokVideoItem,
   type InstagramPostItem,
+  type YouTubeShortItem,
 } from "./providers/scrapecreators";
 import type { ParsedPost } from "./types";
 
-type SupportedPlatform = "instagram" | "tiktok";
+type SupportedPlatform = "instagram" | "tiktok" | "youtube";
 
 export interface ScrapeResult {
   platform: SupportedPlatform;
@@ -68,11 +71,13 @@ export async function getUserHandlesWithCounts(
   const columnMap = {
     instagram: users.instagramHandles,
     tiktok: users.tiktokHandles,
+    youtube: users.youtubeHandles,
   } as const;
 
   const countColumnMap = {
     instagram: users.lastKnownInstagramPostCount,
     tiktok: users.lastKnownTiktokVideoCount,
+    youtube: users.lastKnownYoutubeVideoCount,
   } as const;
 
   const column = columnMap[platform];
@@ -111,7 +116,7 @@ export async function getUserHandlesWithCounts(
  * Get handles for all supported platforms (used by admin info endpoint)
  */
 export async function getAllPlatformHandles(): Promise<PlatformHandles[]> {
-  const platforms: SupportedPlatform[] = ["tiktok", "instagram"];
+  const platforms: SupportedPlatform[] = ["tiktok", "instagram", "youtube"];
   const results: PlatformHandles[] = [];
 
   for (const platform of platforms) {
@@ -382,6 +387,111 @@ function parseInstagramPost(
   };
 }
 
+// ─── YouTube Scraping ─────────────────────────────────────────
+
+/**
+ * Scrape a single YouTube channel's shorts using the peek-then-fetch pattern
+ */
+async function scrapeYouTubeProfile(
+  userId: string,
+  handle: string,
+  lastKnownCount: number | null
+): Promise<ScrapeResult> {
+  const result: ScrapeResult = {
+    platform: "youtube",
+    handle,
+    userId,
+    skipped: false,
+    postsFound: 0,
+    newPosts: [],
+  };
+
+  try {
+    // Strip @ prefix if present for display
+    const cleanHandle = handle.replace(/^@/, "");
+
+    // Step 1: PEEK — check video count (1 credit)
+    const channel = await getYouTubeChannel(cleanHandle);
+    const currentVideoCount = channel.videoCount;
+
+    console.log(
+      `[ScrapeCreators] YouTube @${cleanHandle}: ${currentVideoCount} videos (last known: ${lastKnownCount ?? "none"})`
+    );
+
+    // Update the last-known count in DB
+    await db
+      .update(users)
+      .set({
+        lastKnownYoutubeVideoCount: currentVideoCount,
+        lastScrapedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    // Skip if no new videos
+    // Note: videoCount includes ALL videos (not just shorts), so this may
+    // trigger unnecessary fetches when regular videos are uploaded. This is
+    // acceptable — the alternative costs more credits.
+    if (lastKnownCount !== null && currentVideoCount <= lastKnownCount) {
+      result.skipped = true;
+      result.skipReason = `No new videos (count: ${currentVideoCount}, last known: ${lastKnownCount})`;
+      console.log(
+        `[ScrapeCreators] YouTube @${cleanHandle}: Skipped — no new videos`
+      );
+      return result;
+    }
+
+    // Step 2: FETCH — get recent shorts (first page only, ~48 shorts)
+    const shortsResponse = await getYouTubeChannelShorts(cleanHandle);
+    const shorts = shortsResponse.shorts || [];
+    result.postsFound = shorts.length;
+
+    console.log(
+      `[ScrapeCreators] YouTube @${cleanHandle}: Fetched ${shorts.length} shorts`
+    );
+
+    // Convert to ParsedPost format
+    for (const short of shorts) {
+      const post = parseYouTubeShort(short, cleanHandle, channel.name);
+      if (post) {
+        result.newPosts.push(post);
+      }
+    }
+  } catch (error) {
+    result.error =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(`[ScrapeCreators] YouTube @${handle} error:`, error);
+  }
+
+  return result;
+}
+
+/**
+ * Convert a Scrape Creators YouTube short to ParsedPost
+ */
+function parseYouTubeShort(
+  short: YouTubeShortItem,
+  handle: string,
+  channelName: string
+): ParsedPost | null {
+  if (!short.id) return null;
+
+  return {
+    platform: "youtube",
+    postUrl: short.url,
+    postId: short.id,
+    authorHandle: handle,
+    authorName: channelName,
+    // Shorts endpoint returns null for description, so use title for content
+    content: short.title,
+    engagement: {
+      views: short.viewCountInt,
+      likes: short.likeCountInt,
+      comments: short.commentCountInt,
+    },
+    postedAt: short.publishDate ? new Date(short.publishDate) : undefined,
+  };
+}
+
 // ─── Orchestration ────────────────────────────────────────────
 
 /**
@@ -420,6 +530,13 @@ export async function scrapeAllProfiles(
           entry.lastKnownCount
         );
         break;
+      case "youtube":
+        result = await scrapeYouTubeProfile(
+          entry.userId,
+          entry.handle,
+          entry.lastKnownCount
+        );
+        break;
     }
 
     platformResult.results.push(result);
@@ -445,7 +562,7 @@ export async function scrapeAllProfiles(
  * Scrape all platforms — main entry point for cron/admin trigger
  */
 export async function scrapeAllPlatforms(): Promise<PlatformScrapeResult[]> {
-  const platforms: SupportedPlatform[] = ["tiktok", "instagram"];
+  const platforms: SupportedPlatform[] = ["tiktok", "instagram", "youtube"];
   const results: PlatformScrapeResult[] = [];
 
   for (const platform of platforms) {

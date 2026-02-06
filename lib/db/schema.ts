@@ -86,6 +86,7 @@ export const users = pgTable(
     // Scrape tracking fields (for Scrape Creators optimization)
     lastKnownTiktokVideoCount: integer("last_known_tiktok_video_count"),
     lastKnownInstagramPostCount: integer("last_known_instagram_post_count"),
+    lastKnownYoutubeVideoCount: integer("last_known_youtube_video_count"),
     lastScrapedAt: timestamp("last_scraped_at"),
     // Notification preferences
 

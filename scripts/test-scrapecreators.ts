@@ -18,6 +18,8 @@ import {
   getTikTokProfileVideos,
   getInstagramProfile,
   getInstagramPosts,
+  getYouTubeChannel,
+  getYouTubeChannelShorts,
 } from "../lib/hashtag-monitoring/providers/scrapecreators";
 import { postContainsMention } from "../lib/hashtag-monitoring/profile-scraper";
 
@@ -27,6 +29,10 @@ const TEST_TIKTOK_HANDLE = process.argv.includes("--handle")
 
 const TEST_INSTAGRAM_HANDLE = process.argv.includes("--ig-handle")
   ? process.argv[process.argv.indexOf("--ig-handle") + 1]
+  : null;
+
+const TEST_YOUTUBE_HANDLE = process.argv.includes("--yt-handle")
+  ? process.argv[process.argv.indexOf("--yt-handle") + 1]
   : null;
 
 let passed = 0;
@@ -160,8 +166,77 @@ async function testInstagramPosts() {
   }
 }
 
+async function testYouTubeChannel() {
+  if (!TEST_YOUTUBE_HANDLE) {
+    console.log("\n📺 Test 5: YouTube Channel — SKIPPED (pass --yt-handle to test)");
+    return null;
+  }
+
+  console.log(`\n📺 Test 5: YouTube Channel (@${TEST_YOUTUBE_HANDLE})`);
+  console.log("   This costs 1 credit.\n");
+
+  try {
+    const channel = await getYouTubeChannel(TEST_YOUTUBE_HANDLE);
+
+    assert(!!channel.channelId, `channelId = "${channel.channelId}"`);
+    assert(!!channel.handle, `handle = "${channel.handle}"`);
+    assert(!!channel.name, `name = "${channel.name}"`);
+    assert(typeof channel.videoCount === "number", `videoCount = ${channel.videoCount}`);
+    assert(channel.videoCount > 0, "videoCount > 0");
+    assert(typeof channel.subscriberCount === "number", `subscriberCount = ${channel.subscriberCount}`);
+
+    console.log(`\n   📊 Key stats: ${channel.videoCount} videos, ${channel.subscriberCount} subscribers`);
+    return channel;
+  } catch (error) {
+    console.log(`  ❌ API call failed: ${error}`);
+    failed++;
+    return null;
+  }
+}
+
+async function testYouTubeShorts() {
+  if (!TEST_YOUTUBE_HANDLE) {
+    console.log("\n📺 Test 6: YouTube Shorts — SKIPPED (pass --yt-handle to test)");
+    return null;
+  }
+
+  console.log(`\n📺 Test 6: YouTube Channel Shorts (@${TEST_YOUTUBE_HANDLE})`);
+  console.log("   This costs additional credits.\n");
+
+  try {
+    const response = await getYouTubeChannelShorts(TEST_YOUTUBE_HANDLE);
+
+    assert(Array.isArray(response.shorts), "Response has shorts array");
+    assert(response.shorts.length > 0, `Got ${response.shorts.length} shorts`);
+
+    const firstShort = response.shorts[0];
+    assert(!!firstShort.id, `First short ID = "${firstShort.id}"`);
+    assert(!!firstShort.url, `First short URL = "${firstShort.url}"`);
+    assert(!!firstShort.title, `First short title = "${firstShort.title.substring(0, 50)}..."`);
+    assert(typeof firstShort.viewCountInt === "number", `viewCountInt = ${firstShort.viewCountInt}`);
+    assert(typeof firstShort.likeCountInt === "number", `likeCountInt = ${firstShort.likeCountInt}`);
+    assert(typeof firstShort.commentCountInt === "number", `commentCountInt = ${firstShort.commentCountInt}`);
+    assert(!!firstShort.publishDate, `publishDate = "${firstShort.publishDate}"`);
+
+    console.log(`\n   📊 First short: ${firstShort.viewCountInt} views, ${firstShort.likeCountInt} likes`);
+    console.log(`   📎 URL: ${firstShort.url}`);
+    console.log(`   📅 Published: ${firstShort.publishDate}`);
+    console.log(`   📝 Title: "${firstShort.title.substring(0, 80)}"`);
+
+    // Check continuation token
+    const hasContinuation = !!response.continuationToken;
+    console.log(`   🔗 Continuation token: ${hasContinuation ? "present" : "none"}`);
+
+    return response;
+  } catch (error) {
+    console.log(`  ❌ API call failed: ${error}`);
+    failed++;
+    return null;
+  }
+}
+
 function testMentionDetection() {
-  console.log("\n🏷️  Test 5: Mention Detection (no credits used)\n");
+  console.log("\n🏷️  Test 7: Mention Detection (no credits used)\n");
 
   assert(postContainsMention("Check out @ugc.community for tips!"), "Detects @ugc.community");
   assert(postContainsMention("Shoutout to @ugccommunity"), "Detects @ugccommunity");
@@ -184,6 +259,7 @@ async function main() {
   console.log(`  API Key: ${process.env.SCRAPE_CREATORS_API_KEY ? "✅ Set" : "❌ Missing"}`);
   console.log(`  TikTok handle: @${TEST_TIKTOK_HANDLE}`);
   console.log(`  Instagram handle: ${TEST_INSTAGRAM_HANDLE ? `@${TEST_INSTAGRAM_HANDLE}` : "not set (pass --ig-handle)"}`);
+  console.log(`  YouTube handle: ${TEST_YOUTUBE_HANDLE ? `@${TEST_YOUTUBE_HANDLE}` : "not set (pass --yt-handle)"}`);
 
   if (!process.env.SCRAPE_CREATORS_API_KEY) {
     console.error("\n❌ SCRAPE_CREATORS_API_KEY not set. Source your .env.local first.");
@@ -198,7 +274,11 @@ async function main() {
   await testInstagramProfile();
   await testInstagramPosts();
 
-  // Test 5: Pure logic (free)
+  // Test 5-6: YouTube (costs ~2-3 credits if handle provided)
+  await testYouTubeChannel();
+  await testYouTubeShorts();
+
+  // Test 7: Pure logic (free)
   testMentionDetection();
 
   // Summary

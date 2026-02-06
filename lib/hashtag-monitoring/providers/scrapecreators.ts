@@ -157,6 +157,38 @@ export interface InstagramPostsResponse {
   has_next_page: boolean;
 }
 
+// ─── YouTube Types ────────────────────────────────────────────
+
+export interface YouTubeChannelResponse {
+  channelId: string;
+  handle: string;
+  name: string;
+  subscriberCount: number;
+  videoCount: number;
+  viewCount: number;
+  description: string;
+  avatar: string;
+}
+
+export interface YouTubeShortItem {
+  type: string;
+  id: string;
+  url: string;
+  title: string;
+  viewCountInt: number;
+  viewCountText: string;
+  commentCountInt: number;
+  likeCountInt: number;
+  publishDate: string;
+  description: string | null;
+  genre: string;
+}
+
+export interface YouTubeChannelShortsResponse {
+  shorts: YouTubeShortItem[];
+  continuationToken?: string;
+}
+
 // ─── API Functions ────────────────────────────────────────────
 
 /**
@@ -274,6 +306,62 @@ export async function getInstagramPosts(
     const errorText = await response.text();
     throw new Error(
       `Scrape Creators Instagram posts error (${response.status}): ${errorText}`
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Get YouTube channel info (1 credit)
+ * Use to check videoCount before fetching shorts
+ */
+export async function getYouTubeChannel(
+  handle: string
+): Promise<YouTubeChannelResponse> {
+  const apiKey = getApiKey();
+  // Strip @ prefix if present
+  const cleanHandle = handle.replace(/^@/, "");
+  const url = `${API_BASE}/v1/youtube/channel?handle=${encodeURIComponent(cleanHandle)}`;
+
+  const response = await fetch(url, {
+    headers: { "x-api-key": apiKey },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Scrape Creators YouTube channel error (${response.status}): ${errorText}`
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Get YouTube channel shorts (credits vary)
+ * Returns paginated list of shorts sorted by newest first
+ */
+export async function getYouTubeChannelShorts(
+  handle: string,
+  continuationToken?: string
+): Promise<YouTubeChannelShortsResponse> {
+  const apiKey = getApiKey();
+  // Strip @ prefix if present
+  const cleanHandle = handle.replace(/^@/, "");
+  let url = `${API_BASE}/v1/youtube/channel/shorts?handle=${encodeURIComponent(cleanHandle)}&sort=newest`;
+  if (continuationToken) {
+    url += `&continuationToken=${encodeURIComponent(continuationToken)}`;
+  }
+
+  const response = await fetch(url, {
+    headers: { "x-api-key": apiKey },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Scrape Creators YouTube shorts error (${response.status}): ${errorText}`
     );
   }
 
