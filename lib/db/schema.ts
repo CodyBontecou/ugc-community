@@ -83,6 +83,10 @@ export const users = pgTable(
     monthlyEditsAllowance: integer("monthly_edits_allowance").notNull().default(0),
     editsResetMonth: text("edits_reset_month"), // Format: '2026-01'
     unlimitedEditsUntil: timestamp("unlimited_edits_until"),
+    // Scrape tracking fields (for Scrape Creators optimization)
+    lastKnownTiktokVideoCount: integer("last_known_tiktok_video_count"),
+    lastKnownInstagramPostCount: integer("last_known_instagram_post_count"),
+    lastScrapedAt: timestamp("last_scraped_at"),
     // Notification preferences
 
   },
@@ -361,7 +365,7 @@ export const posts = pgTable(
     postId: text("post_id"), // Platform-specific post ID (optional)
     postedAt: timestamp("posted_at"), // When post was made on platform
     verified: boolean("verified").notNull().default(false), // Provider verification status
-    source: text("source").notNull().default("manual"), // Provider name: 'apify', 'brand24', etc.
+    source: text("source").notNull().default("manual"), // Source: 'scrapecreators', 'manual', etc.
     metadata: jsonb("metadata").$type<PostMetadata>().default({}),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -395,7 +399,7 @@ export const hashtagMentions = pgTable(
     matchedJobId: uuid("matched_job_id").references(() => contentJobs.id, { onDelete: "set null" }),
     matchedHook: text("matched_hook"), // The specific hook text that was matched
     hookMatchConfidence: text("hook_match_confidence"), // 'high' | 'medium' | 'low'
-    source: text("source").notNull(), // Provider name: 'apify', 'brand24', etc.
+    source: text("source").notNull(), // Source: 'scrapecreators', 'manual', etc.
     metadata: jsonb("metadata").$type<HashtagMentionMetadata>().default({}),
   },
   (table) => [

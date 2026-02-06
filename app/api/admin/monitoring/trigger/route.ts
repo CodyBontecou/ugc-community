@@ -2,27 +2,39 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
 import {
-  triggerAllProfileScrapers,
-  triggerProfileScraper,
+  scrapeAllPlatforms,
+  scrapeAllProfiles,
   getAllPlatformHandles,
-  type TriggerResult,
+  type PlatformScrapeResult,
 } from "@/lib/hashtag-monitoring/profile-scraper";
+import { processScrapedPosts } from "@/lib/hashtag-monitoring/handler";
 
 export interface TriggerResponse {
   success: boolean;
-  results: TriggerResult[];
-  summary: {
-    totalPlatforms: number;
-    successCount: number;
-    failureCount: number;
-    totalHandles: number;
+  scrape: {
+    platforms: Array<{
+      platform: string;
+      totalHandles: number;
+      scraped: number;
+      skipped: number;
+      postsFound: number;
+    }>;
+    totalScraped: number;
+    totalSkipped: number;
+    totalPostsFound: number;
   };
+  processing: {
+    saved: number;
+    duplicates: number;
+    matched: number;
+  };
+  errors?: string[];
 }
 
 /**
  * POST /api/admin/monitoring/trigger
  *
- * Manually trigger profile-based scraping for registered users.
+ * Manually trigger profile-based scraping via Scrape Creators API.
  * Optionally specify a platform, otherwise triggers all platforms.
  *
  * Body (optional):
@@ -48,44 +60,62 @@ export async function POST(request: Request) {
       // No body or invalid JSON - trigger all platforms
     }
 
-    let results: TriggerResult[];
-    const platformHandles = await getAllPlatformHandles();
+    let scrapeResults: PlatformScrapeResult[];
 
-    if (platform) {
-      // Trigger specific platform
-      const handles = platformHandles.find((p) => p.platform === platform);
-      if (!handles) {
-        return NextResponse.json(
-          { error: `No registered users with ${platform} handles` },
-          { status: 400 }
-        );
-      }
-      const result = await triggerProfileScraper(
-        platform as "instagram" | "tiktok",
-        handles.handles
-      );
-      results = [result];
+    if (platform === "tiktok" || platform === "instagram") {
+      const result = await scrapeAllProfiles(platform);
+      scrapeResults = [result];
     } else {
-      // Trigger all platforms
-      results = await triggerAllProfileScrapers();
+      scrapeResults = await scrapeAllPlatforms();
     }
 
-    const successCount = results.filter((r) => r.success).length;
-    const failureCount = results.filter((r) => !r.success).length;
-    const totalHandles = platformHandles.reduce(
-      (sum, p) => sum + p.handles.length,
-      0
+    // Process all new posts through the handler
+    const allNewPosts = scrapeResults.flatMap((r) =>
+      r.results.flatMap((sr) => sr.newPosts)
     );
 
+    let processingResult = {
+      savedCount: 0,
+      duplicateCount: 0,
+      matchedCount: 0,
+      errors: [] as string[],
+    };
+
+    if (allNewPosts.length > 0) {
+      processingResult = await processScrapedPosts(allNewPosts);
+    }
+
+    const totalScraped = scrapeResults.reduce((s, r) => s + r.scraped, 0);
+    const totalSkipped = scrapeResults.reduce((s, r) => s + r.skipped, 0);
+    const totalPostsFound = scrapeResults.reduce(
+      (s, r) => s + r.postsFound,
+      0
+    );
+    const allErrors = [
+      ...scrapeResults.flatMap((r) => r.errors),
+      ...processingResult.errors,
+    ];
+
     const response: TriggerResponse = {
-      success: failureCount === 0,
-      results,
-      summary: {
-        totalPlatforms: results.length,
-        successCount,
-        failureCount,
-        totalHandles,
+      success: allErrors.length === 0,
+      scrape: {
+        platforms: scrapeResults.map((r) => ({
+          platform: r.platform,
+          totalHandles: r.totalHandles,
+          scraped: r.scraped,
+          skipped: r.skipped,
+          postsFound: r.postsFound,
+        })),
+        totalScraped,
+        totalSkipped,
+        totalPostsFound,
       },
+      processing: {
+        saved: processingResult.savedCount,
+        duplicates: processingResult.duplicateCount,
+        matched: processingResult.matchedCount,
+      },
+      errors: allErrors.length > 0 ? allErrors : undefined,
     };
 
     return NextResponse.json(response);
@@ -123,7 +153,7 @@ export async function GET() {
       platforms: platformHandles.map((p) => ({
         platform: p.platform,
         handleCount: p.handles.length,
-        handles: p.handles,
+        handles: p.handles.map((h) => h.handle),
       })),
       totalHandles: platformHandles.reduce(
         (sum, p) => sum + p.handles.length,

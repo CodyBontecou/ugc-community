@@ -1,7 +1,7 @@
 /**
  * Hashtag Monitoring Core Handler
  *
- * Processes incoming posts from any registered provider,
+ * Processes scraped posts from the Scrape Creators API,
  * saves them to the database, matches to users by social handle,
  * and checks for @ugc.community mentions to credit posts.
  */
@@ -9,7 +9,6 @@
 import { db } from "@/lib/db";
 import { hashtagMentions, users } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { getProvider } from "./index";
 import type { ParsedPost, ProcessingResult } from "./types";
 import { updateUserPostCount } from "@/lib/milestones";
 import { sendMilestoneEarnedEmail } from "@/lib/email";
@@ -25,69 +24,36 @@ import {
 const MAX_POST_AGE_DAYS = 14;
 
 /**
- * Process incoming posts from a webhook
- *
- * @param providerName - Name of the provider (e.g., "apify")
- * @param payload - Raw webhook payload
- * @param headers - Request headers for verification
+ * Process already-parsed posts from the Scrape Creators profile scraper.
+ * This is the main entry point — no webhook parsing needed.
  */
-export async function processIncomingPosts(
-  providerName: string,
-  payload: unknown,
-  headers?: Record<string, string>
-): Promise<ProcessingResult> {
-  const result: ProcessingResult = {
-    success: false,
+export async function processScrapedPosts(
+  posts: ParsedPost[]
+): Promise<{
+  savedCount: number;
+  duplicateCount: number;
+  matchedCount: number;
+  errors: string[];
+}> {
+  const result = {
     savedCount: 0,
     duplicateCount: 0,
     matchedCount: 0,
-    errors: [],
+    errors: [] as string[],
   };
 
-  console.log(`[HashtagMonitor] Processing webhook from ${providerName}`);
+  console.log(`[HashtagMonitor] Processing ${posts.length} scraped posts`);
 
-  // Get the provider
-  const provider = getProvider(providerName);
-  if (!provider) {
-    result.errors.push(`Unknown provider: ${providerName}`);
-    return result;
-  }
-
-  // Parse the webhook payload
-  let parseResult;
-  try {
-    parseResult = await provider.parseWebhookPayload(payload, headers);
-    console.log(
-      `[HashtagMonitor] Parsed ${parseResult.posts.length} posts from webhook`
-    );
-  } catch (error) {
-    result.errors.push(
-      `Failed to parse webhook: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
-    console.error(`[HashtagMonitor] Parse error:`, error);
-    return result;
-  }
-
-  // Add any parsing errors
-  if (parseResult.errors) {
-    result.errors.push(...parseResult.errors);
-    console.log(`[HashtagMonitor] Parse errors:`, parseResult.errors);
-  }
-
-  // Filter out old posts to avoid reprocessing
+  // Filter out old posts
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - MAX_POST_AGE_DAYS);
 
-  const filteredPosts = parseResult.posts.filter((post) => {
+  const filteredPosts = posts.filter((post) => {
     if (!post.postedAt) return true;
     return post.postedAt >= cutoffDate;
   });
 
-  const tooOldCount = parseResult.posts.length - filteredPosts.length;
-
-  console.log(
-    `[HashtagMonitor] Filtering: ${parseResult.posts.length} total → ${filteredPosts.length} within ${MAX_POST_AGE_DAYS} days`
-  );
+  const tooOldCount = posts.length - filteredPosts.length;
   if (tooOldCount > 0) {
     console.log(
       `[HashtagMonitor] Skipped ${tooOldCount} posts older than ${MAX_POST_AGE_DAYS} days`
@@ -109,7 +75,7 @@ export async function processIncomingPosts(
   // Process each post
   for (const post of filteredPosts) {
     try {
-      const saveResult = await savePost(post, providerName, activeJobs);
+      const saveResult = await savePost(post, "scrapecreators", activeJobs);
       if (saveResult.isDuplicate) {
         result.duplicateCount++;
       } else {
@@ -125,7 +91,6 @@ export async function processIncomingPosts(
     }
   }
 
-  result.success = result.errors.length === 0;
   return result;
 }
 

@@ -1,222 +1,460 @@
 /**
- * Profile-Based Scraping for Apify
+ * Profile-Based Scraping via Scrape Creators API
  *
- * Triggers Apify profile scrapers for registered platform users,
- * then filters results for posts mentioning @ugc.community.
+ * Directly calls the Scrape Creators REST API for each registered user,
+ * using a two-step approach:
  *
- * This is more efficient than broad scraping when you only want
- * to monitor posts from users registered on your platform.
+ * 1. PEEK: Fetch profile info (1 credit) to check video/post count
+ * 2. FETCH: Only if count increased, fetch actual videos/posts
+ *
+ * This replaces the old Apify actor-based approach and eliminates
+ * the need for webhooks entirely.
  */
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
+import { users, hashtagMentions } from "@/lib/db/schema";
+import { sql, eq } from "drizzle-orm";
+import {
+  getTikTokProfile,
+  getTikTokProfileVideos,
+  getInstagramBasicProfile,
+  getInstagramPosts,
+  type TikTokVideoItem,
+  type InstagramPostItem,
+} from "./providers/scrapecreators";
+import type { ParsedPost } from "./types";
 
-const APIFY_API_BASE = "https://api.apify.com/v2";
+type SupportedPlatform = "instagram" | "tiktok";
 
-// Apify actor IDs for profile scrapers
-const PROFILE_SCRAPER_ACTORS = {
-  instagram: "apify/instagram-profile-scraper",
-  tiktok: "clockworks/free-tiktok-scraper",
-} as const;
-
-type SupportedPlatform = keyof typeof PROFILE_SCRAPER_ACTORS;
-
-export interface PlatformHandles {
+export interface ScrapeResult {
   platform: SupportedPlatform;
-  handles: string[];
-}
-
-export interface TriggerResult {
-  platform: SupportedPlatform;
-  success: boolean;
-  runId?: string;
+  handle: string;
+  userId: string;
+  skipped: boolean;
+  skipReason?: string;
+  postsFound: number;
+  newPosts: ParsedPost[];
   error?: string;
 }
 
+export interface PlatformScrapeResult {
+  platform: SupportedPlatform;
+  totalHandles: number;
+  scraped: number;
+  skipped: number;
+  postsFound: number;
+  errors: string[];
+  results: ScrapeResult[];
+}
+
+export interface PlatformHandles {
+  platform: SupportedPlatform;
+  handles: Array<{ userId: string; handle: string }>;
+}
+
 /**
- * Get all registered user handles for a specific platform
+ * Get all registered user handles for a specific platform, along with their user ID
+ * and last-known counts for the peek optimization.
  */
-export async function getUserHandlesByPlatform(
+export async function getUserHandlesWithCounts(
   platform: SupportedPlatform
-): Promise<string[]> {
+): Promise<
+  Array<{
+    userId: string;
+    handle: string;
+    lastKnownCount: number | null;
+  }>
+> {
   const columnMap = {
     instagram: users.instagramHandles,
     tiktok: users.tiktokHandles,
   } as const;
 
-  const column = columnMap[platform];
-  if (!column) {
-    return [];
-  }
+  const countColumnMap = {
+    instagram: users.lastKnownInstagramPostCount,
+    tiktok: users.lastKnownTiktokVideoCount,
+  } as const;
 
-  // Get all users with handles for this platform
+  const column = columnMap[platform];
+  const countColumn = countColumnMap[platform];
+
   const result = await db
-    .select({ handles: column })
+    .select({
+      id: users.id,
+      handles: column,
+      lastKnownCount: countColumn,
+    })
     .from(users)
     .where(sql`array_length(${column}, 1) > 0`);
 
-  // Flatten and deduplicate handles
-  const allHandles = result.flatMap((r) => r.handles ?? []);
-  return [...new Set(allHandles)];
+  // Flatten: one entry per handle (a user can have multiple handles)
+  const entries: Array<{
+    userId: string;
+    handle: string;
+    lastKnownCount: number | null;
+  }> = [];
+
+  for (const row of result) {
+    for (const handle of row.handles ?? []) {
+      entries.push({
+        userId: row.id,
+        handle,
+        lastKnownCount: row.lastKnownCount,
+      });
+    }
+  }
+
+  return entries;
 }
 
 /**
- * Get handles for all supported platforms
+ * Get handles for all supported platforms (used by admin info endpoint)
  */
 export async function getAllPlatformHandles(): Promise<PlatformHandles[]> {
-  const platforms: SupportedPlatform[] = ["instagram", "tiktok"];
+  const platforms: SupportedPlatform[] = ["tiktok", "instagram"];
   const results: PlatformHandles[] = [];
 
   for (const platform of platforms) {
-    const handles = await getUserHandlesByPlatform(platform);
-    if (handles.length > 0) {
-      results.push({ platform, handles });
+    const entries = await getUserHandlesWithCounts(platform);
+    if (entries.length > 0) {
+      results.push({
+        platform,
+        handles: entries.map((e) => ({ userId: e.userId, handle: e.handle })),
+      });
     }
   }
 
   return results;
 }
 
+// ─── TikTok Scraping ──────────────────────────────────────────
+
 /**
- * Build Apify actor input for Instagram profile scraper
+ * Scrape a single TikTok profile using the peek-then-fetch pattern
  */
-function buildInstagramInput(handles: string[]): Record<string, unknown> {
-  return {
-    usernames: handles,
-    resultsLimit: 20, // Last 20 posts per user
-    addParentData: false,
+async function scrapeTikTokProfile(
+  userId: string,
+  handle: string,
+  lastKnownCount: number | null
+): Promise<ScrapeResult> {
+  const result: ScrapeResult = {
+    platform: "tiktok",
+    handle,
+    userId,
+    skipped: false,
+    postsFound: 0,
+    newPosts: [],
   };
-}
-
-/**
- * Build Apify actor input for TikTok profile scraper
- */
-function buildTikTokInput(handles: string[]): Record<string, unknown> {
-  return {
-    profiles: handles.map((h) => `https://www.tiktok.com/@${h}`),
-    resultsPerPage: 20, // Last 20 posts per user
-    shouldDownloadVideos: false,
-    shouldDownloadCovers: false,
-  };
-}
-
-/**
- * Trigger an Apify profile scraper run
- */
-export async function triggerProfileScraper(
-  platform: SupportedPlatform,
-  handles: string[]
-): Promise<TriggerResult> {
-  const token = process.env.APIFY_API_TOKEN;
-  if (!token) {
-    return {
-      platform,
-      success: false,
-      error: "APIFY_API_TOKEN environment variable is not set",
-    };
-  }
-
-  if (handles.length === 0) {
-    return {
-      platform,
-      success: false,
-      error: "No handles provided",
-    };
-  }
-
-  const actorId = PROFILE_SCRAPER_ACTORS[platform];
-  // Apify API requires tilde (~) instead of slash (/) for namespaced actor IDs in URLs
-  const encodedActorId = actorId.replace("/", "~");
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/hashtag-monitor/apify`;
-
-  // Build platform-specific input
-  let input: Record<string, unknown>;
-  switch (platform) {
-    case "instagram":
-      input = buildInstagramInput(handles);
-      break;
-    case "tiktok":
-      input = buildTikTokInput(handles);
-      break;
-    default:
-      return {
-        platform,
-        success: false,
-        error: `Unsupported platform: ${platform}`,
-      };
-  }
 
   try {
-    // Build webhook configuration for this run
-    // Apify requires webhooks as a base64-encoded JSON array in query params
-    const webhookConfig = [
-      {
-        eventTypes: ["ACTOR.RUN.SUCCEEDED"],
-        requestUrl: webhookUrl,
-        payloadTemplate: JSON.stringify({
-          eventType: "ACTOR.RUN.SUCCEEDED",
-          eventData: {
-            actorId: "{{actorId}}",
-            actorRunId: "{{actorRunId}}",
-          },
-          resource: {
-            defaultDatasetId: "{{defaultDatasetId}}",
-          },
-        }),
-        headersTemplate: JSON.stringify({
-          "X-Apify-Webhook-Secret": process.env.APIFY_WEBHOOK_SECRET || "",
-        }),
-      },
-    ];
-    const webhooksParam = Buffer.from(JSON.stringify(webhookConfig)).toString("base64");
+    // Step 1: PEEK — check video count (1 credit)
+    const profile = await getTikTokProfile(handle);
+    const currentVideoCount = profile.stats.videoCount;
 
-    // Start actor run with webhook as query parameter
-    const response = await fetch(
-      `${APIFY_API_BASE}/acts/${encodedActorId}/runs?token=${token}&webhooks=${webhooksParam}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      }
+    console.log(
+      `[ScrapeCreators] TikTok @${handle}: ${currentVideoCount} videos (last known: ${lastKnownCount ?? "none"})`
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return {
-        platform,
-        success: false,
-        error: `Apify API error: ${response.status} - ${errorText}`,
-      };
+    // Update the last-known count in DB
+    await db
+      .update(users)
+      .set({
+        lastKnownTiktokVideoCount: currentVideoCount,
+        lastScrapedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    // Skip if no new videos
+    if (lastKnownCount !== null && currentVideoCount <= lastKnownCount) {
+      result.skipped = true;
+      result.skipReason = `No new videos (count: ${currentVideoCount}, last known: ${lastKnownCount})`;
+      console.log(`[ScrapeCreators] TikTok @${handle}: Skipped — no new videos`);
+      return result;
     }
 
-    const data = await response.json();
-    return {
-      platform,
-      success: true,
-      runId: data.data?.id,
-    };
+    // Step 2: FETCH — get recent videos
+    const videosResponse = await getTikTokProfileVideos(handle);
+    const videos = videosResponse.aweme_list || [];
+    result.postsFound = videos.length;
+
+    console.log(
+      `[ScrapeCreators] TikTok @${handle}: Fetched ${videos.length} videos`
+    );
+
+    // Convert to ParsedPost format
+    for (const video of videos) {
+      const post = parseTikTokVideo(video, handle, profile.user.nickname);
+      if (post) {
+        result.newPosts.push(post);
+      }
+    }
   } catch (error) {
-    return {
-      platform,
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    result.error =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(`[ScrapeCreators] TikTok @${handle} error:`, error);
   }
+
+  return result;
 }
 
 /**
- * Trigger profile scrapers for all platforms with registered users
+ * Convert a Scrape Creators TikTok video to ParsedPost
  */
-export async function triggerAllProfileScrapers(): Promise<TriggerResult[]> {
-  const platformHandles = await getAllPlatformHandles();
-  const results: TriggerResult[] = [];
+function parseTikTokVideo(
+  video: TikTokVideoItem,
+  handle: string,
+  nickname: string
+): ParsedPost | null {
+  const videoId = video.aweme_id;
+  if (!videoId) return null;
 
-  for (const { platform, handles } of platformHandles) {
-    const result = await triggerProfileScraper(platform, handles);
+  const postUrl =
+    video.url ||
+    `https://www.tiktok.com/@${handle}/video/${videoId}`;
+
+  // Extract hashtags from cha_list or text_extra
+  const hashtags: string[] = [];
+  if (video.cha_list) {
+    for (const tag of video.cha_list) {
+      if (tag.cha_name) hashtags.push(tag.cha_name);
+    }
+  }
+  if (video.text_extra) {
+    for (const extra of video.text_extra) {
+      if (extra.hashtag_name && !hashtags.includes(extra.hashtag_name)) {
+        hashtags.push(extra.hashtag_name);
+      }
+    }
+  }
+
+  const coverUrl = video.video?.cover?.url_list?.[0];
+
+  return {
+    platform: "tiktok",
+    postUrl,
+    postId: videoId,
+    authorHandle: video.author?.unique_id || handle,
+    authorName: video.author?.nickname || nickname,
+    content: video.desc,
+    engagement: {
+      likes: video.statistics?.digg_count,
+      views: video.statistics?.play_count,
+      comments: video.statistics?.comment_count,
+      shares: video.statistics?.share_count,
+      saves: video.statistics?.collect_count,
+    },
+    postedAt: video.create_time
+      ? new Date(video.create_time * 1000)
+      : video.create_time_utc
+        ? new Date(video.create_time_utc)
+        : undefined,
+    metadata: {
+      hashtags: hashtags.length > 0 ? hashtags : undefined,
+      thumbnailUrl: coverUrl,
+      duration: video.video?.duration,
+      isVerified: video.author?.verification_type === 1,
+      followerCount: video.author?.follower_count,
+    },
+  };
+}
+
+// ─── Instagram Scraping ───────────────────────────────────────
+
+/**
+ * Scrape a single Instagram profile using the peek-then-fetch pattern
+ */
+async function scrapeInstagramProfile(
+  userId: string,
+  handle: string,
+  lastKnownCount: number | null
+): Promise<ScrapeResult> {
+  const result: ScrapeResult = {
+    platform: "instagram",
+    handle,
+    userId,
+    skipped: false,
+    postsFound: 0,
+    newPosts: [],
+  };
+
+  try {
+    // Step 1: PEEK — check post count (1 credit)
+    const profile = await getInstagramBasicProfile(handle);
+    const currentPostCount = profile.media_count;
+
+    console.log(
+      `[ScrapeCreators] Instagram @${handle}: ${currentPostCount} posts (last known: ${lastKnownCount ?? "none"})`
+    );
+
+    // Update the last-known count in DB
+    await db
+      .update(users)
+      .set({
+        lastKnownInstagramPostCount: currentPostCount,
+        lastScrapedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    // Skip if no new posts
+    if (lastKnownCount !== null && currentPostCount <= lastKnownCount) {
+      result.skipped = true;
+      result.skipReason = `No new posts (count: ${currentPostCount}, last known: ${lastKnownCount})`;
+      console.log(
+        `[ScrapeCreators] Instagram @${handle}: Skipped — no new posts`
+      );
+      return result;
+    }
+
+    // Step 2: FETCH — get recent posts
+    const postsResponse = await getInstagramPosts(handle);
+    const posts = postsResponse.items || [];
+    result.postsFound = posts.length;
+
+    console.log(
+      `[ScrapeCreators] Instagram @${handle}: Fetched ${posts.length} posts`
+    );
+
+    // Convert to ParsedPost format
+    for (const post of posts) {
+      const parsed = parseInstagramPost(post, handle, profile.full_name);
+      if (parsed) {
+        result.newPosts.push(parsed);
+      }
+    }
+  } catch (error) {
+    result.error =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(`[ScrapeCreators] Instagram @${handle} error:`, error);
+  }
+
+  return result;
+}
+
+/**
+ * Convert a Scrape Creators Instagram post to ParsedPost
+ */
+function parseInstagramPost(
+  post: InstagramPostItem,
+  handle: string,
+  fullName: string
+): ParsedPost | null {
+  const shortcode = post.shortcode;
+  if (!shortcode) return null;
+
+  const postUrl = `https://www.instagram.com/p/${shortcode}/`;
+
+  // Extract caption text
+  const caption =
+    post.caption?.text ||
+    post.edge_media_to_caption?.edges?.[0]?.node?.text ||
+    "";
+
+  // Extract hashtags from caption
+  const hashtagMatches = caption.match(/#(\w+)/g);
+  const hashtags = hashtagMatches
+    ? hashtagMatches.map((h) => h.replace("#", ""))
+    : undefined;
+
+  const likes =
+    post.edge_liked_by?.count ??
+    post.edge_media_preview_like?.count;
+  const comments = post.edge_media_to_comment?.count;
+
+  return {
+    platform: "instagram",
+    postUrl,
+    postId: post.id || shortcode,
+    authorHandle: post.owner?.username || handle,
+    authorName: post.owner?.full_name || fullName,
+    content: caption,
+    engagement: {
+      likes,
+      comments,
+      views: post.video_view_count,
+    },
+    postedAt: post.taken_at_timestamp
+      ? new Date(post.taken_at_timestamp * 1000)
+      : undefined,
+    metadata: {
+      hashtags,
+      thumbnailUrl: post.display_url,
+    },
+  };
+}
+
+// ─── Orchestration ────────────────────────────────────────────
+
+/**
+ * Scrape all profiles for a given platform
+ */
+export async function scrapeAllProfiles(
+  platform: SupportedPlatform
+): Promise<PlatformScrapeResult> {
+  const entries = await getUserHandlesWithCounts(platform);
+
+  const platformResult: PlatformScrapeResult = {
+    platform,
+    totalHandles: entries.length,
+    scraped: 0,
+    skipped: 0,
+    postsFound: 0,
+    errors: [],
+    results: [],
+  };
+
+  for (const entry of entries) {
+    let result: ScrapeResult;
+
+    switch (platform) {
+      case "tiktok":
+        result = await scrapeTikTokProfile(
+          entry.userId,
+          entry.handle,
+          entry.lastKnownCount
+        );
+        break;
+      case "instagram":
+        result = await scrapeInstagramProfile(
+          entry.userId,
+          entry.handle,
+          entry.lastKnownCount
+        );
+        break;
+    }
+
+    platformResult.results.push(result);
+
+    if (result.skipped) {
+      platformResult.skipped++;
+    } else {
+      platformResult.scraped++;
+      platformResult.postsFound += result.postsFound;
+    }
+
+    if (result.error) {
+      platformResult.errors.push(
+        `${platform}/@${entry.handle}: ${result.error}`
+      );
+    }
+  }
+
+  return platformResult;
+}
+
+/**
+ * Scrape all platforms — main entry point for cron/admin trigger
+ */
+export async function scrapeAllPlatforms(): Promise<PlatformScrapeResult[]> {
+  const platforms: SupportedPlatform[] = ["tiktok", "instagram"];
+  const results: PlatformScrapeResult[] = [];
+
+  for (const platform of platforms) {
+    console.log(`[ScrapeCreators] Starting ${platform} scrape...`);
+    const result = await scrapeAllProfiles(platform);
     results.push(result);
+    console.log(
+      `[ScrapeCreators] ${platform} complete: ${result.scraped} scraped, ${result.skipped} skipped, ${result.postsFound} posts found`
+    );
   }
 
   return results;
@@ -232,7 +470,6 @@ export function postContainsHashtag(
 ): boolean {
   const normalizedTarget = targetHashtag.toLowerCase().replace(/^#/, "");
 
-  // Check hashtags array first (more reliable)
   if (hashtags && Array.isArray(hashtags)) {
     const hasHashtag = hashtags.some(
       (h) => h.toLowerCase().replace(/^#/, "") === normalizedTarget
@@ -240,7 +477,6 @@ export function postContainsHashtag(
     if (hasHashtag) return true;
   }
 
-  // Fallback: check content for hashtag mention
   if (content) {
     const hashtagRegex = new RegExp(`#${normalizedTarget}\\b`, "i");
     return hashtagRegex.test(content);
@@ -251,28 +487,18 @@ export function postContainsHashtag(
 
 /**
  * Check if a post mentions the @ugc.community account
- *
- * Handles different username formats per platform:
- * - Instagram/TikTok: @ugc.community (dots allowed)
- * - Twitter/X: @ugc_community (underscores, no dots)
- * - YouTube: ugc.community or UGC Community (channel name)
  */
 export function postContainsMention(
   content: string | undefined | null,
-  platform?: string
 ): boolean {
   if (!content) return false;
 
-  const contentLower = content.toLowerCase();
-
-  // Platform-specific handle variations
   const mentionPatterns = [
-    /@ugc\.community\b/i,      // Instagram, TikTok (with dot)
-    /@ugccommunity\b/i,        // Without dot/separator
-    /@ugc_community\b/i,       // Twitter style (underscore)
+    /@ugc\.community\b/i,
+    /@ugccommunity\b/i,
+    /@ugc_community\b/i,
   ];
 
-  // Check all patterns
   for (const pattern of mentionPatterns) {
     if (pattern.test(content)) {
       return true;

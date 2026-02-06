@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  triggerAllProfileScrapers,
+  scrapeAllPlatforms,
   getAllPlatformHandles,
 } from "@/lib/hashtag-monitoring/profile-scraper";
+import { processScrapedPosts } from "@/lib/hashtag-monitoring/handler";
 
 /**
  * GET /api/cron/profile-monitoring
  *
- * Cron job to trigger profile-based scraping for all registered users.
- * Scrapes creator TikTok/Instagram profiles every 12 hours and detects
- * posts that tag @ugc.community to credit content.
+ * Cron job to scrape registered user profiles via Scrape Creators API.
+ * Uses a two-step approach:
+ *   1. PEEK: Check profile video/post count (1 credit per user)
+ *   2. FETCH: Only fetch posts if count increased (saves credits)
+ *
+ * Then processes any new posts through the mention-matching pipeline.
  *
  * Schedule: Runs every 12 hours (6 AM and 6 PM UTC)
  */
@@ -21,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get platform handles for logging
+    // Log what we're about to scrape
     const platformHandles = await getAllPlatformHandles();
     const totalHandles = platformHandles.reduce(
       (sum, p) => sum + p.handles.length,
@@ -29,45 +33,73 @@ export async function GET(request: NextRequest) {
     );
 
     console.log(
-      `Profile monitoring cron started. Platforms: ${platformHandles.length}, Total handles: ${totalHandles}`
+      `[ProfileMonitoring] Cron started. Platforms: ${platformHandles.length}, Total handles: ${totalHandles}`
     );
-
-    // Log handles per platform
     for (const { platform, handles } of platformHandles) {
       console.log(`  ${platform}: ${handles.length} handles`);
     }
 
-    // Trigger profile scrapers for all platforms
-    const results = await triggerAllProfileScrapers();
+    // Step 1: Scrape all profiles (peek + conditional fetch)
+    const scrapeResults = await scrapeAllPlatforms();
 
-    const successCount = results.filter((r) => r.success).length;
-    const failureCount = results.filter((r) => !r.success).length;
+    // Step 2: Collect all new posts and process them through the handler
+    const allNewPosts = scrapeResults.flatMap((r) =>
+      r.results.flatMap((sr) => sr.newPosts)
+    );
 
-    // Log results
-    for (const result of results) {
-      if (result.success) {
-        console.log(`  ${result.platform}: Started run ${result.runId}`);
-      } else {
-        console.error(`  ${result.platform}: Failed - ${result.error}`);
-      }
+    let processingResult = {
+      savedCount: 0,
+      duplicateCount: 0,
+      matchedCount: 0,
+      errors: [] as string[],
+    };
+
+    if (allNewPosts.length > 0) {
+      console.log(
+        `[ProfileMonitoring] Processing ${allNewPosts.length} new posts through handler...`
+      );
+      processingResult = await processScrapedPosts(allNewPosts);
     }
 
+    // Build summary
+    const totalScraped = scrapeResults.reduce((s, r) => s + r.scraped, 0);
+    const totalSkipped = scrapeResults.reduce((s, r) => s + r.skipped, 0);
+    const totalPostsFound = scrapeResults.reduce(
+      (s, r) => s + r.postsFound,
+      0
+    );
+    const allErrors = [
+      ...scrapeResults.flatMap((r) => r.errors),
+      ...processingResult.errors,
+    ];
+
     console.log(
-      `Profile monitoring cron completed. Success: ${successCount}, Failed: ${failureCount}`
+      `[ProfileMonitoring] Cron complete. Scraped: ${totalScraped}, Skipped: ${totalSkipped}, Posts found: ${totalPostsFound}, Saved: ${processingResult.savedCount}, Matched: ${processingResult.matchedCount}`
     );
 
     return NextResponse.json({
-      success: failureCount === 0,
-      results,
-      summary: {
-        totalPlatforms: results.length,
-        successCount,
-        failureCount,
-        totalHandles,
+      success: allErrors.length === 0,
+      scrape: {
+        platforms: scrapeResults.map((r) => ({
+          platform: r.platform,
+          totalHandles: r.totalHandles,
+          scraped: r.scraped,
+          skipped: r.skipped,
+          postsFound: r.postsFound,
+        })),
+        totalScraped,
+        totalSkipped,
+        totalPostsFound,
       },
+      processing: {
+        saved: processingResult.savedCount,
+        duplicates: processingResult.duplicateCount,
+        matched: processingResult.matchedCount,
+      },
+      errors: allErrors.length > 0 ? allErrors : undefined,
     });
   } catch (error) {
-    console.error("Error in profile monitoring cron:", error);
+    console.error("[ProfileMonitoring] Cron error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
