@@ -398,116 +398,6 @@ async function executeTool(
 // =====================================================
 
 /**
- * Inject portfolio tracking pixel and ensure contact form is properly configured.
- * This runs after the AI generates the files to ensure these features are always present.
- */
-function injectTrackingAndContactForm(
-  files: GeneratedFile[],
-  subdomain: string,
-  faviconHtmlSnippet?: string
-): GeneratedFile[] {
-  const trackingPixel = `<img src="https://ugc.community/api/portfolio/track?subdomain=${subdomain}" width="1" height="1" style="position:absolute;opacity:0;pointer-events:none" alt="" aria-hidden="true" />`;
-
-  return files.map((file) => {
-    if (file.path === "index.html") {
-      let content = file.content;
-
-      // Inject favicon links into <head> if provided
-      if (faviconHtmlSnippet && !content.includes('rel="icon"')) {
-        content = content.replace(
-          /<\/head>/i,
-          `  <!-- Favicon -->\n  ${faviconHtmlSnippet.split('\n').join('\n  ')}\n</head>`
-        );
-      }
-
-      // Inject tracking pixel before closing </body> tag
-      if (!content.includes("/api/portfolio/track")) {
-        content = content.replace(
-          /<\/body>/i,
-          `  <!-- Portfolio Analytics -->\n  ${trackingPixel}\n</body>`
-        );
-      }
-
-      return { ...file, content };
-    }
-
-    if (file.path === "script.js") {
-      let content = file.content;
-
-      // Inject contact form handler if not already present
-      if (!content.includes("/api/portfolio/contact")) {
-        const contactFormHandler = `
-// =====================================================
-// Contact Form Handler (UGC Community Integration)
-// =====================================================
-(function() {
-  const contactForm = document.getElementById('contact-form');
-  if (!contactForm) return;
-
-  contactForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const submitBtn = contactForm.querySelector('[type="submit"]');
-    const originalBtnText = submitBtn ? submitBtn.textContent : 'Send';
-
-    if (submitBtn) {
-      submitBtn.textContent = 'Sending...';
-      submitBtn.disabled = true;
-    }
-
-    const formData = {
-      name: contactForm.querySelector('[name="name"]')?.value || '',
-      email: contactForm.querySelector('[name="email"]')?.value || '',
-      company: contactForm.querySelector('[name="company"]')?.value || '',
-      message: contactForm.querySelector('[name="message"]')?.value || '',
-      creatorSubdomain: '${subdomain}'
-    };
-
-    try {
-      const response = await fetch('https://ugc.community/api/portfolio/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (submitBtn) submitBtn.textContent = 'Message Sent!';
-        contactForm.reset();
-        setTimeout(() => {
-          if (submitBtn) {
-            submitBtn.textContent = originalBtnText;
-            submitBtn.disabled = false;
-          }
-        }, 3000);
-      } else {
-        throw new Error(data.error || 'Failed to send');
-      }
-    } catch (error) {
-      console.error('Contact form error:', error);
-      if (submitBtn) {
-        submitBtn.textContent = 'Error - Try Again';
-        submitBtn.disabled = false;
-        setTimeout(() => {
-          submitBtn.textContent = originalBtnText;
-        }, 3000);
-      }
-    }
-  });
-})();
-`;
-        content = content + "\n" + contactFormHandler;
-      }
-
-      return { ...file, content };
-    }
-
-    return file;
-  });
-}
-
-/**
  * Add favicon files to the generated files array.
  */
 function addFaviconFiles(
@@ -669,31 +559,10 @@ export async function generatePortfolio(
       questionnaire.portfolioVision
     );
 
-    // Inject tracking pixel, contact form handler, and favicon links
-    files = injectTrackingAndContactForm(
-      files,
-      questionnaire.subdomain,
-      faviconResult?.htmlSnippet
-    );
-
     // Add favicon files if generation succeeded
     if (faviconResult) {
       files = addFaviconFiles(files, faviconResult);
     }
-
-    // Add vercel.json for static site deployment (no build step)
-    files.push({
-      path: "vercel.json",
-      content: JSON.stringify(
-        {
-          framework: null,
-          buildCommand: null,
-          outputDirectory: ".",
-        },
-        null,
-        2
-      ),
-    });
 
     // Validate we have the minimum required files
     const requiredFiles = ["index.html", "styles.css"];

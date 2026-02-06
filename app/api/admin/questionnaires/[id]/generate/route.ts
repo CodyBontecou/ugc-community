@@ -44,27 +44,7 @@ export async function POST(
 
     const { id: questionnaireId } = await params;
 
-    // Step 2: Get admin's GitHub token (validate before dispatching)
-    const [adminUser] = await db
-      .select({
-        githubAccessToken: users.githubAccessToken,
-        githubUsername: users.githubUsername,
-      })
-      .from(users)
-      .where(eq(users.id, session.user.id));
-
-    if (!adminUser?.githubAccessToken || !adminUser.githubUsername) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Please connect your GitHub account first",
-          step: "github_auth",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Step 3: Load questionnaire and user
+    // Step 2: Load questionnaire and user
     const questionnaires = await db
       .select({
         id: onboardingQuestionnaires.id,
@@ -84,7 +64,7 @@ export async function POST(
 
     const q = questionnaires[0];
 
-    // Step 4: Validate prerequisites
+    // Step 3: Validate prerequisites
     if (!q.userSubdomain) {
       return NextResponse.json(
         {
@@ -96,7 +76,7 @@ export async function POST(
       );
     }
 
-    // Step 5: Create generation record
+    // Step 4: Create generation record
     const [generation] = await db
       .insert(portfolioGenerations)
       .values({
@@ -106,14 +86,13 @@ export async function POST(
       })
       .returning({ id: portfolioGenerations.id });
 
-    // Step 6: Dispatch to Inngest background job
+    // Step 5: Dispatch to Inngest background job
     await inngest.send({
       name: "portfolio/generate.requested",
       data: {
         generationId: generation.id,
         questionnaireId,
         userId: q.userId,
-        adminUserId: session.user.id,
       },
     });
 

@@ -8,8 +8,6 @@ import {
 import { requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { Octokit } from "@octokit/rest";
-import { createPortfolioRepo, waitForRepoInitialized } from "@/lib/github/push-portfolio";
 import { inngest } from "@/lib/inngest/client";
 import {
   validateSubdomain,
@@ -74,12 +72,11 @@ export async function POST(request: NextRequest) {
     }
     const normalizedSubdomain = subdomainValidation.normalized!;
 
-    // Get user info for GitHub repo creation
+    // Get user info
     const [user] = await db
       .select({
         subdomain: users.subdomain,
         name: users.name,
-        githubRepoFullName: users.githubRepoFullName,
       })
       .from(users)
       .where(eq(users.id, session.user.id));
@@ -147,64 +144,6 @@ export async function POST(request: NextRequest) {
         .where(eq(users.id, session.user.id));
     }
 
-    const githubToken = process.env.GITHUB_SERVICE_TOKEN;
-    const githubUsername = process.env.GITHUB_SERVICE_USERNAME;
-
-    if (!githubToken || !githubUsername) {
-      console.error("Missing GITHUB_SERVICE_TOKEN or GITHUB_SERVICE_USERNAME env vars");
-      return NextResponse.json(
-        { error: "Portfolio generation is not configured. Please contact support." },
-        { status: 500 }
-      );
-    }
-
-    // Create or verify GitHub repo
-    let repoFullName = user.githubRepoFullName;
-    let repoId: string | null = null;
-
-    try {
-      const octokit = new Octokit({ auth: githubToken });
-
-      // Check if existing repo still exists
-      let needsNewRepo = !repoFullName;
-      if (repoFullName) {
-        const { repoExists } = await import("@/lib/github/push-portfolio");
-        const exists = await repoExists(octokit, repoFullName);
-        if (!exists) {
-          console.log(`Repo ${repoFullName} no longer exists, creating new one`);
-          needsNewRepo = true;
-        }
-      }
-
-      if (needsNewRepo) {
-        const repoResult = await createPortfolioRepo(octokit, normalizedSubdomain, {
-          description: `Portfolio website for ${user?.name || normalizedSubdomain}`,
-          isPrivate: true,
-        });
-
-        repoFullName = repoResult.repoFullName;
-        repoId = String(repoResult.repoId);
-
-        // Wait for repo to be initialized (auto_init creates commit asynchronously)
-        await waitForRepoInitialized(octokit, repoFullName);
-
-        // Update user with repo info
-        await db
-          .update(users)
-          .set({
-            githubRepoFullName: repoFullName,
-            githubRepoId: repoId,
-          })
-          .where(eq(users.id, session.user.id));
-      }
-    } catch (repoError) {
-      console.error("Failed to create/verify GitHub repo:", repoError);
-      return NextResponse.json(
-        { error: "Failed to create portfolio repository. Please try again." },
-        { status: 500 }
-      );
-    }
-
     // Create new questionnaire
     const [created] = await db
       .insert(onboardingQuestionnaires)
@@ -223,7 +162,6 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         questionnaireId: created.id,
         status: "pending",
-        githubRepo: repoFullName,
       })
       .returning({ id: portfolioGenerations.id });
 
@@ -234,7 +172,6 @@ export async function POST(request: NextRequest) {
         generationId: generation.id,
         questionnaireId: created.id,
         userId: session.user.id,
-        githubRepoFullName: repoFullName || undefined,
       },
     });
 

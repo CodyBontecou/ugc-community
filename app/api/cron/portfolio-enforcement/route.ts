@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, hashtagMentions } from "@/lib/db/schema";
 import { eq, and, gte, sql, isNotNull } from "drizzle-orm";
-import { addDomain, removeDomain, VercelApiError } from "@/lib/vercel";
 import {
   sendPortfolioDisabledEmail,
   sendPortfolioReenabledEmail,
@@ -22,7 +21,6 @@ type CreatorRow = {
   name: string;
   email: string;
   subdomain: string;
-  vercelProjectId: string;
   siteEnabled: boolean;
   hostingUnlockedUntil: Date | null;
 };
@@ -69,21 +67,18 @@ export async function GET(request: NextRequest) {
   );
 
   try {
-    // Fetch all creators that have a portfolio set up (have both subdomain and vercelProjectId)
+    // Fetch all creators that have a portfolio set up (have a subdomain)
     const creators = await db
       .select({
         id: users.id,
         name: users.name,
         email: users.email,
         subdomain: users.subdomain,
-        vercelProjectId: users.vercelProjectId,
         siteEnabled: users.siteEnabled,
         hostingUnlockedUntil: users.hostingUnlockedUntil,
       })
       .from(users)
-      .where(
-        and(isNotNull(users.subdomain), isNotNull(users.vercelProjectId))
-      );
+      .where(isNotNull(users.subdomain));
 
     console.log(
       `[PortfolioEnforcement] Found ${creators.length} creators with portfolios`
@@ -111,7 +106,7 @@ export async function GET(request: NextRequest) {
     const errors: EnforcementError[] = [];
 
     for (const creator of creators as CreatorRow[]) {
-      if (!creator.subdomain || !creator.vercelProjectId) continue;
+      if (!creator.subdomain) continue;
 
       try {
         const result = await enforceCreator(
@@ -213,8 +208,6 @@ async function enforceCreator(
   inGracePeriod: boolean,
   now: Date
 ): Promise<EnforcementAction | null> {
-  const domain = `${creator.subdomain}.ugc.community`;
-
   // Check hosting reward (bypass posting requirement)
   const hasHostingReward =
     creator.hostingUnlockedUntil !== null &&
@@ -252,7 +245,6 @@ async function enforceCreator(
       `[PortfolioEnforcement] Re-enabling ${creator.subdomain}: ${reason}`
     );
 
-    await addDomain(creator.vercelProjectId, domain);
     await db
       .update(users)
       .set({ siteEnabled: true, updatedAt: new Date() })
@@ -286,19 +278,6 @@ async function enforceCreator(
     console.log(
       `[PortfolioEnforcement] Disabling ${creator.subdomain}: ${reason}`
     );
-
-    try {
-      await removeDomain(creator.vercelProjectId, domain);
-    } catch (err) {
-      // If domain is already removed (404), that's fine — just update the DB
-      if (err instanceof VercelApiError && err.statusCode === 404) {
-        console.log(
-          `[PortfolioEnforcement] Domain ${domain} already removed from Vercel`
-        );
-      } else {
-        throw err;
-      }
-    }
 
     await db
       .update(users)
