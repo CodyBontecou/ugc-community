@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/session";
-import {
-  getUserNotificationPreferences,
-  updateUserNotificationPreferences,
-} from "@/lib/notifications/queries";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-// GET /api/user/settings - Get user's notification preferences
+// GET /api/user/settings - Get user settings
 export async function GET() {
   try {
     const session = await getServerSession();
@@ -13,52 +12,26 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const preferences = await getUserNotificationPreferences(session.user.id);
+    const user = await db
+      .select({
+        name: users.name,
+        displayName: users.displayName,
+        bio: users.bio,
+        websiteUrl: users.websiteUrl,
+        tiktokHandles: users.tiktokHandles,
+        instagramHandles: users.instagramHandles,
+      })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1);
 
-    if (!preferences) {
+    if (!user[0]) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ preferences });
+    return NextResponse.json({ settings: user[0] });
   } catch (error) {
     console.error("Error fetching user settings:", error);
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
-  }
-}
-
-// PATCH /api/user/settings - Update user's notification preferences
-export async function PATCH(request: NextRequest) {
-  try {
-    const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { emailOnJobApplication, emailOnApplicationUpdate } = body;
-
-    const updates: {
-      emailOnJobApplication?: boolean;
-      emailOnApplicationUpdate?: boolean;
-    } = {};
-
-    if (typeof emailOnJobApplication === "boolean") {
-      updates.emailOnJobApplication = emailOnJobApplication;
-    }
-
-    if (typeof emailOnApplicationUpdate === "boolean") {
-      updates.emailOnApplicationUpdate = emailOnApplicationUpdate;
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
-    }
-
-    const preferences = await updateUserNotificationPreferences(session.user.id, updates);
-
-    return NextResponse.json({ preferences });
-  } catch (error) {
-    console.error("Error updating user settings:", error);
-    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
 }

@@ -18,19 +18,36 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RecordTypeBadge } from "./record-type-badge";
-import { CreateInviteDialog } from "./create-invite-dialog";
-import { ConvertInviteDialog } from "./convert-invite-dialog";
 import { DeleteUserDialog } from "./delete-user-dialog";
-import type { RecordType, UnifiedRecord } from "@/app/api/admin/people/route";
 import type { UserStatus } from "@/lib/admin";
+
+// Simplified record type - only users now (invites/waitlist removed)
+type RecordType = "user" | "invite" | "waitlist"; // Keep for backwards compat
+type UnifiedRecord = {
+  id: string;
+  type: RecordType;
+  email: string;
+  name: string | null;
+  status: string;
+  createdAt: string;
+  image?: string | null;
+  subdomain?: string | null;
+  displayName?: string | null;
+  socials?: Record<string, string | string[] | null> | null;
+  userType?: string;
+  inviteUrl?: string;
+  expiresAt?: string;
+  usedBy?: { name: string } | null;
+  creator?: { name: string } | null;
+  token?: string;
+  role?: string;
+};
 
 type TypeFilter = "all" | RecordType;
 type SortOrder = "newest" | "oldest";
 
-const STATUS_OPTIONS: Record<RecordType, string[]> = {
+const STATUS_OPTIONS: Record<string, string[]> = {
   user: ["active", "suspended", "banned"],
-  invite: ["active", "expired", "revoked"],
-  waitlist: ["pending", "invited"],
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -144,7 +161,7 @@ export function UnifiedTable() {
           if (matchHandle(socials.instagram)) return true;
           if (matchHandle(socials.tiktok)) return true;
           if (matchHandle(socials.youtube)) return true;
-          if (socials.facebook?.toLowerCase().includes(searchLower)) return true;
+          if (matchHandle(socials.facebook)) return true;
           if (matchHandle(socials.twitter)) return true;
         }
         return false;
@@ -433,7 +450,7 @@ export function UnifiedTable() {
               target="_blank"
               rel="noopener noreferrer"
               className="text-warm-gray-400 hover:text-blue-600 transition-colors"
-              title={facebook}
+              title={String(facebook)}
             >
               <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -674,8 +691,6 @@ export function UnifiedTable() {
   const typeFilterTabs: { value: TypeFilter; label: string }[] = [
     { value: "all", label: "All" },
     { value: "user", label: "Users" },
-    { value: "invite", label: "Invites" },
-    { value: "waitlist", label: "Waitlist" },
   ];
 
   return (
@@ -818,25 +833,11 @@ export function UnifiedTable() {
         </div>
       </div>
 
-      <CreateInviteDialog isOpen={showCreateDialog} onClose={() => setShowCreateDialog(false)} onCreated={fetchRecords} />
-
       <DeleteUserDialog
         isOpen={userToDelete !== null}
         onClose={() => setUserToDelete(null)}
         onDeleted={handleUserDeleted}
         user={userToDelete ? { id: userToDelete.id, name: userToDelete.name, email: userToDelete.email } : null}
-      />
-
-      <ConvertInviteDialog
-        isOpen={inviteToConvert !== null}
-        onClose={() => setInviteToConvert(null)}
-        onConverted={fetchRecords}
-        invite={inviteToConvert ? {
-          id: inviteToConvert.id,
-          email: inviteToConvert.email,
-          role: inviteToConvert.role,
-          socials: inviteToConvert.socials,
-        } : null}
       />
     </>
   );

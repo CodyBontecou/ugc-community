@@ -393,6 +393,9 @@ export const hashtagMentions = pgTable(
     discoveredAt: timestamp("discovered_at").notNull().defaultNow(), // When we found it
     processedAt: timestamp("processed_at"), // When we matched to user
     matchedUserId: text("matched_user_id").references(() => users.id, { onDelete: "set null" }),
+    matchedJobId: uuid("matched_job_id").references(() => contentJobs.id, { onDelete: "set null" }),
+    matchedHook: text("matched_hook"), // The specific hook text that was matched
+    hookMatchConfidence: text("hook_match_confidence"), // 'high' | 'medium' | 'low'
     source: text("source").notNull(), // Provider name: 'apify', 'brand24', etc.
     metadata: jsonb("metadata").$type<HashtagMentionMetadata>().default({}),
   },
@@ -401,6 +404,7 @@ export const hashtagMentions = pgTable(
     index("hashtag_mentions_posted_at_idx").on(table.postedAt),
     index("hashtag_mentions_author_handle_idx").on(table.authorHandle),
     index("hashtag_mentions_matched_user_id_idx").on(table.matchedUserId),
+    index("hashtag_mentions_matched_job_id_idx").on(table.matchedJobId),
     index("hashtag_mentions_source_idx").on(table.source),
   ]
 );

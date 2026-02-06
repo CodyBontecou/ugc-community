@@ -2,11 +2,6 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth/session";
 import { ProjectsManager } from "@/components/portfolio";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { isBrand } from "@/lib/roles";
-import { isAdmin } from "@/lib/admin";
 import { Loader2 } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -21,23 +16,7 @@ export const dynamic = "force-dynamic";
 async function ProjectsContent() {
   const session = await getServerSession();
   if (!session) {
-    redirect("/login");
-  }
-
-  // Fetch user role
-  const user = await db
-    .select({ role: users.role })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .limit(1);
-
-  const userRole = user[0]?.role || "creator";
-  const isUserBrand = isBrand(userRole);
-  const isUserAdmin = isAdmin(session.user.email);
-
-  // Only creators can access projects page
-  if (isUserBrand || isUserAdmin) {
-    redirect("/dashboard");
+    redirect("/sign-in");
   }
 
   return (

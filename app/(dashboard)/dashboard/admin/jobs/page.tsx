@@ -13,7 +13,6 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
-import { BrandBadge } from "@/components/jobs/brand-badge";
 import {
   JOB_STATUSES,
   JOB_STATUS_LABELS,
@@ -238,7 +237,7 @@ export default function AdminJobsPage() {
                               Featured
                             </span>
                           )}
-                          {job.brandId && <BrandBadge />}
+                          
                         </span>
                         <span className="text-sm text-warm-gray-500 line-clamp-1">
                           {job.description}

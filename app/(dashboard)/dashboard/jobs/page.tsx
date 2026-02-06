@@ -2,40 +2,38 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Briefcase, Loader2 } from "lucide-react";
-import { JobTable, type JobRow } from "@/components/jobs/job-table";
-import { JobFilters } from "@/components/jobs/job-filters";
-import { useBrandUser } from "@/lib/hooks/use-brand-user";
+import { ArrowLeft, Briefcase, Loader2, Hash, Clock, Eye } from "lucide-react";
 import type { Platform, CompensationType } from "@/lib/jobs/constants";
 
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  hooks: string[];
+  compensationType: string;
+  compensationDetails: string | null;
+  niches: string[];
+  platforms: string[];
+  status: string;
+  isFeatured: boolean;
+  deadlineAt: string | null;
+  viewCount: number;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
 export default function JobsPage() {
-  const { isBrand, isLoading: isBrandLoading } = useBrandUser();
-  const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Filters
-  const [search, setSearch] = useState("");
-  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
-  const [selectedCompensationType, setSelectedCompensationType] = useState<
-    CompensationType | ""
-  >("");
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const params = new URLSearchParams();
-      if (search) params.set("search", search);
-      if (selectedNiches.length) params.set("niches", selectedNiches.join(","));
-      if (selectedPlatforms.length)
-        params.set("platforms", selectedPlatforms.join(","));
-      if (selectedCompensationType)
-        params.set("compensationType", selectedCompensationType);
-
-      const response = await fetch(`/api/jobs?${params.toString()}`);
+      const response = await fetch(`/api/jobs`);
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
@@ -50,92 +48,14 @@ export default function JobsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [search, selectedNiches, selectedPlatforms, selectedCompensationType]);
+  }, []);
 
   useEffect(() => {
-    if (!isBrandLoading) {
-      fetchJobs();
-    }
-  }, [isBrandLoading, fetchJobs]);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchJobs();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const handleClearFilters = () => {
-    setSearch("");
-    setSelectedNiches([]);
-    setSelectedPlatforms([]);
-    setSelectedCompensationType("");
-  };
-
-  const handleApply = (jobId: string) => {
-    // Update local state to reflect the application
-    setJobs((prev) =>
-      prev.map((job) =>
-        job.id === jobId
-          ? {
-              ...job,
-              creatorApplication: {
-                status: "interested",
-                appliedAt: new Date().toISOString(),
-              },
-            }
-          : job
-      )
-    );
-  };
-
-  // Loading state
-  if (isBrandLoading) {
-    return (
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-warm-gray-400" />
-        </div>
-      </div>
-    );
-  }
-
-  // Brands don't have access to jobs directory
-  if (isBrand) {
-    return (
-      <div className="max-w-6xl mx-auto">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-warm-gray-600 hover:text-warm-gray-900 transition-colors mb-6"
-        >
-          <ArrowLeft size={18} />
-          Back to Dashboard
-        </Link>
-
-        <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-8 text-center">
-          <div className="w-16 h-16 bg-warm-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Briefcase size={28} className="text-warm-gray-400" />
-          </div>
-          <h2 className="text-lg font-semibold text-warm-gray-900 mb-2">
-            Creator-Only Feature
-          </h2>
-          <p className="text-warm-gray-500 mb-6">
-            The jobs directory is only available for creator accounts.
-          </p>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-coral to-rose text-white font-medium rounded-full hover:opacity-90 transition-opacity"
-          >
-            Return to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
+    fetchJobs();
+  }, [fetchJobs]);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -149,8 +69,30 @@ export default function JobsPage() {
           Content Jobs
         </h1>
         <p className="text-warm-gray-500">
-          Browse and apply to content creation opportunities from brands and ugc.community
+          Browse active content jobs. Use the hooks below in your TikTok content —
+          we'll automatically detect and credit your posts.
         </p>
+      </div>
+
+      {/* How it works banner */}
+      <div className="bg-gradient-to-r from-coral/5 to-rose/5 rounded-[--radius-xl] border border-coral/20 p-6 mb-8">
+        <h2 className="text-base font-semibold text-warm-gray-900 mb-3">
+          How It Works
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-warm-gray-600">
+          <div className="flex items-start gap-2">
+            <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">1</span>
+            <span>Pick a job and note the hooks</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">2</span>
+            <span>Create TikTok content using those hooks</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">3</span>
+            <span>We auto-detect your posts and track milestones</span>
+          </div>
+        </div>
       </div>
 
       {/* Error state */}
@@ -160,30 +102,154 @@ export default function JobsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-4 mb-6">
-        <JobFilters
-          search={search}
-          onSearchChange={setSearch}
-          selectedNiches={selectedNiches}
-          onNichesChange={setSelectedNiches}
-          selectedPlatforms={selectedPlatforms}
-          onPlatformsChange={setSelectedPlatforms}
-          selectedCompensationType={selectedCompensationType}
-          onCompensationTypeChange={setSelectedCompensationType}
-          onClear={handleClearFilters}
-        />
-      </div>
-
-      {/* Job count */}
-      {!isLoading && (
-        <p className="text-sm text-warm-gray-500 mb-4">
-          {jobs.length} job{jobs.length !== 1 ? "s" : ""} found
-        </p>
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={32} className="animate-spin text-warm-gray-400" />
+        </div>
       )}
 
-      {/* Jobs table */}
-      <JobTable jobs={jobs} isLoading={isLoading} onApply={handleApply} />
+      {/* Empty state */}
+      {!isLoading && jobs.length === 0 && !error && (
+        <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-warm-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Briefcase size={28} className="text-warm-gray-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-warm-gray-900 mb-2">
+            No active jobs right now
+          </h2>
+          <p className="text-warm-gray-500">
+            Check back soon — new content jobs are posted regularly.
+          </p>
+        </div>
+      )}
+
+      {/* Job cards */}
+      {!isLoading && jobs.length > 0 && (
+        <div className="space-y-4">
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              className={`bg-white rounded-[--radius-xl] border ${
+                job.isFeatured ? "border-coral/30 ring-1 ring-coral/10" : "border-warm-gray-200"
+              } overflow-hidden transition-all hover:shadow-sm`}
+            >
+              <button
+                onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
+                className="w-full text-left p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {job.isFeatured && (
+                        <span className="text-xs font-medium text-coral bg-coral/10 px-2 py-0.5 rounded-full">
+                          Featured
+                        </span>
+                      )}
+                      <h3 className="text-lg font-semibold text-warm-gray-900">
+                        {job.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-warm-gray-500 line-clamp-2 mb-3">
+                      {job.description}
+                    </p>
+
+                    {/* Hooks preview */}
+                    {job.hooks && job.hooks.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {(job.hooks as string[]).slice(0, 3).map((hook, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1 text-xs bg-lavender-soft/30 text-lavender px-2.5 py-1 rounded-full"
+                          >
+                            <Hash size={10} />
+                            {hook.length > 40 ? hook.slice(0, 40) + "..." : hook}
+                          </span>
+                        ))}
+                        {(job.hooks as string[]).length > 3 && (
+                          <span className="text-xs text-warm-gray-400">
+                            +{(job.hooks as string[]).length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    {job.platforms && job.platforms.length > 0 && (
+                      <div className="flex gap-1">
+                        {job.platforms.map((platform) => (
+                          <span
+                            key={platform}
+                            className="text-xs bg-warm-gray-100 text-warm-gray-600 px-2 py-0.5 rounded-full capitalize"
+                          >
+                            {platform}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {job.deadlineAt && (
+                      <div className="flex items-center gap-1 text-xs text-warm-gray-400">
+                        <Clock size={12} />
+                        <span>
+                          {new Date(job.deadlineAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
+
+              {/* Expanded detail */}
+              {expandedJob === job.id && (
+                <div className="px-6 pb-6 border-t border-warm-gray-100 pt-4">
+                  <div className="prose prose-sm max-w-none text-warm-gray-600 mb-6">
+                    <p>{job.description}</p>
+                  </div>
+
+                  {/* All hooks */}
+                  {job.hooks && (job.hooks as string[]).length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-warm-gray-900 mb-3 flex items-center gap-2">
+                        <Hash size={14} className="text-coral" />
+                        Hooks to Use
+                      </h4>
+                      <div className="space-y-2">
+                        {(job.hooks as string[]).map((hook, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-3 bg-warm-gray-50 rounded-[--radius-md] px-4 py-3"
+                          >
+                            <span className="text-coral font-mono text-xs mt-0.5">
+                              {i + 1}.
+                            </span>
+                            <span className="text-sm text-warm-gray-700">
+                              &ldquo;{hook}&rdquo;
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Meta info */}
+                  <div className="flex flex-wrap gap-4 text-xs text-warm-gray-400">
+                    {job.compensationType && (
+                      <span className="capitalize">
+                        💰 {job.compensationType}
+                        {job.compensationDetails && ` — ${job.compensationDetails}`}
+                      </span>
+                    )}
+                    {job.niches && job.niches.length > 0 && (
+                      <span>🎯 {job.niches.join(", ")}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

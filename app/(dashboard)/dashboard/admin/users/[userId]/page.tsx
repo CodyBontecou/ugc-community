@@ -43,12 +43,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
-import { ApplicationStatusBadge } from "@/components/jobs/ApplicationStatusBadge";
 import { formatDistanceToNow } from "date-fns";
 import {
   COMPENSATION_TYPE_LABELS,
   type CompensationType,
-  type ApplicationStatus,
 } from "@/lib/jobs/constants";
 
 interface UserDetails {
@@ -1352,9 +1350,9 @@ export default function UserDetailPage() {
                         </span>
                       </td>
                       <td className="py-3 pr-4">
-                        <ApplicationStatusBadge
-                          status={app.status as ApplicationStatus}
-                        />
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-warm-gray-100 text-warm-gray-600 capitalize">
+                          {app.status}
+                        </span>
                       </td>
                       <td className="py-3 hidden md:table-cell">
                         <span className="text-sm text-warm-gray-500">

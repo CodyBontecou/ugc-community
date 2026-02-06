@@ -1,21 +1,13 @@
-export type UserRole = "creator" | "brand";
+export type UserRole = "creator";
 
 export function isCreator(role: string | null | undefined): boolean {
   return role === "creator" || !role;
 }
 
-export function isBrand(role: string | null | undefined): boolean {
-  return role === "brand";
-}
-
 export function canAccessMilestones(role: string | null | undefined): boolean {
-  return !isBrand(role);
+  return true;
 }
 
 export function canAccessPortfolio(role: string | null | undefined): boolean {
-  return !isBrand(role);
-}
-
-export function canAccessCreatorDirectory(role: string | null | undefined): boolean {
-  return isBrand(role);
+  return true;
 }

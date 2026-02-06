@@ -5,21 +5,21 @@ import { motion } from "framer-motion";
 const steps = [
   {
     step: "01",
-    title: "Choose Your Style",
+    title: "Sign Up & Connect TikTok",
     description:
-      "Pick from our collection of stunning templates designed for UGC creators.",
+      "Create your free account and link your TikTok handle so we can track your content.",
   },
   {
     step: "02",
-    title: "Add Your Content",
+    title: "Browse Jobs & Use the Hooks",
     description:
-      "Upload your best UGC videos and photos. Connect your socials for auto-sync.",
+      "Check the job board for active campaigns. Use the provided hooks in your TikTok content.",
   },
   {
     step: "03",
-    title: "Go Live",
+    title: "We Handle the Rest",
     description:
-      "Publish to your custom subdomain and start sharing with brands.",
+      "Our system automatically detects your posts, matches hooks, and unlocks rewards — portfolio hosting, edits, and more.",
   },
 ];
 
@@ -38,9 +38,9 @@ export function HowItWorks() {
             How It Works
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)]">
-            Live in minutes,
+            Post content,
             <br />
-            <span className="gradient-text">not days</span>
+            <span className="gradient-text">unlock rewards</span>
           </h2>
         </motion.div>
 

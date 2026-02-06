@@ -11,7 +11,7 @@ import {
   type Platform,
   type Niche,
 } from "@/lib/jobs/constants";
-import { ApplyButton } from "./apply-button";
+// Apply button removed - jobs are now automated via hook matching
 
 export interface JobRow {
   id: string;
@@ -189,17 +189,12 @@ export function JobTable({ jobs, isLoading = false, onApply }: JobTableProps) {
                   </div>
                 </td>
                 <td className="px-4 py-4 text-right">
-                  {job.creatorApplication ? (
-                    <span className="inline-flex items-center gap-1 text-sm text-green-600">
-                      <Check size={16} />
-                      Applied
-                    </span>
-                  ) : (
-                    <ApplyButton
-                      jobId={job.id}
-                      onApply={() => onApply?.(job.id)}
-                    />
-                  )}
+                  <Link
+                    href={`/dashboard/jobs/${job.id}`}
+                    className="text-sm text-coral hover:text-coral/80 font-medium"
+                  >
+                    View Hooks →
+                  </Link>
                 </td>
               </tr>
             ))}

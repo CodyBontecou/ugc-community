@@ -10,12 +10,10 @@ import {
   ChevronDown,
   User,
   Shield,
-  Settings,
+  Briefcase,
   FolderKanban,
 } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
-import type { UserRole } from "@/lib/roles";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface DashboardNavProps {
   user: {
@@ -25,26 +23,19 @@ interface DashboardNavProps {
     image?: string | null;
   };
   isAdmin?: boolean;
-  role?: UserRole;
 }
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-];
-
-const creatorNavItems = [
   { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
+  { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
 ];
 
-export function DashboardNav({ user, isAdmin = false, role = "creator" }: DashboardNavProps) {
+export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const isCreator = role === "creator" && !isAdmin;
 
   let allNavItems = [...navItems];
-  if (isCreator) {
-    allNavItems = [...allNavItems, ...creatorNavItems];
-  }
   if (isAdmin) {
     allNavItems = [...allNavItems, { href: "/dashboard/admin", label: "Admin", icon: Shield }];
   }
@@ -70,9 +61,6 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
           </Link>
         ))}
       </nav>
-
-      {/* Notification Bell */}
-      <NotificationBell />
 
       {/* User Menu */}
       <div className="relative">
@@ -135,24 +123,13 @@ export function DashboardNav({ user, isAdmin = false, role = "creator" }: Dashbo
                 </div>
 
                 <Link
-                  href="/dashboard/profile"
+                  href="/dashboard/settings"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
                 >
                   <User size={16} />
-                  View Profile
+                  Settings
                 </Link>
-
-                {role === "brand" && (
-                  <Link
-                    href="/dashboard/brand-settings"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
-                  >
-                    <Settings size={16} />
-                    Settings
-                  </Link>
-                )}
 
                 <button
                   onClick={handleSignOut}

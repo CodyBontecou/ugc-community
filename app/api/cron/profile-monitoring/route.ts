@@ -7,10 +7,11 @@ import {
 /**
  * GET /api/cron/profile-monitoring
  *
- * Daily cron job to trigger profile-based scraping for all registered users.
- * This checks Instagram and TikTok profiles for posts mentioning @ugc.community.
+ * Cron job to trigger profile-based scraping for all registered users.
+ * Scrapes creator TikTok/Instagram profiles every 12 hours and matches
+ * post content against active job hooks using semantic matching.
  *
- * Schedule: Runs every day at 6 AM UTC (configured in vercel.json)
+ * Schedule: Runs every 12 hours (6 AM and 6 PM UTC)
  */
 export async function GET(request: NextRequest) {
   // Verify cron secret for security

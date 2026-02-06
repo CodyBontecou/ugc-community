@@ -18,7 +18,7 @@ import {
   type Platform,
   type Niche,
 } from "@/lib/jobs/constants";
-import { ApplyButton } from "./apply-button";
+// Apply button removed - jobs are now automated via hook matching
 
 interface JobDetailProps {
   job: {
@@ -75,13 +75,7 @@ export function JobDetail({ job, onApply }: JobDetailProps) {
           </p>
         </div>
 
-        <div className="flex-shrink-0">
-          <ApplyButton
-            jobId={job.id}
-            hasApplied={!!job.creatorApplication}
-            onApply={onApply}
-          />
-        </div>
+        {/* Jobs are automated - no apply button needed */}
       </div>
 
       {/* Stats */}

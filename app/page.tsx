@@ -10,9 +10,7 @@ import {
   HowItWorks,
   MilestonesRewards,
   Examples,
-  ForBrands,
   Testimonials,
-  Pricing,
   FinalCTA,
   Footer,
 } from "@/components/landing";
@@ -72,9 +70,7 @@ export default async function HomePage() {
       <HowItWorks />
       <MilestonesRewards />
       <Examples />
-      <ForBrands />
       <Testimonials authorImage={testimonialImage} />
-      <Pricing />
       <FinalCTA />
       <Footer />
     </div>

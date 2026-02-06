@@ -5,49 +5,48 @@ import {
   Palette,
   Globe,
   Zap,
-  MessageCircle,
+  Target,
   BarChart3,
-  Heart,
+  Repeat,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 const features = [
   {
-    icon: <Palette size={24} />,
-    title: "Custom Design",
+    icon: <Target size={24} />,
+    title: "Job Board with Hooks",
     description:
-      "Your profile is uniquely crafted to match your brand and showcase your best work beautifully.",
+      "Browse content jobs with specific hooks to use. Just create content naturally — no applications needed.",
+  },
+  {
+    icon: <Repeat size={24} />,
+    title: "Automatic Detection",
+    description:
+      "We scrape your TikTok every 12 hours and use AI to match your posts to job hooks automatically.",
   },
   {
     icon: <Globe size={24} />,
     title: "Your Own Subdomain",
     description:
-      "Get a professional URL like sarah.ugc.community that's easy to share with brands and clients.",
+      "Get a professional URL like sarah.ugc.community. Post regularly and we'll keep your portfolio live.",
   },
   {
-    icon: <Zap size={24} />,
-    title: "We Handle Everything",
+    icon: <Palette size={24} />,
+    title: "Custom Portfolio",
     description:
-      "From design to launch, we take care of all the technical details so you can focus on creating.",
-  },
-  {
-    icon: <MessageCircle size={24} />,
-    title: "Built-in Contact Form",
-    description:
-      "Let brands reach you directly. Get notifications instantly when someone wants to work with you.",
+      "Your profile is uniquely crafted to match your brand and showcase your best work beautifully.",
   },
   {
     icon: <BarChart3 size={24} />,
     title: "Analytics Dashboard",
     description:
-      "See who's viewing your profile, where they're from, and which content performs best.",
-    comingSoon: true,
+      "See who's viewing your profile, track your post performance, and watch your milestones grow.",
   },
   {
-    icon: <Heart size={24} />,
-    title: "1:1 Collaboration",
+    icon: <Zap size={24} />,
+    title: "Milestone Rewards",
     description:
-      "Work directly with our team. Your input shapes every detail of your profile.",
+      "1 post/month keeps your portfolio live. Hit 10 posts to unlock unlimited edits and premium perks.",
   },
 ];
 
@@ -56,13 +55,11 @@ function FeatureCard({
   title,
   description,
   index,
-  comingSoon,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   index: number;
-  comingSoon?: boolean;
 }) {
   return (
     <motion.div
@@ -82,9 +79,6 @@ function FeatureCard({
       <p className="text-[0.95rem] text-warm-gray-500 leading-relaxed">
         {description}
       </p>
-      {comingSoon && (
-        <p className="text-xs text-warm-gray-400 mt-2 italic">*Coming soon</p>
-      )}
     </motion.div>
   );
 }
@@ -104,12 +98,12 @@ export function Features() {
             Features
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)] mb-6">
-            Everything you need to
+            Create content,
             <br />
-            <span className="gradient-text">stand out</span>
+            <span className="gradient-text">we handle the rest</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[500px] mx-auto">
-            Built specifically for UGC creators. We handle the technical work.
+            Post to TikTok using job hooks. We automatically track everything and unlock rewards.
           </p>
         </motion.div>
 
