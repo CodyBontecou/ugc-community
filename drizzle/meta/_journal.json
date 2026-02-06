@@ -15,6 +15,13 @@
       "when": 1770415309711,
       "tag": "0001_unusual_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770422196123,
+      "tag": "0002_elite_northstar",
+      "breakpoints": true
     }
   ]
 }

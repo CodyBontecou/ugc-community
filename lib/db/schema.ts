@@ -174,6 +174,11 @@ export const portfolioGenerations = pgTable(
     errorStep: text("error_step"),
     startedAt: timestamp("started_at").notNull().defaultNow(),
     completedAt: timestamp("completed_at"),
+    // Design metadata (Feature 3, 6, 7)
+    designSeedId: text("design_seed_id"),
+    qualityScore: integer("quality_score"),
+    fontsUsed: text("fonts_used").array(),
+    primaryColors: text("primary_colors").array(),
   },
   (table) => [
     index("portfolio_generations_user_id_idx").on(table.userId),

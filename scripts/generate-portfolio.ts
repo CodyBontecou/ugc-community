@@ -76,6 +76,13 @@ async function main() {
       portfolioExamples: schema.onboardingQuestionnaires.portfolioExamples,
       userName: schema.users.name,
       userSubdomain: schema.users.subdomain,
+      userBio: schema.users.bio,
+      userTagline: schema.users.tagline,
+      userNiches: schema.users.niches,
+      userInstagramHandles: schema.users.instagramHandles,
+      userTiktokHandles: schema.users.tiktokHandles,
+      userYoutubeHandles: schema.users.youtubeHandles,
+      userTwitterHandles: schema.users.twitterHandles,
     })
     .from(schema.onboardingQuestionnaires)
     .innerJoin(schema.users, eq(schema.onboardingQuestionnaires.userId, schema.users.id))
@@ -91,6 +98,56 @@ async function main() {
   console.log(`  Subdomain: ${q.userSubdomain || "(not set)"}`);
   console.log("");
 
+  // Load user media
+  const mediaItems = await db
+    .select({
+      url: schema.media.url,
+      thumbnailUrl: schema.media.thumbnailUrl,
+      type: schema.media.type,
+      metadata: schema.media.metadata,
+    })
+    .from(schema.media)
+    .where(eq(schema.media.userId, q.userId))
+    .orderBy(schema.media.createdAt)
+    .limit(20);
+
+  // Build social links
+  const socialLinks: { platform: string; handle: string; url: string }[] = [];
+  if (q.userInstagramHandles) {
+    for (const handle of q.userInstagramHandles) {
+      const clean = handle.replace(/^@/, "");
+      socialLinks.push({ platform: "Instagram", handle: `@${clean}`, url: `https://instagram.com/${clean}` });
+    }
+  }
+  if (q.userTiktokHandles) {
+    for (const handle of q.userTiktokHandles) {
+      const clean = handle.replace(/^@/, "");
+      socialLinks.push({ platform: "TikTok", handle: `@${clean}`, url: `https://tiktok.com/@${clean}` });
+    }
+  }
+  if (q.userYoutubeHandles) {
+    for (const handle of q.userYoutubeHandles) {
+      const clean = handle.replace(/^@/, "");
+      socialLinks.push({ platform: "YouTube", handle: `@${clean}`, url: `https://youtube.com/@${clean}` });
+    }
+  }
+  if (q.userTwitterHandles) {
+    for (const handle of q.userTwitterHandles) {
+      const clean = handle.replace(/^@/, "");
+      socialLinks.push({ platform: "Twitter/X", handle: `@${clean}`, url: `https://x.com/${clean}` });
+    }
+  }
+
+  // Build media list
+  const mediaList = mediaItems.map((item) => ({
+    url: item.url,
+    thumbnailUrl: item.thumbnailUrl ?? undefined,
+    type: item.type,
+    caption: item.metadata?.caption ?? undefined,
+    width: item.metadata?.width ?? undefined,
+    height: item.metadata?.height ?? undefined,
+  }));
+
   // Step 2: Prepare questionnaire data
   const questionnaireData: QuestionnaireData = {
     portfolioVision: q.portfolioVision,
@@ -98,6 +155,11 @@ async function main() {
     portfolioExamples: q.portfolioExamples,
     creatorName: q.userName,
     subdomain: q.userSubdomain || "creator",
+    bio: q.userBio,
+    tagline: q.userTagline,
+    niches: q.userNiches,
+    socialLinks: socialLinks.length > 0 ? socialLinks : undefined,
+    mediaItems: mediaList.length > 0 ? mediaList : undefined,
   };
 
   console.log("Portfolio Vision:");

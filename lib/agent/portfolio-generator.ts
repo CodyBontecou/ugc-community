@@ -4,6 +4,10 @@ import * as path from "path";
 import * as os from "os";
 import { buildPortfolioPrompt, QuestionnaireData } from "./portfolio-prompt";
 import { generatePortfolioFavicon, FaviconResult } from "./favicon-generator";
+import { selectDesignSeed, DesignSeed } from "./design-seeds";
+import { detectArchetype } from "./archetype-detector";
+import { getSystemPrompt } from "./system-prompts";
+import { extractDesignMetadata } from "./css-parser";
 
 // =====================================================
 // Types
@@ -24,6 +28,9 @@ export interface GenerationResult {
     inputTokens: number;
     outputTokens: number;
   };
+  designSeedId?: string;
+  archetype?: string;
+  designMetadata?: { fonts: string[]; colors: string[] };
 }
 
 interface ToolResult {
@@ -40,97 +47,6 @@ interface ToolResult {
 // No timeout constraints with Fly worker - allow full generation
 const MAX_TURNS = 30;
 const MODEL = "claude-sonnet-4-5";
-
-// =====================================================
-// System Prompt
-// =====================================================
-
-const SYSTEM_PROMPT = `You are a senior frontend developer creating distinctive, production-grade portfolio websites that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
-
-## CRITICAL CONSTRAINT: Files Allowed
-You may ONLY create these three files:
-- index.html
-- styles.css
-- script.js
-
-Do NOT create any other files (no .json, .md, .ts, .tsx, .jsx, .vue, etc.). Only pure HTML, CSS, and JavaScript.
-
-## Tools
-- **write_file**: Create files (ONLY index.html, styles.css, script.js)
-- **web_fetch**: Fetch a URL if specific portfolio examples are provided (use sparingly)
-
-## CRITICAL: Be Efficient
-- Limit research to 1-2 web_fetch calls maximum (only if URLs are provided)
-- Start writing files immediately after minimal research
-- Create all files in sequence: index.html → styles.css → script.js
-
-## Design Thinking
-
-Before coding, understand the context and commit to a BOLD aesthetic direction:
-- **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
-
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
-
-Then implement working code that is:
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
-
-## Frontend Aesthetics Guidelines
-
-Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
-
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
-
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
-
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
-
-## Technical Standards
-- Semantic HTML5
-- Modern CSS (Flexbox, Grid, custom properties)
-- Vanilla JavaScript (ES6+) - no frameworks, no build tools
-- Mobile-first responsive design
-- WCAG 2.1 AA accessibility
-- SEO metadata
-
-## Contact Form Requirements
-The Contact section MUST include a working form with id="contact-form" and these fields:
-- Name input with name="name" (required)
-- Email input with name="email" (required)
-- Company/Brand input with name="company" (required)
-- Message textarea with name="message" (required)
-- Submit button with type="submit"
-
-Example structure:
-\`\`\`html
-<form id="contact-form">
-  <input type="text" name="name" placeholder="Your Name" required>
-  <input type="email" name="email" placeholder="Email Address" required>
-  <input type="text" name="company" placeholder="Brand / Company" required>
-  <textarea name="message" placeholder="Project Details" required></textarea>
-  <button type="submit">Send Message</button>
-</form>
-\`\`\`
-
-The form submission handler will be automatically injected - just create the form HTML.
-
-## Output
-Create ONLY these three files:
-1. index.html - Complete page with Hero, Portfolio, About, Contact sections (include working contact form)
-2. styles.css - All styling including responsive breakpoints
-3. script.js - Interactions and smooth scrolling
-
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.`;
 
 // =====================================================
 // Tool Definitions
@@ -454,7 +370,12 @@ async function collectFiles(dir: string): Promise<GeneratedFile[]> {
 // =====================================================
 
 export async function generatePortfolio(
-  questionnaire: QuestionnaireData
+  questionnaire: QuestionnaireData,
+  options?: {
+    reviewerFeedback?: string;
+    designSeed?: DesignSeed;
+    excludeSeedIds?: string[];
+  }
 ): Promise<GenerationResult> {
   // Create temp directory for file output
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "portfolio-"));
@@ -467,6 +388,29 @@ export async function generatePortfolio(
   let totalOutputTokens = 0;
 
   try {
+    // Select or reuse design seed
+    const seed =
+      options?.designSeed || selectDesignSeed(options?.excludeSeedIds);
+    console.log(`Design seed selected: ${seed.id} ("${seed.name}")`);
+    questionnaire.designSeed = seed;
+
+    // Detect archetype
+    const archetype = detectArchetype({
+      portfolioVision: questionnaire.portfolioVision,
+      inspiringBrands: questionnaire.inspiringBrands,
+      niches: questionnaire.niches,
+    });
+    console.log(`Creator archetype detected: ${archetype}`);
+    questionnaire.archetype = archetype;
+
+    // Get archetype-specific system prompt
+    const systemPrompt = getSystemPrompt(archetype);
+
+    // Append reviewer feedback if provided
+    if (options?.reviewerFeedback) {
+      questionnaire.reviewerFeedback = options.reviewerFeedback;
+    }
+
     // Build the prompt
     const userPrompt = buildPortfolioPrompt(questionnaire);
 
@@ -482,8 +426,9 @@ export async function generatePortfolio(
       // Call Claude
       const response = await client.messages.create({
         model: MODEL,
-        max_tokens: 16384,
-        system: SYSTEM_PROMPT,
+        max_tokens: 32000,
+        thinking: { type: "enabled", budget_tokens: 10000 },
+        system: systemPrompt,
         tools,
         messages,
       });
@@ -492,9 +437,20 @@ export async function generatePortfolio(
       totalInputTokens += response.usage.input_tokens;
       totalOutputTokens += response.usage.output_tokens;
 
-      // Log text responses
+      // Log cache token usage if available
+      const usageAny = response.usage as unknown as Record<string, unknown>;
+      if (usageAny.cache_creation_input_tokens) {
+        console.log(`  Cache creation tokens: ${usageAny.cache_creation_input_tokens}`);
+      }
+      if (usageAny.cache_read_input_tokens) {
+        console.log(`  Cache read tokens: ${usageAny.cache_read_input_tokens}`);
+      }
+
+      // Log text responses and thinking blocks
       for (const block of response.content) {
-        if (block.type === "text") {
+        if (block.type === "thinking") {
+          console.log("Thinking:", block.thinking.substring(0, 150) + "...");
+        } else if (block.type === "text") {
           console.log("Agent:", block.text.substring(0, 100));
         }
       }
@@ -579,8 +535,16 @@ export async function generatePortfolio(
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,
         },
+        designSeedId: seed.id,
+        archetype,
       };
     }
+
+    // Extract design metadata from generated files
+    const designMetadata = extractDesignMetadata(files);
+    console.log(
+      `Extracted design metadata — fonts: [${designMetadata.fonts.join(", ")}], colors: [${designMetadata.colors.slice(0, 6).join(", ")}]`
+    );
 
     return {
       files,
@@ -589,6 +553,9 @@ export async function generatePortfolio(
         inputTokens: totalInputTokens,
         outputTokens: totalOutputTokens,
       },
+      designSeedId: seed.id,
+      archetype,
+      designMetadata,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

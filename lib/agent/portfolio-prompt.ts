@@ -2,12 +2,35 @@
 // Types
 // =====================================================
 
+import { DesignSeed, formatSeedForPrompt } from "./design-seeds";
+
 export interface QuestionnaireData {
   portfolioVision: string;
   inspiringBrands: string | null;
   portfolioExamples: string | null;
   creatorName: string;
   subdomain: string;
+  // Feature 3: Design Seed
+  designSeed?: DesignSeed;
+  // Feature 4: Real Creator Content
+  bio?: string | null;
+  tagline?: string | null;
+  niches?: string[] | null;
+  socialLinks?: { platform: string; handle: string; url: string }[];
+  mediaItems?: {
+    url: string;
+    thumbnailUrl?: string;
+    type: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+  }[];
+  // Feature 5: Archetype (for tracking)
+  archetype?: string;
+  // Feature 6: Avoidance
+  avoidancePrompt?: string;
+  // Feature 7: Reviewer feedback
+  reviewerFeedback?: string;
 }
 
 // =====================================================
@@ -67,6 +90,62 @@ ${parts.join("\n\n")}`);
 - Vanilla JavaScript (ES6+) - no frameworks
 
 **Deployment:** https://${data.subdomain}.ugc.community`);
+
+  // Feature 3: Design Seed
+  if (data.designSeed) {
+    sections.push(formatSeedForPrompt(data.designSeed));
+  }
+
+  // Feature 4: Real Creator Content
+  if (data.bio || data.tagline || (data.niches && data.niches.length > 0)) {
+    const profileParts: string[] = [];
+    if (data.tagline) {
+      profileParts.push(`**Tagline:** ${data.tagline}`);
+    }
+    if (data.bio) {
+      profileParts.push(
+        `**Bio:** ${data.bio}\n(Use this as the About section content verbatim — do NOT invent a new bio.)`
+      );
+    }
+    if (data.niches && data.niches.length > 0) {
+      profileParts.push(`**Niches:** ${data.niches.join(", ")}`);
+    }
+    sections.push(`## Creator Profile\n\n${profileParts.join("\n\n")}`);
+  }
+
+  if (data.socialLinks && data.socialLinks.length > 0) {
+    const linkLines = data.socialLinks.map(
+      (link) => `- **${link.platform}**: ${link.handle} → ${link.url}`
+    );
+    sections.push(
+      `## Social Links\n\nLink these in the navigation, hero, and/or footer:\n${linkLines.join("\n")}`
+    );
+  }
+
+  if (data.mediaItems && data.mediaItems.length > 0) {
+    const mediaLines = data.mediaItems.map((item, i) => {
+      const dims =
+        item.width && item.height ? ` (${item.width}×${item.height})` : "";
+      const caption = item.caption ? ` — "${item.caption}"` : "";
+      const thumb = item.thumbnailUrl
+        ? `\n  Thumbnail: ${item.thumbnailUrl}`
+        : "";
+      return `${i + 1}. [${item.type}] ${item.url}${dims}${caption}${thumb}`;
+    });
+    sections.push(
+      `## Portfolio Media\n\nUse these REAL URLs in <img>/<video> tags in the portfolio section. Do NOT use placeholder images.\n\n${mediaLines.join("\n")}`
+    );
+  }
+
+  // Feature 6: Avoidance
+  if (data.avoidancePrompt) {
+    sections.push(data.avoidancePrompt);
+  }
+
+  // Feature 7: Reviewer feedback
+  if (data.reviewerFeedback) {
+    sections.push(data.reviewerFeedback);
+  }
 
   // Simple instructions
   sections.push(`## Steps
