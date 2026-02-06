@@ -30,6 +30,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
+import { PortfolioUploadDropzone } from "@/components/admin/PortfolioUploadDropzone";
 
 interface UserDetails {
   id: string;
@@ -838,6 +839,19 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Portfolio Upload */}
+      <PortfolioUploadDropzone
+        userId={userId}
+        subdomain={user.subdomain}
+        siteEnabled={user.siteEnabled}
+        onUploadComplete={() => {
+          // Refresh user data to reflect siteEnabled change
+          setUser((prev) =>
+            prev ? { ...prev, siteEnabled: true } : prev
+          );
+        }}
+      />
 
       {/* Milestone Progress */}
       <UserProgressionPath userId={userId} />

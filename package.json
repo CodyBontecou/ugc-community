@@ -23,7 +23,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@neondatabase/serverless": "^0.10.4",
-
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.0.1",
     "better-auth": "^1.2.8",
@@ -32,6 +31,7 @@
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^11.18.0",
     "inngest": "^3.50.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.468.0",
     "nanoid": "^5.1.6",
     "next": "^16.1.5",
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
