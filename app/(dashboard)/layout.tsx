@@ -38,10 +38,13 @@ export default async function DashboardLayout({
     <DashboardProviders>
       <div className="min-h-screen bg-warm-gray-50">
         {/* Header */}
-        <header className="bg-white border-b border-warm-gray-200">
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-warm-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="font-semibold text-warm-gray-900">
+            <div className="flex justify-between items-center h-14">
+              <Link
+                href="/"
+                className="font-semibold text-warm-gray-900 hover:text-coral transition-colors"
+              >
                 ugc.community
               </Link>
 
@@ -51,7 +54,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Main content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {children}
         </main>
       </div>
