@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
       },
       limit,
       offset,
-      creatorId: session.user.id, // Include application status
     });
 
     return NextResponse.json(result);

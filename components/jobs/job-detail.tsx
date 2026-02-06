@@ -5,7 +5,6 @@ import {
   Calendar,
   Clock,
   DollarSign,
-  Users,
   Eye,
   Lightbulb,
 } from "lucide-react";
@@ -34,16 +33,10 @@ interface JobDetailProps {
     deadlineAt: string | null;
     viewCount: number;
     publishedAt: string | null;
-    applicationCount: number;
-    creatorApplication?: {
-      status: string;
-      appliedAt: string;
-    } | null;
   };
-  onApply?: () => void;
 }
 
-export function JobDetail({ job, onApply }: JobDetailProps) {
+export function JobDetail({ job }: JobDetailProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -83,10 +76,6 @@ export function JobDetail({ job, onApply }: JobDetailProps) {
         <span className="flex items-center gap-1">
           <Eye size={16} className="text-warm-gray-400" />
           {job.viewCount} views
-        </span>
-        <span className="flex items-center gap-1">
-          <Users size={16} className="text-warm-gray-400" />
-          {job.applicationCount} interested
         </span>
       </div>
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ExternalLink, Check, Clock } from "lucide-react";
+import { ExternalLink, Clock } from "lucide-react";
 import {
   COMPENSATION_TYPE_LABELS,
   PLATFORM_LABELS,
@@ -24,10 +24,6 @@ export interface JobRow {
   isFeatured: boolean;
   deadlineAt: string | null;
   publishedAt: string | null;
-  creatorApplication?: {
-    status: string;
-    appliedAt: string;
-  } | null;
 }
 
 interface JobTableProps {

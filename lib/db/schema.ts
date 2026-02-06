@@ -84,8 +84,7 @@ export const users = pgTable(
     editsResetMonth: text("edits_reset_month"), // Format: '2026-01'
     unlimitedEditsUntil: timestamp("unlimited_edits_until"),
     // Notification preferences
-    emailOnJobApplication: boolean("email_on_job_application").notNull().default(true),
-    emailOnApplicationUpdate: boolean("email_on_application_update").notNull().default(true),
+
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -475,8 +474,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   createdJobs: many(contentJobs, { relationName: "createdJobs" }),
   // Brand jobs (jobs associated with this brand)
   brandJobs: many(contentJobs, { relationName: "brandJobs" }),
-  // Job applications (creator perspective)
-  jobApplications: many(jobApplications, { relationName: "jobApplications" }),
+
   // Notifications
   notifications: many(notifications),
   // Onboarding questionnaires
@@ -659,30 +657,7 @@ export const contentJobs = pgTable(
   ]
 );
 
-export const jobApplications = pgTable(
-  "job_applications",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    jobId: uuid("job_id")
-      .notNull()
-      .references(() => contentJobs.id, { onDelete: "cascade" }),
-    creatorId: text("creator_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    status: text("status").notNull().default("interested"),
-    note: text("note"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("job_applications_job_creator_unique").on(table.jobId, table.creatorId),
-    index("job_applications_job_id_idx").on(table.jobId),
-    index("job_applications_creator_id_idx").on(table.creatorId),
-    index("job_applications_status_idx").on(table.status),
-  ]
-);
-
-export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
+export const contentJobsRelations = relations(contentJobs, ({ one }) => ({
   createdByUser: one(users, {
     fields: [contentJobs.createdBy],
     references: [users.id],
@@ -692,19 +667,6 @@ export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
     fields: [contentJobs.brandId],
     references: [users.id],
     relationName: "brandJobs",
-  }),
-  applications: many(jobApplications),
-}));
-
-export const jobApplicationsRelations = relations(jobApplications, ({ one }) => ({
-  job: one(contentJobs, {
-    fields: [jobApplications.jobId],
-    references: [contentJobs.id],
-  }),
-  creator: one(users, {
-    fields: [jobApplications.creatorId],
-    references: [users.id],
-    relationName: "jobApplications",
   }),
 }));
 
@@ -721,7 +683,7 @@ export const notifications = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").notNull(), // 'job_application' | 'application_accepted' | 'application_rejected' | 'application_info_requested' | 'new_message'
+    type: text("type").notNull(), // 'new_message'
     title: text("title").notNull(),
     message: text("message"),
     link: text("link"),
@@ -799,7 +761,6 @@ export type HashtagMentionMetadata = {
 export type NotificationMetadata = {
   jobId?: string;
   jobTitle?: string;
-  applicationId?: string;
   creatorId?: string;
   creatorName?: string;
   brandId?: string;
@@ -835,8 +796,6 @@ export type SavedCreator = typeof savedCreators.$inferSelect;
 export type NewSavedCreator = typeof savedCreators.$inferInsert;
 export type ContentJob = typeof contentJobs.$inferSelect;
 export type NewContentJob = typeof contentJobs.$inferInsert;
-export type JobApplication = typeof jobApplications.$inferSelect;
-export type NewJobApplication = typeof jobApplications.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;

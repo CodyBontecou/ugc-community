@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { isAdmin } from "@/lib/admin";
-import { getJobById, updateJob, deleteJob, getJobApplications } from "@/lib/jobs/queries";
+import { getJobById, updateJob, deleteJob } from "@/lib/jobs/queries";
 
-// GET /api/admin/jobs/[jobId] - Get job detail with applications
+// GET /api/admin/jobs/[jobId] - Get job detail
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> }
@@ -22,13 +22,7 @@ export async function GET(
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    // Get applications for this job
-    const applications = await getJobApplications(jobId);
-
-    return NextResponse.json({
-      ...result,
-      applications,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

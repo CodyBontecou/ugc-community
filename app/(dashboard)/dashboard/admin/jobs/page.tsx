@@ -9,7 +9,6 @@ import {
   Edit2,
   Trash2,
   Eye,
-  Users,
   CheckCircle,
 } from "lucide-react";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
@@ -32,7 +31,6 @@ interface AdminJob {
   viewCount: number;
   createdAt: string;
   publishedAt: string | null;
-  applicationCount?: number;
 }
 
 export default function AdminJobsPage() {
@@ -214,9 +212,6 @@ export default function AdminJobsPage() {
                   <th className="text-center text-xs font-semibold text-warm-gray-600 uppercase tracking-wider px-4 py-3">
                     Views
                   </th>
-                  <th className="text-center text-xs font-semibold text-warm-gray-600 uppercase tracking-wider px-4 py-3">
-                    Applications
-                  </th>
                   <th className="text-left text-xs font-semibold text-warm-gray-600 uppercase tracking-wider px-4 py-3">
                     Created
                   </th>
@@ -257,12 +252,6 @@ export default function AdminJobsPage() {
                       <span className="inline-flex items-center gap-1 text-sm text-warm-gray-600">
                         <Eye size={14} />
                         {job.viewCount}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="inline-flex items-center gap-1 text-sm text-warm-gray-600">
-                        <Users size={14} />
-                        {job.applicationCount || 0}
                       </span>
                     </td>
                     <td className="px-4 py-4">

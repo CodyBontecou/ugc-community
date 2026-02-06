@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
       filters: status ? { status } : undefined,
       limit,
       offset,
-      includeApplicationCount: true,
     });
 
     return NextResponse.json(result);

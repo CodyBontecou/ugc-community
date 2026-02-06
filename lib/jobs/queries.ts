@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { contentJobs, jobApplications, users } from "@/lib/db/schema";
+import { contentJobs } from "@/lib/db/schema";
 import { eq, and, desc, sql, inArray, or, ilike } from "drizzle-orm";
 import type { JobStatus, CompensationType, Platform } from "./constants";
 
@@ -15,12 +15,10 @@ export interface ListJobsOptions {
   filters?: JobFilters;
   limit?: number;
   offset?: number;
-  includeApplicationCount?: boolean;
-  creatorId?: string; // To check if creator has applied
 }
 
 export async function listJobs(options: ListJobsOptions = {}) {
-  const { filters = {}, limit = 20, offset = 0, includeApplicationCount = false, creatorId } = options;
+  const { filters = {}, limit = 20, offset = 0 } = options;
 
   // Build where conditions
   const conditions = [];
@@ -99,66 +97,15 @@ export async function listJobs(options: ListJobsOptions = {}) {
     .where(whereClause);
   const total = countResult[0]?.count || 0;
 
-  // Optionally get application counts
-  let jobsWithCounts = jobs;
-  if (includeApplicationCount && jobs.length > 0) {
-    const jobIds = jobs.map((j) => j.id);
-    const applicationCounts = await db
-      .select({
-        jobId: jobApplications.jobId,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(jobApplications)
-      .where(inArray(jobApplications.jobId, jobIds))
-      .groupBy(jobApplications.jobId);
-
-    const countMap = new Map(applicationCounts.map((c) => [c.jobId, c.count]));
-    jobsWithCounts = jobs.map((job) => ({
-      ...job,
-      applicationCount: countMap.get(job.id) || 0,
-    }));
-  }
-
-  // Optionally check if creator has applied
-  let creatorApplications: Map<string, { status: string; appliedAt: Date }> = new Map();
-  if (creatorId && jobs.length > 0) {
-    const jobIds = jobs.map((j) => j.id);
-    const applications = await db
-      .select({
-        jobId: jobApplications.jobId,
-        status: jobApplications.status,
-        createdAt: jobApplications.createdAt,
-      })
-      .from(jobApplications)
-      .where(
-        and(
-          inArray(jobApplications.jobId, jobIds),
-          eq(jobApplications.creatorId, creatorId)
-        )
-      );
-
-    creatorApplications = new Map(
-      applications.map((a) => [a.jobId, { status: a.status, appliedAt: a.createdAt }])
-    );
-  }
-
-  // Add creator application info to jobs if creatorId provided
-  if (creatorId) {
-    jobsWithCounts = jobsWithCounts.map((job) => ({
-      ...job,
-      creatorApplication: creatorApplications.get(job.id) || null,
-    }));
-  }
-
   return {
-    jobs: jobsWithCounts,
+    jobs,
     total,
     limit,
     offset,
   };
 }
 
-export async function getJobById(jobId: string, creatorId?: string) {
+export async function getJobById(jobId: string) {
   const job = await db
     .select({
       id: contentJobs.id,
@@ -185,43 +132,7 @@ export async function getJobById(jobId: string, creatorId?: string) {
 
   if (!job[0]) return null;
 
-  // Get application count
-  const countResult = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(jobApplications)
-    .where(eq(jobApplications.jobId, jobId));
-
-  const result: {
-    job: typeof job[0] & { applicationCount: number; creatorApplication?: { status: string; appliedAt: Date } | null };
-  } = {
-    job: {
-      ...job[0],
-      applicationCount: countResult[0]?.count || 0,
-    },
-  };
-
-  // Check if creator has applied
-  if (creatorId) {
-    const application = await db
-      .select({
-        status: jobApplications.status,
-        createdAt: jobApplications.createdAt,
-      })
-      .from(jobApplications)
-      .where(
-        and(
-          eq(jobApplications.jobId, jobId),
-          eq(jobApplications.creatorId, creatorId)
-        )
-      )
-      .limit(1);
-
-    result.job.creatorApplication = application[0]
-      ? { status: application[0].status, appliedAt: application[0].createdAt }
-      : null;
-  }
-
-  return result;
+  return { job: job[0] };
 }
 
 export async function incrementJobViewCount(jobId: string) {
@@ -229,47 +140,6 @@ export async function incrementJobViewCount(jobId: string) {
     .update(contentJobs)
     .set({ viewCount: sql`${contentJobs.viewCount} + 1` })
     .where(eq(contentJobs.id, jobId));
-}
-
-export async function createJobApplication(jobId: string, creatorId: string, note?: string) {
-  const result = await db
-    .insert(jobApplications)
-    .values({
-      jobId,
-      creatorId,
-      note,
-      status: "interested",
-    })
-    .onConflictDoNothing()
-    .returning();
-
-  return result[0] || null;
-}
-
-export async function getJobApplications(jobId: string) {
-  return db
-    .select({
-      id: jobApplications.id,
-      jobId: jobApplications.jobId,
-      creatorId: jobApplications.creatorId,
-      status: jobApplications.status,
-      note: jobApplications.note,
-      createdAt: jobApplications.createdAt,
-      updatedAt: jobApplications.updatedAt,
-      creator: {
-        id: users.id,
-        name: users.name,
-        displayName: users.displayName,
-        image: users.image,
-        subdomain: users.subdomain,
-        niches: users.niches,
-        tagline: users.tagline,
-      },
-    })
-    .from(jobApplications)
-    .innerJoin(users, eq(jobApplications.creatorId, users.id))
-    .where(eq(jobApplications.jobId, jobId))
-    .orderBy(desc(jobApplications.createdAt));
 }
 
 // Admin functions
@@ -423,34 +293,8 @@ export async function listBrandJobs(brandId: string, options: ListBrandJobsOptio
     .where(and(...conditions));
   const total = countResult[0]?.count || 0;
 
-  // Get application counts
-  if (jobs.length > 0) {
-    const jobIds = jobs.map((j) => j.id);
-    const applicationCounts = await db
-      .select({
-        jobId: jobApplications.jobId,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(jobApplications)
-      .where(inArray(jobApplications.jobId, jobIds))
-      .groupBy(jobApplications.jobId);
-
-    const countMap = new Map(applicationCounts.map((c) => [c.jobId, c.count]));
-    const jobsWithCounts = jobs.map((job) => ({
-      ...job,
-      applicationCount: countMap.get(job.id) || 0,
-    }));
-
-    return {
-      jobs: jobsWithCounts,
-      total,
-      limit,
-      offset,
-    };
-  }
-
   return {
-    jobs: jobs.map((job) => ({ ...job, applicationCount: 0 })),
+    jobs,
     total,
     limit,
     offset,
@@ -484,164 +328,7 @@ export async function getBrandJobById(jobId: string, brandId: string) {
 
   if (!job[0]) return null;
 
-  // Get application count
-  const countResult = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(jobApplications)
-    .where(eq(jobApplications.jobId, jobId));
-
-  return {
-    job: {
-      ...job[0],
-      applicationCount: countResult[0]?.count || 0,
-    },
-  };
+  return { job: job[0] };
 }
 
-// Admin functions for viewing all applications
-export interface AdminApplicationFilters {
-  status?: string;
-  creatorId?: string;
-  jobId?: string;
-  search?: string;
-}
 
-export async function listAllApplications(
-  filters: AdminApplicationFilters = {},
-  limit = 50,
-  offset = 0
-) {
-  const conditions = [];
-
-  if (filters.status) {
-    conditions.push(eq(jobApplications.status, filters.status));
-  }
-
-  if (filters.creatorId) {
-    conditions.push(eq(jobApplications.creatorId, filters.creatorId));
-  }
-
-  if (filters.jobId) {
-    conditions.push(eq(jobApplications.jobId, filters.jobId));
-  }
-
-  if (filters.search) {
-    conditions.push(
-      or(
-        ilike(contentJobs.title, `%${filters.search}%`),
-        ilike(users.name, `%${filters.search}%`),
-        ilike(users.displayName, `%${filters.search}%`)
-      )
-    );
-  }
-
-  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-  const applications = await db
-    .select({
-      id: jobApplications.id,
-      jobId: jobApplications.jobId,
-      creatorId: jobApplications.creatorId,
-      status: jobApplications.status,
-      note: jobApplications.note,
-      createdAt: jobApplications.createdAt,
-      updatedAt: jobApplications.updatedAt,
-      job: {
-        id: contentJobs.id,
-        title: contentJobs.title,
-        description: contentJobs.description,
-        compensationType: contentJobs.compensationType,
-        compensationDetails: contentJobs.compensationDetails,
-        status: contentJobs.status,
-      },
-      creator: {
-        id: users.id,
-        name: users.name,
-        displayName: users.displayName,
-        image: users.image,
-        subdomain: users.subdomain,
-      },
-    })
-    .from(jobApplications)
-    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
-    .innerJoin(users, eq(jobApplications.creatorId, users.id))
-    .where(whereClause)
-    .orderBy(desc(jobApplications.updatedAt))
-    .limit(limit)
-    .offset(offset);
-
-  // Get total count
-  const countResult = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(jobApplications)
-    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
-    .innerJoin(users, eq(jobApplications.creatorId, users.id))
-    .where(whereClause);
-
-  return {
-    applications,
-    total: countResult[0]?.count || 0,
-    limit,
-    offset,
-  };
-}
-
-export async function getCreatorApplicationsAdmin(creatorId: string) {
-  const applications = await db
-    .select({
-      id: jobApplications.id,
-      jobId: jobApplications.jobId,
-      status: jobApplications.status,
-      note: jobApplications.note,
-      createdAt: jobApplications.createdAt,
-      updatedAt: jobApplications.updatedAt,
-      job: {
-        id: contentJobs.id,
-        title: contentJobs.title,
-        description: contentJobs.description,
-        compensationType: contentJobs.compensationType,
-        compensationDetails: contentJobs.compensationDetails,
-        status: contentJobs.status,
-      },
-    })
-    .from(jobApplications)
-    .innerJoin(contentJobs, eq(jobApplications.jobId, contentJobs.id))
-    .where(eq(jobApplications.creatorId, creatorId))
-    .orderBy(desc(jobApplications.updatedAt));
-
-  // Get brand info for each job
-  const applicationsWithBrand = await Promise.all(
-    applications.map(async (app) => {
-      const [job] = await db
-        .select({ brandId: contentJobs.brandId })
-        .from(contentJobs)
-        .where(eq(contentJobs.id, app.job.id))
-        .limit(1);
-
-      let brand = null;
-      if (job?.brandId) {
-        const [brandUser] = await db
-          .select({
-            id: users.id,
-            name: users.name,
-            displayName: users.displayName,
-            image: users.image,
-          })
-          .from(users)
-          .where(eq(users.id, job.brandId))
-          .limit(1);
-        brand = brandUser || null;
-      }
-
-      return {
-        ...app,
-        job: {
-          ...app.job,
-          brand,
-        },
-      };
-    })
-  );
-
-  return applicationsWithBrand;
-}

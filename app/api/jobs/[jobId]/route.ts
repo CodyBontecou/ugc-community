@@ -14,7 +14,7 @@ export async function GET(
     }
 
     const { jobId } = await params;
-    const result = await getJobById(jobId, session.user.id);
+    const result = await getJobById(jobId);
 
     if (!result) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
