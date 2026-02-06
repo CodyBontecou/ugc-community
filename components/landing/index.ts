@@ -9,5 +9,6 @@ export { MilestonesTiers } from "./milestones-tiers";
 export { RewardsShowcase } from "./rewards-showcase";
 export { Examples } from "./examples";
 export { Testimonials } from "./testimonials";
+export { Pricing } from "./pricing";
 export { FinalCTA } from "./final-cta";
 export { Footer } from "./footer";

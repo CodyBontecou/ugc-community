@@ -11,6 +11,7 @@ import {
   MilestonesRewards,
   Examples,
   Testimonials,
+  Pricing,
   FinalCTA,
   Footer,
 } from "@/components/landing";
@@ -71,6 +72,7 @@ export default async function HomePage() {
       <MilestonesRewards />
       <Examples />
       <Testimonials authorImage={testimonialImage} />
+      <Pricing />
       <FinalCTA />
       <Footer />
     </div>
