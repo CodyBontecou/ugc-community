@@ -222,7 +222,7 @@ export function AdvancedAnalytics() {
     <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-warm-gray-900 flex items-center gap-2">
-          <BarChart3 size={20} className="text-lavender" />
+          <BarChart3 size={20} className="text-coral" />
           Advanced Analytics
         </h2>
         {!hasAdvanced && (
@@ -266,7 +266,7 @@ export function AdvancedAnalytics() {
         {/* Platform Comparison */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <PieChart size={16} className="text-mint" />
+            <PieChart size={16} className="text-rose" />
             <h3 className="font-medium text-warm-gray-900">Platform Breakdown</h3>
           </div>
           <FeatureGate

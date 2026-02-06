@@ -61,8 +61,8 @@ export function CreatorStatsCard() {
         {/* Profile Views */}
         <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-lavender-soft/30 flex items-center justify-center">
-              <Eye size={20} className="text-lavender" />
+            <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
+              <Eye size={20} className="text-coral" />
             </div>
             <div>
               <p className="text-2xl font-bold text-warm-gray-900">
@@ -76,8 +76,8 @@ export function CreatorStatsCard() {
         {/* Portfolio Views */}
         <div className="bg-warm-gray-50 rounded-lg p-4 border border-warm-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-mint-soft/30 flex items-center justify-center">
-              <Briefcase size={20} className="text-mint" />
+            <div className="w-10 h-10 rounded-full bg-warm-gray-100 flex items-center justify-center">
+              <Briefcase size={20} className="text-warm-gray-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-warm-gray-900">
@@ -121,9 +121,9 @@ export function CreatorStatsCard() {
       {/* Advanced Analytics Preview */}
       {stats.analyticsFeatures && !stats.analyticsFeatures.engagementTrends && (
         <div className="mt-6 pt-6 border-t border-warm-gray-100">
-          <div className="flex items-start gap-3 p-4 rounded-lg bg-lavender-soft/10 border border-lavender/20">
-            <div className="w-10 h-10 rounded-full bg-lavender-soft/30 flex items-center justify-center flex-shrink-0">
-              <BarChart3 size={20} className="text-lavender" />
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-coral/[0.06] border border-coral/15">
+            <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
+              <BarChart3 size={20} className="text-coral" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
@@ -138,7 +138,7 @@ export function CreatorStatsCard() {
               <p className="text-sm text-warm-gray-600 mb-2">
                 Unlock engagement trends, platform comparisons, and data export.
               </p>
-              <p className="text-xs text-lavender font-medium">
+              <p className="text-xs text-coral font-medium">
                 {FEATURE_REQUIREMENTS.engagementTrends.label} to unlock
               </p>
             </div>

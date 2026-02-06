@@ -142,7 +142,7 @@ export function DirectorySettingsForm() {
           <button
             onClick={() => setDirectoryListed(!directoryListed)}
             disabled={!hasSubdomain}
-            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-lavender focus:ring-offset-2 ${
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 ${
               directoryListed ? "bg-mint" : "bg-warm-gray-200"
             } ${!hasSubdomain ? "opacity-50 cursor-not-allowed" : ""}`}
           >
@@ -180,7 +180,7 @@ export function DirectorySettingsForm() {
 
               <button
                 onClick={() => setAvailableForHire(!availableForHire)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-lavender focus:ring-offset-2 ${
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 ${
                   availableForHire ? "bg-mint" : "bg-warm-gray-200"
                 }`}
               >
@@ -204,7 +204,7 @@ export function DirectorySettingsForm() {
               onChange={(e) => setTagline(e.target.value)}
               maxLength={160}
               placeholder="A short description that appears on your directory card"
-              className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender/20 focus:border-lavender"
+              className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
             />
             <p className="text-xs text-warm-gray-500 mt-1.5">
               {tagline.length}/160 characters
@@ -233,7 +233,7 @@ export function DirectorySettingsForm() {
                   value={locationCity}
                   onChange={(e) => setLocationCity(e.target.value)}
                   placeholder="Los Angeles"
-                  className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender/20 focus:border-lavender"
+                  className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
                 />
               </div>
               <div>
@@ -245,7 +245,7 @@ export function DirectorySettingsForm() {
                   value={locationCountry}
                   onChange={(e) => setLocationCountry(e.target.value)}
                   placeholder="United States"
-                  className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender/20 focus:border-lavender"
+                  className="w-full px-4 py-2.5 bg-white border border-warm-gray-200 rounded-lg text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral"
                 />
               </div>
             </div>
@@ -264,7 +264,7 @@ export function DirectorySettingsForm() {
                 onClick={() => setRateRange("")}
                 className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                   rateRange === ""
-                    ? "bg-lavender/10 border-lavender"
+                    ? "bg-coral/10 border-coral"
                     : "bg-white border-warm-gray-200 hover:border-warm-gray-300"
                 }`}
               >
@@ -282,7 +282,7 @@ export function DirectorySettingsForm() {
                   onClick={() => setRateRange(range)}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                     rateRange === range
-                      ? "bg-lavender/10 border-lavender"
+                      ? "bg-coral/10 border-coral"
                       : "bg-white border-warm-gray-200 hover:border-warm-gray-300"
                   }`}
                 >

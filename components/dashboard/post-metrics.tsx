@@ -116,7 +116,7 @@ export function PostMetrics() {
     <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-warm-gray-900 flex items-center gap-2">
-          <BarChart3 size={20} className="text-mint" />
+          <BarChart3 size={20} className="text-coral" />
           Post Performance
         </h2>
         {!hasAccess && (

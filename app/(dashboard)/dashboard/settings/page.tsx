@@ -63,7 +63,7 @@ async function SettingsContent() {
           </p>
           <Link
             href="/dashboard"
-            className="text-sm font-medium text-lavender hover:text-purple-dark transition-colors"
+            className="text-sm font-medium text-coral hover:text-coral-dark transition-colors"
           >
             Go to Dashboard
           </Link>

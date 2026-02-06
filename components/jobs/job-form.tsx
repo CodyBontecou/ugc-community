@@ -352,7 +352,7 @@ export function JobForm({ initialData, jobId, mode, context = "admin", onSuccess
               onClick={() => toggleNiche(niche)}
               className={`px-3 py-1 rounded-full text-sm transition-colors ${
                 formData.niches.includes(niche)
-                  ? "bg-lavender text-white"
+                  ? "bg-warm-gray-900 text-white"
                   : "bg-warm-gray-50 text-warm-gray-600 hover:bg-warm-gray-100"
               }`}
             >

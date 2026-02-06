@@ -130,7 +130,7 @@ export function JobFilters({
             onClick={() => toggleNiche(niche)}
             className={`px-2 py-0.5 text-xs rounded-full transition-colors ${
               selectedNiches.includes(niche)
-                ? "bg-lavender text-white"
+                ? "bg-warm-gray-900 text-white"
                 : "bg-warm-gray-50 text-warm-gray-500 hover:bg-warm-gray-100"
             }`}
           >

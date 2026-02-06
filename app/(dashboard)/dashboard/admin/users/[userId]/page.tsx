@@ -253,7 +253,7 @@ function DeploymentStatusBadge({ state }: { state: Deployment["state"] }) {
     READY: { bg: "bg-green-100", text: "text-green-700", label: "Ready" },
     BUILDING: { bg: "bg-blue-100", text: "text-blue-700", label: "Building", animate: true },
     QUEUED: { bg: "bg-amber-100", text: "text-amber-700", label: "Queued" },
-    INITIALIZING: { bg: "bg-purple-100", text: "text-purple-700", label: "Initializing", animate: true },
+    INITIALIZING: { bg: "bg-warm-gray-100", text: "text-warm-gray-700", label: "Initializing", animate: true },
     ERROR: { bg: "bg-red-100", text: "text-red-700", label: "Error" },
     CANCELED: { bg: "bg-warm-gray-100", text: "text-warm-gray-600", label: "Canceled" },
   };
@@ -1129,8 +1129,8 @@ export default function UserDetailPage() {
             </h3>
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center">
-                  <Eye size={24} className="text-lavender" />
+                <div className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center">
+                  <Eye size={24} className="text-coral" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-warm-gray-900">
@@ -1140,8 +1140,8 @@ export default function UserDetailPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4 pt-4 border-t border-warm-gray-100">
-                <div className="w-12 h-12 rounded-full bg-mint-soft/30 flex items-center justify-center">
-                  <Briefcase size={24} className="text-mint" />
+                <div className="w-12 h-12 rounded-full bg-warm-gray-100 flex items-center justify-center">
+                  <Briefcase size={24} className="text-warm-gray-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-warm-gray-900">
@@ -1254,7 +1254,7 @@ export default function UserDetailPage() {
             disabled={savingRole || user.role === "brand"}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               user.role === "brand"
-                ? "bg-purple-100 text-purple-700 cursor-default"
+                ? "bg-warm-gray-100 text-warm-gray-700 cursor-default"
                 : "bg-warm-gray-100 text-warm-gray-600 hover:bg-warm-gray-200"
             }`}
           >
@@ -1356,7 +1356,7 @@ export default function UserDetailPage() {
                       setSubdomainSuggestions([]);
                       setSubdomainError(null);
                     }}
-                    className="px-3 py-1.5 text-sm font-medium bg-lavender-soft/30 text-lavender hover:bg-lavender-soft/50 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-sm font-medium bg-coral/10 text-coral hover:bg-coral/20 rounded-lg transition-colors"
                   >
                     {suggestion}
                   </button>
@@ -2511,14 +2511,14 @@ function TimelineItem({
     },
     waitlist_joined: {
       icon: Users,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      bgColor: "bg-warm-gray-100",
+      iconColor: "text-warm-gray-600",
       title: "Joined Waitlist",
     },
     waitlist_invited: {
       icon: Send,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      bgColor: "bg-coral/10",
+      iconColor: "text-coral",
       title: "Invited from Waitlist",
     },
     invite_sent: {

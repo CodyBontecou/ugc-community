@@ -61,7 +61,7 @@ function getMilestoneConfig(
     const configs: MilestoneConfig[] = [
       {
         icon: <Star size={24} />,
-        color: "text-lavender",
+        color: "text-coral",
         gradientFrom: "#8b5cf6",
         gradientTo: "#a78bfa",
         reward: "Verified Badge",
@@ -94,7 +94,7 @@ function getMilestoneConfig(
     },
     {
       icon: <Star size={24} />,
-      color: "text-lavender",
+      color: "text-coral",
       gradientFrom: "#8b5cf6",
       gradientTo: "#a78bfa",
       reward: "Directory Boost",
@@ -432,7 +432,7 @@ export function UserProgressionPath({
     >
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-mint-soft/10 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-lavender-soft/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-coral/[0.06] to-transparent rounded-full blur-3xl" />
 
       <div className="relative z-10 space-y-8">
         <h2 className="text-lg font-semibold text-warm-gray-900 flex items-center gap-2">

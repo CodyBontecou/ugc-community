@@ -265,7 +265,7 @@ export function MediaLibrary({
             }}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-[--radius-md] transition-colors ${
               activeTab === tab.id
-                ? "bg-purple-100 text-purple-700"
+                ? "bg-coral/10 text-coral"
                 : "text-warm-gray-600 hover:bg-warm-gray-100"
             }`}
           >
@@ -285,13 +285,13 @@ export function MediaLibrary({
           onClick={() => fileInputRef.current?.click()}
           className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[--radius-md] cursor-pointer transition-colors ${
             isDragging
-              ? "border-purple-500 bg-purple-50"
+              ? "border-coral bg-coral/[0.04]"
               : "border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
           }`}
         >
           {uploading ? (
             <>
-              <Loader2 size={24} className="text-purple-500 animate-spin mb-2" />
+              <Loader2 size={24} className="text-coral animate-spin mb-2" />
               <p className="text-sm text-warm-gray-600">{uploadProgress}</p>
             </>
           ) : (
@@ -343,7 +343,7 @@ export function MediaLibrary({
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <Loader2 size={24} className="text-purple-500 animate-spin" />
+            <Loader2 size={24} className="text-coral animate-spin" />
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-warm-gray-500">
@@ -527,7 +527,7 @@ function MediaItem({
       >
         {selectionMode ? (
           <div className="p-2 bg-white rounded-full">
-            <Check size={20} className="text-purple-600" />
+            <Check size={20} className="text-coral" />
           </div>
         ) : (
           <button

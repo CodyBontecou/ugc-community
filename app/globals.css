@@ -121,7 +121,7 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-coral), var(--color-lavender));
+  background: linear-gradient(180deg, var(--color-coral), var(--color-rose));
   border-radius: 9999px;
   border: 2px solid var(--color-warm-gray-100);
 }
@@ -151,7 +151,7 @@ img {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-coral), var(--color-rose), var(--color-lavender));
+  background: linear-gradient(135deg, var(--color-coral), var(--color-rose), var(--color-coral-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

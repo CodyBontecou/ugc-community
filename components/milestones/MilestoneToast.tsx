@@ -29,9 +29,9 @@ const rewardColors: Record<string, { bg: string; border: string; icon: string }>
     icon: "text-coral",
   },
   analytics: {
-    bg: "bg-lavender-soft/30",
-    border: "border-lavender/30",
-    icon: "text-lavender",
+    bg: "bg-coral/10",
+    border: "border-coral/20",
+    icon: "text-coral",
   },
   hosting: {
     bg: "bg-mint-soft/30",
@@ -65,7 +65,7 @@ const rewardDescriptions: Record<string, string> = {
 };
 
 function ConfettiParticle({ delay }: { delay: number }) {
-  const colors = ["bg-coral", "bg-lavender", "bg-mint", "bg-amber-400", "bg-rose-400"];
+  const colors = ["bg-coral", "bg-warm-gray-900", "bg-mint", "bg-amber-400", "bg-rose-400"];
   const color = colors[Math.floor(Math.random() * colors.length)];
   const left = Math.random() * 100;
   const duration = 1.5 + Math.random() * 1;
@@ -165,7 +165,7 @@ function SingleToast({
           {isLifetime ? (
             <PartyPopper size={20} className="text-coral" />
           ) : (
-            <Award size={20} className="text-lavender" />
+            <Award size={20} className="text-coral" />
           )}
           <span className="text-sm font-semibold text-warm-gray-900">
             {isLifetime ? "Lifetime Achievement!" : "Milestone Reached!"}

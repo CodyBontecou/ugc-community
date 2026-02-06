@@ -102,13 +102,13 @@ function MilestoneSection({
   milestones: MilestoneWithEarned[];
   nextMilestone: NextMilestone;
   subtitle?: string;
-  accentColor?: "coral" | "lavender";
+  accentColor?: "coral" | "coral";
 }) {
   const earnedCount = milestones.filter(m => m.earned).length;
   const nextTarget = nextMilestone?.threshold ?? (milestones.length > 0 ? milestones[milestones.length - 1].threshold : 0);
 
-  const iconBgClass = accentColor === "coral" ? "bg-coral/10" : "bg-lavender-soft/30";
-  const iconClass = accentColor === "coral" ? "text-coral" : "text-lavender";
+  const iconBgClass = accentColor === "coral" ? "bg-coral/10" : "bg-coral/10";
+  const iconClass = accentColor === "coral" ? "text-coral" : "text-coral";
 
   return (
     <div className="space-y-4">
@@ -251,7 +251,7 @@ export function MilestoneProgress() {
             milestones={data.lifetime.milestones}
             nextMilestone={data.lifetime.nextMilestone}
             subtitle="All-time achievements"
-            accentColor="lavender"
+            accentColor="coral"
           />
         )}
       </div>

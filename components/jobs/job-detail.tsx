@@ -169,7 +169,7 @@ export function JobDetail({ job }: JobDetailProps) {
                 {job.niches.map((niche) => (
                   <span
                     key={niche}
-                    className="px-3 py-1 bg-lavender/10 text-lavender rounded-full text-sm font-medium"
+                    className="px-3 py-1 bg-warm-gray-100 text-warm-gray-700 rounded-full text-sm font-medium"
                   >
                     {NICHE_LABELS[niche as Niche] || niche}
                   </span>

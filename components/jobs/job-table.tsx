@@ -127,7 +127,7 @@ export function JobTable({ jobs, isLoading = false, onApply }: JobTableProps) {
                         {job.niches.slice(0, 3).map((niche) => (
                           <span
                             key={niche}
-                            className="text-xs bg-lavender/10 text-lavender px-2 py-0.5 rounded-full"
+                            className="text-xs bg-warm-gray-100 text-warm-gray-700 px-2 py-0.5 rounded-full"
                           >
                             {NICHE_LABELS[niche as Niche] || niche}
                           </span>

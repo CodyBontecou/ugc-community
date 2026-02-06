@@ -3,8 +3,8 @@ interface RecordTypeBadgeProps {
 }
 
 const typeStyles: Record<string, string> = {
-  user: "bg-purple-100 text-purple-700",
-  invite: "bg-blue-100 text-blue-700",
+  user: "bg-coral/10 text-coral",
+  invite: "bg-warm-gray-100 text-warm-gray-700",
   waitlist: "bg-amber-100 text-amber-700",
 };
 

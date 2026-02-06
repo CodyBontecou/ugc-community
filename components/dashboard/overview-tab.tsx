@@ -136,19 +136,19 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
             label="Profile Views"
             value={stats.profileViewCount}
             icon={Eye}
-            color="lavender"
+            color="coral"
           />
           <StatTile
             label="Portfolio Views"
             value={stats.portfolioViewCount || 0}
             icon={Globe}
-            color="mint"
+            color="warm"
           />
           <StatTile
             label="Inquiries"
             value={stats.contactSubmissions.total}
             icon={Mail}
-            color="coral"
+            color="rose"
             subtitle={
               stats.contactSubmissions.last7Days > 0
                 ? `+${stats.contactSubmissions.last7Days} this week`
@@ -159,7 +159,7 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
             label="Monthly Posts"
             value={portfolio?.monthlyPostCount ?? 0}
             icon={TrendingUp}
-            color="rose"
+            color="coral-dark"
             subtitle={
               portfolio
                 ? `of ${portfolio.requiredPostCount} needed`
@@ -203,21 +203,21 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
           label="Analytics"
           description="Detailed stats & trends"
           onClick={() => onNavigate("analytics")}
-          color="lavender"
+          color="coral"
         />
         <QuickNavCard
           icon={ImageIcon}
           label="Media Library"
           description="Upload & manage files"
           onClick={() => onNavigate("media")}
-          color="mint"
+          color="rose"
         />
       </motion.div>
 
       {/* ─── Jobs CTA ─── */}
       <motion.div variants={fadeUp}>
         <Link href="/dashboard/jobs" className="block group">
-          <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-coral/[0.04] via-rose/[0.04] to-lavender/[0.04] rounded-[--radius-xl] border border-warm-gray-200 hover:border-coral/30 hover:shadow-sm transition-all">
+          <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-coral/[0.04] via-rose/[0.04] to-coral/[0.02] rounded-[--radius-xl] border border-warm-gray-200 hover:border-coral/30 hover:shadow-sm transition-all">
             <div className="w-11 h-11 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
               <Briefcase size={20} className="text-coral" />
             </div>
@@ -286,7 +286,7 @@ function getNextAction(
       cta: "View Milestones",
       action: () => onNavigate("portfolio"),
       icon: Trophy,
-      accent: "lavender" as const,
+      accent: "rose" as const,
     };
   }
 
@@ -309,10 +309,10 @@ function getNextAction(
 /* ── Stat Tile ── */
 
 const STAT_COLORS: Record<string, { bg: string; text: string }> = {
-  lavender: { bg: "bg-lavender-soft/20", text: "text-lavender" },
-  mint: { bg: "bg-mint/10", text: "text-mint" },
   coral: { bg: "bg-coral/10", text: "text-coral" },
   rose: { bg: "bg-rose/10", text: "text-rose" },
+  "coral-dark": { bg: "bg-coral-dark/10", text: "text-coral-dark" },
+  warm: { bg: "bg-warm-gray-100", text: "text-warm-gray-600" },
 };
 
 function StatTile({
@@ -366,10 +366,10 @@ const ACCENT_STYLES: Record<
     btn: "bg-amber-500 text-white",
     iconClass: "text-amber-500",
   },
-  lavender: {
-    card: "from-lavender-soft/[0.12] to-lavender-soft/[0.04] border-lavender/20",
-    btn: "bg-gradient-to-r from-lavender to-purple-dark text-white",
-    iconClass: "text-lavender",
+  rose: {
+    card: "from-rose/[0.08] to-coral/[0.04] border-rose/20",
+    btn: "bg-gradient-to-r from-coral to-rose text-white",
+    iconClass: "text-rose",
   },
 };
 
@@ -470,7 +470,7 @@ function CompactMilestones({
       earned,
       total: data.lifetime.milestones.length,
       nextThreshold: data.lifetime.nextMilestone?.threshold,
-      gradient: "from-lavender to-purple-dark",
+      gradient: "from-coral to-rose",
     });
   }
 
@@ -602,9 +602,9 @@ function CompactPortfolioStatus({
 /* ── Quick Nav Card ── */
 
 const NAV_COLORS: Record<string, { bg: string; text: string }> = {
-  lavender: { bg: "bg-lavender-soft/15", text: "text-lavender" },
-  mint: { bg: "bg-mint/10", text: "text-mint" },
   coral: { bg: "bg-coral/10", text: "text-coral" },
+  rose: { bg: "bg-rose/10", text: "text-rose" },
+  warm: { bg: "bg-warm-gray-100", text: "text-warm-gray-600" },
 };
 
 function QuickNavCard({

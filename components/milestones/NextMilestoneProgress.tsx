@@ -48,13 +48,13 @@ function ProgressBar({
 }: {
   current: number;
   target: number;
-  color?: "coral" | "lavender";
+  color?: "coral" | "coral";
 }) {
   const percentage = Math.min((current / target) * 100, 100);
   const gradientClass =
     color === "coral"
       ? "from-coral to-rose"
-      : "from-lavender to-purple-400";
+      : "from-coral to-rose";
 
   return (
     <div className="w-full bg-warm-gray-100 rounded-full h-2 overflow-hidden">
@@ -77,12 +77,12 @@ function MilestoneProgressCard({
   postCount: number;
   nextMilestone: NextMilestone;
   subtitle?: string;
-  accentColor: "coral" | "lavender";
+  accentColor: "coral" | "coral";
 }) {
   const Icon = type === "monthly" ? Calendar : Star;
   const iconBgClass =
-    accentColor === "coral" ? "bg-coral/10" : "bg-lavender-soft/30";
-  const iconClass = accentColor === "coral" ? "text-coral" : "text-lavender";
+    accentColor === "coral" ? "bg-coral/10" : "bg-coral/10";
+  const iconClass = accentColor === "coral" ? "text-coral" : "text-coral";
 
   if (!nextMilestone) {
     return (
@@ -138,7 +138,7 @@ function MilestoneProgressCard({
         </div>
         <div
           className={`flex items-center gap-1 text-xs ${
-            accentColor === "coral" ? "text-coral" : "text-lavender"
+            accentColor === "coral" ? "text-coral" : "text-coral"
           }`}
         >
           <RewardIcon size={12} />
@@ -269,7 +269,7 @@ export function NextMilestoneProgress() {
             type="lifetime"
             postCount={data.lifetime.postCount}
             nextMilestone={data.lifetime.nextMilestone}
-            accentColor="lavender"
+            accentColor="coral"
           />
         )}
       </div>

@@ -30,9 +30,9 @@ const rewardColors: Record<string, { bg: string; border: string; icon: string }>
     icon: "text-coral",
   },
   analytics: {
-    bg: "bg-lavender-soft/30",
-    border: "border-lavender/30",
-    icon: "text-lavender",
+    bg: "bg-coral/10",
+    border: "border-coral/20",
+    icon: "text-coral",
   },
   hosting: {
     bg: "bg-mint-soft/30",
@@ -147,7 +147,7 @@ function MilestoneCard({
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className="font-semibold text-warm-gray-900">{milestone.name}</h4>
             {isLifetime && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-lavender-soft/30 text-lavender">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-coral/10 text-coral">
                 Lifetime
               </span>
             )}

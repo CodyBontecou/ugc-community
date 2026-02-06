@@ -41,8 +41,8 @@ export function FeatureGate({
         } flex items-center justify-center`}
       >
         <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-warm-gray-200 p-6 text-center max-w-xs shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-lavender-soft/30 flex items-center justify-center mx-auto mb-3">
-            <Lock size={24} className="text-lavender" />
+          <div className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center mx-auto mb-3">
+            <Lock size={24} className="text-coral" />
           </div>
           <h3 className="font-semibold text-warm-gray-900 mb-1">
             Feature Locked

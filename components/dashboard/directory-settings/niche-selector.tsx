@@ -40,7 +40,7 @@ export function NicheSelector({
             <button
               key={niche}
               onClick={() => toggleNiche(niche)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-lavender text-white rounded-full text-sm hover:bg-lavender/90 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-warm-gray-900 text-white rounded-full text-sm hover:bg-warm-gray-800 transition-colors"
             >
               {NICHE_LABELS[niche]}
               <X size={14} />
@@ -62,7 +62,7 @@ export function NicheSelector({
               disabled={isDisabled}
               className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                 isSelected
-                  ? "bg-lavender/10 border-lavender text-lavender"
+                  ? "bg-coral/10 border-coral text-coral"
                   : isDisabled
                     ? "bg-warm-gray-50 border-warm-gray-100 text-warm-gray-300 cursor-not-allowed"
                     : "bg-white border-warm-gray-200 text-warm-gray-700 hover:border-warm-gray-300"

@@ -85,8 +85,8 @@ export function AnalyticsTab({ onNavigate }: AnalyticsTabProps) {
 function SetupPrompt({ onNavigate }: { onNavigate: (tab: TabId) => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-lavender-soft/20 flex items-center justify-center mb-5">
-        <BarChart3 size={28} className="text-lavender" />
+      <div className="w-16 h-16 rounded-full bg-coral/10 flex items-center justify-center mb-5">
+        <BarChart3 size={28} className="text-coral" />
       </div>
       <h2 className="text-xl font-semibold text-warm-gray-900 mb-2">
         Analytics will appear here
@@ -140,8 +140,8 @@ function LockedAnalyticsCard() {
       {/* Header */}
       <div className="p-6 pb-4">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-full bg-lavender-soft/20 flex items-center justify-center">
-            <Lock size={18} className="text-lavender" />
+          <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
+            <Lock size={18} className="text-coral" />
           </div>
           <div>
             <h3 className="font-semibold text-warm-gray-900">

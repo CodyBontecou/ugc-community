@@ -160,7 +160,7 @@ export default function JobsPage() {
                         {(job.hooks as string[]).slice(0, 3).map((hook, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center gap-1 text-xs bg-lavender-soft/30 text-lavender px-2.5 py-1 rounded-full"
+                            className="inline-flex items-center gap-1 text-xs bg-warm-gray-100 text-warm-gray-700 px-2.5 py-1 rounded-full"
                           >
                             <Hash size={10} />
                             {hook.length > 40 ? hook.slice(0, 40) + "..." : hook}

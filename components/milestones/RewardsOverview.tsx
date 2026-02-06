@@ -38,9 +38,9 @@ const rewardColors: Record<string, { bg: string; text: string; icon: string }> =
     icon: "text-coral",
   },
   analytics: {
-    bg: "bg-lavender-soft/30",
-    text: "text-lavender",
-    icon: "text-lavender",
+    bg: "bg-coral/10",
+    text: "text-coral",
+    icon: "text-coral",
   },
   hosting: {
     bg: "bg-mint-soft/30",
