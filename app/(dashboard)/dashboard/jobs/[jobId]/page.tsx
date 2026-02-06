@@ -160,15 +160,15 @@ export default function JobDetailPage({
           </div>
         </div>
 
-        {/* Hooks */}
+        {/* Talking Points */}
         {hooks.length > 0 && (
           <div className="p-8 border-b border-warm-gray-100">
             <h2 className="text-lg font-semibold text-warm-gray-900 mb-1 flex items-center gap-2">
               <Hash size={18} className="text-coral" />
-              Hooks to Use
+              Talking Points
             </h2>
             <p className="text-sm text-warm-gray-500 mb-4">
-              Use these hooks in your TikTok content. We'll automatically detect and credit your posts.
+              Use these angles in your TikTok content for inspiration.
             </p>
             <div className="space-y-3">
               {hooks.map((hook, i) => (
@@ -191,11 +191,14 @@ export default function JobDetailPage({
         {/* CTA */}
         <div className="p-8 bg-warm-gray-50">
           <div className="text-center">
+            <div className="inline-flex items-center gap-2 bg-coral/10 text-coral font-semibold px-4 py-2 rounded-full mb-3">
+              Tag @ugc.community in your TikTok post
+            </div>
             <p className="text-warm-gray-600 mb-2">
-              Create content using the hooks above and post to TikTok.
+              Create your content and tag <span className="font-semibold">@ugc.community</span> on TikTok so we can find and credit your post.
             </p>
             <p className="text-sm text-warm-gray-400">
-              Our system automatically detects your posts every 12 hours and tracks your milestones.
+              We monitor mentions every 12 hours and automatically track your milestones.
             </p>
           </div>
         </div>

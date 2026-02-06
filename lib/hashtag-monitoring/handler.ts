@@ -3,7 +3,7 @@
  *
  * Processes incoming posts from any registered provider,
  * saves them to the database, matches to users by social handle,
- * and performs semantic hook matching against active job posts.
+ * and checks for @ugc.community mentions to credit posts.
  */
 
 import { db } from "@/lib/db";
@@ -14,10 +14,11 @@ import type { ParsedPost, ProcessingResult } from "./types";
 import { updateUserPostCount } from "@/lib/milestones";
 import { sendMilestoneEarnedEmail } from "@/lib/email";
 import {
-  matchPostToHooks,
-  getActiveJobHooks,
-  type HookMatchResult,
-  type ActiveJobHook,
+  matchPostByMention,
+  getActiveJobs,
+  postContainsMention,
+  type MentionMatchResult,
+  type ActiveJob,
 } from "@/lib/hook-matching";
 
 // Only process posts from the last N days (to avoid reprocessing old posts)
@@ -93,22 +94,22 @@ export async function processIncomingPosts(
     );
   }
 
-  // Pre-fetch active job hooks once for all posts
-  let activeJobHooks: ActiveJobHook[] | undefined;
+  // Pre-fetch active jobs once for all posts
+  let activeJobs: ActiveJob[] | undefined;
   try {
-    activeJobHooks = await getActiveJobHooks();
+    activeJobs = await getActiveJobs();
     console.log(
-      `[HashtagMonitor] Loaded ${activeJobHooks.length} active jobs with hooks`
+      `[HashtagMonitor] Loaded ${activeJobs.length} active jobs`
     );
   } catch (error) {
-    console.error(`[HashtagMonitor] Failed to load job hooks:`, error);
-    activeJobHooks = [];
+    console.error(`[HashtagMonitor] Failed to load active jobs:`, error);
+    activeJobs = [];
   }
 
   // Process each post
   for (const post of filteredPosts) {
     try {
-      const saveResult = await savePost(post, providerName, activeJobHooks);
+      const saveResult = await savePost(post, providerName, activeJobs);
       if (saveResult.isDuplicate) {
         result.duplicateCount++;
       } else {
@@ -129,16 +130,16 @@ export async function processIncomingPosts(
 }
 
 /**
- * Save a single post to the database, match to user, and match hooks
+ * Save a single post to the database, match to user, and check for @ugc.community mention
  */
 async function savePost(
   post: ParsedPost,
   source: string,
-  activeJobHooks?: ActiveJobHook[]
+  activeJobs?: ActiveJob[]
 ): Promise<{
   isDuplicate: boolean;
   matchedUserId: string | null;
-  hookMatch: HookMatchResult | null;
+  mentionMatch: MentionMatchResult | null;
 }> {
   // Try to match to a user based on their social handles
   const matchedUserId = await matchUserByHandle(
@@ -149,27 +150,27 @@ async function savePost(
     `[HashtagMonitor] Saving post from @${post.authorHandle} (${post.platform}) - user matched: ${matchedUserId ? "YES" : "NO"}`
   );
 
-  // Perform semantic hook matching against active job posts
-  let hookMatch: HookMatchResult | null = null;
-  if (post.content) {
+  // Check if the post mentions @ugc.community
+  let mentionMatch: MentionMatchResult | null = null;
+  if (post.content && postContainsMention(post.content)) {
     try {
-      const matches = await matchPostToHooks(
+      const matches = await matchPostByMention(
         {
           caption: post.content,
           hashtags: post.metadata?.hashtags,
           platform: post.platform,
         },
-        activeJobHooks
+        activeJobs
       );
-      // Take the highest confidence match
+      // Take the first match
       if (matches.length > 0) {
-        hookMatch = matches[0];
+        mentionMatch = matches[0];
         console.log(
-          `[HashtagMonitor] Hook match found! Job: "${hookMatch.jobTitle}" Hook: "${hookMatch.matchedHook}" Confidence: ${hookMatch.confidence}`
+          `[HashtagMonitor] @ugc.community mention detected! Job: "${mentionMatch.jobTitle}"`
         );
       }
     } catch (error) {
-      console.error(`[HashtagMonitor] Hook matching error:`, error);
+      console.error(`[HashtagMonitor] Mention matching error:`, error);
     }
   }
 
@@ -187,9 +188,9 @@ async function savePost(
       postedAt: post.postedAt,
       processedAt: matchedUserId ? new Date() : null,
       matchedUserId,
-      matchedJobId: hookMatch?.jobId ?? null,
-      matchedHook: hookMatch?.matchedHook ?? null,
-      hookMatchConfidence: hookMatch?.confidence ?? null,
+      matchedJobId: mentionMatch?.jobId ?? null,
+      matchedHook: mentionMatch?.matchedHook ?? null,
+      hookMatchConfidence: mentionMatch?.confidence ?? null,
       source,
       metadata: post.metadata ?? {},
     })
@@ -199,7 +200,7 @@ async function savePost(
   const isDuplicate = inserted.length === 0;
 
   // Update user's post count and check milestones if matched and not duplicate
-  if (matchedUserId && !isDuplicate && hookMatch) {
+  if (matchedUserId && !isDuplicate && mentionMatch) {
     try {
       const { awardedMilestones } = await updateUserPostCount(matchedUserId);
 
@@ -247,7 +248,7 @@ async function savePost(
   return {
     isDuplicate,
     matchedUserId,
-    hookMatch,
+    mentionMatch,
   };
 }
 

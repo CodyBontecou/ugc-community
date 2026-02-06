@@ -76,7 +76,7 @@ async function DashboardContent() {
               Content Jobs
             </h2>
             <p className="text-sm text-warm-gray-500">
-              Browse active content jobs. Create content using the specified hooks
+              Browse active content jobs. Tag @ugc.community in your TikTok posts
               and we'll automatically track your contributions.
             </p>
           </div>

@@ -8,8 +8,8 @@ import {
  * GET /api/cron/profile-monitoring
  *
  * Cron job to trigger profile-based scraping for all registered users.
- * Scrapes creator TikTok/Instagram profiles every 12 hours and matches
- * post content against active job hooks using semantic matching.
+ * Scrapes creator TikTok/Instagram profiles every 12 hours and detects
+ * posts that tag @ugc.community to credit content.
  *
  * Schedule: Runs every 12 hours (6 AM and 6 PM UTC)
  */

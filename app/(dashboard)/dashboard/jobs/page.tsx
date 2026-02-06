@@ -69,8 +69,8 @@ export default function JobsPage() {
           Content Jobs
         </h1>
         <p className="text-warm-gray-500">
-          Browse active content jobs. Use the hooks below in your TikTok content —
-          we'll automatically detect and credit your posts.
+          Browse active content jobs. Tag <span className="font-semibold">@ugc.community</span> in your TikTok posts —
+          we'll automatically detect and credit your content.
         </p>
       </div>
 
@@ -82,15 +82,15 @@ export default function JobsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-warm-gray-600">
           <div className="flex items-start gap-2">
             <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">1</span>
-            <span>Pick a job and note the hooks</span>
+            <span>Pick a job and check the details</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">2</span>
-            <span>Create TikTok content using those hooks</span>
+            <span>Create TikTok content and tag <strong>@ugc.community</strong></span>
           </div>
           <div className="flex items-start gap-2">
             <span className="w-6 h-6 rounded-full bg-coral/10 flex items-center justify-center text-coral font-bold text-xs flex-shrink-0 mt-0.5">3</span>
-            <span>We auto-detect your posts and track milestones</span>
+            <span>We detect your mention and track milestones</span>
           </div>
         </div>
       </div>
@@ -207,12 +207,12 @@ export default function JobsPage() {
                     <p>{job.description}</p>
                   </div>
 
-                  {/* All hooks */}
+                  {/* Talking points */}
                   {job.hooks && (job.hooks as string[]).length > 0 && (
                     <div className="mb-6">
                       <h4 className="text-sm font-semibold text-warm-gray-900 mb-3 flex items-center gap-2">
                         <Hash size={14} className="text-coral" />
-                        Hooks to Use
+                        Talking Points
                       </h4>
                       <div className="space-y-2">
                         {(job.hooks as string[]).map((hook, i) => (
