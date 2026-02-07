@@ -68,7 +68,7 @@ const activeEffects: Record<string, string> = {
   directory_boost: "Your profile is boosted in the creator directory",
   analytics: "Advanced analytics dashboard is unlocked",
   hosting: "Your portfolio is live at your subdomain",
-  badge: "Verified badge displayed on your profile",
+  badge: "Badge displayed on your profile",
   edits: "Premium editing features enabled",
   custom_domain: "Custom domain support active",
 };
@@ -222,19 +222,31 @@ export function RewardsOverview() {
           <div className="flex flex-wrap gap-2">
             {badges.map((badge, index) => {
               const isNew = isNewReward(badge.earnedAt);
+              const isTemporary = !badge.isPermanent;
               return (
                 <div
                   key={`badge-${index}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
-                    isNew
-                      ? "bg-amber-100 text-amber-700 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
-                      : "bg-amber-100 text-amber-700"
-                  }`}
+                  className="flex flex-col items-start gap-1"
                 >
-                  <Award size={14} />
-                  {badge.name}
-                  {isNew && (
-                    <span className="ml-1 w-2 h-2 bg-coral rounded-full animate-pulse" />
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                      isNew
+                        ? "bg-amber-100 text-amber-700 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                        : isTemporary
+                          ? "bg-mint-soft/20 text-mint"
+                          : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    <Award size={14} />
+                    {badge.name}
+                    {isNew && (
+                      <span className="ml-1 w-2 h-2 bg-coral rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  {isTemporary && (
+                    <span className="text-[10px] text-warm-gray-400 pl-1">
+                      Upgrades to Verified at 100 posts
+                    </span>
                   )}
                 </div>
               );

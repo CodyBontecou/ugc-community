@@ -60,6 +60,13 @@ function getMilestoneConfig(
   if (isLifetime) {
     const configs: MilestoneConfig[] = [
       {
+        icon: <Check size={24} />,
+        color: "text-mint",
+        gradientFrom: "#10b981",
+        gradientTo: "#34d399",
+        reward: "Rising Creator",
+      },
+      {
         icon: <Star size={24} />,
         color: "text-coral",
         gradientFrom: "#8b5cf6",

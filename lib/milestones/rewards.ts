@@ -5,9 +5,9 @@
  */
 
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, milestones, userMilestones } from "@/lib/db/schema";
 import type { Milestone, MilestoneRewardConfig, User } from "@/lib/db/schema";
-import { eq, or, gte, sql } from "drizzle-orm";
+import { eq, and, or, gte, sql } from "drizzle-orm";
 import { getUserEarnedMilestones } from "./queries";
 
 export type RewardType =
@@ -120,6 +120,7 @@ async function applyAnalyticsAccess(userId: string): Promise<void> {
 /**
  * Apply badge reward
  * Special handling for verified badge - sets isVerified on user
+ * Also removes any lower-tier badges that are replaced by this one
  */
 async function applyBadgeReward(
   userId: string,
@@ -132,8 +133,49 @@ async function applyBadgeReward(
       .update(users)
       .set({ isVerified: true })
       .where(eq(users.id, userId));
+
+    // Remove any badges that are superseded by the verified badge
+    await removeSupersededBadges(userId, "verified");
   }
   // Other badge types are displayed from userMilestones table, no additional processing needed
+}
+
+/**
+ * Remove badges that are superseded by a higher-tier badge.
+ * Looks for milestones with rewardConfig.replaced_by_badge matching the new badge type,
+ * and deletes the corresponding userMilestone records.
+ */
+async function removeSupersededBadges(
+  userId: string,
+  newBadgeType: string
+): Promise<void> {
+  // Find all badge milestones that should be replaced by this badge type
+  const supersededMilestones = await db
+    .select({ id: milestones.id, name: milestones.name })
+    .from(milestones)
+    .where(
+      and(
+        eq(milestones.rewardType, "badge"),
+        sql`${milestones.rewardConfig}->>'replaced_by_badge' = ${newBadgeType}`
+      )
+    );
+
+  if (supersededMilestones.length === 0) return;
+
+  // Delete the user's earned records for these superseded milestones
+  for (const milestone of supersededMilestones) {
+    await db
+      .delete(userMilestones)
+      .where(
+        and(
+          eq(userMilestones.userId, userId),
+          eq(userMilestones.milestoneId, milestone.id)
+        )
+      );
+    console.log(
+      `[Milestones] Removed superseded badge "${milestone.name}" for user ${userId} (replaced by ${newBadgeType})`
+    );
+  }
 }
 
 /**
@@ -375,13 +417,15 @@ export async function getUserActiveRewards(
   // Add badges from earned milestones
   for (const earned of earnedMilestones) {
     if (earned.milestone.rewardType === "badge") {
+      const config = earned.milestone.rewardConfig as MilestoneRewardConfig;
+      const isTemporary = !!config.replaced_by_badge;
       activeRewards.push({
         type: "badge",
         name: earned.milestone.name,
         description: earned.milestone.description ?? "Achievement badge",
         earnedAt: earned.earnedAt,
         expiresAt: null,
-        isPermanent: true,
+        isPermanent: !isTemporary,
         milestoneName: earned.milestone.name,
       });
     }

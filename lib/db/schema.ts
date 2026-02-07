@@ -737,6 +737,8 @@ export type MilestoneRewardConfig = {
   // Edit reward specific
   edits_granted?: number;
   companion_boost_days?: number;
+  // Badge replacement: when a higher-tier badge is earned, this badge is removed
+  replaced_by_badge?: string;
 };
 
 export type HashtagMentionEngagement = {

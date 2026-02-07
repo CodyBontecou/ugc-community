@@ -59,7 +59,7 @@ const rewardDescriptions: Record<string, string> = {
   directory_boost: "Profile boosted in creator directory",
   analytics: "Advanced analytics unlocked",
   hosting: "Portfolio hosting enabled",
-  badge: "Verified badge earned",
+  badge: "Achievement badge earned",
   edits: "Premium editing features enabled",
   custom_domain: "Custom domain support active",
 };

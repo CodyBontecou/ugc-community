@@ -56,6 +56,18 @@ const monthlyMilestones: Milestone[] = [
 
 const lifetimeMilestones: Milestone[] = [
   {
+    threshold: 10,
+    label: "10 Posts",
+    sublabel: "lifetime",
+    icon: <Check size={24} />,
+    rewards: ["Rising Creator Badge"],
+    color: "text-mint",
+    bgColor: "bg-mint-soft/30",
+    gradientFrom: "#10b981",
+    gradientTo: "#34d399",
+    isLifetime: true,
+  },
+  {
     threshold: 100,
     label: "100 Posts",
     sublabel: "lifetime",
