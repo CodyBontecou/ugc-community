@@ -401,10 +401,10 @@ export function CreatorDirectory({
       </div>
 
       {/* Results */}
-      <section className="container py-5 sm:py-6">
+      <section className="container pt-4 pb-6 sm:pt-5 sm:pb-8">
         {/* Result count — editorial style */}
         <motion.div
-          className="flex items-center justify-between mb-5"
+          className="flex items-center justify-between mb-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
