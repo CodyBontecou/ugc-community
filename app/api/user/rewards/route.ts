@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { getUserActiveRewards } from "@/lib/milestones";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export type ActiveRewardResponse = {
   type: string;
@@ -24,6 +27,13 @@ export async function GET() {
     const activeRewards = await getUserActiveRewards(userId);
     const now = new Date();
 
+    // Fetch user's badge visibility preference
+    const [user] = await db
+      .select({ hideBadges: users.hideBadges })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
     // Convert to response format with computed fields
     const rewards: ActiveRewardResponse[] = activeRewards.map((reward) => {
       let daysRemaining: number | null = null;
@@ -44,7 +54,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ rewards });
+    return NextResponse.json({
+      rewards,
+      hideBadges: user?.hideBadges ?? false,
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

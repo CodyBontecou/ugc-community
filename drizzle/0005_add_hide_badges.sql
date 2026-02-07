@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "hide_badges" boolean DEFAULT false NOT NULL;

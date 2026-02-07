@@ -9,6 +9,7 @@ import {
   Award,
   Clock,
   CheckCircle2,
+  EyeOff,
 } from "lucide-react";
 
 type ActiveReward = {
@@ -145,6 +146,7 @@ function RewardCard({ reward }: { reward: ActiveReward }) {
 
 export function RewardsOverview() {
   const [rewards, setRewards] = useState<ActiveReward[]>([]);
+  const [hideBadges, setHideBadges] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -157,6 +159,7 @@ export function RewardsOverview() {
         }
         const data = await response.json();
         setRewards(data.rewards);
+        setHideBadges(data.hideBadges ?? false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -216,9 +219,17 @@ export function RewardsOverview() {
 
       {badges.length > 0 && (
         <div className={`space-y-3 ${featureRewards.length > 0 ? "mt-6" : ""}`}>
-          <h3 className="text-sm font-medium text-warm-gray-600">
-            Achievement Badges
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium text-warm-gray-600">
+              Achievement Badges
+            </h3>
+            {hideBadges && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-warm-gray-100 text-warm-gray-500">
+                <EyeOff size={10} />
+                Hidden publicly
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {badges.map((badge, index) => {
               const isNew = isNewReward(badge.earnedAt);

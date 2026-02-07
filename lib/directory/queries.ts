@@ -150,6 +150,7 @@ export async function getDirectoryCreators(
       availableForHire: users.availableForHire,
       isFeatured: users.isFeatured,
       isVerified: users.isVerified,
+      hideBadges: users.hideBadges,
       directoryBoostUntil: users.directoryBoostUntil,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
@@ -166,6 +167,7 @@ export async function getDirectoryCreators(
   const now = new Date();
 
   // Filter out creators without subdomain and compute isBoosted
+  // Respect hideBadges preference — suppress isVerified in public view
   const validCreators = creators
     .filter((c) => c.subdomain !== null)
     .map((c) => ({
@@ -182,7 +184,7 @@ export async function getDirectoryCreators(
       rateRange: c.rateRange,
       availableForHire: c.availableForHire,
       isFeatured: c.isFeatured,
-      isVerified: c.isVerified,
+      isVerified: c.hideBadges ? false : c.isVerified,
       isBoosted: c.isFeatured || (c.directoryBoostUntil !== null && c.directoryBoostUntil > now),
       portfolioViewCount: c.portfolioViewCount,
       directoryJoinedAt: c.directoryJoinedAt,
@@ -235,6 +237,7 @@ export async function getCreatorBySubdomain(
       availableForHire: users.availableForHire,
       isFeatured: users.isFeatured,
       isVerified: users.isVerified,
+      hideBadges: users.hideBadges,
       directoryBoostUntil: users.directoryBoostUntil,
       portfolioViewCount: users.portfolioViewCount,
       directoryJoinedAt: users.directoryJoinedAt,
@@ -264,7 +267,7 @@ export async function getCreatorBySubdomain(
     rateRange: creator.rateRange,
     availableForHire: creator.availableForHire,
     isFeatured: creator.isFeatured,
-    isVerified: creator.isVerified,
+    isVerified: creator.hideBadges ? false : creator.isVerified,
     isBoosted: creator.isFeatured || (creator.directoryBoostUntil !== null && creator.directoryBoostUntil > now),
     portfolioViewCount: creator.portfolioViewCount,
     directoryJoinedAt: creator.directoryJoinedAt,
