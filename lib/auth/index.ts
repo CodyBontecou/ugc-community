@@ -152,8 +152,8 @@ export const auth = betterAuth({
     "https://ugc.community",
     "https://*.ugc.community",
   ],
-  pages: {
-    error: "/auth/error",
+  onAPIError: {
+    errorURL: `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/auth/error`,
   },
 });
 

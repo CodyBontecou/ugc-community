@@ -89,7 +89,8 @@ export function middleware(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "";
   const pathname = request.nextUrl.pathname;
 
-  // Redirect Better Auth's default error page to our custom one
+  // Fallback: Redirect Better Auth's default error page to our custom one
+  // (onAPIError.errorURL handles this normally, but this catches edge cases)
   if (pathname === "/api/auth/error") {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/error";

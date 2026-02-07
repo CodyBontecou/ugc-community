@@ -6,7 +6,25 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { UserX, ArrowRight } from "lucide-react";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  Configuration: "There is a problem with the server configuration.",
+  AccessDenied: "Access was denied. You may not have permission to sign in.",
+  Verification: "The sign-in link has expired or has already been used.",
+  OAuthSignin: "Could not start the sign-in process. Please try again.",
+  OAuthCallback: "Could not complete the sign-in with the provider.",
+  OAuthAccountNotLinked: "This email is already associated with another sign-in method.",
+  Default: "Something went wrong during sign in. Please try again.",
+};
+
 function AuthErrorContent() {
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+  const errorMessage =
+    errorDescription ||
+    (errorCode && ERROR_MESSAGES[errorCode]) ||
+    ERROR_MESSAGES.Default;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-warm-gray-50 to-white flex items-center justify-center p-4">
       <motion.div
@@ -21,9 +39,14 @@ function AuthErrorContent() {
         <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
           Authentication Error
         </h1>
-        <p className="text-warm-gray-500 mb-6">
-          Something went wrong during sign in. Please try again.
+        <p className="text-warm-gray-500 mb-4">
+          {errorMessage}
         </p>
+        {errorCode && (
+          <p className="text-xs text-warm-gray-400 mb-6 font-mono">
+            Error code: {errorCode}
+          </p>
+        )}
         <Link
           href="/sign-in"
           className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-coral-dark to-rose text-white font-medium rounded-[--radius-md] hover:opacity-90 transition-opacity"
