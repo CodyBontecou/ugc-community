@@ -86,17 +86,19 @@ function getCacheControl(filePath: string): string {
     ? `.${filePath.split(".").pop()!.toLowerCase()}`
     : "";
 
-  // Use s-maxage to control Vercel's CDN cache separately from browser cache.
-  // Short s-maxage + stale-while-revalidate ensures CDN picks up new files
-  // quickly after a portfolio re-upload, while still serving fast from edge.
+  // No CDN caching (s-maxage=0) so admin edits and re-uploads are
+  // reflected immediately on the live site.  The blob fetch already
+  // uses `cache: "no-store"`, so the origin always returns fresh data.
+  // Short browser-side max-age keeps repeat navigation snappy while
+  // still picking up changes within seconds.
   switch (ext) {
     case ".html":
-      // HTML: CDN caches 60s, browser caches 0 (always revalidates)
-      return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
+      // HTML: no caching — always serve fresh
+      return "public, max-age=0, s-maxage=0, must-revalidate";
     case ".css":
     case ".js":
-      // CSS/JS: CDN caches 5 min, browser caches 60s
-      return "public, max-age=60, s-maxage=300, stale-while-revalidate=60";
+      // CSS/JS: browser caches 30s, CDN always revalidates
+      return "public, max-age=30, s-maxage=0, must-revalidate";
     case ".png":
     case ".ico":
     case ".jpg":
@@ -107,10 +109,10 @@ function getCacheControl(filePath: string): string {
     case ".woff":
     case ".woff2":
     case ".ttf":
-      // Static assets: CDN caches 1 hour, browser caches 1 hour
-      return "public, max-age=3600, s-maxage=3600, stale-while-revalidate=600";
+      // Static assets: browser caches 5 min, CDN always revalidates
+      return "public, max-age=300, s-maxage=0, must-revalidate";
     default:
-      return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
+      return "public, max-age=0, s-maxage=0, must-revalidate";
   }
 }
 
