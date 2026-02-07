@@ -74,6 +74,7 @@ export default function AdminQuestionnairesPage() {
   const [promptPreviewText, setPromptPreviewText] = useState("");
   const [promptPreviewError, setPromptPreviewError] = useState<string | null>(null);
   const [isPromptPreviewLoading, setIsPromptPreviewLoading] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
 
   const fetchGenerationStatus = useCallback(async (questionnaireId: string) => {
     try {
@@ -161,18 +162,28 @@ export default function AdminQuestionnairesPage() {
     setPromptPreviewText("");
     setPromptPreviewError(null);
     setIsPromptPreviewLoading(false);
+    setCustomPrompt("");
   };
 
-  const openPromptPreview = async (questionnaireId: string) => {
-    setPromptPreviewId(questionnaireId);
+  const fetchPromptPreview = async (questionnaireId: string, customText?: string) => {
     setPromptPreviewText("");
     setPromptPreviewError(null);
     setIsPromptPreviewLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/admin/questionnaires/${questionnaireId}/generate/prompt`
-      );
+      const hasCustom = customText && customText.trim().length > 0;
+      const response = hasCustom
+        ? await fetch(
+            `/api/admin/questionnaires/${questionnaireId}/generate/prompt`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ customPrompt: customText }),
+            }
+          )
+        : await fetch(
+            `/api/admin/questionnaires/${questionnaireId}/generate/prompt`
+          );
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -189,14 +200,26 @@ export default function AdminQuestionnairesPage() {
     }
   };
 
+  const openPromptPreview = async (questionnaireId: string) => {
+    setPromptPreviewId(questionnaireId);
+    setCustomPrompt("");
+    await fetchPromptPreview(questionnaireId);
+  };
+
+  const refreshPromptPreview = async () => {
+    if (!promptPreviewId) return;
+    await fetchPromptPreview(promptPreviewId, customPrompt);
+  };
+
   const handleConfirmGenerate = async () => {
     if (!promptPreviewId) return;
     const questionnaireId = promptPreviewId;
+    const savedCustomPrompt = customPrompt;
     closePromptPreview();
-    await handleGenerate(questionnaireId);
+    await handleGenerate(questionnaireId, savedCustomPrompt);
   };
 
-  const handleGenerate = async (questionnaireId: string) => {
+  const handleGenerate = async (questionnaireId: string, customPromptText?: string) => {
     if (generatingId) return; // Prevent double-clicks
 
     setGeneratingId(questionnaireId);
@@ -215,7 +238,11 @@ export default function AdminQuestionnairesPage() {
     try {
       const response = await fetch(
         `/api/admin/questionnaires/${questionnaireId}/generate`,
-        { method: "POST" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customPrompt: customPromptText || undefined }),
+        }
       );
       const data: GenerationResult = await response.json();
 
@@ -665,6 +692,42 @@ export default function AdminQuestionnairesPage() {
                 <pre className="text-xs text-warm-gray-700 whitespace-pre-wrap font-mono bg-warm-gray-50 border border-warm-gray-200 rounded-[--radius-md] p-4">
                   {promptPreviewText || "No prompt available."}
                 </pre>
+              )}
+            </div>
+
+            {/* Custom prompt instructions */}
+            <div className="px-6 py-4 border-t border-warm-gray-200">
+              <label
+                htmlFor="custom-prompt"
+                className="block text-sm font-semibold text-warm-gray-900 mb-1.5"
+              >
+                Custom Instructions{" "}
+                <span className="font-normal text-warm-gray-400">(optional)</span>
+              </label>
+              <p className="text-xs text-warm-gray-500 mb-2">
+                Add extra directions to customize the generation — e.g. style tweaks, layout preferences, specific requests.
+              </p>
+              <textarea
+                id="custom-prompt"
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="e.g. Use a dark theme with neon accents. Make the hero section full-screen with a video background..."
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral resize-y placeholder:text-warm-gray-300"
+              />
+              {customPrompt.trim() && (
+                <button
+                  onClick={refreshPromptPreview}
+                  disabled={isPromptPreviewLoading}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-coral bg-coral/10 border border-coral/20 rounded-full hover:bg-coral/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPromptPreviewLoading ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <FileText size={12} />
+                  )}
+                  Refresh Preview
+                </button>
               )}
             </div>
 

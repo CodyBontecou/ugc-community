@@ -44,6 +44,15 @@ export async function POST(
 
     const { id: questionnaireId } = await params;
 
+    // Parse optional custom instructions from request body
+    let customPrompt: string | undefined;
+    try {
+      const body = await request.json();
+      customPrompt = body.customPrompt || undefined;
+    } catch {
+      // No body or invalid JSON is fine - customPrompt stays undefined
+    }
+
     // Step 2: Load questionnaire and user
     const questionnaires = await db
       .select({
@@ -93,6 +102,7 @@ export async function POST(
         generationId: generation.id,
         questionnaireId,
         userId: q.userId,
+        customPrompt,
       },
     });
 

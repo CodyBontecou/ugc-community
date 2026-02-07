@@ -18,9 +18,23 @@ interface PromptResponse {
   error?: string;
 }
 
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<PromptResponse>> {
+  return handlePromptPreview(request, params);
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<PromptResponse>> {
+  return handlePromptPreview(null, params);
+}
+
+async function handlePromptPreview(
+  request: NextRequest | null,
+  params: Promise<{ id: string }>
 ): Promise<NextResponse<PromptResponse>> {
   try {
     const session = await requireAuth();
@@ -32,6 +46,17 @@ export async function GET(
     }
 
     const { id: questionnaireId } = await params;
+
+    // Parse optional custom instructions from POST body
+    let customInstructions: string | undefined;
+    if (request) {
+      try {
+        const body = await request.json();
+        customInstructions = body.customPrompt || undefined;
+      } catch {
+        // No body or invalid JSON is fine
+      }
+    }
 
     const [questionnaire] = await db
       .select({
@@ -69,6 +94,7 @@ export async function GET(
       portfolioExamples: questionnaire.portfolioExamples,
       creatorName: questionnaire.creatorName,
       subdomain: questionnaire.subdomain,
+      customInstructions,
     };
 
     const prompt = buildPortfolioPrompt(questionnaireData);

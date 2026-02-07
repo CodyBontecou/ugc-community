@@ -7,6 +7,7 @@ type Events = {
       generationId: string;
       questionnaireId: string;
       userId: string;
+      customPrompt?: string;
     };
   };
   "media/video.uploaded": {

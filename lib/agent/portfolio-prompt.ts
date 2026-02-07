@@ -31,6 +31,8 @@ export interface QuestionnaireData {
   avoidancePrompt?: string;
   // Feature 7: Reviewer feedback
   reviewerFeedback?: string;
+  // Feature 8: Admin custom instructions
+  customInstructions?: string;
 }
 
 // =====================================================
@@ -145,6 +147,13 @@ ${parts.join("\n\n")}`);
   // Feature 7: Reviewer feedback
   if (data.reviewerFeedback) {
     sections.push(data.reviewerFeedback);
+  }
+
+  // Feature 8: Admin custom instructions
+  if (data.customInstructions) {
+    sections.push(`## Additional Instructions from Admin
+
+${data.customInstructions}`);
   }
 
   // Simple instructions

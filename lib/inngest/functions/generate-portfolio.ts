@@ -24,7 +24,7 @@ export const generatePortfolioFunction = inngest.createFunction(
   },
   { event: "portfolio/generate.requested" },
   async ({ event, step }) => {
-    const { generationId, questionnaireId, userId } = event.data;
+    const { generationId, questionnaireId, userId, customPrompt } = event.data;
 
     // Helper to update generation status
     const updateStatus = async (updates: Record<string, unknown>) => {
@@ -182,6 +182,7 @@ export const generatePortfolioFunction = inngest.createFunction(
             mediaItems:
               data.mediaItems.length > 0 ? data.mediaItems : undefined,
             avoidancePrompt: genContext.avoidancePrompt || undefined,
+            customInstructions: customPrompt || undefined,
           };
 
           const result = await generatePortfolio(questionnaireData, {
@@ -250,6 +251,7 @@ export const generatePortfolioFunction = inngest.createFunction(
             mediaItems:
               data.mediaItems.length > 0 ? data.mediaItems : undefined,
             avoidancePrompt: genContext.avoidancePrompt || undefined,
+            customInstructions: customPrompt || undefined,
           };
 
           const result = await generatePortfolio(questionnaireData, {
