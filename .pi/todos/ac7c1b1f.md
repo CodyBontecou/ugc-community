@@ -7,7 +7,7 @@
     "getting-started",
     "writing"
   ],
-  "status": "todo",
+  "status": "done",
   "created_at": "2026-02-07T12:43:49.125Z"
 }
 
