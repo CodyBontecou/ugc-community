@@ -7,6 +7,7 @@ import {
   Hero,
   SocialProof,
   Features,
+  TheTrade,
   HowItWorks,
   MilestonesRewards,
   Examples,
@@ -68,6 +69,7 @@ export default async function HomePage() {
       <Hero />
       <SocialProof creatorCount={creatorCount} creators={socialProofCreators} />
       <Features />
+      <TheTrade />
       <HowItWorks />
       <MilestonesRewards />
       <Examples />
