@@ -402,38 +402,6 @@ export function CreatorDirectory({
 
       {/* Results */}
       <section className="container pt-4 pb-6 sm:pt-5 sm:pb-8">
-        {/* Result count — editorial style */}
-        <motion.div
-          className="flex items-center justify-between mb-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-px w-8 bg-gradient-to-r from-coral to-rose" />
-            <p className="text-[13px] text-warm-gray-500 font-medium tracking-wide">
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 border-2 border-warm-gray-200 border-t-coral rounded-full animate-spin" />
-                  Loading creators…
-                </span>
-              ) : (
-                <>
-                  Showing{" "}
-                  <span className="font-bold text-warm-gray-800 tabular-nums">
-                    {filteredCreators.length}
-                  </span>{" "}
-                  of{" "}
-                  <span className="font-bold text-warm-gray-800 tabular-nums">
-                    {total}
-                  </span>{" "}
-                  creators
-                </>
-              )}
-            </p>
-          </div>
-        </motion.div>
-
         {/* Creator Grid */}
         {filteredCreators.length === 0 && !loading ? (
           <motion.div
@@ -512,6 +480,34 @@ export function CreatorDirectory({
           </>
         )}
       </section>
+      {/* Result count — fixed bottom right */}
+      <motion.div
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 py-2 px-4 bg-white/90 backdrop-blur-lg border border-warm-gray-100 rounded-full shadow-md"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+      >
+        <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-coral to-rose" />
+        <p className="text-[12px] text-warm-gray-500 font-medium tracking-wide">
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="w-3 h-3 border-[1.5px] border-warm-gray-200 border-t-coral rounded-full animate-spin" />
+              Loading…
+            </span>
+          ) : (
+            <>
+              <span className="font-bold text-warm-gray-800 tabular-nums">
+                {filteredCreators.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-bold text-warm-gray-800 tabular-nums">
+                {total}
+              </span>{" "}
+              creators
+            </>
+          )}
+        </p>
+      </motion.div>
     </div>
   );
 }
