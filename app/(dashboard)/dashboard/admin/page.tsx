@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Briefcase, ArrowRight, Sparkles } from "lucide-react";
 import { UnifiedTable } from "@/components/admin/unified-table";
-import { GitHubConnection } from "@/components/admin/github-connection";
 import { MonitoringTrigger } from "@/components/admin/monitoring-trigger";
 
 export default function AdminPage() {
@@ -40,7 +39,6 @@ export default function AdminPage() {
 
       <UnifiedTable />
       <MonitoringTrigger />
-      <GitHubConnection />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { users } from "@/lib/db/schema";
 import { eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
-// Token-based auth for GitHub Actions
+// Token-based auth for external API calls
 // Set CREATOR_REGISTRATION_SECRET in your .env
 function isValidToken(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
@@ -63,7 +63,7 @@ const registerCreatorSchema = z.object({
 
 export type RegisterCreatorInput = z.infer<typeof registerCreatorSchema>;
 
-// POST /api/admin/register-creator - Register a new creator from GitHub Action
+// POST /api/admin/register-creator - Register a new creator
 export async function POST(request: NextRequest) {
   try {
     if (!isValidToken(request)) {

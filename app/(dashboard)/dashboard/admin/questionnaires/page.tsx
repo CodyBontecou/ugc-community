@@ -54,7 +54,7 @@ interface GenerationStatus {
 const STATUS_LABELS: Record<string, string> = {
   pending: "Queued...",
   generating: "Generating with AI...",
-  pushing: "Pushing to GitHub...",
+  pushing: "Pushing changes...",
   deploying: "Deploying to Vercel...",
   completed: "Completed",
   failed: "Failed",
