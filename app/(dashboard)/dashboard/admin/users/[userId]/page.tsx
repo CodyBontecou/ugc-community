@@ -213,6 +213,12 @@ export default function UserDetailPage() {
   const [siteToggleError, setSiteToggleError] = useState<string | null>(null);
   const [siteToggleSuccess, setSiteToggleSuccess] = useState(false);
 
+  // Site delete state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingSite, setDeletingSite] = useState(false);
+  const [siteDeleteError, setSiteDeleteError] = useState<string | null>(null);
+  const [siteDeleteSuccess, setSiteDeleteSuccess] = useState(false);
+
   // Social handles editing state - now arrays with max 5 per platform
   const [instagramHandles, setInstagramHandles] = useState<string[]>([]);
   const [tiktokHandles, setTiktokHandles] = useState<string[]>([]);
@@ -443,6 +449,38 @@ export default function UserDetailPage() {
       setSiteToggleError(err instanceof Error ? err.message : "Failed to toggle site");
     } finally {
       setTogglingSite(false);
+    }
+  };
+
+  // Delete site
+  const handleDeleteSite = async () => {
+    if (!user) return;
+
+    setDeletingSite(true);
+    setSiteDeleteError(null);
+    setSiteDeleteSuccess(false);
+
+    try {
+      const response = await fetch(`/api/admin/creators/${userId}/site-delete`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete site");
+      }
+
+      const data = await response.json();
+      setUser((prev) =>
+        prev ? { ...prev, siteEnabled: false } : prev
+      );
+      setShowDeleteConfirm(false);
+      setSiteDeleteSuccess(true);
+      setTimeout(() => setSiteDeleteSuccess(false), 5000);
+    } catch (err) {
+      setSiteDeleteError(err instanceof Error ? err.message : "Failed to delete site");
+    } finally {
+      setDeletingSite(false);
     }
   };
 
@@ -1432,6 +1470,69 @@ export default function UserDetailPage() {
               Site {user.siteEnabled ? "enabled" : "disabled"} successfully!
             </p>
           )}
+
+          {/* Delete Site - Danger Zone */}
+          <div className="mt-6 pt-6 border-t border-red-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-red-700 flex items-center gap-2">
+                  <Trash2 size={16} />
+                  Delete Site
+                </p>
+                <p className="text-sm text-warm-gray-500 mt-0.5">
+                  Permanently delete all portfolio files from blob storage and remove generation history.
+                </p>
+              </div>
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={deletingSite}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={16} />
+                  Delete Site
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setSiteDeleteError(null);
+                    }}
+                    disabled={deletingSite}
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-warm-gray-600 hover:bg-warm-gray-100 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteSite}
+                    disabled={deletingSite}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deletingSite ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={16} />
+                        Confirm Delete
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+            {siteDeleteError && (
+              <p className="text-sm text-red-600 mt-2">{siteDeleteError}</p>
+            )}
+            {siteDeleteSuccess && (
+              <p className="text-sm text-green-600 mt-2">
+                Site deleted successfully! All portfolio files and generation records have been removed.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
