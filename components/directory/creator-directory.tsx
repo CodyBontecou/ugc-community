@@ -12,7 +12,6 @@ import {
   ArrowRight,
   Sparkles,
   Users,
-  ExternalLink,
 } from "lucide-react";
 import {
   NICHES,
@@ -227,15 +226,15 @@ export function CreatorDirectory({
       </section>
 
       {/* Toolbar */}
-      <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-xl border-b border-warm-gray-100">
-        <div className="container py-3 flex items-center gap-3 overflow-x-auto scrollbar-hide">
+      <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-xl border-b border-warm-gray-100 shadow-[0_4px_20px_rgba(26,22,20,0.03)]">
+        <div className="container py-3 flex items-center gap-2.5 overflow-x-auto scrollbar-hide">
           {/* Filter toggle */}
           <button
             onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`shrink-0 inline-flex items-center gap-2 py-2 px-4 rounded-full text-sm font-medium border transition-all ${
+            className={`shrink-0 inline-flex items-center gap-2 py-2.5 px-5 rounded-full text-[13px] font-semibold border transition-all duration-300 ${
               filtersOpen || hasActiveFilters
-                ? "bg-warm-gray-900 text-white border-warm-gray-900"
-                : "bg-white text-warm-gray-700 border-warm-gray-200 hover:border-warm-gray-300"
+                ? "bg-warm-gray-900 text-white border-warm-gray-900 shadow-md"
+                : "bg-white text-warm-gray-700 border-warm-gray-200 hover:border-warm-gray-300 hover:shadow-sm"
             }`}
           >
             <SlidersHorizontal size={14} />
@@ -250,16 +249,19 @@ export function CreatorDirectory({
             )}
           </button>
 
+          {/* Subtle divider */}
+          <div className="shrink-0 w-px h-6 bg-warm-gray-200" />
+
           {/* Niche quick-filters */}
           <div className="flex gap-2">
             {NICHES.slice(0, 8).map((niche) => (
               <button
                 key={niche}
                 onClick={() => toggleNiche(niche)}
-                className={`shrink-0 py-2 px-4 rounded-full text-sm font-medium border transition-all ${
+                className={`shrink-0 py-2.5 px-4 rounded-full text-[13px] font-medium border transition-all duration-300 ${
                   selectedNiches.includes(niche)
-                    ? "bg-coral text-white border-coral"
-                    : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300 hover:text-warm-gray-800"
+                    ? "bg-gradient-to-r from-coral to-rose text-white border-transparent shadow-[0_2px_12px_rgba(255,107,149,0.3)]"
+                    : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300 hover:text-warm-gray-800 hover:shadow-sm"
                 }`}
               >
                 {NICHE_LABELS[niche]}
@@ -272,7 +274,7 @@ export function CreatorDirectory({
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="appearance-none py-2 pl-4 pr-9 rounded-full text-sm font-medium border border-warm-gray-200 bg-white text-warm-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose/30"
+              className="appearance-none py-2.5 pl-4 pr-10 rounded-full text-[13px] font-semibold border border-warm-gray-200 bg-white text-warm-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose/30 hover:border-warm-gray-300 transition-all"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -282,7 +284,7 @@ export function CreatorDirectory({
             </select>
             <ChevronDown
               size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-warm-gray-400 pointer-events-none"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-gray-400 pointer-events-none"
             />
           </div>
         </div>
@@ -297,10 +299,10 @@ export function CreatorDirectory({
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden border-t border-warm-gray-100"
             >
-              <div className="container py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="container py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Niches (all) */}
                 <div>
-                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-warm-gray-400 uppercase tracking-[0.15em] mb-3">
                     Niches
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -308,9 +310,9 @@ export function CreatorDirectory({
                       <button
                         key={niche}
                         onClick={() => toggleNiche(niche)}
-                        className={`py-1 px-3 rounded-full text-xs font-medium border transition-all ${
+                        className={`py-1.5 px-3 rounded-full text-[11px] font-semibold border transition-all duration-300 ${
                           selectedNiches.includes(niche)
-                            ? "bg-coral text-white border-coral"
+                            ? "bg-gradient-to-r from-coral to-rose text-white border-transparent shadow-sm"
                             : "bg-warm-gray-50 text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                         }`}
                       >
@@ -322,7 +324,7 @@ export function CreatorDirectory({
 
                 {/* Location */}
                 <div>
-                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-warm-gray-400 uppercase tracking-[0.15em] mb-3">
                     Location
                   </label>
                   <div className="relative">
@@ -335,14 +337,14 @@ export function CreatorDirectory({
                       placeholder="City or country…"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-[--radius-md] text-sm border border-warm-gray-200 bg-white text-warm-gray-800 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/30"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm border border-warm-gray-200 bg-white text-warm-gray-800 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/30 transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Rate Range */}
                 <div>
-                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-bold text-warm-gray-400 uppercase tracking-[0.15em] mb-3">
                     Rate Range
                   </label>
                   <div className="flex gap-2">
@@ -352,9 +354,9 @@ export function CreatorDirectory({
                         onClick={() =>
                           setRateRange(rateRange === range ? "" : range)
                         }
-                        className={`flex-1 py-2.5 rounded-[--radius-md] text-xs font-medium border transition-all ${
+                        className={`flex-1 py-2.5 rounded-xl text-[11px] font-semibold border transition-all duration-300 ${
                           rateRange === range
-                            ? "bg-coral text-white border-coral"
+                            ? "bg-gradient-to-r from-coral to-rose text-white border-transparent shadow-sm"
                             : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                         }`}
                       >
@@ -367,14 +369,14 @@ export function CreatorDirectory({
                 {/* Availability + Clear */}
                 <div className="flex flex-col justify-between">
                   <div>
-                    <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
+                    <label className="block text-[10px] font-bold text-warm-gray-400 uppercase tracking-[0.15em] mb-3">
                       Availability
                     </label>
                     <button
                       onClick={() => setAvailableOnly(!availableOnly)}
-                      className={`w-full py-2.5 rounded-[--radius-md] text-xs font-medium border transition-all ${
+                      className={`w-full py-2.5 rounded-xl text-[11px] font-semibold border transition-all duration-300 ${
                         availableOnly
-                          ? "bg-mint/20 text-emerald-700 border-mint"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm"
                           : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                       }`}
                     >
@@ -386,7 +388,7 @@ export function CreatorDirectory({
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
-                      className="mt-3 text-xs font-medium text-rose hover:text-coral-dark transition-colors"
+                      className="mt-3 text-[11px] font-semibold text-rose hover:text-coral-dark transition-colors"
                     >
                       Clear all filters
                     </button>
@@ -400,47 +402,59 @@ export function CreatorDirectory({
 
       {/* Results */}
       <section className="container py-8 sm:py-12">
-        {/* Result count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-warm-gray-500">
-            {loading ? (
-              "Loading…"
-            ) : (
-              <>
-                Showing{" "}
-                <span className="font-semibold text-warm-gray-800">
-                  {filteredCreators.length}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-warm-gray-800">
-                  {total}
-                </span>{" "}
-                creators
-              </>
-            )}
-          </p>
-        </div>
+        {/* Result count — editorial style */}
+        <motion.div
+          className="flex items-center justify-between mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-gradient-to-r from-coral to-rose" />
+            <p className="text-[13px] text-warm-gray-500 font-medium tracking-wide">
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-warm-gray-200 border-t-coral rounded-full animate-spin" />
+                  Loading creators…
+                </span>
+              ) : (
+                <>
+                  Showing{" "}
+                  <span className="font-bold text-warm-gray-800 tabular-nums">
+                    {filteredCreators.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-bold text-warm-gray-800 tabular-nums">
+                    {total}
+                  </span>{" "}
+                  creators
+                </>
+              )}
+            </p>
+          </div>
+        </motion.div>
 
         {/* Creator Grid */}
         {filteredCreators.length === 0 && !loading ? (
           <motion.div
-            className="text-center py-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="text-center py-24"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-peach-200 flex items-center justify-center">
-              <Search size={24} className="text-coral" />
+            <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center rotate-3">
+              <Search size={28} className="text-coral -rotate-3" />
             </div>
-            <h3 className="text-xl mb-2 text-warm-gray-800">
+            <h3 className="font-[family-name:var(--font-display)] text-2xl mb-2 text-warm-gray-800">
               No creators found
             </h3>
-            <p className="text-warm-gray-500 mb-6 max-w-md mx-auto">
+            <p className="text-warm-gray-500 mb-8 max-w-md mx-auto text-[15px] leading-relaxed">
               Try adjusting your filters or search to discover more creators.
             </p>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="inline-flex items-center gap-2 py-2.5 px-6 rounded-full text-sm font-medium bg-coral text-white hover:bg-coral-dark transition-colors"
+                className="inline-flex items-center gap-2 py-3 px-7 rounded-full text-sm font-semibold bg-gradient-to-r from-coral to-rose text-white hover:shadow-[0_8px_30px_rgba(255,107,149,0.3)] transition-all duration-300"
               >
                 Clear Filters
               </button>
@@ -452,11 +466,11 @@ export function CreatorDirectory({
               {filteredCreators.map((creator, i) => (
                 <motion.div
                   key={creator.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
-                    duration: 0.4,
-                    delay: Math.min(i * 0.05, 0.4),
+                    duration: 0.5,
+                    delay: Math.min(i * 0.06, 0.5),
                     ease: [0.16, 1, 0.3, 1],
                   }}
                 >
@@ -467,11 +481,16 @@ export function CreatorDirectory({
 
             {/* Load More */}
             {hasMore && (
-              <div className="text-center mt-12">
+              <motion.div
+                className="text-center mt-14"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
                 <button
                   onClick={loadMore}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 py-3 px-8 rounded-full text-sm font-medium border border-warm-gray-200 bg-white text-warm-gray-700 hover:border-warm-gray-300 hover:bg-warm-gray-50 transition-all disabled:opacity-50"
+                  className="group/btn inline-flex items-center gap-2.5 py-3.5 px-9 rounded-full text-sm font-semibold border border-warm-gray-200 bg-white text-warm-gray-700 hover:border-coral hover:text-coral hover:shadow-[0_8px_30px_rgba(255,107,149,0.12)] transition-all duration-300 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -480,17 +499,19 @@ export function CreatorDirectory({
                     </>
                   ) : (
                     <>
-                      Load More
-                      <ArrowRight size={14} />
+                      Load More Creators
+                      <ArrowRight
+                        size={15}
+                        className="group-hover/btn:translate-x-1 transition-transform duration-300"
+                      />
                     </>
                   )}
                 </button>
-              </div>
+              </motion.div>
             )}
           </>
         )}
       </section>
-
     </div>
   );
 }
