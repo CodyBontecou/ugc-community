@@ -27,7 +27,7 @@ interface ContactFormRequest {
 { "success": true, "message": "Message sent successfully" }
 ```
 
-**Error (400/404/500):**
+**Error (400/404/429/500):**
 ```json
 { "error": "Error message here" }
 ```
@@ -77,4 +77,5 @@ async function handleSubmit(formData: {
 
 - CORS is configured to allow requests from `*.ugc.community` subdomains
 - The `creatorSubdomain` must match an existing user's subdomain in the database
+- Rate limiting is enforced server-side (you may receive `429` if submitting too frequently)
 - Form validation should happen client-side before submission for better UX

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { users, contactSubmissions } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { sendContactInquiry, sendContactConfirmation } from "@/lib/email";
 import { checkBotId } from "botid/server";
+import { createHash } from "crypto";
 
 const contactSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -14,28 +15,110 @@ const contactSchema = z.object({
   creatorSubdomain: z.string().min(1, "Creator subdomain is required"),
 });
 
-function getCorsHeaders(origin: string | null): Record<string, string> {
-  // Allow requests from any *.ugc.community subdomain
-  const allowedOriginPattern = /^https?:\/\/([a-z0-9-]+\.)?ugc\.community$/i;
+const EMAIL_RATE_LIMIT_WINDOW_MINUTES = 60;
+const EMAIL_RATE_LIMIT_MAX_SUBMISSIONS = 3;
+const IP_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const IP_RATE_LIMIT_MAX_SUBMISSIONS = 10;
 
-  if (origin && allowedOriginPattern.test(origin)) {
-    return {
-      "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+const inMemoryIpLimiter = new Map<string, number[]>();
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+
+  // Allow requests from any *.ugc.community subdomain
+  if (/^https?:\/\/([a-z0-9-]+\.)?ugc\.community$/i.test(origin)) {
+    return true;
   }
 
   // For development, also allow localhost
-  if (origin && /^https?:\/\/localhost(:\d+)?$/i.test(origin)) {
-    return {
-      "Access-Control-Allow-Origin": origin,
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+  return /^https?:\/\/localhost(:\d+)?$/i.test(origin);
+}
+
+function isAllowedReferer(referer: string | null): boolean {
+  if (!referer) return false;
+
+  try {
+    const parsed = new URL(referer);
+    return isAllowedOrigin(`${parsed.protocol}//${parsed.host}`);
+  } catch {
+    return false;
+  }
+}
+
+function extractSubdomainFromOrigin(origin: string | null): string | null {
+  if (!origin) return null;
+
+  const match = origin.match(/^https?:\/\/([a-z0-9-]+)\.ugc\.community$/i);
+  if (!match) return null;
+
+  return match[1].toLowerCase();
+}
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  if (!isAllowedOrigin(origin)) {
+    return {};
   }
 
-  return {};
+  return {
+    "Access-Control-Allow-Origin": origin!,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+function getClientIp(request: NextRequest): string {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || "unknown";
+  }
+
+  return request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+function hashIp(ip: string): string {
+  return createHash("sha256").update(ip).digest("hex").slice(0, 16);
+}
+
+function isInMemoryIpRateLimited(key: string): boolean {
+  const now = Date.now();
+  const cutoff = now - IP_RATE_LIMIT_WINDOW_MS;
+
+  const recentHits = (inMemoryIpLimiter.get(key) || []).filter((timestamp) => timestamp >= cutoff);
+  recentHits.push(now);
+  inMemoryIpLimiter.set(key, recentHits);
+
+  // Basic periodic cleanup to avoid unbounded growth
+  if (inMemoryIpLimiter.size > 5000) {
+    for (const [entryKey, timestamps] of inMemoryIpLimiter) {
+      const active = timestamps.filter((timestamp) => timestamp >= cutoff);
+      if (active.length === 0) {
+        inMemoryIpLimiter.delete(entryKey);
+      } else {
+        inMemoryIpLimiter.set(entryKey, active);
+      }
+    }
+  }
+
+  return recentHits.length > IP_RATE_LIMIT_MAX_SUBMISSIONS;
+}
+
+async function isEmailRateLimited(creatorId: string, senderEmail: string): Promise<boolean> {
+  const windowStart = new Date(
+    Date.now() - EMAIL_RATE_LIMIT_WINDOW_MINUTES * 60 * 1000
+  );
+
+  const [result] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(contactSubmissions)
+    .where(
+      and(
+        eq(contactSubmissions.creatorId, creatorId),
+        eq(contactSubmissions.senderEmail, senderEmail),
+        gte(contactSubmissions.createdAt, windowStart)
+      )
+    );
+
+  return Number(result?.count || 0) >= EMAIL_RATE_LIMIT_MAX_SUBMISSIONS;
 }
 
 export async function OPTIONS(request: NextRequest) {
@@ -45,24 +128,68 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+  const secFetchSite = request.headers.get("sec-fetch-site");
   const corsHeaders = getCorsHeaders(origin);
 
-  // Bot protection via Vercel BotID
+  if (!isAllowedOrigin(origin)) {
+    return NextResponse.json(
+      { error: "Invalid origin" },
+      { status: 403, headers: corsHeaders }
+    );
+  }
+
+  const hasFetchMetadata = secFetchSite !== null;
+  const isSameSiteBrowserRequest =
+    !hasFetchMetadata || secFetchSite === "same-site" || secFetchSite === "same-origin";
+
+  // Portfolio pages are served from static Blob HTML, so BotID client signals
+  // are not always available. Keep BotID enabled, but allow trusted same-site
+  // browser submissions from ugc.community origins as a fallback.
+  const isTrustedPortfolioSubmission =
+    isAllowedOrigin(origin) &&
+    (!referer || isAllowedReferer(referer)) &&
+    isSameSiteBrowserRequest;
+
   const verification = await checkBotId();
-  if (verification.isBot) {
+  if (verification.isBot && !isTrustedPortfolioSubmission) {
     return NextResponse.json(
       { error: "Access denied" },
       { status: 403, headers: corsHeaders }
     );
   }
 
+  if (verification.isBot && isTrustedPortfolioSubmission) {
+    console.warn("Allowing BotID-blocked request via trusted portfolio fallback", {
+      origin,
+      referer,
+      secFetchSite,
+    });
+  }
+
   try {
     const body = await request.json();
     const data = contactSchema.parse(body);
 
+    const normalized = {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      company: data.company.trim(),
+      message: data.message.trim(),
+      creatorSubdomain: data.creatorSubdomain.trim().toLowerCase(),
+    };
+
+    const originSubdomain = extractSubdomainFromOrigin(origin);
+    if (originSubdomain && originSubdomain !== normalized.creatorSubdomain) {
+      return NextResponse.json(
+        { error: "Invalid creator subdomain" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
     // Look up creator by subdomain
     const creator = await db.query.users.findFirst({
-      where: eq(users.subdomain, data.creatorSubdomain.toLowerCase()),
+      where: eq(users.subdomain, normalized.creatorSubdomain),
     });
 
     if (!creator) {
@@ -72,17 +199,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const portfolioUrl = `https://${data.creatorSubdomain}.ugc.community`;
+    const emailLimited = await isEmailRateLimited(creator.id, normalized.email);
+    if (emailLimited) {
+      return NextResponse.json(
+        { error: "Too many messages sent recently. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Retry-After": String(EMAIL_RATE_LIMIT_WINDOW_MINUTES * 60),
+          },
+        }
+      );
+    }
+
+    const clientIpHash = hashIp(getClientIp(request));
+    const ipLimitKey = `${creator.id}:${clientIpHash}`;
+    if (isInMemoryIpRateLimited(ipLimitKey)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again shortly." },
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Retry-After": String(Math.floor(IP_RATE_LIMIT_WINDOW_MS / 1000)),
+          },
+        }
+      );
+    }
+
+    const portfolioUrl = `https://${normalized.creatorSubdomain}.ugc.community`;
 
     // Insert submission record
     const [submission] = await db
       .insert(contactSubmissions)
       .values({
         creatorId: creator.id,
-        senderName: data.name,
-        senderEmail: data.email,
-        senderCompany: data.company,
-        message: data.message,
+        senderName: normalized.name,
+        senderEmail: normalized.email,
+        senderCompany: normalized.company,
+        message: normalized.message,
         emailSentToCreator: false,
         emailSentToSender: false,
       })
@@ -98,10 +254,10 @@ export async function POST(request: NextRequest) {
       await sendContactInquiry({
         creatorName: creator.displayName || creator.name,
         creatorEmail: creator.email,
-        senderName: data.name,
-        senderEmail: data.email,
-        company: data.company,
-        message: data.message,
+        senderName: normalized.name,
+        senderEmail: normalized.email,
+        company: normalized.company,
+        message: normalized.message,
         portfolioUrl,
       });
       emailSentToCreator = true;
@@ -113,8 +269,8 @@ export async function POST(request: NextRequest) {
     // Send confirmation to the person who submitted
     try {
       await sendContactConfirmation({
-        senderName: data.name,
-        senderEmail: data.email,
+        senderName: normalized.name,
+        senderEmail: normalized.email,
         creatorName: creator.displayName || creator.name,
         portfolioUrl,
       });

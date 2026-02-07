@@ -10,7 +10,6 @@ initBotId({
   protect: [
     // Public form endpoints - high priority for bot protection
     { path: "/api/waitlist", method: "POST" },
-    { path: "/api/portfolio/contact", method: "POST" },
 
     // Invite redemption - prevent automated invite farming
     { path: "/api/invites/use", method: "POST" },
