@@ -66,15 +66,18 @@ export async function getDirectoryCreators(
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE } = pagination;
 
   // Build conditions
-  // When showAll is true (authenticated users), show all creators with subdomains
-  // Otherwise, only show creators who opted into directory listing
+  // Only show creators whose portfolio site is live (siteEnabled = true)
+  // When showAll is true (authenticated users), show all creators with live sites
+  // Otherwise, only show creators who opted into directory listing AND have live sites
   const conditions = showAll
     ? [
         sql`${users.subdomain} IS NOT NULL`,
+        eq(users.siteEnabled, true),
         eq(users.status, "active"),
       ]
     : [
         eq(users.directoryListed, true),
+        eq(users.siteEnabled, true),
         eq(users.status, "active"),
       ];
 
@@ -202,16 +205,18 @@ export async function getCreatorBySubdomain(
 ): Promise<DirectoryCreator | null> {
   const { showAll } = options;
 
-  // When showAll is true (authenticated users), show any creator with this subdomain
-  // Otherwise, only show creators who opted into directory listing
+  // When showAll is true (authenticated users), show any creator with a live site
+  // Otherwise, only show creators who opted into directory listing AND have live sites
   const conditions = showAll
     ? [
         eq(users.subdomain, subdomain.toLowerCase()),
+        eq(users.siteEnabled, true),
         eq(users.status, "active"),
       ]
     : [
         eq(users.subdomain, subdomain.toLowerCase()),
         eq(users.directoryListed, true),
+        eq(users.siteEnabled, true),
         eq(users.status, "active"),
       ];
 
@@ -281,6 +286,7 @@ export async function getDirectoryListedSubdomains(): Promise<string[]> {
   const adminEmails = getAdminEmails();
   const conditions = [
     eq(users.directoryListed, true),
+    eq(users.siteEnabled, true),
     eq(users.status, "active"),
   ];
 
