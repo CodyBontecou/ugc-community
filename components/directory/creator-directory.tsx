@@ -491,20 +491,6 @@ export function CreatorDirectory({
         )}
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-warm-gray-100 bg-white/50">
-        <div className="container py-8 flex items-center justify-between text-sm text-warm-gray-500">
-          <Link
-            href="/"
-            className="font-semibold text-warm-gray-800 hover:text-coral transition-colors"
-          >
-            ugc.community
-          </Link>
-          <p>
-            &copy; {new Date().getFullYear()} ugc.community
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
