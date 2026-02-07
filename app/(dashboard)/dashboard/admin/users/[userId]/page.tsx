@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -110,6 +110,19 @@ interface TimelineEvent {
   data: Record<string, unknown>;
 }
 
+type AdminUserTab = "overview" | "portfolio" | "profile" | "journey";
+
+const adminUserTabs: { id: AdminUserTab; label: string; description: string }[] = [
+  { id: "overview", label: "Overview", description: "Performance and account summary" },
+  { id: "portfolio", label: "Portfolio", description: "Uploads, files, and hosting" },
+  { id: "profile", label: "Profile", description: "Role, subdomain, bio, and socials" },
+  { id: "journey", label: "Journey", description: "Timeline and invite history" },
+];
+
+function isAdminUserTab(value: string | null): value is AdminUserTab {
+  return adminUserTabs.some((tab) => tab.id === value);
+}
+
 function formatDate(dateString: string | null): string {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
@@ -191,7 +204,30 @@ function InviteStatusBadge({ invite }: { invite: InviteDetails }) {
 
 export default function UserDetailPage() {
   const params = useParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = params.userId as string;
+
+  const tabParam = searchParams.get("tab");
+  const activeTab: AdminUserTab = isAdminUserTab(tabParam)
+    ? tabParam
+    : "overview";
+
+  const handleTabChange = (tab: AdminUserTab) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (tab === "overview") {
+      nextParams.delete("tab");
+    } else {
+      nextParams.set("tab", tab);
+    }
+
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  };
 
   const [user, setUser] = useState<UserDetails | null>(null);
   const [allInvites, setAllInvites] = useState<InviteDetails[]>([]);
@@ -783,9 +819,37 @@ export default function UserDetailPage() {
         )}
       </div>
 
-      {/* Profile Stats & Site Preview */}
-      {user.subdomain && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Admin Tabs */}
+      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-2">
+        <div className="flex flex-wrap gap-2">
+          {adminUserTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-warm-gray-900 text-white"
+                    : "text-warm-gray-600 hover:bg-warm-gray-100"
+                }`}
+                aria-pressed={isActive}
+                title={tab.description}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {activeTab === "overview" && (
+        <div className="space-y-6">
+          {/* Profile Stats & Site Preview */}
+          {user.subdomain && (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Stats */}
           <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
             <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
@@ -877,28 +941,40 @@ export default function UserDetailPage() {
             </div>
           </div>
         </div>
+          )}
+        </div>
       )}
 
-      {/* Portfolio Upload */}
-      <PortfolioUploadDropzone
-        userId={userId}
-        subdomain={user.subdomain}
-        siteEnabled={user.siteEnabled}
-        onUploadComplete={() => {
-          // Refresh user data to reflect siteEnabled change
-          setUser((prev) =>
-            prev ? { ...prev, siteEnabled: true } : prev
-          );
-        }}
-      />
+      {activeTab === "portfolio" && (
+        <div className="space-y-6">
+          {/* Portfolio Upload */}
+          <PortfolioUploadDropzone
+            userId={userId}
+            subdomain={user.subdomain}
+            siteEnabled={user.siteEnabled}
+            onUploadComplete={() => {
+              // Refresh user data to reflect siteEnabled change
+              setUser((prev) =>
+                prev ? { ...prev, siteEnabled: true } : prev
+              );
+            }}
+          />
 
-      {/* File Browser */}
-      <UserFileBrowser userId={userId} subdomain={user.subdomain} />
+          {/* File Browser */}
+          <UserFileBrowser userId={userId} subdomain={user.subdomain} />
+        </div>
+      )}
 
-      {/* Milestone Progress */}
-      <UserProgressionPath userId={userId} />
+      {activeTab === "overview" && (
+        <div className="space-y-6">
+          {/* Milestone Progress */}
+          <UserProgressionPath userId={userId} />
+        </div>
+      )}
 
-      {/* User Role Management */}
+      {activeTab === "profile" && (
+        <div className="space-y-6">
+          {/* User Role Management */}
       <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
         <div className="flex items-center gap-2 mb-4">
           <User size={20} className="text-warm-gray-600" />
@@ -1539,9 +1615,13 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+        </div>
+      )}
 
-      {/* Timeline */}
-      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+      {activeTab === "journey" && (
+        <div className="space-y-6">
+          {/* Timeline */}
+          <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
         <h3 className="text-lg font-semibold text-warm-gray-900 mb-6">
           User Journey
         </h3>
@@ -1685,50 +1765,53 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+        </div>
+      )}
 
-      {/* Account Details */}
-      <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
+      {activeTab === "overview" && (
+        <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-6">
         <h3 className="text-lg font-semibold text-warm-gray-900 mb-4">
           Account Details
         </h3>
 
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <dt className="text-sm text-warm-gray-500">User ID</dt>
-            <dd className="text-sm font-mono text-warm-gray-900 mt-0.5">
-              {user.id}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm text-warm-gray-500">Email Verified</dt>
-            <dd className="text-sm text-warm-gray-900 mt-0.5">
-              {user.emailVerified ? (
-                <span className="text-green-600 flex items-center gap-1">
-                  <CheckCircle size={14} /> Yes
-                </span>
-              ) : (
-                <span className="text-warm-gray-500">No</span>
-              )}
-            </dd>
-          </div>
-          {user.websiteUrl && (
-            <div className="sm:col-span-2">
-              <dt className="text-sm text-warm-gray-500">Website</dt>
-              <dd className="text-sm mt-0.5">
-                <a
-                  href={user.websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-coral hover:text-coral/80 flex items-center gap-1"
-                >
-                  {user.websiteUrl}
-                  <ExternalLink size={14} />
-                </a>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <dt className="text-sm text-warm-gray-500">User ID</dt>
+              <dd className="text-sm font-mono text-warm-gray-900 mt-0.5">
+                {user.id}
               </dd>
             </div>
-          )}
-        </dl>
-      </div>
+            <div>
+              <dt className="text-sm text-warm-gray-500">Email Verified</dt>
+              <dd className="text-sm text-warm-gray-900 mt-0.5">
+                {user.emailVerified ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle size={14} /> Yes
+                  </span>
+                ) : (
+                  <span className="text-warm-gray-500">No</span>
+                )}
+              </dd>
+            </div>
+            {user.websiteUrl && (
+              <div className="sm:col-span-2">
+                <dt className="text-sm text-warm-gray-500">Website</dt>
+                <dd className="text-sm mt-0.5">
+                  <a
+                    href={user.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-coral hover:text-coral/80 flex items-center gap-1"
+                  >
+                    {user.websiteUrl}
+                    <ExternalLink size={14} />
+                  </a>
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      )}
     </div>
   );
 }
