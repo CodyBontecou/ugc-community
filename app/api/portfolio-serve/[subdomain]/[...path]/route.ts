@@ -19,6 +19,9 @@ import {
   getContactFormHandler,
 } from "@/lib/portfolio/platform-injections";
 
+// Ensure this route is always dynamically rendered (never cached at build time)
+export const dynamic = "force-dynamic";
+
 // =====================================================
 // Subdomain Lookup Cache (in-memory LRU)
 // =====================================================
@@ -83,14 +86,17 @@ function getCacheControl(filePath: string): string {
     ? `.${filePath.split(".").pop()!.toLowerCase()}`
     : "";
 
+  // Use s-maxage to control Vercel's CDN cache separately from browser cache.
+  // Short s-maxage + stale-while-revalidate ensures CDN picks up new files
+  // quickly after a portfolio re-upload, while still serving fast from edge.
   switch (ext) {
     case ".html":
-      // Short cache — allows platform injection updates to propagate
-      return "public, max-age=3600, stale-while-revalidate=60";
+      // HTML: CDN caches 60s, browser caches 0 (always revalidates)
+      return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
     case ".css":
     case ".js":
-      // Medium cache — portfolio content changes less often
-      return "public, max-age=86400, stale-while-revalidate=3600";
+      // CSS/JS: CDN caches 5 min, browser caches 60s
+      return "public, max-age=60, s-maxage=300, stale-while-revalidate=60";
     case ".png":
     case ".ico":
     case ".jpg":
@@ -101,10 +107,10 @@ function getCacheControl(filePath: string): string {
     case ".woff":
     case ".woff2":
     case ".ttf":
-      // Long cache — static assets rarely change
-      return "public, max-age=604800, stale-while-revalidate=86400";
+      // Static assets: CDN caches 1 hour, browser caches 1 hour
+      return "public, max-age=3600, s-maxage=3600, stale-while-revalidate=600";
     default:
-      return "public, max-age=3600";
+      return "public, max-age=0, s-maxage=60, stale-while-revalidate=30";
   }
 }
 
@@ -144,8 +150,8 @@ export async function GET(
     });
   }
 
-  // 3. Fetch raw file from Vercel Blob
-  const blobResponse = await fetch(blobUrl);
+  // 3. Fetch raw file from Vercel Blob (no-store to bypass Next.js data cache)
+  const blobResponse = await fetch(blobUrl, { cache: "no-store" });
 
   if (!blobResponse.ok) {
     return new NextResponse("File not found", {
