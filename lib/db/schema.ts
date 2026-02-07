@@ -80,6 +80,8 @@ export const users = pgTable(
     lastScrapedAt: timestamp("last_scraped_at"),
     // Notification preferences
 
+    // Badge visibility preference
+    hideBadges: boolean("hide_badges").notNull().default(false),
   },
   (table) => [
     // Index for fast subdomain lookups (directory queries, routing)
@@ -656,7 +658,7 @@ export const contentJobs = pgTable(
   ]
 );
 
-export const contentJobsRelations = relations(contentJobs, ({ one }) => ({
+export const contentJobsRelations = relations(contentJobs, ({ one, many }) => ({
   createdByUser: one(users, {
     fields: [contentJobs.createdBy],
     references: [users.id],
@@ -667,9 +669,40 @@ export const contentJobsRelations = relations(contentJobs, ({ one }) => ({
     references: [users.id],
     relationName: "brandJobs",
   }),
+  jobHooks: many(jobHooks),
 }));
 
 
+
+// =====================================================
+// Job Hooks (Structured hooks with optional screenshots)
+// =====================================================
+
+export const jobHooks = pgTable(
+  "job_hooks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobId: uuid("job_id")
+      .notNull()
+      .references(() => contentJobs.id, { onDelete: "cascade" }),
+    hookText: text("hook_text").notNull(),
+    screenshotUrl: text("screenshot_url"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("job_hooks_job_id_idx").on(table.jobId),
+    index("job_hooks_sort_order_idx").on(table.jobId, table.sortOrder),
+  ]
+);
+
+export const jobHooksRelations = relations(jobHooks, ({ one }) => ({
+  job: one(contentJobs, {
+    fields: [jobHooks.jobId],
+    references: [contentJobs.id],
+  }),
+}));
 
 // =====================================================
 // Notifications
@@ -797,6 +830,8 @@ export type SavedCreator = typeof savedCreators.$inferSelect;
 export type NewSavedCreator = typeof savedCreators.$inferInsert;
 export type ContentJob = typeof contentJobs.$inferSelect;
 export type NewContentJob = typeof contentJobs.$inferInsert;
+export type JobHook = typeof jobHooks.$inferSelect;
+export type NewJobHook = typeof jobHooks.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
 export type OnboardingQuestionnaire = typeof onboardingQuestionnaires.$inferSelect;

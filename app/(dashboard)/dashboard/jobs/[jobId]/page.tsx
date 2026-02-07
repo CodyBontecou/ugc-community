@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Briefcase, Loader2, Hash, Clock, Eye } from "lucide-react";
+import { JobHooksTable } from "@/components/jobs/job-hooks-table";
 
 interface JobDetailData {
   job: {
@@ -160,33 +161,8 @@ export default function JobDetailPage({
           </div>
         </div>
 
-        {/* Talking Points */}
-        {hooks.length > 0 && (
-          <div className="p-8 border-b border-warm-gray-100">
-            <h2 className="text-lg font-semibold text-warm-gray-900 mb-1 flex items-center gap-2">
-              <Hash size={18} className="text-coral" />
-              Talking Points
-            </h2>
-            <p className="text-sm text-warm-gray-500 mb-4">
-              Use these angles in your TikTok content for inspiration.
-            </p>
-            <div className="space-y-3">
-              {hooks.map((hook, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 bg-gradient-to-r from-coral/5 to-rose/5 border border-coral/10 rounded-[--radius-lg] px-5 py-4"
-                >
-                  <span className="text-coral font-bold text-sm mt-0.5">
-                    {i + 1}.
-                  </span>
-                  <span className="text-warm-gray-800 font-medium">
-                    &ldquo;{hook}&rdquo;
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Hooks & Inspiration Table */}
+        <JobHooksTable jobId={job.id} legacyHooks={hooks} />
 
         {/* CTA */}
         <div className="p-8 bg-warm-gray-50">

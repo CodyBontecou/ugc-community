@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { JobForm } from "@/components/jobs/job-form";
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
+import { JobHooksManager } from "@/components/jobs/job-hooks-manager";
 import type { JobStatus, Niche, CompensationType, Platform } from "@/lib/jobs/constants";
 
 interface JobData {
@@ -132,6 +133,11 @@ export default function EditJobPage({
               : "",
           }}
         />
+      </div>
+
+      {/* Hooks & Screenshots Table */}
+      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+        <JobHooksManager jobId={jobId} />
       </div>
     </div>
   );
