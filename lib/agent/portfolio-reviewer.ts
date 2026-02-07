@@ -98,12 +98,14 @@ Generated files:
 
 ${fileContents}`;
 
-    const response = await client.messages.create({
+    // Use streaming to avoid 10-minute timeout on long requests
+    const stream = client.messages.stream({
       model: "claude-sonnet-4-5",
       max_tokens: 4096,
       system: REVIEW_SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }],
     });
+    const response = await stream.finalMessage();
 
     // Extract JSON from response
     const textBlock = response.content.find((b) => b.type === "text");

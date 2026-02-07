@@ -423,8 +423,8 @@ export async function generatePortfolio(
     for (let turn = 0; turn < MAX_TURNS; turn++) {
       console.log(`Turn ${turn + 1}/${MAX_TURNS}`);
 
-      // Call Claude
-      const response = await client.messages.create({
+      // Call Claude (streaming to avoid 10-minute timeout on long requests)
+      const stream = client.messages.stream({
         model: MODEL,
         max_tokens: 32000,
         thinking: { type: "enabled", budget_tokens: 10000 },
@@ -432,6 +432,7 @@ export async function generatePortfolio(
         tools,
         messages,
       });
+      const response = await stream.finalMessage();
 
       // Track usage
       totalInputTokens += response.usage.input_tokens;
