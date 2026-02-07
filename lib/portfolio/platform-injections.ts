@@ -37,14 +37,15 @@ export function getPlatformBodyTags(subdomain: string): string {
 }
 
 // =====================================================
-// Community Ribbon Widget
+// Community Badge Widget (Pill)
 // =====================================================
 
 /**
- * Scoped CSS for the community ribbon badge.
- * A cute diagonal corner ribbon in the bottom-right, styled to match
+ * Scoped CSS for the community pill badge.
+ * A rounded pill badge in the bottom-right corner, styled to match
  * the ugc.community landing page aesthetic (coral-to-rose gradient,
- * Outfit font, warm shadows).
+ * Outfit font, warm shadows). Uses fully rounded borders (border-radius: 50px)
+ * for an organic shape with no straight lines.
  *
  * All selectors are prefixed with `#ugc-badge` to avoid
  * collisions with creator portfolio styles.
@@ -55,33 +56,24 @@ function getCommunityBadgeStyles(): string {
 
   #ugc-badge {
     position: fixed;
-    bottom: -4px;
-    right: -4px;
+    bottom: 12px;
+    right: 12px;
     z-index: 2147483647;
-    width: 100px;
-    height: 100px;
     pointer-events: none;
-    overflow: hidden;
-    border-top-left-radius: 16px;
     animation: ugcBadgeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
   }
 
   #ugc-badge a {
-    position: absolute;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    width: 150px;
-    padding: 6px 0;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
+    gap: 4px;
+    padding: 6px 14px;
     background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%);
-    border-radius: 6px;
+    border-radius: 50px;
     color: #fff;
     font-family: 'Outfit', system-ui, sans-serif;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 500;
     letter-spacing: 0.03em;
     line-height: 1;
@@ -89,16 +81,17 @@ function getCommunityBadgeStyles(): string {
     cursor: pointer;
     pointer-events: auto;
     box-shadow:
-      0 2px 6px rgba(255, 107, 149, 0.3),
-      0 1px 2px rgba(0, 0, 0, 0.06);
+      0 2px 8px rgba(255, 107, 149, 0.35),
+      0 1px 3px rgba(0, 0, 0, 0.08);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   #ugc-badge a:hover {
     background: linear-gradient(135deg, #FF8A7A 0%, #FF5A85 100%);
+    transform: scale(1.05);
     box-shadow:
-      0 3px 10px rgba(255, 107, 149, 0.45),
-      0 1px 4px rgba(0, 0, 0, 0.08);
+      0 4px 14px rgba(255, 107, 149, 0.45),
+      0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   #ugc-badge a:hover #ugc-badge-sparkle {
@@ -106,7 +99,7 @@ function getCommunityBadgeStyles(): string {
   }
 
   #ugc-badge-sparkle {
-    font-size: 8px;
+    font-size: 9px;
     transition: transform 0.3s ease;
     filter: brightness(1.2);
   }
@@ -118,32 +111,30 @@ function getCommunityBadgeStyles(): string {
   @keyframes ugcBadgeIn {
     from {
       opacity: 0;
-      transform: translate(20px, 20px) scale(0.5);
+      transform: translateY(10px) scale(0.8);
     }
     to {
       opacity: 1;
-      transform: translate(0, 0) scale(1);
+      transform: translateY(0) scale(1);
     }
   }
 
   @media (max-width: 480px) {
     #ugc-badge {
-      width: 84px;
-      height: 84px;
-      border-top-left-radius: 14px;
+      bottom: 8px;
+      right: 8px;
     }
     #ugc-badge a {
-      width: 124px;
-      font-size: 8px;
-      padding: 5px 0;
+      font-size: 9px;
+      padding: 5px 12px;
     }
   }
 </style>`;
 }
 
 /**
- * HTML for the community ribbon widget.
- * A cute diagonal corner ribbon in the bottom-right that links
+ * HTML for the community pill badge widget.
+ * A rounded pill badge in the bottom-right that links
  * back to ugc.community with a sparkle accent.
  */
 function getCommunityBadgeHtml(): string {
