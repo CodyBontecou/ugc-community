@@ -45,7 +45,7 @@ interface ToolResult {
 // =====================================================
 
 // No timeout constraints with Fly worker - allow full generation
-const MAX_TURNS = 30;
+const MAX_TURNS = 15;
 const MODEL = "claude-sonnet-4-5";
 
 // =====================================================
