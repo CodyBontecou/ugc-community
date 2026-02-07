@@ -113,7 +113,8 @@ img {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -121,9 +122,13 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-coral), var(--color-rose));
+  background: var(--color-warm-gray-300);
   border-radius: 9999px;
   border: 2px solid var(--color-warm-gray-100);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-warm-gray-400);
 }
 
 /* Focus styles */

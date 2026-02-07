@@ -1,16 +1,10 @@
-import { getDirectoryCreators } from "@/lib/directory/queries";
-import { CreatorDirectory } from "@/components/directory/creator-directory";
+import { getCreatorsForTable } from "@/lib/directory/table-queries";
+import { CreatorsDataTable } from "@/components/directory/creators-data-table";
 
 export const dynamic = "force-dynamic";
 
 export default async function CreatorsPage() {
-  // Initial server-side fetch — only creators with live portfolios (siteEnabled)
-  const { creators, total } = await getDirectoryCreators({}, { sort: "popular" }, { pageSize: 24 });
+  const creators = await getCreatorsForTable();
 
-  return (
-    <CreatorDirectory
-      initialCreators={creators}
-      initialTotal={total}
-    />
-  );
+  return <CreatorsDataTable creators={creators} />;
 }

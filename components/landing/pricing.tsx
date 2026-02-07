@@ -25,19 +25,6 @@ const plans = [
     cta: "Become a Partner",
     footnote: "@ugc.community",
   },
-  {
-    name: "Pro",
-    description: "No content commitment",
-    price: "$12",
-    period: "/month",
-    featured: false,
-    features: [
-      "Everything in Partner",
-      "No posting requirement",
-      "Support the platform directly",
-    ],
-    cta: "Subscribe",
-  },
 ];
 
 export function Pricing() {
@@ -65,7 +52,7 @@ export function Pricing() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-3xl mx-auto">
+        <div className="flex justify-center max-w-md mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={i}

@@ -25,6 +25,7 @@ import {
 } from "@/lib/directory/constants";
 import type { DirectoryCreator } from "@/lib/directory/queries";
 import { CreatorCard } from "./creator-card";
+import { Navbar } from "@/components/landing/navbar";
 
 interface CreatorDirectoryProps {
   initialCreators: DirectoryCreator[];
@@ -143,30 +144,8 @@ export function CreatorDirectory({
   return (
     <div className="min-h-screen bg-cream">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-warm-gray-100">
-        <div className="container flex items-center justify-between h-16">
-          <Link
-            href="/"
-            className="font-semibold text-[1.1rem] text-warm-gray-900 hover:text-coral transition-colors"
-          >
-            ugc.community
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/creators"
-              className="text-sm font-medium text-coral"
-            >
-              Creators
-            </Link>
-            <Link
-              href="/sign-in"
-              className="inline-flex items-center gap-2 text-sm font-medium rounded-full py-2 px-5 bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
+      <div className="h-16" />
 
       {/* Hero Header */}
       <section className="relative overflow-hidden pt-14 pb-8 sm:pt-16 sm:pb-10">
