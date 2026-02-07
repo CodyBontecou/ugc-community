@@ -23,17 +23,23 @@ export function Navbar() {
 
         <div className="hidden md:flex gap-12">
           <a
-            href="#features"
+            href="/#features"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
             Features
           </a>
           <a
-            href="#pricing"
+            href="/#pricing"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
             Pricing
           </a>
+          <Link
+            href="/tutorials"
+            className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
+          >
+            Tutorials
+          </Link>
         </div>
 
         <div className="flex-1 flex items-center justify-end gap-6">

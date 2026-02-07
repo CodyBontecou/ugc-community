@@ -29,7 +29,7 @@ interface DashboardNavProps {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/dashboard/tutorials", label: "Tutorials", icon: BookOpen },
+  { href: "/tutorials", label: "Tutorials", icon: BookOpen },
 ];
 
 export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
