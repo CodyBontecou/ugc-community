@@ -62,6 +62,7 @@ function getCommunityBadgeStyles(): string {
     height: 100px;
     pointer-events: none;
     overflow: hidden;
+    border-top-left-radius: 16px;
     animation: ugcBadgeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
   }
 
@@ -77,7 +78,7 @@ function getCommunityBadgeStyles(): string {
     left: 50%;
     transform: translate(-50%, -50%) rotate(-45deg);
     background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%);
-    border-radius: 3px;
+    border-radius: 6px;
     color: #fff;
     font-family: 'Outfit', system-ui, sans-serif;
     font-size: 9px;
@@ -129,6 +130,7 @@ function getCommunityBadgeStyles(): string {
     #ugc-badge {
       width: 84px;
       height: 84px;
+      border-top-left-radius: 14px;
     }
     #ugc-badge a {
       width: 124px;
