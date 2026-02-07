@@ -59,7 +59,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
         )}
 
         {/* Main card body */}
-        <div className="px-5 pt-5 pb-1">
+        <div className="px-5 pt-4 pb-0">
           {/* Avatar + Identity row */}
           <div className="flex items-start gap-4">
             {/* Avatar with decorative ring */}
@@ -118,7 +118,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
 
         {/* Niches */}
         {niches.length > 0 && (
-          <div className="px-5 pt-2.5 flex flex-wrap gap-1.5">
+          <div className="px-5 pt-2 flex flex-wrap gap-1.5">
             {niches.map((niche) => (
               <span
                 key={niche}
@@ -131,7 +131,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
         )}
 
         {/* Footer bar */}
-        <div className="mt-3 mx-3.5 mb-3.5 px-4 py-2.5 bg-warm-gray-50/60 rounded-xl flex items-center justify-between">
+        <div className="mt-2 mx-3.5 mb-3 px-4 py-2 bg-warm-gray-50/60 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Social icons */}
             {hasSocials && (

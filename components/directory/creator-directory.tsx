@@ -401,7 +401,7 @@ export function CreatorDirectory({
       </div>
 
       {/* Results */}
-      <section className="container pt-4 pb-6 sm:pt-5 sm:pb-8">
+      <section className="container pt-3 pb-6 sm:pt-4 sm:pb-8">
         {/* Creator Grid */}
         {filteredCreators.length === 0 && !loading ? (
           <motion.div
