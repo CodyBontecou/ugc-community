@@ -10,8 +10,9 @@ import {
   X,
   ChevronDown,
   ArrowRight,
+  Sparkles,
   Users,
-  Zap,
+  ExternalLink,
 } from "lucide-react";
 import {
   NICHES,
@@ -49,7 +50,6 @@ export function CreatorDirectory({
   const [sort, setSort] = useState<SortOption>("popular");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
 
   const loadingRef = useRef(false);
 
@@ -144,24 +144,24 @@ export function CreatorDirectory({
   return (
     <div className="min-h-screen bg-cream">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-deep-900/95 backdrop-blur-xl border-b border-white/[0.06]">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-warm-gray-100">
         <div className="container flex items-center justify-between h-16">
           <Link
             href="/"
-            className="font-[family-name:var(--font-display)] text-[1.15rem] text-white/90 hover:text-white transition-colors"
+            className="font-semibold text-[1.1rem] text-warm-gray-900 hover:text-coral transition-colors"
           >
             ugc.community
           </Link>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4">
             <Link
               href="/creators"
-              className="text-sm font-medium text-white/60 hover:text-white transition-colors"
+              className="text-sm font-medium text-coral"
             >
               Creators
             </Link>
             <Link
               href="/sign-in"
-              className="inline-flex items-center gap-2 text-sm font-semibold rounded-full py-2.5 px-6 bg-white text-deep-900 hover:bg-white/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-2 text-sm font-medium rounded-full py-2 px-5 bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
             >
               Login
             </Link>
@@ -169,152 +169,73 @@ export function CreatorDirectory({
         </div>
       </nav>
 
-      {/* Hero Header — Dark, Dramatic */}
-      <section className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-20">
-        {/* Deep dark base */}
-        <div className="absolute inset-0 bg-deep-900" />
+      {/* Hero Header */}
+      <section className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16">
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-peach-100 via-peach-200/40 to-cream" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-rose/8 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-lavender/6 to-transparent rounded-full blur-3xl" />
 
-        {/* Animated gradient mesh */}
-        <div
-          className="absolute top-[-40%] right-[-20%] w-[700px] h-[700px] rounded-full opacity-40 blur-[120px]"
-          style={{
-            background: "radial-gradient(circle, #FF6B95 0%, #FF9A8B 40%, transparent 70%)",
-            animation: "mesh-drift 12s ease-in-out infinite",
-          }}
-        />
-        <div
-          className="absolute bottom-[-30%] left-[-15%] w-[600px] h-[600px] rounded-full opacity-25 blur-[100px]"
-          style={{
-            background: "radial-gradient(circle, #A855F7 0%, #7C3AED 40%, transparent 70%)",
-            animation: "mesh-drift-reverse 15s ease-in-out infinite",
-          }}
-        />
-        <div
-          className="absolute top-[20%] left-[40%] w-[300px] h-[300px] rounded-full opacity-20 blur-[80px]"
-          style={{
-            background: "radial-gradient(circle, #FFB8A9 0%, transparent 70%)",
-            animation: "pulse-glow 6s ease-in-out infinite",
-          }}
-        />
-
-        {/* Noise texture */}
-        <div className="absolute inset-0 noise-overlay" />
-
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-
-        <div className="container relative z-10">
+        <div className="container relative">
           <motion.div
-            className="text-center max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            className="text-center max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Badge */}
-            <motion.div
-              className="inline-flex items-center gap-2.5 py-2 px-5 bg-white/[0.07] border border-white/[0.1] rounded-full text-sm font-medium text-white/70 mb-8 backdrop-blur-md"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-br from-coral to-rose">
-                <Users size={11} className="text-white" />
-              </div>
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 bg-white/80 border border-warm-gray-200 rounded-full text-sm font-medium text-warm-gray-600 mb-6 shadow-sm backdrop-blur-sm">
+              <Users size={14} className="text-coral" />
               <span>
                 {total} creator{total !== 1 ? "s" : ""} with live portfolios
               </span>
-            </motion.div>
+            </div>
 
-            {/* Headline */}
-            <motion.h1
-              className="text-[clamp(2.6rem,6vw,4.5rem)] leading-[1.04] tracking-[-0.03em] mb-5 text-white"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <h1 className="text-[clamp(2.2rem,5vw,3.5rem)] leading-[1.08] tracking-[-0.02em] mb-4">
               Discover{" "}
-              <span className="gradient-text-light italic">
-                UGC Creators
-              </span>
-            </motion.h1>
+              <span className="gradient-text">UGC Creators</span>
+            </h1>
 
-            <motion.p
-              className="text-lg sm:text-xl text-white/45 leading-relaxed mb-10 max-w-xl mx-auto"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <p className="text-lg text-warm-gray-500 leading-relaxed mb-8">
               Browse creators with live portfolios. Find the perfect partner for
               your next campaign.
-            </motion.p>
+            </p>
 
-            {/* Search Bar — Glassmorphism */}
-            <motion.div
-              className="relative max-w-xl mx-auto"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div
-                className={`relative transition-all duration-500 ${
-                  searchFocused ? "scale-[1.02]" : ""
-                }`}
-              >
-                {/* Glow behind search on focus */}
-                <div
-                  className={`absolute -inset-3 rounded-full bg-gradient-to-r from-coral/30 via-rose/20 to-lavender/30 blur-xl transition-opacity duration-500 ${
-                    searchFocused ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-                <div className="relative">
-                  <Search
-                    size={18}
-                    className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search by name, niche, or keyword…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    className="w-full pl-13 pr-5 py-4 bg-white/[0.07] border border-white/[0.12] rounded-full text-[15px] text-white placeholder:text-white/30 backdrop-blur-xl shadow-lg focus:outline-none focus:border-white/25 focus:bg-white/[0.1] transition-all"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+            {/* Search Bar */}
+            <div className="relative max-w-lg mx-auto">
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search by name, niche, or keyword…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3.5 bg-white border border-warm-gray-200 rounded-full text-sm text-warm-gray-800 placeholder:text-warm-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose/30 focus:border-rose transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-gray-400 hover:text-warm-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
           </motion.div>
         </div>
-
-        {/* Bottom gradient fade to content area */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-cream to-transparent" />
       </section>
 
       {/* Toolbar */}
-      <div className="sticky top-16 z-40 bg-cream/90 backdrop-blur-xl border-b border-warm-gray-200/60">
-        <div className="container py-3.5 flex items-center gap-3 overflow-x-auto scrollbar-hide">
+      <div className="sticky top-16 z-40 bg-white/80 backdrop-blur-xl border-b border-warm-gray-100">
+        <div className="container py-3 flex items-center gap-3 overflow-x-auto scrollbar-hide">
           {/* Filter toggle */}
           <button
             onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`shrink-0 inline-flex items-center gap-2 py-2.5 px-5 rounded-full text-sm font-semibold border transition-all duration-300 ${
+            className={`shrink-0 inline-flex items-center gap-2 py-2 px-4 rounded-full text-sm font-medium border transition-all ${
               filtersOpen || hasActiveFilters
-                ? "bg-deep-900 text-white border-deep-900 shadow-md"
-                : "bg-white text-warm-gray-700 border-warm-gray-200 hover:border-warm-gray-300 hover:shadow-sm"
+                ? "bg-warm-gray-900 text-white border-warm-gray-900"
+                : "bg-white text-warm-gray-700 border-warm-gray-200 hover:border-warm-gray-300"
             }`}
           >
             <SlidersHorizontal size={14} />
@@ -329,19 +250,16 @@ export function CreatorDirectory({
             )}
           </button>
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-warm-gray-200 shrink-0" />
-
           {/* Niche quick-filters */}
           <div className="flex gap-2">
             {NICHES.slice(0, 8).map((niche) => (
               <button
                 key={niche}
                 onClick={() => toggleNiche(niche)}
-                className={`shrink-0 py-2.5 px-4 rounded-full text-sm font-medium border transition-all duration-300 ${
+                className={`shrink-0 py-2 px-4 rounded-full text-sm font-medium border transition-all ${
                   selectedNiches.includes(niche)
-                    ? "bg-gradient-to-r from-coral to-rose text-white border-transparent shadow-md shadow-coral/20"
-                    : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300 hover:text-warm-gray-800 hover:shadow-sm"
+                    ? "bg-coral text-white border-coral"
+                    : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300 hover:text-warm-gray-800"
                 }`}
               >
                 {NICHE_LABELS[niche]}
@@ -354,7 +272,7 @@ export function CreatorDirectory({
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="appearance-none py-2.5 pl-4 pr-9 rounded-full text-sm font-medium border border-warm-gray-200 bg-white text-warm-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose/30 hover:border-warm-gray-300 transition-colors"
+              className="appearance-none py-2 pl-4 pr-9 rounded-full text-sm font-medium border border-warm-gray-200 bg-white text-warm-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose/30"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -376,13 +294,13 @@ export function CreatorDirectory({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden border-t border-warm-gray-200/60"
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden border-t border-warm-gray-100"
             >
-              <div className="container py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="container py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* Niches (all) */}
                 <div>
-                  <label className="block text-xs font-bold text-warm-gray-500 uppercase tracking-wider mb-3">
+                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
                     Niches
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -390,9 +308,9 @@ export function CreatorDirectory({
                       <button
                         key={niche}
                         onClick={() => toggleNiche(niche)}
-                        className={`py-1.5 px-3 rounded-full text-xs font-medium border transition-all duration-200 ${
+                        className={`py-1 px-3 rounded-full text-xs font-medium border transition-all ${
                           selectedNiches.includes(niche)
-                            ? "bg-gradient-to-r from-coral to-rose text-white border-transparent"
+                            ? "bg-coral text-white border-coral"
                             : "bg-warm-gray-50 text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                         }`}
                       >
@@ -404,7 +322,7 @@ export function CreatorDirectory({
 
                 {/* Location */}
                 <div>
-                  <label className="block text-xs font-bold text-warm-gray-500 uppercase tracking-wider mb-3">
+                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
                     Location
                   </label>
                   <div className="relative">
@@ -417,14 +335,14 @@ export function CreatorDirectory({
                       placeholder="City or country…"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm border border-warm-gray-200 bg-white text-warm-gray-800 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/30 focus:border-rose/40 transition-all"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-[--radius-md] text-sm border border-warm-gray-200 bg-white text-warm-gray-800 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/30"
                     />
                   </div>
                 </div>
 
                 {/* Rate Range */}
                 <div>
-                  <label className="block text-xs font-bold text-warm-gray-500 uppercase tracking-wider mb-3">
+                  <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
                     Rate Range
                   </label>
                   <div className="flex gap-2">
@@ -434,9 +352,9 @@ export function CreatorDirectory({
                         onClick={() =>
                           setRateRange(rateRange === range ? "" : range)
                         }
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-medium border transition-all duration-200 ${
+                        className={`flex-1 py-2.5 rounded-[--radius-md] text-xs font-medium border transition-all ${
                           rateRange === range
-                            ? "bg-gradient-to-r from-coral to-rose text-white border-transparent"
+                            ? "bg-coral text-white border-coral"
                             : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                         }`}
                       >
@@ -449,14 +367,14 @@ export function CreatorDirectory({
                 {/* Availability + Clear */}
                 <div className="flex flex-col justify-between">
                   <div>
-                    <label className="block text-xs font-bold text-warm-gray-500 uppercase tracking-wider mb-3">
+                    <label className="block text-xs font-semibold text-warm-gray-500 uppercase tracking-wider mb-2">
                       Availability
                     </label>
                     <button
                       onClick={() => setAvailableOnly(!availableOnly)}
-                      className={`w-full py-2.5 rounded-xl text-xs font-medium border transition-all duration-200 ${
+                      className={`w-full py-2.5 rounded-[--radius-md] text-xs font-medium border transition-all ${
                         availableOnly
-                          ? "bg-emerald-500 text-white border-emerald-500"
+                          ? "bg-mint/20 text-emerald-700 border-mint"
                           : "bg-white text-warm-gray-600 border-warm-gray-200 hover:border-warm-gray-300"
                       }`}
                     >
@@ -468,7 +386,7 @@ export function CreatorDirectory({
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
-                      className="mt-3 text-xs font-semibold text-rose hover:text-coral-dark transition-colors"
+                      className="mt-3 text-xs font-medium text-rose hover:text-coral-dark transition-colors"
                     >
                       Clear all filters
                     </button>
@@ -481,57 +399,48 @@ export function CreatorDirectory({
       </div>
 
       {/* Results */}
-      <section className="container py-10 sm:py-14">
+      <section className="container py-8 sm:py-12">
         {/* Result count */}
-        <motion.div
-          className="flex items-center justify-between mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-warm-gray-500">
             {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="w-3.5 h-3.5 border-2 border-warm-gray-300 border-t-coral rounded-full animate-spin" />
-                Loading…
-              </span>
+              "Loading…"
             ) : (
               <>
                 Showing{" "}
-                <span className="font-bold text-warm-gray-800">
+                <span className="font-semibold text-warm-gray-800">
                   {filteredCreators.length}
                 </span>{" "}
                 of{" "}
-                <span className="font-bold text-warm-gray-800">
+                <span className="font-semibold text-warm-gray-800">
                   {total}
                 </span>{" "}
                 creators
               </>
             )}
           </p>
-        </motion.div>
+        </div>
 
         {/* Creator Grid */}
         {filteredCreators.length === 0 && !loading ? (
           <motion.div
-            className="text-center py-24"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            className="text-center py-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-peach-200 to-peach-300 flex items-center justify-center shadow-lg shadow-peach-200/50">
-              <Search size={28} className="text-coral-dark" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-peach-200 flex items-center justify-center">
+              <Search size={24} className="text-coral" />
             </div>
-            <h3 className="font-[family-name:var(--font-display)] text-2xl mb-3 text-warm-gray-800">
+            <h3 className="text-xl mb-2 text-warm-gray-800">
               No creators found
             </h3>
-            <p className="text-warm-gray-500 mb-8 max-w-md mx-auto">
+            <p className="text-warm-gray-500 mb-6 max-w-md mx-auto">
               Try adjusting your filters or search to discover more creators.
             </p>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="inline-flex items-center gap-2 py-3 px-7 rounded-full text-sm font-semibold bg-gradient-to-r from-coral to-rose text-white hover:shadow-lg hover:shadow-coral/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 py-2.5 px-6 rounded-full text-sm font-medium bg-coral text-white hover:bg-coral-dark transition-colors"
               >
                 Clear Filters
               </button>
@@ -539,15 +448,15 @@ export function CreatorDirectory({
           </motion.div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredCreators.map((creator, i) => (
                 <motion.div
                   key={creator.id}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
-                    duration: 0.5,
-                    delay: Math.min(i * 0.06, 0.5),
+                    duration: 0.4,
+                    delay: Math.min(i * 0.05, 0.4),
                     ease: [0.16, 1, 0.3, 1],
                   }}
                 >
@@ -558,16 +467,11 @@ export function CreatorDirectory({
 
             {/* Load More */}
             {hasMore && (
-              <motion.div
-                className="text-center mt-16"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
+              <div className="text-center mt-12">
                 <button
                   onClick={loadMore}
                   disabled={loading}
-                  className="group inline-flex items-center gap-2.5 py-3.5 px-9 rounded-full text-sm font-semibold border-2 border-warm-gray-200 bg-white text-warm-gray-700 hover:border-deep-900 hover:bg-deep-900 hover:text-white transition-all duration-300 disabled:opacity-50 hover:shadow-lg"
+                  className="inline-flex items-center gap-2 py-3 px-8 rounded-full text-sm font-medium border border-warm-gray-200 bg-white text-warm-gray-700 hover:border-warm-gray-300 hover:bg-warm-gray-50 transition-all disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -576,16 +480,17 @@ export function CreatorDirectory({
                     </>
                   ) : (
                     <>
-                      Load More Creators
-                      <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
+                      Load More
+                      <ArrowRight size={14} />
                     </>
                   )}
                 </button>
-              </motion.div>
+              </div>
             )}
           </>
         )}
       </section>
+
     </div>
   );
 }
