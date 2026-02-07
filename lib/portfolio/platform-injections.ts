@@ -37,115 +37,142 @@ export function getPlatformBodyTags(subdomain: string): string {
 }
 
 // =====================================================
-// Community Badge Widget
+// Community Ribbon Widget
 // =====================================================
 
 /**
- * Scoped CSS for the community badge.
+ * Scoped CSS for the community ribbon badge.
+ * A cute diagonal corner ribbon in the bottom-right, styled to match
+ * the ugc.community landing page aesthetic (coral-to-rose gradient,
+ * Outfit font, warm shadows).
+ *
  * All selectors are prefixed with `#ugc-badge` to avoid
  * collisions with creator portfolio styles.
  */
 function getCommunityBadgeStyles(): string {
   return `<style id="ugc-badge-styles">
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500&display=swap');
+
   #ugc-badge {
-    --ugc-bg: rgba(15, 15, 15, 0.75);
-    --ugc-bg-hover: rgba(15, 15, 15, 0.92);
-    --ugc-text: rgba(255, 255, 255, 0.88);
-    --ugc-text-dim: rgba(255, 255, 255, 0.5);
-    --ugc-accent: #c8ff32;
-    --ugc-radius: 20px;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 0;
+    right: 0;
     z-index: 2147483647;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 12px;
-    line-height: 1;
-    pointer-events: auto;
-    animation: ugcBadgeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.5s both;
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+    overflow: hidden;
+    animation: ugcBadgeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
   }
 
   #ugc-badge a {
+    position: absolute;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 12px 8px 10px;
-    background: var(--ugc-bg);
-    backdrop-filter: blur(16px) saturate(1.8);
-    -webkit-backdrop-filter: blur(16px) saturate(1.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--ugc-radius);
-    color: var(--ugc-text);
+    justify-content: center;
+    gap: 5px;
+    width: 260px;
+    padding: 8px 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%);
+    color: #fff;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    line-height: 1;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.24),
-      0 8px 24px rgba(0, 0, 0, 0.16);
+      0 2px 8px rgba(255, 107, 149, 0.35),
+      0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   #ugc-badge a:hover {
-    background: var(--ugc-bg-hover);
-    border-color: rgba(255, 255, 255, 0.14);
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, #FF8A7A 0%, #FF5A85 100%);
     box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.28),
-      0 12px 32px rgba(0, 0, 0, 0.22);
+      0 4px 16px rgba(255, 107, 149, 0.5),
+      0 2px 6px rgba(0, 0, 0, 0.1);
   }
 
-  #ugc-badge a:hover #ugc-badge-dot {
-    background: var(--ugc-accent);
-    box-shadow: 0 0 8px var(--ugc-accent);
+  #ugc-badge a:hover #ugc-badge-sparkle {
+    transform: scale(1.3) rotate(15deg);
   }
 
-  #ugc-badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--ugc-text-dim);
-    flex-shrink: 0;
-    transition: all 0.3s ease;
+  #ugc-badge-sparkle {
+    font-size: 11px;
+    transition: transform 0.3s ease;
+    filter: brightness(1.2);
   }
 
   #ugc-badge-label {
-    letter-spacing: 0.02em;
-    font-weight: 500;
     white-space: nowrap;
+  }
+
+  /* Ribbon fold shadows */
+  #ugc-badge::before,
+  #ugc-badge::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+  }
+
+  #ugc-badge::before {
+    right: 0;
+    bottom: 0;
+    border-style: solid;
+    border-width: 0 0 8px 8px;
+    border-color: transparent transparent #cc5468 transparent;
+  }
+
+  #ugc-badge::after {
+    left: 0;
+    bottom: 0;
+    border-style: solid;
+    border-width: 8px 0 0 8px;
+    border-color: transparent transparent transparent #cc5468;
   }
 
   @keyframes ugcBadgeIn {
     from {
       opacity: 0;
-      transform: translateY(12px) scale(0.92);
+      transform: translate(40px, 40px) scale(0.5);
     }
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translate(0, 0) scale(1);
     }
   }
 
   @media (max-width: 480px) {
     #ugc-badge {
-      bottom: 12px;
-      right: 12px;
-      font-size: 11px;
+      width: 160px;
+      height: 160px;
     }
     #ugc-badge a {
-      padding: 7px 10px 7px 8px;
+      width: 220px;
+      font-size: 11px;
+      padding: 7px 0;
     }
   }
 </style>`;
 }
 
 /**
- * HTML for the community badge widget.
- * A small frosted-glass pill in the bottom-right corner
- * that links back to ugc.community.
+ * HTML for the community ribbon widget.
+ * A cute diagonal corner ribbon in the bottom-right that links
+ * back to ugc.community with a sparkle accent.
  */
 function getCommunityBadgeHtml(): string {
   return `<div id="ugc-badge" role="complementary" aria-label="UGC Community badge">
   <a href="https://ugc.community" target="_blank" rel="noopener noreferrer" title="Part of ugc.community">
-    <span id="ugc-badge-dot" aria-hidden="true"></span>
+    <span id="ugc-badge-sparkle" aria-hidden="true">&#10022;</span>
     <span id="ugc-badge-label">ugc.community</span>
   </a>
 </div>`;
