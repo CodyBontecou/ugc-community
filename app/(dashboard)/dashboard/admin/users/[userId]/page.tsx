@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
 import { PortfolioUploadDropzone } from "@/components/admin/PortfolioUploadDropzone";
+import { UserFileBrowser } from "@/components/admin/UserFileBrowser";
 
 interface UserDetails {
   id: string;
@@ -890,6 +891,9 @@ export default function UserDetailPage() {
           );
         }}
       />
+
+      {/* File Browser */}
+      <UserFileBrowser userId={userId} subdomain={user.subdomain} />
 
       {/* Milestone Progress */}
       <UserProgressionPath userId={userId} />
