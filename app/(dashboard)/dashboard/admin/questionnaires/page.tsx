@@ -75,6 +75,7 @@ export default function AdminQuestionnairesPage() {
   const [promptPreviewError, setPromptPreviewError] = useState<string | null>(null);
   const [isPromptPreviewLoading, setIsPromptPreviewLoading] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const [customPrompts, setCustomPrompts] = useState<Map<string, string>>(new Map());
 
   const fetchGenerationStatus = useCallback(async (questionnaireId: string) => {
     try {
@@ -200,10 +201,21 @@ export default function AdminQuestionnairesPage() {
     }
   };
 
+  const getCustomPrompt = (id: string) => customPrompts.get(id) || "";
+  const setCustomPromptForId = (id: string, value: string) => {
+    setCustomPrompts((prev) => {
+      const next = new Map(prev);
+      next.set(id, value);
+      return next;
+    });
+  };
+
   const openPromptPreview = async (questionnaireId: string) => {
     setPromptPreviewId(questionnaireId);
-    setCustomPrompt("");
-    await fetchPromptPreview(questionnaireId);
+    // Sync modal state with per-questionnaire custom prompt
+    const existing = getCustomPrompt(questionnaireId);
+    setCustomPrompt(existing);
+    await fetchPromptPreview(questionnaireId, existing || undefined);
   };
 
   const refreshPromptPreview = async () => {
@@ -586,6 +598,32 @@ export default function AdminQuestionnairesPage() {
                         </div>
                       )}
 
+                      {/* Custom Instructions */}
+                      {questionnaire.userSubdomain && (
+                        <div>
+                          <label
+                            htmlFor={`custom-prompt-${questionnaire.id}`}
+                            className="block text-sm font-semibold text-warm-gray-900 mb-1.5"
+                          >
+                            Custom Instructions{" "}
+                            <span className="font-normal text-warm-gray-400">(optional)</span>
+                          </label>
+                          <p className="text-xs text-warm-gray-500 mb-2">
+                            Add extra directions to customize the generation — e.g. style tweaks, layout preferences, specific requests.
+                          </p>
+                          <textarea
+                            id={`custom-prompt-${questionnaire.id}`}
+                            value={getCustomPrompt(questionnaire.id)}
+                            onChange={(e) =>
+                              setCustomPromptForId(questionnaire.id, e.target.value)
+                            }
+                            placeholder="e.g. Use a dark theme with neon accents. Make the hero section full-screen with a video background..."
+                            rows={3}
+                            className="w-full px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral resize-y placeholder:text-warm-gray-300 bg-white"
+                          />
+                        </div>
+                      )}
+
                       {/* Actions */}
                       <div className="flex flex-wrap items-center gap-3 pt-2">
                         <Link
@@ -710,7 +748,12 @@ export default function AdminQuestionnairesPage() {
               <textarea
                 id="custom-prompt"
                 value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
+                onChange={(e) => {
+                  setCustomPrompt(e.target.value);
+                  if (promptPreviewId) {
+                    setCustomPromptForId(promptPreviewId, e.target.value);
+                  }
+                }}
                 placeholder="e.g. Use a dark theme with neon accents. Make the hero section full-screen with a video background..."
                 rows={3}
                 className="w-full px-3 py-2 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral resize-y placeholder:text-warm-gray-300"
