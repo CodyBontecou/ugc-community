@@ -13,6 +13,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "migrate:single-portfolio": "npx tsx scripts/migrate-single-portfolio.ts",
+    "portfolio:config:init": "tsx scripts/generate-portfolio-upload-config.ts",
+    "portfolio:upload": "tsx scripts/upload-portfolio.ts",
     "worker": "tsx worker/index.ts",
     "worker:dev": "tsx watch worker/index.ts"
   },
