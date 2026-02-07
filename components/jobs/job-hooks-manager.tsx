@@ -13,7 +13,10 @@ import {
   AlertCircle,
   FileSpreadsheet,
   ExternalLink,
+  Link,
 } from "lucide-react";
+
+const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/gif,image/webp";
 
 interface HookRow {
   id: string;
@@ -24,6 +27,101 @@ interface HookRow {
 
 interface JobHooksManagerProps {
   jobId: string;
+}
+
+/**
+ * Small combo input: type a URL or pick a file. Shows a thumbnail when a value exists.
+ */
+function ScreenshotInput({
+  value,
+  onChange,
+  onKeyDown,
+  jobId,
+  onError,
+  placeholder = "URL or upload image",
+  autoFocus,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+  jobId: string;
+  onError: (msg: string) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(
+        `/api/admin/jobs/${jobId}/hooks/screenshot-upload`,
+        { method: "POST", body: form }
+      );
+      if (!res.ok) {
+        const data = await res.json();
+        onError(data.error || "Upload failed");
+        return;
+      }
+      const data = await res.json();
+      onChange(data.url);
+    } catch {
+      onError("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const hasValue = value.trim().length > 0;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <input type="file" ref={fileRef} accept={ACCEPTED_IMAGE_TYPES} onChange={handleFileChange} className="hidden" />
+
+      {/* Thumbnail preview */}
+      {hasValue && (
+        <a href={value} target="_blank" rel="noopener noreferrer" className="shrink-0">
+          <img
+            src={value}
+            alt=""
+            className="w-8 h-8 rounded object-cover border border-warm-gray-200"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </a>
+      )}
+
+      {/* URL text input */}
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral bg-white"
+      />
+
+      {/* Upload button */}
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="shrink-0 p-1.5 text-warm-gray-400 hover:text-coral hover:bg-coral/5 rounded-[--radius-md] transition-colors disabled:opacity-50"
+        title="Upload image"
+      >
+        {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+      </button>
+    </div>
+  );
 }
 
 export function JobHooksManager({ jobId }: JobHooksManagerProps) {
@@ -292,8 +390,8 @@ export function JobHooksManager({ jobId }: JobHooksManagerProps) {
               <th className="text-left text-xs font-semibold text-warm-gray-500 uppercase tracking-wider px-4 py-3">
                 Hook Text
               </th>
-              <th className="text-left text-xs font-semibold text-warm-gray-500 uppercase tracking-wider px-4 py-3 w-64">
-                Screenshot URL
+              <th className="text-left text-xs font-semibold text-warm-gray-500 uppercase tracking-wider px-4 py-3 w-72">
+                Screenshot
               </th>
               <th className="text-right text-xs font-semibold text-warm-gray-500 uppercase tracking-wider px-4 py-3 w-28">
                 Actions
@@ -333,16 +431,15 @@ export function JobHooksManager({ jobId }: JobHooksManagerProps) {
                       />
                     </td>
                     <td className="px-4 py-2">
-                      <input
-                        type="text"
+                      <ScreenshotInput
                         value={editScreenshotUrl}
-                        onChange={(e) => setEditScreenshotUrl(e.target.value)}
+                        onChange={setEditScreenshotUrl}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") saveEdit();
                           if (e.key === "Escape") cancelEdit();
                         }}
-                        placeholder="https://..."
-                        className="w-full px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral bg-white"
+                        jobId={jobId}
+                        onError={setError}
                       />
                     </td>
                     <td className="px-4 py-2 text-right">
@@ -383,10 +480,18 @@ export function JobHooksManager({ jobId }: JobHooksManagerProps) {
                           href={hook.screenshotUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-coral hover:text-coral/80 transition-colors"
+                          className="inline-flex items-center gap-2 text-xs text-coral hover:text-coral/80 transition-colors group/img"
                         >
-                          <ImageIcon size={12} />
-                          <span className="truncate max-w-[180px]">
+                          <img
+                            src={hook.screenshotUrl}
+                            alt=""
+                            className="w-8 h-8 rounded object-cover border border-warm-gray-200 group-hover/img:border-coral/40 transition-colors"
+                            onError={(e) => {
+                              // Fallback: hide broken image, show text link
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                          <span className="truncate max-w-[160px]">
                             {hook.screenshotUrl.replace(/^https?:\/\//, "")}
                           </span>
                           <ExternalLink size={10} />
@@ -448,10 +553,9 @@ export function JobHooksManager({ jobId }: JobHooksManagerProps) {
                   />
                 </td>
                 <td className="px-4 py-2">
-                  <input
-                    type="text"
+                  <ScreenshotInput
                     value={newScreenshotUrl}
-                    onChange={(e) => setNewScreenshotUrl(e.target.value)}
+                    onChange={setNewScreenshotUrl}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleAdd();
                       if (e.key === "Escape") {
@@ -460,8 +564,9 @@ export function JobHooksManager({ jobId }: JobHooksManagerProps) {
                         setNewScreenshotUrl("");
                       }
                     }}
-                    placeholder="https://... (optional)"
-                    className="w-full px-3 py-1.5 text-sm border border-warm-gray-200 rounded-[--radius-md] focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral bg-white"
+                    jobId={jobId}
+                    onError={setError}
+                    placeholder="URL or upload (optional)"
                   />
                 </td>
                 <td className="px-4 py-2 text-right">

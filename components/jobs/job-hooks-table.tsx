@@ -120,9 +120,16 @@ export function JobHooksTable({ jobId, legacyHooks = [] }: JobHooksTableProps) {
                         href={hook.screenshotUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-coral hover:text-coral/80 bg-coral/5 hover:bg-coral/10 px-2.5 py-1 rounded-full transition-colors"
+                        className="inline-flex items-center gap-2 text-xs font-medium text-coral hover:text-coral/80 bg-coral/5 hover:bg-coral/10 px-2.5 py-1.5 rounded-full transition-colors"
                       >
-                        <ImageIcon size={12} />
+                        <img
+                          src={hook.screenshotUrl}
+                          alt=""
+                          className="w-6 h-6 rounded object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
                         View
                         <ExternalLink size={10} />
                       </a>
