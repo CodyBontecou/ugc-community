@@ -116,60 +116,6 @@ export const RESERVED_SUBDOMAINS = new Set([
   "production",
 ]);
 
-// Common profanity/offensive terms to block
-// This is a basic list - consider using a dedicated library for production
-const PROFANITY_LIST = new Set([
-  // Slurs and hate speech
-  "fuck",
-  "shit",
-  "ass",
-  "bitch",
-  "damn",
-  "cunt",
-  "dick",
-  "cock",
-  "pussy",
-  "slut",
-  "whore",
-  "bastard",
-  "nigger",
-  "nigga",
-  "faggot",
-  "fag",
-  "retard",
-
-  // Variations with common substitutions
-  "f-ck",
-  "fuk",
-  "fuc",
-  "sh1t",
-  "a55",
-  "b1tch",
-  "d1ck",
-  "c0ck",
-
-  // Hate/violence terms
-  "nazi",
-  "hitler",
-  "kkk",
-  "isis",
-  "terrorist",
-  "kill",
-  "murder",
-  "rape",
-  "suicide",
-
-  // Spam/scam indicators
-  "porn",
-  "xxx",
-  "sex",
-  "viagra",
-  "casino",
-  "lottery",
-  "bitcoin-free",
-  "free-money",
-]);
-
 export type SubdomainValidationResult = {
   valid: boolean;
   error?: string;
@@ -180,7 +126,6 @@ export type SubdomainValidationResult = {
  * Validates a subdomain string against all rules:
  * - Format (length, characters, no leading/trailing hyphens)
  * - Reserved words
- * - Profanity filter
  *
  * Returns normalized (lowercase) subdomain if valid.
  */
@@ -205,37 +150,10 @@ export function validateSubdomain(input: string): SubdomainValidationResult {
     };
   }
 
-  // Check profanity - both exact match and substring match
-  if (containsProfanity(normalized)) {
-    return {
-      valid: false,
-      error: "This subdomain contains inappropriate content",
-    };
-  }
-
   return {
     valid: true,
     normalized: parseResult.data,
   };
-}
-
-/**
- * Checks if a string contains profanity (exact match or as substring)
- */
-function containsProfanity(str: string): boolean {
-  // Exact match
-  if (PROFANITY_LIST.has(str)) {
-    return true;
-  }
-
-  // Substring match (profanity embedded in subdomain)
-  for (const term of PROFANITY_LIST) {
-    if (str.includes(term)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /**
@@ -266,10 +184,9 @@ export function generateSubdomainSuggestions(base: string): string[] {
     }
   }
 
-  // Filter out any that are reserved or contain profanity
+  // Filter out any that are reserved
   return suggestions
     .filter((s) => s.length >= 3 && s.length <= 63)
     .filter((s) => !RESERVED_SUBDOMAINS.has(s))
-    .filter((s) => !containsProfanity(s))
     .slice(0, 5);
 }
