@@ -58,8 +58,8 @@ function getCommunityBadgeStyles(): string {
     bottom: 0;
     right: 0;
     z-index: 2147483647;
-    width: 200px;
-    height: 200px;
+    width: 110px;
+    height: 110px;
     pointer-events: none;
     overflow: hidden;
     animation: ugcBadgeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
@@ -70,16 +70,16 @@ function getCommunityBadgeStyles(): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    width: 260px;
-    padding: 8px 0;
+    gap: 3px;
+    width: 160px;
+    padding: 5px 0;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-45deg);
     background: linear-gradient(135deg, #FF9A8B 0%, #FF6B95 100%);
     color: #fff;
     font-family: 'Outfit', system-ui, sans-serif;
-    font-size: 12.5px;
+    font-size: 9.5px;
     font-weight: 500;
     letter-spacing: 0.03em;
     line-height: 1;
@@ -87,8 +87,8 @@ function getCommunityBadgeStyles(): string {
     cursor: pointer;
     pointer-events: auto;
     box-shadow:
-      0 2px 8px rgba(255, 107, 149, 0.35),
-      0 1px 3px rgba(0, 0, 0, 0.08);
+      0 2px 6px rgba(255, 107, 149, 0.3),
+      0 1px 2px rgba(0, 0, 0, 0.06);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     border-top: 1px solid rgba(255, 255, 255, 0.25);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -97,8 +97,8 @@ function getCommunityBadgeStyles(): string {
   #ugc-badge a:hover {
     background: linear-gradient(135deg, #FF8A7A 0%, #FF5A85 100%);
     box-shadow:
-      0 4px 16px rgba(255, 107, 149, 0.5),
-      0 2px 6px rgba(0, 0, 0, 0.1);
+      0 3px 10px rgba(255, 107, 149, 0.45),
+      0 1px 4px rgba(0, 0, 0, 0.08);
   }
 
   #ugc-badge a:hover #ugc-badge-sparkle {
@@ -106,7 +106,7 @@ function getCommunityBadgeStyles(): string {
   }
 
   #ugc-badge-sparkle {
-    font-size: 11px;
+    font-size: 8px;
     transition: transform 0.3s ease;
     filter: brightness(1.2);
   }
@@ -127,7 +127,7 @@ function getCommunityBadgeStyles(): string {
     right: 0;
     bottom: 0;
     border-style: solid;
-    border-width: 0 0 8px 8px;
+    border-width: 0 0 5px 5px;
     border-color: transparent transparent #cc5468 transparent;
   }
 
@@ -135,14 +135,14 @@ function getCommunityBadgeStyles(): string {
     left: 0;
     bottom: 0;
     border-style: solid;
-    border-width: 8px 0 0 8px;
+    border-width: 5px 0 0 5px;
     border-color: transparent transparent transparent #cc5468;
   }
 
   @keyframes ugcBadgeIn {
     from {
       opacity: 0;
-      transform: translate(40px, 40px) scale(0.5);
+      transform: translate(30px, 30px) scale(0.5);
     }
     to {
       opacity: 1;
@@ -152,13 +152,13 @@ function getCommunityBadgeStyles(): string {
 
   @media (max-width: 480px) {
     #ugc-badge {
-      width: 160px;
-      height: 160px;
+      width: 90px;
+      height: 90px;
     }
     #ugc-badge a {
-      width: 220px;
-      font-size: 11px;
-      padding: 7px 0;
+      width: 130px;
+      font-size: 8px;
+      padding: 4px 0;
     }
   }
 </style>`;
