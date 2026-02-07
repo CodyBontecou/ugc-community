@@ -169,7 +169,7 @@ export function CreatorDirectory({
       </nav>
 
       {/* Hero Header */}
-      <section className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16">
+      <section className="relative overflow-hidden pt-14 pb-8 sm:pt-16 sm:pb-10">
         {/* Subtle background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-peach-100 via-peach-200/40 to-cream" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-rose/8 to-transparent rounded-full blur-3xl" />
@@ -194,7 +194,7 @@ export function CreatorDirectory({
               <span className="gradient-text">UGC Creators</span>
             </h1>
 
-            <p className="text-lg text-warm-gray-500 leading-relaxed mb-8">
+            <p className="text-lg text-warm-gray-500 leading-relaxed mb-6">
               Browse creators with live portfolios. Find the perfect partner for
               your next campaign.
             </p>
@@ -401,10 +401,10 @@ export function CreatorDirectory({
       </div>
 
       {/* Results */}
-      <section className="container py-8 sm:py-12">
+      <section className="container py-5 sm:py-6">
         {/* Result count — editorial style */}
         <motion.div
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
