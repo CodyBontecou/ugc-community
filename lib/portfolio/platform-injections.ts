@@ -190,41 +190,57 @@ export function getContactFormHandler(subdomain: string): string {
 // Contact Form Handler (UGC Community Integration)
 // =====================================================
 (function() {
-  const contactForm = document.getElementById('contact-form');
+  var contactForm = document.getElementById('contact-form');
   if (!contactForm) return;
 
-  contactForm.addEventListener('submit', async (e) => {
+  // Anti-spam: record when the form became interactive
+  var _formLoadedAt = Date.now();
+
+  // Anti-spam: inject a honeypot field (invisible to humans, bots auto-fill it)
+  var _hp = document.createElement('input');
+  _hp.type = 'text';
+  _hp.name = '_hp_website';
+  _hp.tabIndex = -1;
+  _hp.autocomplete = 'off';
+  _hp.setAttribute('aria-hidden', 'true');
+  _hp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:0;height:0;opacity:0;pointer-events:none;';
+  contactForm.appendChild(_hp);
+
+  contactForm.addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const submitBtn = contactForm.querySelector('[type="submit"]');
-    const originalBtnText = submitBtn ? submitBtn.textContent : 'Send';
+    var submitBtn = contactForm.querySelector('[type="submit"]');
+    var originalBtnText = submitBtn ? submitBtn.textContent : 'Send';
 
     if (submitBtn) {
       submitBtn.textContent = 'Sending...';
       submitBtn.disabled = true;
     }
 
-    const formData = {
+    var formData = {
       name: contactForm.querySelector('[name="name"]')?.value || '',
       email: contactForm.querySelector('[name="email"]')?.value || '',
       company: contactForm.querySelector('[name="company"]')?.value || '',
       message: contactForm.querySelector('[name="message"]')?.value || '',
-      creatorSubdomain: '${subdomain}'
+      creatorSubdomain: '${subdomain}',
+      _hp_website: _hp.value,
+      _ts: _formLoadedAt
     };
 
     try {
-      const response = await fetch('https://ugc.community/api/portfolio/contact', {
+      var response = await fetch('https://ugc.community/api/portfolio/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      var data = await response.json();
 
       if (response.ok) {
         if (submitBtn) submitBtn.textContent = 'Message Sent!';
         contactForm.reset();
-        setTimeout(() => {
+        _hp.value = '';
+        setTimeout(function() {
           if (submitBtn) {
             submitBtn.textContent = originalBtnText;
             submitBtn.disabled = false;
@@ -238,7 +254,7 @@ export function getContactFormHandler(subdomain: string): string {
       if (submitBtn) {
         submitBtn.textContent = 'Error - Try Again';
         submitBtn.disabled = false;
-        setTimeout(() => {
+        setTimeout(function() {
           submitBtn.textContent = originalBtnText;
         }, 3000);
       }

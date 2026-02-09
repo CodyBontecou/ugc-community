@@ -11,6 +11,9 @@ initBotId({
     // Public form endpoints - high priority for bot protection
     { path: "/api/waitlist", method: "POST" },
 
+    // Portfolio contact form - heavily targeted by spam bots
+    { path: "/api/portfolio/contact", method: "POST" },
+
     // Invite redemption - prevent automated invite farming
     { path: "/api/invites/use", method: "POST" },
 

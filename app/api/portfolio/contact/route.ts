@@ -13,12 +13,19 @@ const contactSchema = z.object({
   company: z.string().min(1, "Company name is required").max(100),
   message: z.string().min(1, "Project details are required").max(5000),
   creatorSubdomain: z.string().min(1, "Creator subdomain is required"),
+  // Anti-spam fields (injected by platform JS at serve-time)
+  _hp_website: z.string().optional(), // Honeypot — must be empty
+  _ts: z.number().optional(), // Timestamp — form load time
 });
 
 const EMAIL_RATE_LIMIT_WINDOW_MINUTES = 60;
 const EMAIL_RATE_LIMIT_MAX_SUBMISSIONS = 3;
 const IP_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const IP_RATE_LIMIT_MAX_SUBMISSIONS = 10;
+
+// Anti-spam: minimum time (ms) between form load and submission
+// Humans need at least 3 seconds to fill a 4-field form
+const MIN_SUBMISSION_TIME_MS = 3_000;
 
 const inMemoryIpLimiter = new Map<string, number[]>();
 
@@ -170,6 +177,34 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const data = contactSchema.parse(body);
+
+    // Anti-spam: honeypot field — bots auto-fill this invisible field
+    if (data._hp_website) {
+      // Silently accept to avoid tipping off the bot, but don't process
+      console.warn("Honeypot triggered — rejecting spam submission", {
+        origin,
+        honeypot: data._hp_website.slice(0, 50),
+      });
+      return NextResponse.json(
+        { success: true, message: "Message sent successfully" },
+        { headers: corsHeaders }
+      );
+    }
+
+    // Anti-spam: timing check — reject impossibly fast submissions
+    if (data._ts) {
+      const elapsed = Date.now() - data._ts;
+      if (elapsed < MIN_SUBMISSION_TIME_MS) {
+        console.warn("Timing check failed — rejecting spam submission", {
+          origin,
+          elapsedMs: elapsed,
+        });
+        return NextResponse.json(
+          { success: true, message: "Message sent successfully" },
+          { headers: corsHeaders }
+        );
+      }
+    }
 
     const normalized = {
       name: data.name.trim(),
