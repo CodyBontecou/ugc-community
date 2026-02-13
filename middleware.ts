@@ -112,10 +112,7 @@ export function middleware(request: NextRequest) {
 
   // Security headers
   response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set(
-    "Content-Security-Policy",
-    "frame-ancestors 'self' https://isolated.tech https://*.isolated.tech"
-  );
+  response.headers.set("Content-Security-Policy", "frame-ancestors *");
   response.headers.set("X-XSS-Protection", "1; mode=block");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
