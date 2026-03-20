@@ -17,14 +17,14 @@ const examples = [
     },
   },
   {
-    name: "Aman",
-    role: "Gen Z Fashion & Lifestyle Creator",
-    url: "https://amanyadhav.ugc.community",
-    image: "/examples/aman-preview.png",
+    name: "Cass Collins",
+    role: "UGC Creator · Fashion, Travel & Tech · NYC",
+    url: "https://cassanncoll.ugc.community",
+    image: "/examples/cassanncoll-preview.png",
     stats: {
-      views: "60K+",
+      views: "46.5K+",
       brands: "10+",
-      third: { value: "32K", label: "Followers" },
+      third: { value: "8K+", label: "Followers" },
     },
   },
 ];
