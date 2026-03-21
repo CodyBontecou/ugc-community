@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Briefcase, Loader2, Hash, Clock, Eye } from "lucide-react";
 import { JobHooksTable } from "@/components/jobs/job-hooks-table";
@@ -24,10 +25,25 @@ interface Job {
 }
 
 export default function JobsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedJob, setExpandedJob] = useState<string | null>(null);
+
+  // Derive expanded state directly from the URL — ?job=<id>
+  const expandedJob = searchParams.get("job");
+
+  function toggleJob(jobId: string) {
+    const next = new URLSearchParams(searchParams.toString());
+    if (expandedJob === jobId) {
+      next.delete("job");
+    } else {
+      next.set("job", jobId);
+    }
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }
 
   const fetchJobs = useCallback(async () => {
     setIsLoading(true);
@@ -136,7 +152,7 @@ export default function JobsPage() {
               } overflow-hidden transition-all hover:shadow-sm`}
             >
               <button
-                onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
+                onClick={() => toggleJob(job.id)}
                 className="w-full text-left p-6"
               >
                 <div className="flex items-start justify-between gap-4">
