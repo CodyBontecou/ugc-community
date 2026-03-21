@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
@@ -202,15 +201,7 @@ export function SignInForm() {
           Continue with Google
         </motion.button>
 
-        <p className="mt-6 text-center text-sm text-warm-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/sign-up"
-            className="text-rose hover:text-rose/80 font-medium transition-colors"
-          >
-            Sign up
-          </Link>
-        </p>
+
       </motion.div>
     </div>
   );

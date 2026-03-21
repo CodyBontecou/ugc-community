@@ -1,11 +1,5 @@
-import { SignUpForm } from "@/components/auth";
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Sign Up - ugc.community",
-  description: "Create your account on ugc.community and start showcasing your work to brands",
-};
-
-export default async function SignUpPage() {
-  return <SignUpForm />;
+export default function SignUpPage() {
+  redirect("/sign-in");
 }
