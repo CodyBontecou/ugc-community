@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, Briefcase, Loader2, Hash, Clock, Eye } from "lucide-react";
+import { JobHooksTable } from "@/components/jobs/job-hooks-table";
 import type { Platform, CompensationType } from "@/lib/jobs/constants";
 
 interface Job {
@@ -202,38 +203,18 @@ export default function JobsPage() {
 
               {/* Expanded detail */}
               {expandedJob === job.id && (
-                <div className="px-6 pb-6 border-t border-warm-gray-100 pt-4">
-                  <div className="prose prose-sm max-w-none text-warm-gray-600 mb-6">
-                    <p>{job.description}</p>
+                <div className="border-t border-warm-gray-100">
+                  <div className="px-6 pt-4 pb-2">
+                    <div className="prose prose-sm max-w-none text-warm-gray-600">
+                      <p>{job.description}</p>
+                    </div>
                   </div>
 
-                  {/* Talking points */}
-                  {job.hooks && (job.hooks as string[]).length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-sm font-semibold text-warm-gray-900 mb-3 flex items-center gap-2">
-                        <Hash size={14} className="text-coral" />
-                        Talking Points
-                      </h4>
-                      <div className="space-y-2">
-                        {(job.hooks as string[]).map((hook, i) => (
-                          <div
-                            key={i}
-                            className="flex items-start gap-3 bg-warm-gray-50 rounded-[--radius-md] px-4 py-3"
-                          >
-                            <span className="text-coral font-mono text-xs mt-0.5">
-                              {i + 1}.
-                            </span>
-                            <span className="text-sm text-warm-gray-700">
-                              &ldquo;{hook}&rdquo;
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Hooks & Inspiration — fetches from job_hooks table */}
+                  <JobHooksTable jobId={job.id} legacyHooks={job.hooks} />
 
                   {/* Meta info */}
-                  <div className="flex flex-wrap gap-4 text-xs text-warm-gray-400">
+                  <div className="px-6 pb-5 flex flex-wrap gap-4 text-xs text-warm-gray-400">
                     {job.compensationType && (
                       <span className="capitalize">
                         💰 {job.compensationType}
