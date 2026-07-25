@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { users, contactSubmissions } from "@/lib/db/schema";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { sendContactInquiry, sendContactConfirmation } from "@/lib/email";
-import { checkBotId } from "botid/server";
 import { createHash } from "crypto";
 
 const contactSchema = z.object({
@@ -150,28 +149,17 @@ export async function POST(request: NextRequest) {
   const isSameSiteBrowserRequest =
     !hasFetchMetadata || secFetchSite === "same-site" || secFetchSite === "same-origin";
 
-  // Portfolio pages are served from static Blob HTML, so BotID client signals
-  // are not always available. Keep BotID enabled, but allow trusted same-site
-  // browser submissions from ugc.community origins as a fallback.
+  // Reject requests that do not look like same-site portfolio submissions.
+  // The remaining honeypot, timing, IP, and persisted email rate limits below
+  // provide runtime-neutral anti-spam protection on Cloudflare Workers.
   const isTrustedPortfolioSubmission =
-    isAllowedOrigin(origin) &&
-    (!referer || isAllowedReferer(referer)) &&
-    isSameSiteBrowserRequest;
+    (!referer || isAllowedReferer(referer)) && isSameSiteBrowserRequest;
 
-  const verification = await checkBotId();
-  if (verification.isBot && !isTrustedPortfolioSubmission) {
+  if (!isTrustedPortfolioSubmission) {
     return NextResponse.json(
       { error: "Access denied" },
       { status: 403, headers: corsHeaders }
     );
-  }
-
-  if (verification.isBot && isTrustedPortfolioSubmission) {
-    console.warn("Allowing BotID-blocked request via trusted portfolio fallback", {
-      origin,
-      referer,
-      secFetchSite,
-    });
   }
 
   try {

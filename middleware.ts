@@ -39,21 +39,22 @@ function getPortfolioSubdomain(request: NextRequest): string | null {
     return subdomain || null;
   }
 
-  // Production: parse subdomain from host
-  // Expected format: {subdomain}.ugc.community
-  const parts = host.split(".");
+  // Production: only treat direct children of our configured domain as
+  // portfolio subdomains. Preview hosts such as *.workers.dev must continue
+  // through the main app instead of being mistaken for creator portfolios.
+  const hostname = host.split(":")[0].toLowerCase();
+  const baseDomain = (process.env.NEXT_PUBLIC_DOMAIN || "ugc.community").toLowerCase();
+  const suffix = `.${baseDomain}`;
 
-  // Apex domain (ugc.community) or bare host → no subdomain
-  if (parts.length <= 2) return null;
+  if (!hostname.endsWith(suffix)) return null;
 
-  // Extract subdomain (first segment)
-  const subdomain = parts[0].toLowerCase();
+  const subdomain = hostname.slice(0, -suffix.length);
+
+  // Only direct subdomains are creator portfolios.
+  if (!subdomain || subdomain.includes(".")) return null;
 
   // Skip known non-portfolio subdomains
   if (NON_PORTFOLIO_HOSTS.has(subdomain)) return null;
-
-  // Skip empty subdomains
-  if (!subdomain) return null;
 
   return subdomain;
 }
