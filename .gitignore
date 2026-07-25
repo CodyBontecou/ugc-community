@@ -4,6 +4,7 @@ node_modules
 .pnp.js
 
 # Testing
+.playwright-cli/
 coverage
 
 # Next.js

@@ -2,6 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "main": "./cloudflare-worker.ts",
   "name": "ugc-community",
+  "workers_dev": true,
+  "preview_urls": true,
   "compatibility_date": "2026-07-25",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -26,6 +28,16 @@
   "observability": {
     "enabled": true
   },
+  "routes": [
+    {
+      "pattern": "ugc.community",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.ugc.community",
+      "custom_domain": true
+    }
+  ],
   "triggers": {
     "crons": ["0 3 * * *", "0 4 * * *", "0 6 * * *"]
   }

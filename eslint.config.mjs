@@ -12,5 +12,12 @@ export default defineConfig([
       "react-hooks/static-components": "off",
     },
   },
-  globalIgnores([".next/**", ".open-next/**", ".vercel/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    ".open-next/**",
+    ".playwright-cli/**",
+    ".vercel/**",
+    ".wrangler/**",
+    "next-env.d.ts",
+  ]),
 ]);
