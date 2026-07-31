@@ -13,6 +13,7 @@ import {
   Examples,
   Testimonials,
   Pricing,
+  FAQ,
   FinalCTA,
   Footer,
 } from "@/components/landing";
@@ -75,6 +76,7 @@ export default async function HomePage() {
       <Examples />
       <Testimonials authorImage={testimonialImage} />
       <Pricing />
+      <FAQ />
       <FinalCTA />
       <Footer />
     </div>

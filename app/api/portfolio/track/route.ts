@@ -10,6 +10,19 @@ function getTodayDateString(): string {
 }
 
 const DEDUP_WINDOW_HOURS = 24;
+const SUBDOMAIN_ALIASES: Readonly<Record<string, string>> = {
+  dany: "daniela",
+  danielabontecou: "daniela",
+};
+const REFERRAL_SOURCES = new Set([
+  "chatgpt",
+  "perplexity",
+  "claude",
+  "copilot",
+  "gemini",
+  "direct",
+  "other",
+]);
 
 // 1x1 transparent GIF for tracking pixel
 const TRACKING_PIXEL = Buffer.from(
@@ -45,41 +58,43 @@ function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex").slice(0, 16);
 }
 
+function normalizeSubdomain(value: string): string {
+  const normalized = value.toLowerCase();
+  return SUBDOMAIN_ALIASES[normalized] || normalized;
+}
+
+function extractReferralSource(request: NextRequest): string {
+  const value = request.nextUrl.searchParams.get("source")?.toLowerCase();
+  return value && REFERRAL_SOURCES.has(value) ? value : "other";
+}
+
 // Extract subdomain from Origin, Referer, or explicit parameter
 function extractSubdomain(request: NextRequest): string | null {
-  // Check for explicit subdomain parameter
   const urlSubdomain = request.nextUrl.searchParams.get("subdomain");
-  if (urlSubdomain) {
-    return urlSubdomain.toLowerCase();
-  }
+  if (urlSubdomain) return normalizeSubdomain(urlSubdomain);
 
-  // Try to extract from Origin header
   const origin = request.headers.get("origin");
   if (origin) {
     const match = origin.match(/^https?:\/\/([a-z0-9-]+)\.ugc\.community$/i);
-    if (match) {
-      return match[1].toLowerCase();
-    }
+    if (match) return normalizeSubdomain(match[1]);
   }
 
-  // Try to extract from Referer header
   const referer = request.headers.get("referer");
   if (referer) {
     const match = referer.match(/^https?:\/\/([a-z0-9-]+)\.ugc\.community/i);
-    if (match) {
-      return match[1].toLowerCase();
-    }
+    if (match) return normalizeSubdomain(match[1]);
   }
 
   return null;
 }
 
-async function trackView(request: NextRequest): Promise<{ success: boolean; subdomain?: string; deduplicated?: boolean }> {
+async function trackView(request: NextRequest): Promise<{ success: boolean; subdomain?: string; source?: string; deduplicated?: boolean }> {
   const subdomain = extractSubdomain(request);
+  const source = extractReferralSource(request);
 
   if (!subdomain) {
     console.log("Portfolio view tracking: no subdomain found");
-    return { success: false };
+    return { success: false, source };
   }
 
   // Get IP for logging (hashed for privacy)
@@ -97,7 +112,7 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
 
     if (userResult.length === 0) {
       console.log(`Portfolio view tracking: subdomain not found: ${subdomain}`);
-      return { success: false, subdomain };
+      return { success: false, subdomain, source };
     }
 
     const userId = userResult[0].id;
@@ -123,9 +138,9 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
     if (existingView.length > 0) {
       // Already counted this view recently
       console.log(
-        `Portfolio view deduplicated: subdomain=${subdomain}, ip_hash=${hashedIp}`
+        JSON.stringify({ event: "portfolio_view_deduplicated", subdomain, source, ipHash: hashedIp })
       );
-      return { success: true, subdomain, deduplicated: true };
+      return { success: true, subdomain, source, deduplicated: true };
     }
 
     // Increment count and record the view in a transaction
@@ -161,11 +176,11 @@ async function trackView(request: NextRequest): Promise<{ success: boolean; subd
         });
     });
 
-    console.log(`Portfolio view tracked: subdomain=${subdomain}, ip_hash=${hashedIp}`);
-    return { success: true, subdomain };
+    console.log(JSON.stringify({ event: "portfolio_view", subdomain, source, ipHash: hashedIp }));
+    return { success: true, subdomain, source };
   } catch (error) {
     console.error("Error tracking portfolio view:", error);
-    return { success: false, subdomain };
+    return { success: false, subdomain, source };
   }
 }
 

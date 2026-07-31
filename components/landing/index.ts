@@ -11,5 +11,6 @@ export { RewardsShowcase } from "./rewards-showcase";
 export { Examples } from "./examples";
 export { Testimonials } from "./testimonials";
 export { Pricing } from "./pricing";
+export { FAQ } from "./faq";
 export { FinalCTA } from "./final-cta";
 export { Footer } from "./footer";

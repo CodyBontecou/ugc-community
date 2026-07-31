@@ -3,19 +3,34 @@ import type { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
-      // Allow legitimate search engines
+      {
+        userAgent: "Googlebot",
+        allow: "/",
+        disallow: ["/api/", "/dashboard/", "/admin/"],
+      },
+      {
+        userAgent: "OAI-SearchBot",
+        allow: "/",
+        disallow: ["/api/", "/dashboard/", "/admin/"],
+      },
+      {
+        userAgent: "PerplexityBot",
+        allow: "/",
+        disallow: ["/api/", "/dashboard/", "/admin/"],
+      },
+      {
+        userAgent: "Claude-SearchBot",
+        allow: "/",
+        disallow: ["/api/", "/dashboard/", "/admin/"],
+      },
       {
         userAgent: "*",
         allow: "/",
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
-      // Block OpenAI crawlers
+      // Training crawlers remain separate from search and user-directed retrieval.
       {
         userAgent: "GPTBot",
-        disallow: "/",
-      },
-      {
-        userAgent: "ChatGPT-User",
         disallow: "/",
       },
       // Block Anthropic crawlers
@@ -57,10 +72,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: "/",
       },
       // Block other known AI scrapers
-      {
-        userAgent: "PerplexityBot",
-        disallow: "/",
-      },
       {
         userAgent: "YouBot",
         disallow: "/",

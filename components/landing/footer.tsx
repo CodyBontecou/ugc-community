@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Youtube } from "lucide-react";
 
 export function Footer() {
   return (
@@ -23,22 +22,13 @@ export function Footer() {
             The modern way for content creators to showcase their work and
             land brand deals.
           </p>
-          <div className="flex gap-4">
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
-            >
-              <Instagram size={20} />
-            </a>
-            <a
-              href="#"
-              aria-label="YouTube"
-              className="w-10 h-10 rounded-full bg-warm-gray-800 flex items-center justify-center text-warm-gray-400 hover:bg-rose hover:text-white transition-colors"
-            >
-              <Youtube size={20} />
-            </a>
-          </div>
+          <nav aria-label="Site information" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link href="/creators" className="hover:text-white">Creator directory</Link>
+            <Link href="/#faq" className="hover:text-white">FAQ</Link>
+            <Link href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link href="/terms" className="hover:text-white">Terms</Link>
+            <a href="mailto:cody@isolated.tech" className="hover:text-white">Support</a>
+          </nav>
         </div>
 
         <div className="pt-8 border-t border-warm-gray-800 text-center">
