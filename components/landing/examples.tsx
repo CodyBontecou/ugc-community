@@ -8,7 +8,7 @@ const examples = [
   {
     name: "Daniela",
     role: "UGC Creator & Content Strategist",
-    url: "https://daniela.ugc.community",
+    url: "https://dany.ugc.community",
     image: "/examples/daniela-preview.png",
     stats: {
       views: "2.2M+",

@@ -85,12 +85,12 @@ export function Testimonials({ authorImage }: TestimonialsProps) {
                   UGC Creator & Content Strategist
                 </span>
                 <a
-                  href="https://daniela.ugc.community"
+                  href="https://dany.ugc.community"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-rose hover:underline"
                 >
-                  daniela.ugc.community
+                  dany.ugc.community
                 </a>
               </div>
             </div>
