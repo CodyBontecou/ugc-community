@@ -17,7 +17,6 @@ export function BehaviorAnalytics() {
   const params = useSearchParams();
   const query = params.toString();
   const [consent, setConsent] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
   const [signal, setSignal] = useState(false);
   const [editing, setEditing] = useState(false);
   const [allowed, setAllowed] = useState(false);
@@ -26,7 +25,6 @@ export function BehaviorAnalytics() {
       try { setConsent(localStorage.getItem(CONSENT_KEY)); } catch { setConsent("denied"); }
       setAllowed(trackingAllowed());
       setSignal(navigator.doNotTrack === "1" || Boolean((navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl));
-      setReady(true);
       if (!trackingAllowed()) clearTracking();
     };
     update();
@@ -146,7 +144,7 @@ export function BehaviorAnalytics() {
   }, [allowed, pathname, query]);
   const choose = (granted: boolean) => { setTrackingConsent(granted); setEditing(false); };
   return <>
-    {ready && (consent === null || editing) && !signal && <aside aria-label="Analytics preferences" data-analytics-ignore className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-xl rounded-2xl border border-warm-gray-200 bg-white p-4 shadow-lg">
+    {(consent === null || editing) && !signal && <aside aria-label="Analytics preferences" data-analytics-ignore data-editing={editing} className="analytics-consent-prompt fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-xl rounded-2xl border border-warm-gray-200 bg-white p-4 shadow-lg">
       <p className="font-semibold text-warm-gray-900">Help improve ugc.community</p>
       <p className="mt-2 text-sm text-warm-gray-600">Allow anonymous traffic and activity measurement? We track pages and actions, never your form entries. You can change this anytime in <a href="/privacy" className="underline">Privacy</a>.</p>
       <div className="mt-4 flex flex-wrap gap-3"><button type="button" onClick={() => choose(true)} className="rounded-lg bg-warm-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-warm-gray-700 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2">Allow analytics</button><button type="button" onClick={() => choose(false)} className="rounded-lg border border-warm-gray-200 px-3 py-2 text-sm font-semibold hover:bg-warm-gray-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2">No thanks</button></div>

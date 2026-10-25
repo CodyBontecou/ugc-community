@@ -105,8 +105,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${instrumentSerif.variable} ${outfit.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${instrumentSerif.variable} ${outfit.variable}`}>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem("ugc.analytics.consent")!==null||navigator.doNotTrack==="1"||navigator.globalPrivacyControl)document.documentElement.dataset.analyticsPreference="set"}catch(e){document.documentElement.dataset.analyticsPreference="set"}})()` }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

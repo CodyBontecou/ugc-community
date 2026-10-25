@@ -256,3 +256,8 @@ img {
 .primary-action:active { transform: scale(0.98); }
 .primary-action:focus-visible { outline-color: var(--color-rose); }
 .primary-action:disabled { cursor: not-allowed; }
+
+/* Hide a resolved consent choice before React loads; preferences can reopen it. */
+html[data-analytics-preference="set"] .analytics-consent-prompt:not([data-editing="true"]) {
+  display: none;
+}
