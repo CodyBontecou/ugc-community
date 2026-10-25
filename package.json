@@ -26,6 +26,7 @@
     "worker": "tsx worker/index.ts",
     "worker:dev": "tsx watch worker/index.ts",
     "test:creator-database": "tsx --test lib/creator-database/*.test.ts",
+    "test:subdomains": "node --import tsx --experimental-test-module-mocks --test app/api/user/subdomain/route.test.ts",
     "db:creators:migrate": "wrangler d1 migrations apply CREATOR_DATABASE --remote",
     "creators:sync": "tsx scripts/sync-creator-database.ts",
     "test:job-board": "tsx --test lib/job-board/*.test.ts",

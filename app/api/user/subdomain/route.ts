@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { requireAuth } from "@/lib/auth/session";
+import { getServerSession, requireAuth } from "@/lib/auth/session";
 import { eq } from "drizzle-orm";
 import {
   validateSubdomain,
@@ -122,14 +122,17 @@ export async function GET(request: NextRequest) {
   });
 
   if (existing) {
-    // Generate suggestions
-    const suggestions = generateSubdomainSuggestions(normalizedSubdomain);
+    // A creator can keep their own URL when editing their portfolio.
+    const session = await getServerSession();
+    if (existing.id !== session?.user.id) {
+      const suggestions = generateSubdomainSuggestions(normalizedSubdomain);
 
-    return NextResponse.json({
-      available: false,
-      reason: "Already taken",
-      suggestions,
-    });
+      return NextResponse.json({
+        available: false,
+        reason: "Already taken",
+        suggestions,
+      });
+    }
   }
 
   return NextResponse.json({
