@@ -20,9 +20,11 @@ export default async function AdminLayout({
           Admin Panel
         </h1>
         <p className="mt-1 text-warm-gray-500">
-          Manage users, invites, and waitlist in one place
+          Review opportunities, validate job supply, and manage the community
         </p>
       </div>
+
+      <a href="/dashboard/admin/opportunities" className="inline-block text-sm text-warm-gray-700 underline underline-offset-4">Job review & supply validation →</a>
 
       {children}
     </div>

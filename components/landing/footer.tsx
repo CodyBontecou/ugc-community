@@ -19,10 +19,11 @@ export function Footer() {
             </span>
           </Link>
           <p className="text-sm leading-relaxed max-w-[280px] mb-6">
-            Discover UGC creators for your next campaign. A growing database for brands and agencies.
+            Find your next UGC opportunity. Collected jobs and brand-posted briefs in one place.
           </p>
           <nav aria-label="Site information" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <Link href="/#database-preview" className="hover:text-white">Database preview</Link>
+            <Link href="/jobs" className="hover:text-white">Browse jobs</Link>
+            <Link href="/post-job" className="hover:text-white">Post a job</Link>
             <Link href="/creators" className="hover:text-white">Community portfolios</Link>
             <Link href="/#faq" className="hover:text-white">FAQ</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>

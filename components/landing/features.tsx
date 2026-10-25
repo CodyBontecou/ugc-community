@@ -12,12 +12,12 @@ import {
 import type { ReactNode } from "react";
 
 const features = [
-  { icon: <Target size={24} />, title: "Search in one place", description: "Find creator records by Reddit username, social platform, and the links they share." },
-  { icon: <Repeat size={24} />, title: "New discoveries over time", description: "The subscription is being built around ongoing additions from r/UGCcreators, so you can return for new leads." },
-  { icon: <Globe size={24} />, title: "Find their work", description: "Explore shared Instagram, TikTok, YouTube, and portfolio links when those details are available." },
-  { icon: <Palette size={24} />, title: "Keep the context", description: "Understand where a detail came from with its source post or comment and supporting text." },
-  { icon: <BarChart3 size={24} />, title: "Know what is available", description: "See which records include an email, a portfolio, or social links before you start researching." },
-  { icon: <Zap size={24} />, title: "Built for your next campaign", description: "Spend less time collecting scattered links and more time reviewing creators for your brand." },
+  { icon: <Target size={24} />, title: "One searchable feed", description: "Search collected opportunities and brand-posted roles together by brand, title, or keyword." },
+  { icon: <Repeat size={24} />, title: "Know the source", description: "Every listing is labeled External opportunity or Posted directly, so you know where the brief came from." },
+  { icon: <Globe size={24} />, title: "Apply at the original destination", description: "Follow the listing’s application link directly to the brand or original hiring process." },
+  { icon: <Palette size={24} />, title: "See the actual terms", description: "Review compensation, deliverables, eligibility, and usage rights. Missing external terms are shown as not stated." },
+  { icon: <BarChart3 size={24} />, title: "Freshness matters", description: "Closing dates are enforced, and external opportunities need another review after seven days to stay visible." },
+  { icon: <Zap size={24} />, title: "Free to get started", description: "Creators can browse for free. Brands can submit a complete brief for manual review without a posting fee during launch." },
 ];
 
 function FeatureCard({
@@ -70,10 +70,10 @@ export function Features() {
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)] mb-6">
             Less searching,
             <br />
-            <span className="gradient-text">more discovering</span>
+            <span className="gradient-text">better opportunities</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[500px] mx-auto">
-            A clearer starting point for brands and agencies looking for their next UGC collaboration.
+            A clearer starting point for creators looking for their next paid collaboration.
           </p>
         </motion.div>
 

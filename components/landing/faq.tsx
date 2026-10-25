@@ -1,10 +1,10 @@
 const questions = [
-  { question: "Who is the database for?", answer: "Brands, agencies, and teams looking for UGC creators to research for upcoming campaigns." },
-  { question: "Where does the data come from?", answer: "The planned database uses details shared in public posts and comments on r/UGCcreators. Records can include social links, portfolios, emails, and the original source context, depending on what was shared." },
-  { question: "How will updates work?", answer: "New records will be added as Subscrape uploads are processed. There is no guaranteed refresh interval, and a capture date does not mean a contact detail has been reverified." },
-  { question: "Can I subscribe today?", answer: "Subscriptions are not open yet. You can try the searchable sample preview and join early access. Pricing and access details will be announced before launch." },
-  { question: "Are these creators verified or available?", answer: "A shared link or email does not confirm identity, availability, or permission to contact someone. Review the source context and confirm details directly before planning a collaboration." },
-  { question: "Can I correct or remove my details?", answer: "Yes. Email cody@isolated.tech with the record or source link and the correction or removal you are requesting." },
+  { question: "Is the job board free?", answer: "Yes. Creators can browse for free, and brands can submit jobs for free during launch. Every submitted listing is reviewed before publication." },
+  { question: "What is an external opportunity?", answer: "A hiring opportunity collected from a public source. The listing includes its source and sends you to the original application destination. It is not a job posted directly to ugc.community by that employer." },
+  { question: "What does Posted directly mean?", answer: "The listing was submitted to ugc.community and manually reviewed. Direct submissions require compensation, deliverables, eligibility, usage rights, and a closing date." },
+  { question: "Are all opportunities paid?", answer: "Compensation labels distinguish guaranteed cash, base plus variable pay, performance-only pay, affiliate work, and gifted or unpaid opportunities. Missing terms in external sources are marked as not stated." },
+  { question: "How do you keep listings current?", answer: "Listings disappear after their closing date. External opportunities also expire from the feed seven days after the last manual freshness review unless checked again. A scrape date alone does not confirm that applications are still open." },
+  { question: "How can I report an expired or incorrect job?", answer: "Email cody@isolated.tech with the listing or source link. We can correct or close the listing after review." },
 ];
 
 export function FAQ() {

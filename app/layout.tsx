@@ -26,9 +26,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ugc.community"),
-  title: "UGC Creator Database — ugc.community",
+  title: "UGC Jobs & Creator Opportunities — ugc.community",
   description:
-    "Discover UGC creators, social profiles, portfolios, and shared contact details. Join early access to a searchable creator database for brands and agencies.",
+    "Find UGC jobs and brand opportunities in one searchable feed. Browse reviewed external opportunities and directly posted jobs. Free for creators.",
   keywords: [
     "UGC",
     "creator",
@@ -37,18 +37,18 @@ export const metadata: Metadata = {
     "influencer",
   ],
   openGraph: {
-    title: "UGC Creator Database — ugc.community",
+    title: "UGC Jobs & Creator Opportunities — ugc.community",
     description:
-      "A searchable UGC creator database for brands and agencies. Join early access.",
+      "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",
     type: "website",
     locale: "en_US",
     siteName: "ugc.community",
   },
   twitter: {
     card: "summary_large_image",
-    title: "UGC Creator Database — ugc.community",
+    title: "UGC Jobs & Creator Opportunities — ugc.community",
     description:
-      "A searchable UGC creator database for brands and agencies. Join early access.",
+      "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",
   },
   alternates: { canonical: "/" },
 };
@@ -71,11 +71,11 @@ const structuredData = {
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "A UGC creator discovery database for brands and agencies. Subscription access is coming soon.",
+        "A searchable UGC job board with reviewed external opportunities and free brand submissions.",
       provider: { "@id": "https://ugc.community/#organization" },
       featureList: [
-        "Searchable UGC creator database preview",
-        "Subscription early-access registration",
+        "Searchable UGC opportunities",
+        "Free job submissions with manual review",
       ],
     },
     {

@@ -1,4 +1,6 @@
-# Creator database
+# Creator database (retired)
+
+This product was retired on October 24, 2026. Its five-minute cron is disabled, `/database` redirects to `/jobs`, and its former APIs return 410. The historical architecture below is retained for reference. See `job-board.md` for current operations.
 
 The creator database reads private Subscrape uploads from the `subscrape-exports` R2 bucket and indexes them in the `ugc-creator-database` D1 database. It does not change Subscrape or expose the raw bucket.
 

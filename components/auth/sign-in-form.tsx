@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 
-export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: "/dashboard" | "/database" }) {
+export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: "/dashboard" | "/jobs" | "/post-job" }) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);

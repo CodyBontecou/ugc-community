@@ -26,7 +26,10 @@
     "worker:dev": "tsx watch worker/index.ts",
     "test:creator-database": "tsx --test lib/creator-database/*.test.ts",
     "db:creators:migrate": "wrangler d1 migrations apply CREATOR_DATABASE --remote",
-    "creators:sync": "tsx scripts/sync-creator-database.ts"
+    "creators:sync": "tsx scripts/sync-creator-database.ts",
+    "test:job-board": "tsx --test lib/job-board/*.test.ts",
+    "jobs:sync": "tsx scripts/sync-job-board.ts",
+    "db:jobs:migrate": "wrangler d1 migrations apply JOB_BOARD --remote"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

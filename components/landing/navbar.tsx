@@ -26,19 +26,19 @@ export function Navbar() {
             href="/#features"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            The database
+            How it works
           </a>
           <a
-            href="/#pricing"
+            href="/post-job"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            Pricing
+            Post a job
           </a>
           <Link
-            href="/database"
+            href="/jobs"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            Creator database
+            Browse jobs
           </Link>
         </div>
 

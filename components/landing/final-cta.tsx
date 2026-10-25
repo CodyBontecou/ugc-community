@@ -15,18 +15,18 @@ export function FinalCTA() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-[clamp(2rem,4vw,2.75rem)] text-white mb-4">
-            Find the creators behind your next campaign.
+            Your next collaboration starts with a brief.
           </h2>
           <p className="text-lg text-white/90 mb-12">
-            Get notified when subscriptions open.
+            Explore UGC opportunities or share a job with creators.
           </p>
           <motion.a
-            href="#pricing"
+            href="/jobs"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-white text-warm-gray-900 shadow-md hover:shadow-lg transition-shadow"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Get early access
+            Browse opportunities
             <ArrowRight size={18} />
           </motion.a>
         </motion.div>

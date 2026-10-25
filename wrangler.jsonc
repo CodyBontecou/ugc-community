@@ -50,7 +50,7 @@
       "0 3 * * *",
       "0 4 * * *",
       "0 6 * * *",
-      "*/5 * * * *"
+      "*/10 * * * *"
     ]
   },
   "d1_databases": [
@@ -59,6 +59,12 @@
       "database_name": "ugc-creator-database",
       "database_id": "b41d700a-d7e3-4c3e-b71a-43602ae5db56",
       "migrations_dir": "migrations/creator-database"
+    },
+    {
+      "binding": "JOB_BOARD",
+      "database_name": "ugc-job-board",
+      "database_id": "2de569eb-1427-466c-bc02-72bc0c4ded96",
+      "migrations_dir": "migrations/job-board"
     }
   ]
 }
