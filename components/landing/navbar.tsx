@@ -35,10 +35,10 @@ export function Navbar() {
             Pricing
           </a>
           <Link
-            href="/#database-preview"
+            href="/database"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            Database preview
+            Creator database
           </Link>
         </div>
 

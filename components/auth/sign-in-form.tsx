@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 
-export function SignInForm() {
+export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: "/dashboard" | "/database" }) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -20,7 +20,7 @@ export function SignInForm() {
     try {
       const result = await signIn.magicLink({
         email,
-        callbackURL: "/dashboard",
+        callbackURL,
       });
 
       if (result.error) {
@@ -42,7 +42,7 @@ export function SignInForm() {
     try {
       const result = await signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL,
       });
 
       if (result?.error) {

@@ -19,5 +19,6 @@ export default defineConfig([
     ".vercel/**",
     ".wrangler/**",
     "next-env.d.ts",
+    "cloudflare-env.d.ts",
   ]),
 ]);

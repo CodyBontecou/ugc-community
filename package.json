@@ -14,7 +14,7 @@
     "deploy": "./scripts/deploy-with-indexnow.sh",
     "deploy:worker": "pnpm cf:build && opennextjs-cloudflare deploy",
     "upload": "pnpm cf:build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts && node scripts/scope-cloudflare-types.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -23,7 +23,10 @@
     "portfolio:config:init": "tsx scripts/generate-portfolio-upload-config.ts",
     "portfolio:upload": "tsx scripts/upload-portfolio.ts",
     "worker": "tsx worker/index.ts",
-    "worker:dev": "tsx watch worker/index.ts"
+    "worker:dev": "tsx watch worker/index.ts",
+    "test:creator-database": "tsx --test lib/creator-database/*.test.ts",
+    "db:creators:migrate": "wrangler d1 migrations apply CREATOR_DATABASE --remote",
+    "creators:sync": "tsx scripts/sync-creator-database.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -66,6 +69,7 @@
     "drizzle-kit": "^0.31.4",
     "eslint": "^9.17.0",
     "eslint-config-next": "^16.2.11",
+    "miniflare": "4.20260721.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.2",

@@ -20,6 +20,7 @@ export function Hero() {
         </div>
         <p className="inline-flex items-center gap-2 text-sm text-warm-gray-600 mb-14"><RefreshCw size={14} className="text-rose" /> Planned subscription access to a growing database</p>
         <DatabasePreview />
+        <a href="/database" className="inline-flex items-center gap-2 text-sm text-warm-gray-700 underline underline-offset-4 mt-6">Open the live database <ArrowRight size={14} /></a>
       </div>
     </section>
   );

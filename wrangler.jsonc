@@ -5,7 +5,10 @@
   "workers_dev": true,
   "preview_urls": true,
   "compatibility_date": "2026-07-25",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -20,6 +23,10 @@
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "ugc-community-opennext-cache"
+    },
+    {
+      "binding": "SUBSCRAPE_EXPORTS",
+      "bucket_name": "subscrape-exports"
     }
   ],
   "images": {
@@ -39,6 +46,19 @@
     }
   ],
   "triggers": {
-    "crons": ["0 3 * * *", "0 4 * * *", "0 6 * * *"]
-  }
+    "crons": [
+      "0 3 * * *",
+      "0 4 * * *",
+      "0 6 * * *",
+      "*/5 * * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "CREATOR_DATABASE",
+      "database_name": "ugc-creator-database",
+      "database_id": "b41d700a-d7e3-4c3e-b71a-43602ae5db56",
+      "migrations_dir": "migrations/creator-database"
+    }
+  ]
 }
