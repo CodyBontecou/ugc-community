@@ -110,7 +110,7 @@ export function DashboardShell({ userName }: DashboardShellProps) {
             <div
               className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden"
               style={{
-                height: "calc(100vh - 300px)",
+                height: "calc(100dvh - 300px)",
                 minHeight: "500px",
               }}
             >

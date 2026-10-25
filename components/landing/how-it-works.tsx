@@ -10,10 +10,10 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative z-[1] py-32">
+    <section className="relative z-[1] py-16 sm:py-24 lg:py-32">
       <div className="container">
         <motion.div
-          className="text-center mb-24"
+          className="text-center mb-12 sm:mb-24"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -33,7 +33,7 @@ export function HowItWorks() {
           {steps.map((item, i) => (
             <motion.div
               key={i}
-              className="flex gap-8 items-start"
+              className="flex gap-4 sm:gap-8 items-start"
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -42,7 +42,7 @@ export function HowItWorks() {
               <div className="font-[family-name:var(--font-display)] text-5xl gradient-text leading-none shrink-0">
                 {item.step}
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-[family-name:var(--font-body)] font-semibold text-xl text-warm-gray-900 mb-2">
                   {item.title}
                 </h3>

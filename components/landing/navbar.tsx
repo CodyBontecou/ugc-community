@@ -15,8 +15,8 @@ export function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="container flex items-center justify-between">
-        <div className="flex-1">
+      <div className="container flex items-center justify-between gap-3">
+        <div className="min-w-0 md:flex-1">
           <BrandLink />
         </div>
 
@@ -41,11 +41,11 @@ export function Navbar() {
           </Link>
         </div>
 
-        <div className="flex-1 flex items-center justify-end gap-6">
+        <div className="flex shrink-0 items-center justify-end gap-3 md:flex-1 md:gap-6">
           {isPending ? (
             <div className="w-8 h-8 rounded-full bg-warm-gray-200 animate-pulse" />
           ) : session?.user ? (
-            <Link href="/dashboard">
+            <Link href="/dashboard" aria-label="Open your dashboard" className="inline-flex min-h-11 min-w-11 items-center justify-center">
               {session.user.image ? (
                 <motion.img
                   src={session.user.image}
@@ -67,7 +67,7 @@ export function Navbar() {
           ) : (
             <motion.a
               href="/sign-in"
-              className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-2 px-5 text-sm bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
+              className="inline-flex min-h-11 items-center justify-center gap-2 font-medium rounded-full py-2 px-4 sm:px-5 text-sm bg-gradient-to-r from-coral to-rose text-white hover:opacity-90 transition-opacity"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

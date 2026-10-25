@@ -58,12 +58,12 @@ export function SignUpForm() {
 
   if (magicLinkSent) {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full min-w-0 max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white rounded-[--radius-xl] p-8 shadow-lg border border-warm-gray-100"
+          className="bg-white rounded-[var(--radius-xl)] p-5 sm:p-8 shadow-lg border border-warm-gray-100"
         >
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-50 flex items-center justify-center">
@@ -72,7 +72,7 @@ export function SignUpForm() {
             <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-3">
               Check your email
             </h1>
-            <p className="text-warm-gray-500 mb-6">
+            <p className="text-warm-gray-500 mb-6 break-words">
               We sent a sign-in link to{" "}
               <span className="font-medium text-warm-gray-700">{email}</span>
             </p>
@@ -98,15 +98,15 @@ export function SignUpForm() {
   const anyLoading = isLoading || isGoogleLoading;
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full min-w-0 max-w-md mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white rounded-[--radius-xl] p-8 shadow-lg border border-warm-gray-100"
+        className="bg-white rounded-[var(--radius-xl)] p-5 sm:p-8 shadow-lg border border-warm-gray-100"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
             Create your account
           </h1>
           <p className="text-warm-gray-500">
@@ -115,7 +115,7 @@ export function SignUpForm() {
         </div>
 
         {error && (
-          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-[--radius-md] text-red-700 text-sm">
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-red-700 text-sm">
             {error}
           </div>
         )}
@@ -136,9 +136,14 @@ export function SignUpForm() {
               <input
                 id="email"
                 type="email"
+                name="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                enterKeyHint="send"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[--radius-md] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                className="min-h-12 w-full min-w-0 text-base pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[var(--radius-md)] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
                 placeholder="you@example.com"
                 required
                 disabled={anyLoading}
@@ -149,7 +154,7 @@ export function SignUpForm() {
           <motion.button
             type="submit"
             disabled={anyLoading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-coral to-rose font-medium rounded-[--radius-md] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
+            className="min-h-12 w-full py-3 px-3 sm:px-4 bg-gradient-to-r from-coral to-rose font-medium rounded-[var(--radius-md)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
             whileHover={{ scale: anyLoading ? 1 : 1.01 }}
             whileTap={{ scale: anyLoading ? 1 : 1.01 }}
           >
@@ -174,14 +179,14 @@ export function SignUpForm() {
           type="button"
           onClick={handleGoogleSignUp}
           disabled={anyLoading}
-          className="w-full py-3 px-4 bg-white border border-warm-gray-200 text-warm-gray-700 font-medium rounded-[--radius-md] hover:bg-warm-gray-50 hover:border-warm-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-3"
+          className="min-h-12 w-full py-3 px-3 sm:px-4 bg-white border border-warm-gray-200 text-warm-gray-700 font-medium rounded-[var(--radius-md)] hover:bg-warm-gray-50 hover:border-warm-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-3"
           whileHover={{ scale: anyLoading ? 1 : 1.01 }}
           whileTap={{ scale: anyLoading ? 1 : 0.99 }}
         >
           {isGoogleLoading ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            <svg width="18" height="18" viewBox="0 0 18 18">
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0">
               <path
                 fill="#4285F4"
                 d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"

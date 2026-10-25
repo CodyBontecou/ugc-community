@@ -26,20 +26,20 @@ export async function JobFeed({ params = {} }: { params?: Record<string, string 
     if (page && page > 1) query.set("page", String(page));
     return `/jobs${query.size ? `?${query}` : ""}`;
   };
-  const controlClass = "h-11 w-full rounded-xl border border-warm-gray-200 bg-white px-3 text-sm text-warm-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark";
+  const controlClass = "h-11 min-w-0 w-full rounded-xl border border-warm-gray-200 bg-white px-3 text-base sm:text-sm text-warm-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark";
 
   return (
     <section id="jobs" aria-label="Browse UGC opportunities" className="relative z-[1] scroll-mt-28 pb-20">
       <div className="container max-w-6xl">
         <div className="overflow-hidden rounded-[24px] border border-warm-gray-200 bg-white/95 shadow-sm">
-          <form key={JSON.stringify([filters.q, filters.source, filters.pay])} action="/jobs" role="search" className="grid grid-cols-2 items-end gap-3 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_180px_210px_auto]">
-            <label className="col-span-2 lg:col-span-1">
+          <form key={JSON.stringify([filters.q, filters.source, filters.pay])} action="/jobs" role="search" className="grid grid-cols-1 items-end gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-[minmax(0,1fr)_180px_210px_auto]">
+            <label className="min-w-0 sm:col-span-2 lg:col-span-1">
               <span className="sr-only">Search opportunities</span>
               <span className="relative block"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 text-warm-gray-500" /><input name="q" defaultValue={filters.q} maxLength={100} placeholder="Search roles, brands, keywords…" className={`${controlClass} pl-10`} /></span>
             </label>
             <label><span className="sr-only">Source</span><select name="source" defaultValue={filters.source} className={controlClass}><option value="">All sources</option><option value="external">External opportunity</option><option value="direct">Posted directly</option></select></label>
             <label><span className="sr-only">Compensation</span><select name="pay" defaultValue={filters.pay} className={controlClass}><option value="">All compensation</option>{PAY_TYPES.map(type => <option key={type} value={type}>{PAY_LABELS[type]}</option>)}</select></label>
-            <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-rose px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Filter jobs</button>
+            <button className="sm:col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-rose px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Filter jobs</button>
           </form>
           {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link href="/jobs" className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-warm-gray-200 px-4 py-3 text-xs text-warm-gray-600 sm:px-6">

@@ -60,6 +60,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
   /* Extend background into safe area on iOS */
   background: var(--color-peach-100);
   min-height: 100%;
@@ -97,6 +98,23 @@ button {
   font-family: var(--font-body);
   cursor: pointer;
   border: none;
+}
+
+/* Keep taps immediate while preserving pinch zoom and selectable page content. */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+button, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent iOS from zooming into compact form fields on touch screens. */
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: max(1rem, 16px);
+  }
 }
 
 img {

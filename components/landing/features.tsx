@@ -33,14 +33,14 @@ function FeatureCard({
 }) {
   return (
     <motion.div
-      className="bg-white rounded-[--radius-xl] p-8 border border-warm-gray-100 transition-all duration-300 hover:shadow-lg hover:border-warm-gray-200"
+      className="bg-white rounded-[var(--radius-xl)] p-5 sm:p-8 border border-warm-gray-100 transition-all duration-300 hover:shadow-lg hover:border-warm-gray-200"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
-      <div className="w-[52px] h-[52px] rounded-[--radius-lg] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center mb-6 text-rose">
+      <div className="w-[52px] h-[52px] rounded-[var(--radius-lg)] bg-gradient-to-br from-peach-100 to-peach-200 flex items-center justify-center mb-6 text-rose">
         {icon}
       </div>
       <h3 className="font-[family-name:var(--font-body)] text-xl font-semibold mb-2 text-warm-gray-900">
@@ -55,10 +55,10 @@ function FeatureCard({
 
 export function Features() {
   return (
-    <section id="features" className="relative z-[1] py-32">
+    <section id="features" className="relative z-[1] py-16 sm:py-24 lg:py-32">
       <div className="container">
         <motion.div
-          className="text-center mb-24"
+          className="text-center mb-12 sm:mb-24"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
