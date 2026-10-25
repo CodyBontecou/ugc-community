@@ -37,12 +37,14 @@ The stable contract is /api/v1. Additive fields are allowed; breaking changes us
 
 npm registry publication still needs an authenticated publisher: npm whoami returned E401 on this Mac. The package name ugc-community-cli was not found in the registry at verification time; the prepared package is installable directly from the site without registry credentials.
 
-A real business mailing address intended for publication is still needed to complete Organization PostalAddress metadata. Search-based recommendations depend on the search provider indexing and ranking the pages; an accepted IndexNow submission does not guarantee either.
+The owner-supplied business mailing address is now published in Organization PostalAddress metadata and on the Contact page. Live HTML verification confirmed all address fields. A scanner refresh was requested after deployment; the saved snapshot below predates the address update. Search-based recommendations depend on the search provider indexing and ranking the pages; an accepted IndexNow submission does not guarantee either.
 
 The earlier 98-point report remains in final-report.json as historical evidence. Use the Rescan button after deployments to request fresh technical checks; a new report URL or query marker alone may still reuse Ora's cached snapshot. Agent journey and search observations may remain cached separately from current HTTP checks.
 
 ## Final scan
 
-The canonical scan at 2026-10-25T01:46:05.378Z confirms that versioning and deprecation policy now passes. The dedicated /docs/deprecation page, rel=deprecation API response link, and OpenAPI x-deprecation-policy metadata are live. Active operations have no fictional Sunset date. The App view has two remaining partial recommendations: Organization postal address and registry-published CLI. The broader report also retains search discovery findings. The historical agent journey can describe older site content even after current technical checks improve.
+The canonical scan at 2026-10-25T01:46:05.378Z confirms that versioning and deprecation policy now passes. The dedicated /docs/deprecation page, rel=deprecation API response link, and OpenAPI x-deprecation-policy metadata are live. Active operations have no fictional Sunset date. That snapshot had two remaining partial App recommendations: Organization postal address and registry-published CLI. The address was subsequently supplied and deployed; npm publication still requires login. The broader report also retains search discovery findings. The historical agent journey can describe older site content even after current technical checks improve.
 
 Final production deployment: c7046ddd-52c1-4c2c-8f0e-bf3a63d2f76d.
+
+Address deployment: 2bcd9f74-422d-4ec4-bc3d-833b0503a5a2. Focused lint, all four agent-content tests, and the Cloudflare production build passed. IndexNow accepted the updated homepage and Contact page with HTTP 200.
