@@ -22,3 +22,18 @@ test("CLI preserves server error details and exits nonzero", async () => {
   const code = await run(["jobs", "--json"], { err: text => errors.push(text), fetcher: async () => Response.json({ code: "rate_limit_exceeded", detail: "Too many requests", resolution: "Wait 60 seconds" }, { status: 429, headers: { "Retry-After": "60" } }) });
   assert.equal(code, 1); assert.equal(JSON.parse(errors[0]).code, "rate_limit_exceeded");
 });
+
+test("npm bin symlinks invoke the CLI rather than silently exiting", async () => {
+  const { mkdtemp, symlink, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const { spawnSync } = await import("node:child_process");
+  const directory = await mkdtemp(join(tmpdir(), "ugc-cli-bin-"));
+  try {
+    const link = join(directory, "ugc-jobs");
+    await symlink(fileURLToPath(new URL("../bin/ugc-jobs.mjs", import.meta.url)), link);
+    const result = spawnSync(process.execPath, [link, "--version"], { encoding: "utf8" });
+    assert.equal(result.status, 0); assert.equal(result.stdout.trim(), "1.0.1");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});

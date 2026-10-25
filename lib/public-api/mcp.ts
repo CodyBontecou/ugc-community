@@ -58,7 +58,6 @@ export async function handleJobsMcp(request: Request, env: PublicApiBindings) {
 }
 
 export const serverCard = {
-  $schema: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   name: "community.ugc/jobs", title: "ugc.community public jobs", version: "1.0.0",
   description: "Read-only tools to search current UGC jobs and retrieve their public terms. No account or API key required.",
   websiteUrl: "https://ugc.community/docs",

@@ -31,10 +31,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
-    { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${baseUrl}/contact`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${baseUrl}/docs`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${baseUrl}/guide`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/docs`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/guide`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
   ];
 
   return staticPages;

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const help = `ugc-jobs — read-only ugc.community client (Node.js 20+)
@@ -18,7 +19,7 @@ export async function run(args, { fetcher = fetch, out = console.log, err = cons
   const json = args.includes("--json");
   try {
     if (!args.length || args.includes("--help") || args.includes("-h")) { out(help); return 0; }
-    if (args.length === 1 && args[0] === "--version") { out("1.0.0"); return 0; }
+    if (args.length === 1 && args[0] === "--version") { out("1.0.1"); return 0; }
     const [command, ...rest] = args;
     const url = new URL("https://ugc.community/api/v1/jobs");
     if (command === "jobs") {
@@ -39,7 +40,7 @@ export async function run(args, { fetcher = fetch, out = console.log, err = cons
       url.pathname += `/${ids[0]}`;
     } else throw new Error(`Unknown command: ${command}. Use --help.`);
 
-    const response = await fetcher(url, { headers: { Accept: "application/json", "User-Agent": "ugc-community-cli/1.0.0" }, signal: AbortSignal.timeout(20000) });
+    const response = await fetcher(url, { headers: { Accept: "application/json", "User-Agent": "ugc-community-cli/1.0.1" }, signal: AbortSignal.timeout(20000) });
     const data = await response.json();
     if (!response.ok) {
       if (json) err(JSON.stringify(data));
@@ -60,4 +61,4 @@ export async function run(args, { fetcher = fetch, out = console.log, err = cons
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exitCode = await run(process.argv.slice(2));
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) process.exitCode = await run(process.argv.slice(2));

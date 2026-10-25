@@ -100,7 +100,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Block known AI bots from API routes
-  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/v1/")) {
+  if (pathname.startsWith("/api/") && pathname !== "/api/v1" && !pathname.startsWith("/api/v1/")) {
     const isBlockedBot = BLOCKED_USER_AGENTS.some((bot) =>
       userAgent.toLowerCase().includes(bot.toLowerCase())
     );

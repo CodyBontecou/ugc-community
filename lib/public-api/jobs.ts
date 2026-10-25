@@ -10,7 +10,7 @@ export const searchSchema = z.object({
   page: z.number().int().min(1).max(10000).default(1).describe("One-based page number, with 20 results per page."),
 }).strict();
 export const jobSchema = z.object({
-  id: z.string(), source: z.enum(["external", "direct"]), company: z.string(), title: z.string(), description: z.string(),
+  id: z.string(), url: z.string().url(), source: z.enum(["external", "direct"]), company: z.string(), title: z.string(), description: z.string(),
   compensation: z.object({ type: z.enum(PAY_TYPES), text: z.string(), cashAmount: z.number().nullable() }),
   deliverables: z.string(), eligibility: z.string(), usageRights: z.string(),
   applicationUrl: z.string().nullable(), sourceUrl: z.string().nullable(),
@@ -23,7 +23,7 @@ export type SearchInput = z.infer<typeof searchSchema>;
 // columns out of the REST, MCP, and CLI contracts, even if the row grows.
 export function publicJob(row: BoardJob): z.infer<typeof jobSchema> {
   return jobSchema.parse({
-    id: row.id, source: row.source_kind, company: row.company, title: row.title, description: row.description,
+    id: row.id, url: `https://ugc.community/jobs/${encodeURIComponent(row.id)}`, source: row.source_kind, company: row.company, title: row.title, description: row.description,
     compensation: { type: row.compensation_type, text: row.compensation_text, cashAmount: row.cash_amount },
     deliverables: row.deliverables, eligibility: row.eligibility, usageRights: row.usage_rights,
     applicationUrl: safeLink(row.application_url), sourceUrl: row.source_url ? safeLink(row.source_url) : null,

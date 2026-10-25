@@ -5,7 +5,7 @@ Official read-only command-line client for the ugc.community public jobs API. Re
 Install the official package directly from the site:
 
 ```sh
-npm install -g https://ugc.community/downloads/ugc-community-cli-1.0.0.tgz
+npm install -g https://ugc.community/downloads/ugc-community-cli-1.0.1.tgz
 ugc-jobs jobs --q skincare --pay cash --json
 ```
 

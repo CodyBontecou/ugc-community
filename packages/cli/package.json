@@ -1,16 +1,37 @@
 {
   "name": "ugc-community-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official read-only CLI for ugc.community public UGC jobs",
   "type": "module",
-  "bin": { "ugc-jobs": "bin/ugc-jobs.mjs" },
-  "files": ["bin", "README.md", "LICENSE"],
-  "engines": { "node": ">=20" },
+  "bin": {
+    "ugc-jobs": "bin/ugc-jobs.mjs"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "license": "MIT",
   "author": "Cody Bontecou",
   "homepage": "https://ugc.community/docs",
-  "repository": { "type": "git", "url": "git+https://github.com/CodyBontecou/ugc-community.git", "directory": "packages/cli" },
-  "keywords": ["ugc", "jobs", "cli", "agents"],
-  "scripts": { "test": "node --test test/*.test.mjs" },
-  "publishConfig": { "access": "public" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodyBontecou/ugc-community.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "ugc",
+    "jobs",
+    "cli",
+    "agents"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

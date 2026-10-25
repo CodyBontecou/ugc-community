@@ -1,6 +1,6 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { Miniflare } from "miniflare";
 import type { D1Database } from "@/cloudflare-env";
 import { handlePublicApi, type PublicApiBindings } from "./http";
@@ -12,10 +12,14 @@ const mf = new Miniflare({ modules: true, script: "export default { fetch() { re
 const db = await mf.getD1Database("JOB_BOARD") as D1Database;
 const env: PublicApiBindings = { JOB_BOARD: db, PUBLIC_API_RATE_LIMITER: { limit: async () => ({ success: true }) } };
 before(async () => {
-  const sql = await readFile(new URL("../../migrations/job-board/0001_job_board.sql", import.meta.url), "utf8");
-  for (const statement of sql.replace(/^--.*$/gm, "").split(";").filter(s => s.trim())) await db.prepare(statement).run();
+  const migrations = new URL("../../migrations/job-board/", import.meta.url);
+  for (const name of (await readdir(migrations)).filter(name => name.endsWith(".sql")).sort()) {
+    const sql = await readFile(new URL(name, migrations), "utf8");
+    for (const statement of sql.replace(/^--.*$/gm, "").split(";").filter(s => s.trim())) await db.prepare(statement).run();
+  }
   const now = new Date().toISOString(), future = new Date(Date.now() + 86400_000).toISOString(), old = new Date(Date.now() - 8 * 86400_000).toISOString();
   for (let i = 0; i < 24; i++) await insert(`public_${i}`, "published", "direct", future, now);
+  await db.prepare("UPDATE board_jobs SET application_email=? WHERE id=?").bind("private-employer@example.com", "public_0").run();
   await insert("pending", "pending_review", "direct", future, now);
   await insert("closed", "closed", "direct", future, now);
   await insert("expired", "published", "direct", old, now);
@@ -35,7 +39,7 @@ test("search and details share visibility rules and never expose private columns
   assert.equal(page.total, 24); assert.equal(page.jobs.length, 20);
   assert.match(page.next, /page=2/);
   const serialized = JSON.stringify(page);
-  assert.doesNotMatch(serialized, /private@example|Private review notes|submitter_email|review_notes|application_email/);
+  assert.doesNotMatch(serialized, /private@example|private-employer@example|Private review notes|submitter_email|review_notes|application_email/);
   const next = await (await handlePublicApi(new Request(page.next), env)).json();
   assert.equal(next.jobs.length, 4); assert.equal(next.next, null);
   const job = await (await handlePublicApi(request("/api/v1/jobs/public_0"), env)).json();
@@ -85,7 +89,7 @@ test("MCP initializes, discovers typed read-only tools, and calls the same publi
   for (const tool of list.result.tools) { assert.equal(tool.annotations.readOnlyHint, true); assert.ok(tool.inputSchema); assert.ok(tool.outputSchema); }
   const search = await rpcBody(await rpc("tools/call", { name: "search_jobs", arguments: { q: "Skincare" } }));
   assert.equal(search.result.structuredContent.total, 24);
-  assert.doesNotMatch(JSON.stringify(search), /private@example|Private review notes/);
+  assert.doesNotMatch(JSON.stringify(search), /private@example|private-employer@example|Private review notes/);
   const missing = await rpcBody(await rpc("tools/call", { name: "get_job", arguments: { id: "pending" } }));
   assert.equal(missing.result.isError, true);
 });
