@@ -70,11 +70,13 @@ export interface ReviewInput {
   deliverables: string; eligibility: string; usageRights: string; applicationUrl: string; closingAt: string | null;
   campaignKey: string; notes: string; verified: boolean;
 }
-export async function reviewJob(db: D1Database, input: ReviewInput) {
+export async function reviewJob(db: D1Database, input: ReviewInput, evidence: { sourceCapturedAt?: string } = {}) {
   const job = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(input.id).first<BoardJob>();
   if (!job) throw new Error("Listing not found");
   if (job.updated_at !== input.expectedUpdatedAt) throw new Error("Listing changed; reload before reviewing");
   const now = new Date().toISOString();
+  // An archive review cannot extend freshness beyond the evidence's capture date.
+  const verifiedAt = evidence.sourceCapturedAt || now;
   if (input.action === "publish") {
     if (!input.verified || !input.company.trim() || !input.title.trim() || !input.compensationText.trim() || !safeLink(input.applicationUrl) || input.campaignKey.trim().length < 3) throw new Error("Confirm the application destination, employer, terms, and campaign identifier");
     if (input.closingAt && input.closingAt <= now) throw new Error("Closing date must be in the future");
@@ -95,7 +97,7 @@ export async function reviewJob(db: D1Database, input: ReviewInput) {
     .bind(status, input.company, input.title, input.description, input.compensationType, input.compensationText, input.cashAmount, input.deliverables,
       input.eligibility, input.usageRights, input.applicationUrl, input.closingAt,
       input.action === "publish" ? input.campaignKey.trim().toLowerCase() : job.campaign_key, input.notes,
-      input.action === "publish" ? now : null, status, now, now, job.id, input.expectedUpdatedAt);
+      input.action === "publish" ? verifiedAt : null, status, now, now, job.id, input.expectedUpdatedAt);
   const qualifications = input.action === "publish" ? db.prepare(`
     INSERT INTO board_qualifications (campaign_key, job_id, qualified_at, first_seen_at, source_published_at)
     SELECT j.campaign_key, j.id, ?, MIN(o.first_seen_at), j.source_published_at

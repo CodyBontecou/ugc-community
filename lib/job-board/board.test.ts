@@ -171,3 +171,35 @@ test("agent reviews require fresh evidence, preserve publication gates, and can 
   assert.equal(held.status, "pending_review"); assert.equal(held.verified_at, null);
   assert.equal((await listBoardJobs(db, { ...filters, q: "Agent reviewed brand" })).total, 0);
 });
+
+test("Subscrape full text can approve a job without browsing Reddit and cannot refresh old evidence", async () => {
+  const capturedAt = new Date(Date.now() - 6 * 86400_000).toISOString();
+  const source = (await normalizeSource(archive("capturedreview", { capturedAt, publishedAt: capturedAt,
+    fullText: "Brand is hiring US creators for USD $250 per product video. DM us your portfolio to apply. Organic use for 30 days." })))!;
+  await storeSource(db, source);
+  const job = await db.prepare("SELECT * FROM board_jobs WHERE source_key=?").bind(source.key).first<BoardJob>(); assert.ok(job);
+  const decision = { checkedAt: new Date().toISOString(), evidence: [],
+    capturedSource: { sourceKey: source.key, revision: source.revision, capturedAt, finding: "The complete captured brief states USD $250 per video, US eligibility, and DM portfolio applications." },
+    review: { id: job.id, expectedUpdatedAt: job.updated_at, action: "publish", company: "Captured brief brand", title: "Product video role",
+      description: "Create one product video. Apply by sending your portfolio to the poster via Reddit DM.", compensationType: "cash", compensationText: "USD $250 per product video",
+      cashAmount: 250, deliverables: "Product video", eligibility: "US", usageRights: "30 days organic use", applicationUrl: source.source,
+      closingAt: null, campaignKey: "captured-brief-campaign", notes: "Details checked against the captured brief; no independent live availability check.", verified: true },
+  };
+  const queue = await agentReviewQueue(db);
+  assert.equal(queue.jobs.find(row => row.id === job.id)?.source_captured_at, capturedAt);
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, capturedSource: { ...decision.capturedSource, revision: "outdated" } }), /Captured source changed/);
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, applicationUrl: "https://unlisted.example/apply" } }), /Application destination/);
+  await applyAgentDecision(db, decision);
+  const published = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(job.id).first<BoardJob>(); assert.ok(published);
+  assert.equal(published.verified_at, capturedAt);
+  assert.equal((await listBoardJobs(db, { ...filters, q: "Captured brief brand" })).total, 1);
+  // A daily rereview does not reset the seven-day evidence horizon.
+  await applyAgentDecision(db, { ...decision, review: { ...decision.review, expectedUpdatedAt: published.updated_at } });
+  assert.equal((await listBoardJobs(db, { ...filters, q: "Captured brief brand" }, new Date(Date.now() + 2 * 86400_000).toISOString())).total, 0);
+  const current = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(job.id).first<BoardJob>(); assert.ok(current);
+  const oldCapture = new Date(Date.now() - 8 * 86400_000).toISOString();
+  await db.prepare("UPDATE board_sources SET captured_at=? WHERE source_key=?").bind(oldCapture, source.key).run();
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, capturedSource: { ...decision.capturedSource, capturedAt: oldCapture }, review: { ...decision.review, expectedUpdatedAt: current.updated_at } }), /last seven days/);
+  await db.prepare("UPDATE board_sources SET captured_at=?, content_status='removed' WHERE source_key=?").bind(capturedAt, source.key).run();
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, expectedUpdatedAt: current.updated_at } }), /available, complete/);
+});
