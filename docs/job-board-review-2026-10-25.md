@@ -27,3 +27,32 @@ Validation: 38 job-board tests passed, repository lint passed with seven existin
 ## Infrastructure follow-up
 
 Fly sign-in succeeded. The only accessible organization is personal, and the legacy `ugc-community-worker` app is absent from its account-wide app list; direct status lookup also cannot find it. The manually dispatched Fly deploy workflow was disabled with explicit user approval. No unrelated Fly app, stored creator record, hosted file or provider credential was deleted. Inngest sign-in and Neon/Blob inventory access remain unresolved in #6; see `legacy-infrastructure.md` and the aggregate read-only inventory command.
+
+## Complete source classification after upload reconciliation
+
+The screenshot's 1,496 count was the number of selected export records before server-side deduplication. The exact R2 object `incremental/subscrape-filtered-1792940377333.jsonl` contains 784 records: 758 unique source posts/comments and 26 contact/link matches. Its production checkpoint records 758 accepted sources, 26 legacy records and zero rejected inputs; no import errors were present.
+
+Every one of those 758 source bodies was subsequently read in full and classified directly by the Codex chat model. This is distinct from the earlier rule-based recovery scan: no Jev or OpenAI classification API was called, because no API credential was configured. Post titles supplied context; employer follow-ups were checked against the archived parent author's identity. Certainty labels are qualitative, not calibrated probabilities. These classifications describe the uploaded archive; 15 source revisions have since been superseded and must not overwrite current evidence.
+
+| Classification | Source records |
+| --- | ---: |
+| Applicant responses | 367 |
+| Creator service pitches | 63 |
+| Discussion/advice | 206 |
+| Community administration | 30 |
+| Employer hiring offers | 45 |
+| Performance/commission offers | 7 |
+| Incomplete hiring inquiry | 1 |
+| Employer application follow-ups | 18 |
+| Platform/network invitations | 5 |
+| Broader creator/research roles | 4 |
+| Opportunity referrals | 2 |
+| Multi-campaign roundup | 1 |
+| Insufficient body/context | 9 |
+| **Total** | **758** |
+
+These are source categories, not counts of unique verified jobs. Individual source reasons, qualitative certainty, original classifications, source/body hashes, original dates, database review states and revision comparisons are retained privately in `.wrangler/classification/classified-758-sources.json`. Raw source bodies, applicant contact details and classifier results were not published to the repository or public API.
+
+Two previously unqueued leads were found. A buyer's employment-webapp creator inquiry (`reddit:1xee0vq:19rlcnfmv6s0x`, previously `other`) is now a private pending record, held for employer identity, compensation, deliverables and application evidence. A one-hour $100 USD CapCut workflow-testing offer (`reddit:1x9waxa:phql31g`, previously `creator_self_promotion`) is retained separately as paid research, since it explicitly requests no promotional content. Both follow-ups are recorded in #7; no outreach or applications were submitted.
+
+Final database verification: 82 records, comprising 37 published, 21 pending, 23 rejected and one closed internal test. Existing decisions, raw source labels/revisions and original dates were preserved. Classification did not publish or renew any job. Coverage validation confirmed 758 unique identities, one nonempty decision per identity, exact body hashes and label totals summing to 758.
