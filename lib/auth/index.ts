@@ -4,10 +4,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email/transport";
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@ugc.community";
-const FROM_NAME = process.env.FROM_NAME || "ugc.community";
 
 function generateMagicLinkEmail(url: string): string {
   return `
@@ -93,17 +91,12 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
-          from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        await sendEmail({
           to: email,
           subject: "Sign in to ugc.community",
           html: generateMagicLinkEmail(url),
+          text: `Sign in to ugc.community: ${url}\n\nThis link expires in 5 minutes. If you did not request it, ignore this email.`,
         });
-        if (error) {
-          const providerMessage = error.message.split(process.env.RESEND_API_KEY || "__no_key__").join("[redacted]").slice(0, 400);
-          console.error("Magic-link email rejected", { name: error.name, statusCode: error.statusCode, message: providerMessage });
-          throw new Error("Could not send sign-in link");
-        }
       },
       expiresIn: 60 * 5, // 5 minutes
       disableSignUp: false,

@@ -76,5 +76,13 @@
         "period": 60
       }
     }
+  ],
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": [
+        "noreply@ugc.community"
+      ]
+    }
   ]
 }

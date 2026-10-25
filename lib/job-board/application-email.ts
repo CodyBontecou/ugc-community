@@ -1,5 +1,5 @@
 import { emailBrandMark } from "@/lib/email/brand";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email/transport";
 import type { Application } from "./applications";
 import type { CreatorProfile } from "./profiles";
 const escape = (text: string) => text.replace(/[&<>"']/g, value => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[value]!);
@@ -12,17 +12,11 @@ export function applicationEmailContent(application: Application, profile: Creat
   return { text, html };
 }
 export async function sendApplicationEmail(application: Application, profile: CreatorProfile) {
-  if (!process.env.RESEND_API_KEY) throw new Error("Application email is not configured");
-  const { data, error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
-    from: `${process.env.FROM_NAME || "ugc.community"} <${process.env.FROM_EMAIL || "noreply@ugc.community"}>`,
-    to: application.recipient, replyTo: application.reply_email,
+  return sendEmail({
+    to: application.recipient,
+    replyTo: application.reply_email,
     subject: `UGC application: ${application.job_title} — ${profile.name}`.replace(/[\r\n]/g, " ").slice(0, 250),
+    headers: { "X-Application-ID": application.id },
     ...applicationEmailContent(application, profile),
-  }, { idempotencyKey: `job-application/${application.id}` });
-  if (error) {
-    const providerMessage = error.message.split(process.env.RESEND_API_KEY).join("[redacted]").slice(0, 400);
-    console.error("Application email rejected", { name: error.name, statusCode: error.statusCode, message: providerMessage });
-  }
-  if (error || !data?.id) throw new Error("Application email was not accepted");
-  return data.id;
+  });
 }

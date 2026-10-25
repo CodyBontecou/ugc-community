@@ -1,17 +1,5 @@
 import { emailBrandMark } from "./brand";
-import { Resend } from "resend";
-
-let resend: Resend | null = null;
-
-function getResend(): Resend {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  return resend;
-}
-
-const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@ugc.community";
-const FROM_NAME = process.env.FROM_NAME || "ugc.community";
+import { sendEmail } from "./transport";
 
 interface WaitlistNotificationParams {
   email: string;
@@ -38,8 +26,7 @@ export async function sendWaitlistNotification(params: WaitlistNotificationParam
     ? `<p style="margin: 8px 0 0 0; font-size: 14px; color: #625850;">${socialHandles.join("<br>")}</p>`
     : "";
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: "cody@isolated.tech",
     subject: `New waitlist signup: ${email}`,
     html: `
@@ -60,15 +47,10 @@ export async function sendWaitlistNotification(params: WaitlistNotificationParam
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send waitlist notification email:", error);
-    throw error;
-  }
 }
 
 export async function sendWaitlistConfirmation(email: string) {
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: email,
     subject: "You're on the waitlist!",
     html: `
@@ -204,15 +186,10 @@ export async function sendWaitlistConfirmation(email: string) {
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send waitlist confirmation email:", error);
-    throw error;
-  }
 }
 
 export async function sendInvitationEmail(email: string, inviteUrl: string) {
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: email,
     subject: "You're in — let's build your portfolio",
     html: `
@@ -370,10 +347,6 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send invitation email:", error);
-    throw error;
-  }
 }
 
 interface ContactInquiryParams {
@@ -389,8 +362,7 @@ interface ContactInquiryParams {
 export async function sendContactInquiry(params: ContactInquiryParams) {
   const { creatorName, creatorEmail, senderName, senderEmail, company, message, portfolioUrl } = params;
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: creatorEmail,
     replyTo: senderEmail,
     subject: `New inquiry from ${company}`,
@@ -511,10 +483,6 @@ export async function sendContactInquiry(params: ContactInquiryParams) {
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send contact inquiry email:", error);
-    throw error;
-  }
 }
 
 interface ContactConfirmationParams {
@@ -527,8 +495,7 @@ interface ContactConfirmationParams {
 export async function sendContactConfirmation(params: ContactConfirmationParams) {
   const { senderName, senderEmail, creatorName, portfolioUrl } = params;
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: senderEmail,
     subject: `Message sent to ${creatorName}`,
     html: `
@@ -622,10 +589,6 @@ export async function sendContactConfirmation(params: ContactConfirmationParams)
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send contact confirmation email:", error);
-    throw error;
-  }
 }
 
 interface MilestoneEarnedParams {
@@ -664,8 +627,7 @@ export async function sendMilestoneEarnedEmail(params: MilestoneEarnedParams) {
 
   const rewardText = rewardDescriptions[rewardType] || "Special reward";
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: creatorEmail,
     subject: `You earned the ${milestoneName} milestone!`,
     html: `
@@ -788,10 +750,6 @@ export async function sendMilestoneEarnedEmail(params: MilestoneEarnedParams) {
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send milestone earned email:", error);
-    throw error;
-  }
 }
 
 // =====================================================
@@ -812,8 +770,7 @@ export async function sendPortfolioDisabledEmail(params: PortfolioDisabledParams
   const postsNeeded = requiredPostCount - currentPostCount;
   const portfolioUrl = `https://${subdomain}.ugc.community`;
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: creatorEmail,
     subject: "Your portfolio has been paused",
     html: `
@@ -941,10 +898,6 @@ export async function sendPortfolioDisabledEmail(params: PortfolioDisabledParams
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send portfolio disabled email:", error);
-    throw error;
-  }
 }
 
 interface PortfolioReenabledParams {
@@ -958,8 +911,7 @@ export async function sendPortfolioReenabledEmail(params: PortfolioReenabledPara
   const firstName = creatorName.split(" ")[0] || "there";
   const portfolioUrl = `https://${subdomain}.ugc.community`;
 
-  const { error } = await getResend().emails.send({
-    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+  await sendEmail({
     to: creatorEmail,
     subject: "Your portfolio is back online!",
     html: `
@@ -1059,10 +1011,6 @@ export async function sendPortfolioReenabledEmail(params: PortfolioReenabledPara
     `.trim(),
   });
 
-  if (error) {
-    console.error("Failed to send portfolio re-enabled email:", error);
-    throw error;
-  }
 }
 
 

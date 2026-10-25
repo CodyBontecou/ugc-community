@@ -1,3 +1,4 @@
+import { EmailDeliveryError } from "../email/delivery";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -15,7 +16,7 @@ const profile = { name: "Jamie", headline: "Skincare UGC creator", bio: "I make 
 const input = { message: "I create skincare demos and would love to make your launch video.", consent: true };
 const user = (id: string) => ({ id, email: `${id}@example.com`, emailVerified: true });
 before(async () => {
-  for (const file of ["0001_job_board.sql", "0002_applications.sql"]) {
+  for (const file of ["0001_job_board.sql", "0002_applications.sql", "0003_email_retry_safety.sql"]) {
     const sql = await readFile(new URL(`../../migrations/job-board/${file}`, import.meta.url), "utf8");
     for (const statement of sql.replace(/^--.*$/gm, "").split(";").filter(s => s.trim())) await db.prepare(statement).run();
   }
@@ -69,8 +70,8 @@ test("retries keep original recipient, reply address, profile, and message and s
   let attempts = 0;
   let snapshot: Application | undefined;
   await assert.rejects(() => submitApplication(db, user("retry-user"), "retry", input, async application => {
-    snapshot = application; attempts++; throw new Error("Network timeout");
-  }), /could not be confirmed/);
+    snapshot = application; attempts++; throw new EmailDeliveryError("E_SENDER_NOT_VERIFIED");
+  }), /not accepted/);
   assert.equal((await db.prepare("SELECT status FROM board_applications WHERE job_id='retry'").first<{ status: string }>())?.status, "failed");
   await saveCreatorProfile(db, "retry-user", { ...profile, name: "Changed name" });
   const result = await submitApplication(db, { ...user("retry-user"), email: "new@example.com" }, "retry", { ...input, message: "This new message should never replace the original." }, async (application, sentProfile) => {
@@ -144,4 +145,18 @@ test("external email applications require a mailbox present in the source brief"
   await assert.rejects(() => reviewJob(db, { ...review, applicationEmail: "unrelated@example.com" }), /must be explicitly stated/);
   await reviewJob(db, { ...review, applicationEmail: "hiring@example.com" });
   assert.equal((await listBoardJobs(db, { q: "Skincare role", source: "external", pay: "", page: 1 })).jobs[0]?.email_apply_enabled, 1);
+});
+
+
+test("an ambiguous Cloudflare send is never repeated, even after its lease expires", async () => {
+  await job("uncertain"); await saveCreatorProfile(db, "uncertain-user", profile);
+  let sends = 0;
+  await assert.rejects(() => submitApplication(db, user("uncertain-user"), "uncertain", input, async () => { sends++; throw new Error("Connection lost after submission"); }), /Contact support/);
+  const row = await db.prepare("SELECT status, failure_retryable FROM board_applications WHERE job_id='uncertain'").first<{ status: string; failure_retryable: number }>();
+  assert.equal(row?.status, "sending"); assert.equal(row.failure_retryable, 0);
+  await assert.rejects(() => submitApplication(db, user("uncertain-user"), "uncertain", input, async () => { sends++; return "duplicate"; }), /needs checking/);
+  assert.equal(sends, 1);
+  await db.prepare("UPDATE board_applications SET status='failed' WHERE job_id='uncertain'").run();
+  await assert.rejects(() => submitApplication(db, user("uncertain-user"), "uncertain", input, async () => { sends++; return "legacy-duplicate"; }), /needs checking/);
+  assert.equal(sends, 1);
 });
