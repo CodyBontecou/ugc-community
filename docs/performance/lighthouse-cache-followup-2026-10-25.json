@@ -1,0 +1,350 @@
+{
+  "date": "2026-10-25",
+  "deployedVersion": "bb3e5357-0728-44f0-af6e-f42f2a294a84",
+  "appSourceCommit": "2c3572b",
+  "allScoredCategories100": true,
+  "zeroRecommendations": false,
+  "goalMet": false,
+  "assessment": "Final sequential homepage mobile, jobs mobile, and homepage desktop runs reached 100 in every category without audit suppression. Framework/CDN recommendations and variable uncached latency remain, so the combined all-100s AND zero-recommendations goal is not fully achieved. Scores describe measured runs, not a guarantee.",
+  "changes": [
+    "Release-keyed anonymous HTML cache, maximum30s bounded by listing closing and external seven-day freshness deadlines.",
+    "Bypass cookies, auth, queries, RSC, Markdown, bots, reloads and unsupported response variants; retain private browser headers.",
+    "Lazy-load Next handler only after cache lookup; independent feed reads use one consistent visibility timestamp.",
+    "Keep Zod validation out of browser analytics and remove unsupported Vercel script.",
+    "Render consent markup immediately outside React streaming boundary; early saved preference/DNT/GPC check hides opted-out or returning UI before paint.",
+    "Preserve released guides, analytics, AI referral tracking and committed impression conversion reporting."
+  ],
+  "runs": [
+    {
+      "report": "ugc-perf2-complete-mobile.report.html",
+      "url": "https://ugc.community/",
+      "fetchTime": "2026-10-25T18:32:05.370Z",
+      "lighthouseVersion": "13.5.0",
+      "device": "mobile",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "cacheOutcome": [
+        "MISS"
+      ],
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 1167.368,
+          "display": "1.2\u00a0s"
+        },
+        "largest-contentful-paint": {
+          "value": 1295.368,
+          "display": "1.3\u00a0s"
+        },
+        "speed-index": {
+          "value": 2190.6134239971157,
+          "display": "2.2\u00a0s"
+        },
+        "total-blocking-time": {
+          "value": 4,
+          "display": "0\u00a0ms"
+        },
+        "cumulative-layout-shift": {
+          "value": 6.787193857276656e-05,
+          "display": "0"
+        },
+        "server-response-time": {
+          "value": 943,
+          "display": "Root document took 940\u00a0ms"
+        }
+      },
+      "recommendations": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "display": "Est savings of 55\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "display": "Est savings of 4\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "document-latency-insight",
+          "title": "Document request latency",
+          "display": "Est savings of 840\u00a0ms",
+          "estimatedSavings": {
+            "FCP": 850,
+            "LCP": 850
+          }
+        },
+        {
+          "id": "legacy-javascript-insight",
+          "title": "Legacy JavaScript",
+          "display": "Est savings of 22\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "display": null,
+          "estimatedSavings": {
+            "LCP": 0
+          }
+        }
+      ]
+    },
+    {
+      "report": "ugc-perf2-complete-jobs-mobile.report.html",
+      "url": "https://ugc.community/jobs",
+      "fetchTime": "2026-10-25T18:32:34.089Z",
+      "lighthouseVersion": "13.5.0",
+      "device": "mobile",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "cacheOutcome": [
+        "MISS"
+      ],
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 1200.1805,
+          "display": "1.2\u00a0s"
+        },
+        "largest-contentful-paint": {
+          "value": 1200.1805,
+          "display": "1.2\u00a0s"
+        },
+        "speed-index": {
+          "value": 1200.1805,
+          "display": "1.2\u00a0s"
+        },
+        "total-blocking-time": {
+          "value": 5.5,
+          "display": "10\u00a0ms"
+        },
+        "cumulative-layout-shift": {
+          "value": 4.255543336578471e-05,
+          "display": "0"
+        },
+        "server-response-time": {
+          "value": 170,
+          "display": "Root document took 170\u00a0ms"
+        }
+      },
+      "recommendations": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "display": "Est savings of 56\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "display": "Est savings of 4\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "legacy-javascript-insight",
+          "title": "Legacy JavaScript",
+          "display": "Est savings of 22\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "display": null,
+          "estimatedSavings": {
+            "LCP": 0
+          }
+        }
+      ]
+    },
+    {
+      "report": "ugc-perf2-complete-desktop.report.html",
+      "url": "https://ugc.community/",
+      "fetchTime": "2026-10-25T18:33:01.366Z",
+      "lighthouseVersion": "13.5.0",
+      "device": "desktop",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "cacheOutcome": [
+        "HIT"
+      ],
+      "metrics": {
+        "first-contentful-paint": {
+          "value": 378.74649999999997,
+          "display": "0.4\u00a0s"
+        },
+        "largest-contentful-paint": {
+          "value": 453.74649999999997,
+          "display": "0.5\u00a0s"
+        },
+        "speed-index": {
+          "value": 428.11111116417294,
+          "display": "0.4\u00a0s"
+        },
+        "total-blocking-time": {
+          "value": 0,
+          "display": "0\u00a0ms"
+        },
+        "cumulative-layout-shift": {
+          "value": 3.107544513867207e-05,
+          "display": "0"
+        },
+        "server-response-time": {
+          "value": 111,
+          "display": "Root document took 110\u00a0ms"
+        }
+      },
+      "recommendations": [
+        {
+          "id": "unused-javascript",
+          "title": "Reduce unused JavaScript",
+          "display": "Est savings of 49\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 50
+          }
+        },
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "display": "Est savings of 4\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "legacy-javascript-insight",
+          "title": "Legacy JavaScript",
+          "display": "Est savings of 22\u00a0KiB",
+          "estimatedSavings": {
+            "FCP": 0,
+            "LCP": 0
+          }
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "display": null,
+          "estimatedSavings": {
+            "LCP": 0
+          }
+        }
+      ]
+    }
+  ],
+  "cacheProbes": {
+    "results": [
+      {
+        "label": "normal-first",
+        "status": 200,
+        "headersMs": 350,
+        "cache": "MISS",
+        "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+      },
+      {
+        "label": "normal-repeat",
+        "status": 200,
+        "headersMs": 96,
+        "cache": "HIT",
+        "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+      },
+      {
+        "label": "cookie",
+        "status": 200,
+        "headersMs": 165,
+        "cache": "BYPASS",
+        "cacheControl": "private, no-cache, no-store, max-age=0, must-revalidate"
+      },
+      {
+        "label": "reload",
+        "status": 200,
+        "headersMs": 180,
+        "cache": "BYPASS",
+        "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+      }
+    ],
+    "refresh": {
+      "count": 38,
+      "nonReddit": 0,
+      "truncated": false
+    }
+  },
+  "workerCpuSamples": {
+    "version": "a525bcd7-3eb0-4380-973c-100492dea696",
+    "miss": {
+      "cpuMs": 117,
+      "wallMs": 170
+    },
+    "hits": [
+      {
+        "cpuMs": 1,
+        "wallMs": 29
+      },
+      {
+        "cpuMs": 1,
+        "wallMs": 9
+      }
+    ],
+    "note": "Same cache implementation as final release; Cloudflare tail CPU counters used because performance.now advances only with I/O in workerd."
+  },
+  "verification": {
+    "productionBuild": "passed",
+    "typescript": "passed",
+    "analyticsTests": 48,
+    "performanceTests": 6,
+    "lintErrors": 0,
+    "preExistingLintWarnings": 6,
+    "browserConsoleErrorsWarningsIssues": 0,
+    "mobileViewportWidth": 390,
+    "horizontalOverflow": false,
+    "consent": "allow, decline, reopen, saved choice and GPC checked locally; controls operational after streaming refactor",
+    "liveGuards": "posting auth, analytics access/privacy, guides HTML/Markdown/canonical/schema/sitemap all passed on final release",
+    "liveImpression": "missing listing400; valid+retry204; D1 exactly1; exact synthetic event removed and zero remaining verified by coordinated analytics chat",
+    "liveAiReferral": "known guide/source event verified and exact fixture removed on preceding equivalent tracking release"
+  },
+  "remainingWork": [
+    "Next initial runtime unused JavaScript (~55KiB) and Next/Cloudflare legacy JavaScript (~22KiB). Removing them safely requires an upstream/runtime architecture change, rather than stripping required framework chunks.",
+    "Cloudflare injected beacon cache lifetime (~4KiB estimated savings); response headers are controlled by Cloudflare.",
+    "Cold/uncached render and network latency still vary. Cache hits avoid SSR CPU, but deliberately bypass private and reload requests.",
+    "Six pre-existing legacy image lint warnings and framework/build deprecation/default-secret build diagnostics remain; no claim of a warning-free repository build."
+  ],
+  "auditMethod": "Lighthouse13.5.0 fresh Chrome state, simulated default mobile/desktop throttling, no disabled audits or relaxed thresholds. Final three runs sequential. Earlier overlapping diagnostic runs (91/93) and one transient Chrome interstitial were preserved in raw artifact bundle, not treated as final benchmark runs.",
+  "artifactDirectory": "/Users/codybontecou/.codex/visualizations/2026/10/25/01a173c9-31bb-7370-affb-bffdcf43df6a/lighthouse/cache-followup",
+  "followUpTodo": ".pi/todos/perf0001.md"
+}
