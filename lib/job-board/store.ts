@@ -1,5 +1,16 @@
 import type { D1Database } from "@/cloudflare-env";
 import { safeLink, submissionSchema, type BoardJob, type Submission, type SourceSnapshot } from "./model";
+import { isReviewCandidate } from "./candidates";
+
+function insertCandidate(db: D1Database, row: SourceSnapshot, now: string, changed: boolean) {
+  return db.prepare(`INSERT INTO board_jobs
+    (id, source_kind, source_key, company, title, description, compensation_type, compensation_text, source_url, source_published_at, captured_at, created_at, updated_at)
+    VALUES (?, 'external', ?, 'Employer needs review', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(source_key) ${changed ? `DO UPDATE SET status='pending_review', description=excluded.description,
+      source_published_at=excluded.source_published_at, captured_at=excluded.captured_at,
+      source_url=excluded.source_url, verified_at=NULL, updated_at=excluded.updated_at` : "DO NOTHING"}`)
+    .bind(crypto.randomUUID(), row.key, row.title || "UGC opportunity — review required", "Source captured; write a short summary after reviewing the original brief.", row.compensationType, row.compensationText, row.source, row.publishedAt, row.capturedAt, now, now);
+}
 
 export async function storeSource(db: D1Database, row: SourceSnapshot) {
   return storeSources(db, [row]);
@@ -14,12 +25,14 @@ export async function storeSources(db: D1Database, rows: SourceSnapshot[]) {
     for (const row of chunk) {
       const previous = byKey.get(row.key);
       if (previous && previous.captured_at > row.capturedAt) continue;
+      const candidate = isReviewCandidate(row);
+      const now = new Date().toISOString();
       if (previous?.revision === row.revision) {
         statements.push(db.prepare("UPDATE board_sources SET captured_at=MAX(captured_at, ?) WHERE source_key=?").bind(row.capturedAt, row.key));
+        // Recover historical false negatives without reopening reviewed decisions.
+        if (candidate) statements.push(insertCandidate(db, row, now, false));
         continue;
       }
-      const now = new Date().toISOString();
-      const candidate = ["paid_ugc_job", "hiring_unconfirmed"].includes(row.classification) && row.contentStatus === "available";
       const pending = [
         db.prepare(`INSERT INTO board_sources VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(source_key) DO UPDATE SET revision=excluded.revision, source_url=excluded.source_url,
@@ -30,13 +43,7 @@ export async function storeSources(db: D1Database, rows: SourceSnapshot[]) {
           .bind(row.key, row.revision, now, row.publishedAt, row.fullText.trim() ? 1 : 0, candidate ? 1 : 0),
       ];
       if (candidate) {
-        pending.push(db.prepare(`INSERT INTO board_jobs
-          (id, source_kind, source_key, company, title, description, compensation_type, compensation_text, source_url, source_published_at, captured_at, created_at, updated_at)
-          VALUES (?, 'external', ?, 'Employer needs review', ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(source_key) DO UPDATE SET status='pending_review', description=excluded.description,
-            source_published_at=excluded.source_published_at, captured_at=excluded.captured_at,
-            source_url=excluded.source_url, verified_at=NULL, updated_at=excluded.updated_at`)
-          .bind(crypto.randomUUID(), row.key, row.title || "UGC opportunity — review required", "Source captured; write a short summary after reviewing the original brief.", row.compensationType, row.compensationText, row.source, row.publishedAt, row.capturedAt, now, now));
+        pending.push(insertCandidate(db, row, now, true));
       } else {
         // A removed source or a revision without a hiring signal can never remain public.
         pending.push(db.prepare("UPDATE board_jobs SET status=?, verified_at=NULL, updated_at=? WHERE source_key=?")
