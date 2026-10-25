@@ -15,6 +15,7 @@ export function BrandLink({
   return (
     <Link
       href={href}
+      aria-label="ugc.community home"
       className={`inline-flex items-center gap-2.5 whitespace-nowrap font-semibold text-[1.1rem] ${light ? "text-white" : "text-warm-gray-900"} ${className}`}
     >
       <Image src="/brand/icon.svg" alt="" width={iconSize} height={iconSize} className="shrink-0" />
