@@ -210,6 +210,32 @@ test("Subscrape full text can approve a job without browsing Reddit and cannot r
   await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, expectedUpdatedAt: current.updated_at } }), /available, complete/);
 });
 
+test("captured comment applications publish only to the original thread", async () => {
+  const source = (await normalizeSource(archive("commentapplication", {
+    fullText: "Hiring cooking creators for $250 per video. Interested? Comment with your portfolio and rate.",
+  })))!;
+  await storeSource(db, source);
+  const job = await db.prepare("SELECT * FROM board_jobs WHERE source_key=?").bind(source.key).first<BoardJob>(); assert.ok(job);
+  const decision = { checkedAt: new Date().toISOString(), evidence: [],
+    capturedSource: { sourceKey: source.key, revision: source.revision, capturedAt: source.capturedAt,
+      finding: "The complete brief explicitly instructs creators to comment with a portfolio and rate." },
+    review: { id: job.id, expectedUpdatedAt: job.updated_at, action: "publish", company: "Employer not disclosed",
+      title: "Cooking video", description: "Create one cooking video. Comment on the original source with your portfolio and rate.",
+      compensationType: "cash", compensationText: "$250 per video; currency not specified", cashAmount: 250,
+      deliverables: "One cooking video", eligibility: "Cooking creators", usageRights: "Not stated",
+      applicationUrl: source.source, closingAt: null, campaignKey: "comment-application-campaign",
+      notes: "Employer identity is undisclosed; original comment application instructions are supported.", verified: true },
+  };
+  await assert.rejects(() => applyAgentDecision(db, { ...decision,
+    review: { ...decision.review, applicationUrl: "https://unlisted.example/apply" } }), /Application destination/);
+  await applyAgentDecision(db, decision);
+  const published = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(job.id).first<BoardJob>(); assert.ok(published);
+  assert.equal(published.status, "published");
+  assert.equal(published.application_url, source.source);
+  assert.equal(published.company, "Employer not disclosed");
+  assert.equal(published.verified_at, source.capturedAt);
+});
+
 test("daily observations update source freshness without duplicating campaigns or auto-renewing approvals", async () => {
   const source = (await normalizeSource(archive("dailyobservation")))!;
   await storeSource(db, source);

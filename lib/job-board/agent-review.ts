@@ -54,10 +54,10 @@ export async function applyAgentDecision(db: D1Database, raw: unknown) {
       if (source.content_status !== "available" || !source.full_text.trim() || captureTime < Date.now() - 7 * 86400_000 || captureTime > Date.now() + 60_000) {
         throw new Error("Captured source must be available, complete, and captured within the last seven days");
       }
-      // The original page is the application destination for explicitly stated DM/email instructions.
+      // The original page is the destination for DM/email or explicit comment applications.
       // External forms may be verified from the captured brief itself or fresh destination evidence.
       const sourceApplication = safeLink(input.applicationUrl) === safeLink(job.source_url || "")
-        && /\b(dm|email|contact|apply|form)\b/i.test(source.full_text);
+        && /\b(dm|email|contact|apply|form)\b|\b(?:comment|reply)\s+(?:below|with)\b|\bleave\s+(?:a\s+)?comment\b/i.test(source.full_text);
       const embeddedApplication = source.full_text.replace(/\\([_()])/g, "$1").includes(input.applicationUrl);
       if (!sourceApplication && !embeddedApplication && !urls.has(safeLink(input.applicationUrl))) {
         throw new Error("Application destination must be stated in the captured brief or checked separately");
