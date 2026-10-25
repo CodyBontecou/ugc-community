@@ -32,12 +32,19 @@ export async function listBoardJobs(db: D1Database, filters: JobFilters, now = n
   const jobs = page === requestedPage ? requestedJobs : await selectPage(page);
   return { jobs: jobs.results, total, page, pageSize };
 }
-export async function boardFilterCounts(db: D1Database, now = new Date().toISOString()) {
+export async function boardFilterSnapshot(db: D1Database, now = new Date().toISOString()) {
   const counts = await db.prepare(`SELECT COUNT(*) AS total,
     COALESCE(SUM(CASE WHEN compensation_type='cash' THEN 1 ELSE 0 END), 0) AS cash,
-    COALESCE(SUM(CASE WHEN source_kind='direct' THEN 1 ELSE 0 END), 0) AS direct
-    FROM board_jobs WHERE ${VISIBLE}`).bind(...visibleBindings(now)).first<{ total: number; cash: number; direct: number }>();
-  return counts || { total: 0, cash: 0, direct: 0 };
+    COALESCE(SUM(CASE WHEN source_kind='direct' THEN 1 ELSE 0 END), 0) AS direct,
+    MIN(closing_at) AS nextClosing,
+    MIN(CASE WHEN source_kind='external' THEN verified_at END) AS oldestExternal
+    FROM board_jobs WHERE ${VISIBLE}`).bind(...visibleBindings(now)).first<{ total: number; cash: number; direct: number; nextClosing: string | null; oldestExternal: string | null }>();
+  const deadlines = [counts?.nextClosing ? Date.parse(counts.nextClosing) : Infinity, counts?.oldestExternal ? Date.parse(counts.oldestExternal) + 7 * 86400_000 : Infinity];
+  return { counts: { total: counts?.total || 0, cash: counts?.cash || 0, direct: counts?.direct || 0 }, validUntil: Math.min(...deadlines) };
+}
+
+export async function boardFilterCounts(db: D1Database, now = new Date().toISOString()) {
+  return (await boardFilterSnapshot(db, now)).counts;
 }
 
 export async function supplyReport(db: D1Database) {

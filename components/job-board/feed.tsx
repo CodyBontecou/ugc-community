@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
-import { boardBindings } from "@/lib/job-board/access";
-import { boardFilterCounts, listBoardJobs, type JobFilters } from "@/lib/job-board/search";
+import { boardBindings, markPublicFeedReady } from "@/lib/job-board/bindings";
+import { boardFilterCounts, boardFilterSnapshot, listBoardJobs, type JobFilters } from "@/lib/job-board/search";
 import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/display";
 import { JobTable } from "./job-table";
 
@@ -21,8 +21,15 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
   let result: Awaited<ReturnType<typeof listBoardJobs>> | null = null;
   let counts: Awaited<ReturnType<typeof boardFilterCounts>> | null = null;
   try {
+    const started = performance.now();
     const db = (await boardBindings()).JOB_BOARD;
-    [result, counts] = await Promise.all([listBoardJobs(db, filters), boardFilterCounts(db)]);
+    const bound = performance.now();
+    const now = new Date().toISOString();
+    const [jobs, snapshot] = await Promise.all([listBoardJobs(db, filters, now), boardFilterSnapshot(db, now)]);
+    result = jobs;
+    counts = snapshot.counts;
+    await markPublicFeedReady(snapshot.validUntil);
+    console.log(JSON.stringify({ event: "public_feed_timing", bindingsMs: Math.round(bound - started), databaseMs: Math.round(performance.now() - bound) }));
   } catch { /* Show a truthful unavailable state. */ }
   const filterUrl = (remove?: string, page?: number) => {
     const query = new URLSearchParams();

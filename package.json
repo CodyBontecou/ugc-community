@@ -32,7 +32,8 @@
     "jobs:review": "tsx scripts/review-job-board.ts",
     "test:analytics": "node --import tsx --experimental-test-module-mocks --test lib/analytics/*.test.ts",
     "test:agent-content": "node --import tsx --test lib/agent-content/*.test.ts",
-    "test:public-api": "node --import tsx --test lib/public-api/*.test.ts && node --test packages/cli/test/*.test.mjs"
+    "test:public-api": "node --import tsx --test lib/public-api/*.test.ts && node --test packages/cli/test/*.test.mjs",
+    "test:performance": "node --import tsx --test lib/performance/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
