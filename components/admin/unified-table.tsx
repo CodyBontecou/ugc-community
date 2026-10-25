@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarImage } from "@/components/avatar-image";
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
@@ -351,7 +352,7 @@ export function UnifiedTable() {
       return (
         <div className="flex items-center gap-3">
           {record.image ? (
-            <img src={record.image} alt={record.name || ""} className="w-10 h-10 rounded-full" />
+            <AvatarImage size={40} src={record.image} alt={record.name || ""} className="w-10 h-10 rounded-full" />
           ) : (
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-sm font-medium">
               {record.name?.charAt(0) || "U"}

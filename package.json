@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint .",
     "icons:generate": "node scripts/generate-brand-icons.mjs",
-    "cf:build": "BETTER_AUTH_URL=https://ugc.community NEXT_PUBLIC_APP_URL=https://ugc.community NEXT_PUBLIC_DOMAIN=ugc.community opennextjs-cloudflare build && node scripts/build-public-site.mjs",
+    "cf:build": "BETTER_AUTH_URL=https://ugc.community NEXT_PUBLIC_APP_URL=https://ugc.community NEXT_PUBLIC_DOMAIN=ugc.community opennextjs-cloudflare build && node scripts/build-public-site.mjs && node scripts/build-lazy-next-worker.mjs",
     "preview": "pnpm cf:build && opennextjs-cloudflare preview",
     "deploy": "./scripts/deploy-with-indexnow.sh",
     "deploy:worker": "pnpm cf:build && opennextjs-cloudflare deploy",

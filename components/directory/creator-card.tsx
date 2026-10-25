@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarImage } from "@/components/avatar-image";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -66,7 +67,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
             <div className="relative shrink-0">
               <div className="w-[68px] h-[68px] rounded-full p-[2.5px] bg-gradient-to-br from-coral/40 via-rose/30 to-lavender-soft/40 group-hover:from-coral group-hover:via-rose group-hover:to-lavender-soft transition-all duration-500">
                 {creator.image ? (
-                  <img
+                  <AvatarImage size={68}
                     src={creator.image}
                     alt={name}
                     className="w-full h-full rounded-full object-cover border-[2.5px] border-white"

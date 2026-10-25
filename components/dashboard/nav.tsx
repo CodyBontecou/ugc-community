@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarImage } from "@/components/avatar-image";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -88,7 +89,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
           className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-warm-gray-700 hover:bg-warm-gray-50 rounded-[var(--radius-md)] transition-colors"
         >
           {user.image ? (
-            <img
+            <AvatarImage size={32}
               src={user.image}
               alt={user.name}
               className="w-8 h-8 rounded-full ring-2 ring-warm-gray-100"

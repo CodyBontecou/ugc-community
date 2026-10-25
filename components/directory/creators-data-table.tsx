@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarImage } from "@/components/avatar-image";
 import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -318,7 +319,7 @@ export function CreatorsDataTable({ creators }: CreatorsDataTableProps) {
                           <Link href={`/creators/${creator.subdomain}`} className="flex items-center gap-2.5 group">
                             <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-gray-100">
                               {creator.image ? (
-                                <img src={creator.image} alt={name} className="w-full h-full object-cover" />
+                                <AvatarImage size={32} src={creator.image} alt={name} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs font-medium">
                                   {name.charAt(0)}

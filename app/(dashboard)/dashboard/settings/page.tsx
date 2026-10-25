@@ -1,3 +1,4 @@
+import { AvatarImage } from "@/components/avatar-image";
 import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
@@ -40,7 +41,7 @@ async function SettingsContent() {
       <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-5 sm:p-6">
         <div className="flex items-center gap-4 mb-6">
           {session.user.image ? (
-            <img
+            <AvatarImage size={64}
               src={session.user.image}
               alt={session.user.name || ""}
               className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-full"
