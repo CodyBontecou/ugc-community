@@ -17,11 +17,19 @@ export async function listBoardJobs(db: D1Database, filters: JobFilters, now = n
   if (["external", "direct"].includes(filters.source)) { clauses.push("source_kind=?"); values.push(filters.source); }
   if (["cash", "mixed", "performance_only", "affiliate", "gifted_or_unpaid", "unspecified"].includes(filters.pay)) { clauses.push("compensation_type=?"); values.push(filters.pay); }
   const where = clauses.join(" AND ");
-  const count = await db.prepare(`SELECT COUNT(*) AS total FROM board_jobs WHERE ${where}`).bind(...values).first<{ total: number }>();
-  const total = count?.total || 0, pageSize = 20;
-  const page = Math.max(1, Math.min(Math.floor(filters.page) || 1, Math.max(1, Math.ceil(total / pageSize))));
-  const jobs = await db.prepare(`SELECT ${PUBLIC_FIELDS} FROM board_jobs WHERE ${where} ORDER BY published_at DESC, id LIMIT ? OFFSET ?`)
-    .bind(...values, pageSize, (page - 1) * pageSize).all<BoardJob>();
+  const pageSize = 20;
+  const requestedPage = Math.max(1, Math.floor(filters.page) || 1);
+  const selectPage = (page: number) => db.prepare(`SELECT ${PUBLIC_FIELDS} FROM board_jobs WHERE ${where} ORDER BY published_at DESC, id LIMIT ? OFFSET ?`)
+    .bind(...values, pageSize, Math.min(Number.MAX_SAFE_INTEGER, (page - 1) * pageSize)).all<BoardJob>();
+  // The normal page does not depend on the count. Start both reads together
+  // instead of adding a second database round trip to every public page load.
+  const [count, requestedJobs] = await Promise.all([
+    db.prepare(`SELECT COUNT(*) AS total FROM board_jobs WHERE ${where}`).bind(...values).first<{ total: number }>(),
+    selectPage(requestedPage),
+  ]);
+  const total = count?.total || 0;
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(total / pageSize)));
+  const jobs = page === requestedPage ? requestedJobs : await selectPage(page);
   return { jobs: jobs.results, total, page, pageSize };
 }
 export async function boardFilterCounts(db: D1Database, now = new Date().toISOString()) {

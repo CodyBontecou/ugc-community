@@ -21,6 +21,18 @@ export function varyAccept(headers: Headers): void {
 export function agentResponse(request: Request, response: Response): Response {
   const headers = new Headers(response.headers);
   varyAccept(headers);
+  // Anonymous browsing pages contain public listings only. Require validation
+  // on new requests while allowing browser back/forward snapshots. Never relax
+  // the policy on account pages, session responses, RSC, or errors.
+  const pathname = new URL(request.url).pathname;
+  if (
+    request.method === "GET" && response.status === 200 &&
+    ["/", "/jobs"].includes(pathname) &&
+    !request.headers.has("Cookie") && !headers.has("Set-Cookie") &&
+    headers.get("Content-Type")?.startsWith("text/html")
+  ) {
+    headers.set("Cache-Control", "private, no-cache, max-age=0, must-revalidate");
+  }
   if (response.status === 404 && !new URL(request.url).pathname.startsWith("/api/") && prefersMarkdown(request.headers.get("Accept"))) {
     void response.body?.cancel();
     headers.set("Content-Type", "text/markdown; charset=utf-8");

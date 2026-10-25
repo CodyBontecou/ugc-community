@@ -1,5 +1,6 @@
 import { ExternalLink, CalendarDays } from "lucide-react";
-import { PAY_LABELS, safeLink, type BoardJob } from "@/lib/job-board/model";
+import { PAY_LABELS, safeLink } from "@/lib/job-board/display";
+import type { BoardJob } from "@/lib/job-board/model";
 
 export function JobCard({ job }: { job: BoardJob }) {
   return <article className="bg-white border border-warm-gray-200 rounded-[28px] p-6 sm:p-8">

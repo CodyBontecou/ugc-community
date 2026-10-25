@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { boardBindings } from "@/lib/job-board/access";
 import { boardFilterCounts, listBoardJobs, type JobFilters } from "@/lib/job-board/search";
-import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/model";
+import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/display";
 import { JobTable } from "./job-table";
 
 export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Record<string, string | string[] | undefined>; basePath?: "/" | "/jobs" }) {
@@ -42,7 +42,7 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
             { label: "Guaranteed cash", count: counts?.cash, show: !counts || counts.cash > 0 || filters.pay === "cash", query: "?pay=cash", active: filters.pay === "cash" && !filters.q && !filters.source },
             { label: "Posted directly", count: counts?.direct, show: !counts || counts.direct > 0 || filters.source === "direct", query: "?source=direct", active: filters.source === "direct" && !filters.q && !filters.pay },
           ].filter(filter => filter.show).map(({ label, count, query, active }) => (
-            <Link key={label} href={`${basePath}${query}#jobs`} aria-current={active ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-full border px-3 py-2 text-xs font-medium ${active ? "border-warm-gray-900 bg-warm-gray-900 text-white" : "border-warm-gray-200 bg-white/80 text-warm-gray-700 hover:bg-peach-100"}`}>
+            <Link prefetch={false} key={label} href={`${basePath}${query}#jobs`} aria-current={active ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-full border px-3 py-2 text-xs font-medium ${active ? "border-warm-gray-900 bg-warm-gray-900 text-white" : "border-warm-gray-200 bg-white/80 text-warm-gray-700 hover:bg-peach-100"}`}>
               {label}{count !== undefined && <span className="ml-2 tabular-nums opacity-75">{count}</span>}
             </Link>
           ))}
@@ -69,7 +69,7 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
             </label>
             <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl primary-action px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Search jobs</button>
           </form>
-          {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link href={`${basePath}#jobs`} className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
+          {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link prefetch={false} key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link prefetch={false} href={`${basePath}#jobs`} className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-warm-gray-200 px-4 py-3 text-xs text-warm-gray-600 sm:px-6">
             <p>{result ? <><span className="font-semibold tabular-nums text-warm-gray-900">{result.total}</span> {result.total === 1 ? "opportunity" : "opportunities"}{activeFilters.length > 0 ? " found" : " to explore"}</> : "UGC opportunities"}</p>
             <span>Newest first</span>
@@ -77,15 +77,15 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
           {!result ? <div role="alert" className="border-t border-warm-gray-200 px-6 py-14 text-center"><h2 className="mb-3 text-3xl">Jobs are temporarily unavailable</h2><p className="text-sm text-warm-gray-600">Please try again shortly.</p></div> : !result.jobs.length ? <div className="border-t border-warm-gray-200 px-6 py-14 text-center">
             <h2 className="mb-3 text-3xl">{activeFilters.length ? "No matching opportunities" : "New opportunities are on the way"}</h2>
             <p className="mx-auto mb-6 max-w-md text-sm text-warm-gray-600">{activeFilters.length ? "Try another keyword or clear your filters." : "We’re reviewing the first briefs. Hiring a UGC creator? Post your role for free."}</p>
-            <Link href={activeFilters.length ? `${basePath}#jobs` : "/post-job"} className="inline-flex rounded-full border border-warm-gray-200 px-5 py-2.5 text-sm font-medium hover:bg-peach-100">{activeFilters.length ? "Clear filters" : "Post a free job"}</Link>
+            <Link prefetch={false} href={activeFilters.length ? `${basePath}#jobs` : "/post-job"} className="inline-flex rounded-full border border-warm-gray-200 px-5 py-2.5 text-sm font-medium hover:bg-peach-100">{activeFilters.length ? "Clear filters" : "Post a free job"}</Link>
           </div> : <JobTable jobs={result.jobs} />}
           {result && result.total > result.pageSize && <nav aria-label="Job pagination" className="flex items-center justify-between border-t border-warm-gray-200 px-4 py-4 text-xs sm:px-6">
-            {result.page > 1 ? <Link href={filterUrl(undefined, result.page - 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100"><ArrowLeft size={14} />Previous</Link> : <span />}
+            {result.page > 1 ? <Link prefetch={false} href={filterUrl(undefined, result.page - 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100"><ArrowLeft size={14} />Previous</Link> : <span />}
             <span className="tabular-nums text-warm-gray-600">Page {result.page} of {Math.ceil(result.total / result.pageSize)}</span>
-            {result.page * result.pageSize < result.total ? <Link href={filterUrl(undefined, result.page + 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100">Next<ArrowRight size={14} /></Link> : <span />}
+            {result.page * result.pageSize < result.total ? <Link prefetch={false} href={filterUrl(undefined, result.page + 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100">Next<ArrowRight size={14} /></Link> : <span />}
           </nav>}
         </div>
-        <p className="mt-4 text-center text-sm"><Link href="/apply-profile" className="text-rose underline">Create your quick-apply profile</Link></p>
+        <p className="mt-4 text-center text-sm"><Link prefetch={false} href="/apply-profile" className="text-purple-dark underline">Create your quick-apply profile</Link></p>
         <p className="mt-4 text-center text-xs text-warm-gray-600">Free to browse · Reviewed before publication · Quick apply by email where accepted</p>
       </div>
     </section>

@@ -32,3 +32,23 @@ test("HEAD 404 returns no body", async () => {
   assert.equal(response.status, 404);
   assert.equal(await response.text(), "");
 });
+
+test("anonymous job pages permit back/forward snapshots but require revalidation", () => {
+  for (const path of ["/", "/jobs", "/?pay=cash"]) {
+    const response = agentResponse(new Request(`https://ugc.community${path}`), new Response("jobs", { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } }));
+    assert.equal(response.headers.get("Cache-Control"), "private, no-cache, max-age=0, must-revalidate");
+  }
+});
+
+test("browsing cache policy never relaxes private, RSC, session, or error responses", () => {
+  for (const { path, requestHeaders, responseHeaders, status } of [
+    { path: "/dashboard" }, { path: "/api/auth/get-session" },
+    { path: "/", requestHeaders: { Cookie: "better-auth.session_token=private" } },
+    { path: "/", responseHeaders: { "Set-Cookie": "session=private" } },
+    { path: "/", responseHeaders: { "Content-Type": "text/x-component" } },
+    { path: "/", status: 500 },
+  ]) {
+    const response = agentResponse(new Request(`https://ugc.community${path}`, { headers: requestHeaders }), new Response("private", { status: status || 200, headers: { "Content-Type": "text/html", "Cache-Control": "no-store", ...responseHeaders } }));
+    assert.equal(response.headers.get("Cache-Control"), "no-store");
+  }
+});

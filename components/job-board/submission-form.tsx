@@ -1,7 +1,7 @@
 "use client";
 import { ChevronDown } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/model";
+import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/display";
 
 export function SubmissionForm() {
   const [state, setState] = useState("idle"), [error, setError] = useState("");

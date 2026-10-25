@@ -71,11 +71,11 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
             <h1 className="text-2xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-3">
               Check your email
             </h1>
-            <p className="text-warm-gray-500 mb-6 break-words">
+            <p className="text-warm-gray-600 mb-6 break-words">
               We sent a sign-in link to{" "}
               <span className="font-medium text-warm-gray-700">{email}</span>
             </p>
-            <p className="text-sm text-warm-gray-400 mb-6">
+            <p className="text-sm text-warm-gray-600 mb-6">
               Click the link in the email to sign in. It expires in 5 minutes.
             </p>
             <button
@@ -83,7 +83,7 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
                 setMagicLinkSent(false);
                 setEmail("");
               }}
-              className="text-rose hover:text-rose/80 font-medium transition-colors text-sm"
+              className="text-purple-dark hover:text-purple-dark/80 font-medium transition-colors text-sm"
             >
               Use a different email
             </button>
@@ -107,7 +107,7 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
           <h1 className="text-3xl sm:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
             Welcome to ugc.community
           </h1>
-          <p className="text-warm-gray-500">
+          <p className="text-warm-gray-600">
             Create an account or sign in with your email
           </p>
         </div>
@@ -129,7 +129,7 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
             <div className="relative">
               <Mail
                 size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-gray-600"
               />
               <input
                 id="email"
@@ -141,7 +141,7 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
                 enterKeyHint="send"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="min-h-12 w-full min-w-0 text-base pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[var(--radius-md)] text-warm-gray-900 placeholder:text-warm-gray-400 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
+                className="min-h-12 w-full min-w-0 text-base pl-10 pr-4 py-3 border border-warm-gray-200 rounded-[var(--radius-md)] text-warm-gray-900 placeholder:text-warm-gray-600 focus:outline-none focus:ring-2 focus:ring-rose/20 focus:border-rose transition-colors"
                 placeholder="you@example.com"
                 required
                 disabled={anyLoading}
@@ -169,7 +169,7 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: strin
 
         <div className="my-6 flex items-center gap-4">
           <div className="flex-1 h-px bg-warm-gray-200" />
-          <span className="text-sm text-warm-gray-400">or continue with</span>
+          <span className="text-sm text-warm-gray-600">or continue with</span>
           <div className="flex-1 h-px bg-warm-gray-200" />
         </div>
 

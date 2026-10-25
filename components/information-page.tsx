@@ -10,7 +10,7 @@ export function InformationPage({ name, children }: { name: keyof typeof informa
     <BrandLink />
     <h1 className="mt-8 break-words text-4xl text-warm-gray-900 sm:text-5xl">{page.title}</h1>
     <div className="mt-10 space-y-8 leading-7 text-warm-gray-600">{page.sections.map(section => <section key={section.heading}><h2 className="text-2xl text-warm-gray-900">{section.heading}</h2><p className="mt-3">{section.text}</p></section>)}</div>
-    <nav aria-label="Related resources" className="mt-10 flex flex-wrap gap-5 text-rose"><Link href="/jobs">Browse jobs</Link><Link href="/post-job">Post a job</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="mailto:cody@isolated.tech">Email support</a></nav>
+    <nav aria-label="Related resources" className="mt-10 flex flex-wrap gap-5 text-purple-dark"><Link href="/jobs">Browse jobs</Link><Link href="/post-job">Post a job</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="mailto:cody@isolated.tech">Email support</a></nav>
     {children}
   </article></main><Footer /></>;
 }

@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Avoid a render-blocking stylesheet round trip on cold mobile visits.
+  experimental: {
+    inlineCss: true,
+  },
+
   // Vercel Blob imports undici directly for Node.js. Cloudflare workerd's
   // Node TLS shim does not implement undici's ALPN options, so use the package's
   // own browser transport, which delegates to the Workers-native fetch API.

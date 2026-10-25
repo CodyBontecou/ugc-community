@@ -174,7 +174,7 @@ img {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-coral), var(--color-rose), var(--color-coral-dark));
+  background: linear-gradient(135deg, #a83b2d, #a92e55);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -244,10 +244,10 @@ img {
   }
 }
 
-/* Shared brand gradient for primary actions. */
+/* Dark rose keeps white action labels readable. */
 .primary-action {
   color: #fff;
-  background: linear-gradient(to right, var(--color-coral), var(--color-rose));
+  background: #a92e55;
   transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 @media (hover: hover) {

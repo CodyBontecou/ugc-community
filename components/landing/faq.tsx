@@ -12,14 +12,14 @@ export function FAQ() {
     <section id="faq" className="relative z-[1] py-16 sm:py-24 lg:py-32">
       <div className="container">
         <div className="text-center mb-10 sm:mb-16">
-          <span className="inline-block py-1.5 px-4 bg-peach-100 text-rose rounded-full text-xs font-semibold uppercase tracking-wider mb-6">FAQ</span>
+          <span className="inline-block py-1.5 px-4 bg-peach-100 text-purple-dark rounded-full text-xs font-semibold uppercase tracking-wider mb-6">FAQ</span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)]">A few things to know</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           {questions.map((item) => (
             <article key={item.question} className="bg-white rounded-[var(--radius-xl)] p-5 sm:p-8 border border-warm-gray-100">
               <h3 className="font-[family-name:var(--font-body)] font-semibold text-xl text-warm-gray-900 mb-3">{item.question}</h3>
-              <p className="text-warm-gray-500 leading-relaxed">{item.answer}</p>
+              <p className="text-warm-gray-600 leading-relaxed">{item.answer}</p>
             </article>
           ))}
         </div>

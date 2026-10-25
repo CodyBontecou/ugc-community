@@ -11,21 +11,21 @@ export function Footer() {
             Find your next UGC opportunity. Collected jobs and brand-posted briefs in one place.
           </p>
           <nav aria-label="Site information" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-            <Link href="/jobs" className="hover:text-white">Browse jobs</Link>
-            <Link href="/post-job" className="hover:text-white">Post a job</Link>
-            <Link href="/#faq" className="hover:text-white">FAQ</Link>
-            <Link href="/about" className="hover:text-white">About</Link>
-            <Link href="/contact" className="hover:text-white">Contact</Link>
-            <Link href="/docs" className="hover:text-white">Developers</Link>
-            <Link href="/guide" className="hover:text-white">Agent guide</Link>
-            <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/terms" className="hover:text-white">Terms</Link>
+            <Link prefetch={false} href="/jobs" className="hover:text-white">Browse jobs</Link>
+            <Link prefetch={false} href="/post-job" className="hover:text-white">Post a job</Link>
+            <Link prefetch={false} href="/#faq" className="hover:text-white">FAQ</Link>
+            <Link prefetch={false} href="/about" className="hover:text-white">About</Link>
+            <Link prefetch={false} href="/contact" className="hover:text-white">Contact</Link>
+            <Link prefetch={false} href="/docs" className="hover:text-white">Developers</Link>
+            <Link prefetch={false} href="/guide" className="hover:text-white">Agent guide</Link>
+            <Link prefetch={false} href="/privacy" className="hover:text-white">Privacy</Link>
+            <Link prefetch={false} href="/terms" className="hover:text-white">Terms</Link>
             <a href="mailto:cody@isolated.tech" className="hover:text-white">Support</a>
           </nav>
         </div>
 
         <div className="pt-8 border-t border-warm-gray-800 text-center">
-          <p className="text-sm text-warm-gray-500">
+          <p className="text-sm text-warm-gray-400">
             &copy; {new Date().getFullYear()} ugc.community. Made with love for
             creators.
           </p>

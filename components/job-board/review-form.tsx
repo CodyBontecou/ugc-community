@@ -1,7 +1,8 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { PAY_LABELS, PAY_TYPES, type BoardJob } from "@/lib/job-board/model";
+import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/display";
+import type { BoardJob } from "@/lib/job-board/model";
 
 export function ReviewForm({ job }: { job: BoardJob }) {
   const [error, setError] = useState(""), [pending, setPending] = useState(false);

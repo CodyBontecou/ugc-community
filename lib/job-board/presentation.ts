@@ -1,4 +1,4 @@
-import { PAY_LABELS } from "./model";
+import { PAY_LABELS } from "./display";
 
 // Keep the source wording and payment unit; all qualifications remain in the brief.
 export function compensationSummary(text: string, payType: string) {

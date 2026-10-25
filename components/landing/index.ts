@@ -1,9 +1,5 @@
-export { Navbar } from "./navbar";
+export { PublicNavbar as Navbar } from "./public-navbar";
 export { BackgroundBlobs } from "./background-blobs";
 export { Hero } from "./hero";
-export { Features } from "./features";
-export { HowItWorks } from "./how-it-works";
-export { Pricing } from "./pricing";
 export { FAQ } from "./faq";
-export { FinalCTA } from "./final-cta";
 export { Footer } from "./footer";
