@@ -1,5 +1,7 @@
 # Recommended for App implementation
 
+The canonical report now scores **100/100**, with all 11 essential checks passing. The first completed interface scan passed 19 of 24 recommended checks (17.6/20), with five bonus points. Evidence: [app-report.json](app-report.json). Public report: https://is-agentic.com/scan/ugc.community
+
 The public interfaces now support the recommended agent workflows without exposing account data or write operations.
 
 | Interface | Public location | Behavior |
@@ -38,3 +40,7 @@ npm registry publication still needs an authenticated publisher: npm whoami retu
 A real business mailing address intended for publication is still needed to complete Organization PostalAddress metadata. Search-based recommendations depend on the search provider indexing and ranking the pages; an accepted IndexNow submission does not guarantee either.
 
 The earlier 98-point report remains in final-report.json as historical evidence. Use the Rescan button after deployments to request fresh technical checks; a new report URL or query marker alone may still reuse Ora's cached snapshot. Agent journey and search observations may remain cached separately from current HTTP checks.
+
+## Policy check freshness
+
+The first 100-point snapshot predates the dedicated /docs/deprecation page, its rel=deprecation API response link, and the OpenAPI x-deprecation-policy metadata. Those are now live and verified by HTTP; a fresh scan was requested after deployment. Do not add fictional Sunset dates to active operations just to satisfy the scanner. The historical agent journey can describe older site content even after current technical checks improve.

@@ -1,5 +1,9 @@
 # Agent readiness verification
 
+Latest verified result: **[100/100 on the canonical report](https://is-agentic.com/scan/ugc.community)**. See [app-recommendations.md](app-recommendations.md) and [app-report.json](app-report.json) for the public API, MCP, CLI and current recommendation evidence.
+
+## Earlier website baseline
+
 On October 24, 2026 (America/Puerto_Rico), ugc.community improved from **66/100 to 98/100** on Is Agentic. All six applicable essential checks pass (80/80); recommended checks contribute 15.5/20 and bonus signals 2.6 points. The reported total is rounded by the scanner.
 
 Fresh report: https://is-agentic.com/scan/ugc.community%3Fagent-readiness%3D2
