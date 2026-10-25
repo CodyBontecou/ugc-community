@@ -10,6 +10,7 @@ import { listBoardJobs, supplyReport } from "./search";
 import { readBody, sameOrigin } from "./http";
 import { seedAuditLeads } from "./seed";
 import leads from "../../content/jobs/audit-leads.json";
+import { agentReviewQueue, applyAgentDecision } from "./agent-review";
 const mf = new Miniflare({ modules: true, script: "export default { fetch() { return new Response('test'); } }", compatibilityDate: "2026-07-25", d1Databases: ["JOB_BOARD"], r2Buckets: ["SUBSCRAPE_EXPORTS"] });
 const env = await mf.getBindings<BoardBindings>();
 const db = env.JOB_BOARD;
@@ -141,4 +142,32 @@ test("canonical app origin works behind Next while foreign origins and oversized
     assert.equal(sameOrigin(new Request("http://localhost:3000/api", { headers: { Origin: "https://evil.example" } })), false);
     await assert.rejects(() => readBody(new Request("http://localhost/api", { method: "POST", body: "x".repeat(100) }), 50), /too large/);
   } finally { if (original === undefined) delete process.env.NEXT_PUBLIC_APP_URL; else process.env.NEXT_PUBLIC_APP_URL = original; }
+});
+
+test("agent reviews require fresh evidence, preserve publication gates, and can withdraw uncertain jobs", async () => {
+  const source = (await normalizeSource(archive("agentcheck")))!;
+  await storeSource(db, source);
+  const job = await db.prepare("SELECT * FROM board_jobs WHERE source_key=?").bind(source.key).first<BoardJob>(); assert.ok(job);
+  const decision = {
+    checkedAt: new Date().toISOString(), evidence: [] as { url: string; finding: string }[],
+    review: { id: job.id, expectedUpdatedAt: job.updated_at, action: "publish", company: "Agent reviewed brand", title: "UGC brief",
+      description: "Create one original video for the product launch.", compensationType: "cash", compensationText: "USD $250 per video",
+      cashAmount: 250, deliverables: "One video", eligibility: "US", usageRights: "30 days organic", applicationUrl: "https://example.com/apply",
+      closingAt: future, campaignKey: "agent-reviewed-campaign", notes: "Confirmed hiring and terms", verified: true },
+  };
+  await assert.rejects(() => applyAgentDecision(db, decision), /requires fresh source/);
+  decision.evidence = [{ url: source.source, finding: "Original brief states USD $250 per video and remains open." }, { url: decision.review.applicationUrl, finding: "Employer application form accepts this campaign's applications." }];
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, checkedAt: "2000-01-01T00:00:00.000Z" }), /within the last 24/);
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, cashAmount: null } }), /Cash compensation/);
+  await applyAgentDecision(db, decision);
+  const updated = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(job.id).first<BoardJob>(); assert.ok(updated);
+  assert.equal(updated.status, "published"); assert.match(updated.review_notes, /Daily agent review/);
+  const queue = await agentReviewQueue(db);
+  assert.ok(queue.jobs.some(row => row.id === job.id));
+  assert.ok(queue.jobs.every(row => !("submitter_email" in row) && !("submitter_user_id" in row)));
+  await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, action: "defer", expectedUpdatedAt: "2000-01-01T00:00:00.000Z" } }), /Listing changed/);
+  await applyAgentDecision(db, { ...decision, evidence: [], review: { ...decision.review, action: "defer", expectedUpdatedAt: updated.updated_at, notes: "Application form is inaccessible; retry next daily run." } });
+  const held = await db.prepare("SELECT * FROM board_jobs WHERE id=?").bind(job.id).first<BoardJob>(); assert.ok(held);
+  assert.equal(held.status, "pending_review"); assert.equal(held.verified_at, null);
+  assert.equal((await listBoardJobs(db, { ...filters, q: "Agent reviewed brand" })).total, 0);
 });

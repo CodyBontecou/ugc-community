@@ -18,7 +18,7 @@ export function SubmissionForm() {
     } catch (error) { setState("idle"); setError(error instanceof Error ? error.message : "Please try again"); }
   }
   const input = "block w-full border border-warm-gray-200 rounded-xl px-4 py-3 mt-2 bg-white font-normal";
-  if (state === "success") return <div role="status" className="bg-white rounded-[28px] border border-warm-gray-200 p-10"><h2 className="text-3xl mb-4">Your job is in the review queue.</h2><p className="text-warm-gray-600 mb-5">It will appear in the feed only after manual approval. There’s no posting fee.</p><a href="/jobs" className="underline underline-offset-4">Back to opportunities</a></div>;
+  if (state === "success") return <div role="status" className="bg-white rounded-[28px] border border-warm-gray-200 p-10"><h2 className="text-3xl mb-4">Your job is in the review queue.</h2><p className="text-warm-gray-600 mb-5">It will appear in the feed after it passes our daily agent review. There’s no posting fee.</p><a href="/jobs" className="underline underline-offset-4">Back to opportunities</a></div>;
   return <form onSubmit={submit} className="bg-white rounded-[28px] border border-warm-gray-200 p-6 sm:p-10 space-y-6">
     <label className="block text-sm font-medium">Work email (private)<input name="contactEmail" type="email" autoComplete="email" required maxLength={254} className={input} /></label>
     <div className="grid sm:grid-cols-2 gap-5">{[["company", "Brand / company", 160], ["title", "Job title", 200]].map(([key, label, max]) => <label key={key} className="text-sm font-medium">{label}<input name={String(key)} required maxLength={Number(max)} className={input} /></label>)}</div>
