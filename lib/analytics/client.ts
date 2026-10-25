@@ -1,5 +1,5 @@
 "use client";
-import { CONSENT_KEY, SESSION_COOKIE, SESSION_SECONDS, referralSource, analyticsPath, type BrowserEvent, type EventProperties, type EventBatch } from "./model";
+import { CONSENT_KEY, SESSION_COOKIE, SESSION_SECONDS, referralSource, analyticsPath, type BrowserEvent, type EventProperties, type EventBatch } from "./browser";
 
 type QueuedEvent = EventBatch["events"][number];
 let queue: QueuedEvent[] = [];
