@@ -1,8 +1,4 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
-
-const TUTORIALS_DIR = path.join(process.cwd(), "content/tutorials");
+import bundledTutorials from "@/content/tutorials.generated.json";
 
 export interface TutorialFrontmatter {
   title: string;
@@ -22,52 +18,20 @@ export interface TutorialMeta extends TutorialFrontmatter {
 
 export interface Tutorial extends TutorialMeta {
   content: string;
+  html?: string;
 }
 
 export function getAllTutorials(): TutorialMeta[] {
-  if (!fs.existsSync(TUTORIALS_DIR)) return [];
-
-  const files = fs
-    .readdirSync(TUTORIALS_DIR)
-    .filter((f) => f.endsWith(".mdx"));
-
-  const tutorials = files.map((filename) => {
-    const slug = filename.replace(/\.mdx$/, "");
-    const fullPath = path.join(TUTORIALS_DIR, filename);
-    const fileContents = fs.readFileSync(fullPath, "utf8");
-    const { data } = matter(fileContents);
-
-    return {
-      slug,
-      ...(data as TutorialFrontmatter),
-    };
-  });
-
-  return tutorials.sort((a, b) => a.order - b.order);
+  return bundledTutorials.map(({ content: _content, ...meta }) => meta as TutorialMeta)
+    .sort((a, b) => a.order - b.order);
 }
 
 export function getTutorialBySlug(slug: string): Tutorial | null {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
-  const fullPath = path.join(TUTORIALS_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(fullPath)) return null;
-
-  const fileContents = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(fileContents);
-
-  return {
-    slug,
-    content,
-    ...(data as TutorialFrontmatter),
-  };
+  return (bundledTutorials.find(tutorial => tutorial.slug === slug) as Tutorial | undefined) ?? null;
 }
 
 export function getTutorialSlugs(): string[] {
-  if (!fs.existsSync(TUTORIALS_DIR)) return [];
-
-  return fs
-    .readdirSync(TUTORIALS_DIR)
-    .filter((f) => f.endsWith(".mdx"))
-    .map((f) => f.replace(/\.mdx$/, ""));
+  return bundledTutorials.map(tutorial => tutorial.slug);
 }
 
 export function getAdjacentTutorials(
