@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 const base = process.argv[2] || 'https://ugc.community';
-const slugs = ['find-paid-ugc-jobs', 'apply-for-ugc-jobs', 'compare-ugc-compensation', 'ugc-job-brief-template'];
+const slugs = process.argv.length > 3 ? process.argv.slice(3) : ['find-paid-ugc-jobs', 'apply-for-ugc-jobs', 'compare-ugc-compensation', 'ugc-job-brief-template'];
 for (const slug of slugs) {
   const path = `/tutorials/${slug}`;
   const res = await fetch(base + path);
@@ -9,7 +9,7 @@ for (const slug of slugs) {
   assert.ok(html.includes(`rel="canonical" href="https://ugc.community${path}"`), `canonical ${slug}`);
   assert.ok(html.includes('"@type":"Article"'), `article ${slug}`);
   assert.ok(html.includes(`href="${path}/content.md"`), `markdown link ${slug}`);
-  assert.ok(html.includes('2026-10-25'), `date ${slug}`);
+  assert.match(html, /datetime="\d{4}-\d{2}-\d{2}"/i, `date ${slug}`);
   assert.ok(html.includes('Frequently asked questions'), `rendered body ${slug}`);
   const md = await fetch(base + path + '/content.md');
   assert.equal(md.status, 200);

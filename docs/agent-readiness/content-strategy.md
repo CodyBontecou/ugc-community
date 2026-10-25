@@ -50,3 +50,9 @@ Tracked follow-up: .pi/todos/aeo00001.md. Legacy tutorials predate this content 
 - HTTP checks against the production build: all four HTML guides returned 200 with rendered body text, individual canonical URLs, Article JSON-LD, dates, and Markdown links. All four Markdown copies returned 200 with the expected media type, canonical Link header, and noindex. The tutorial index, sitemap entries, and footer link passed; unknown and legacy unsupported Markdown routes returned 404.
 
 These checks verify the local production build. They do not establish public deployment, indexing, or AI citations.
+
+## Cloudflare publication follow-through
+
+The four guides are now verified live. See [publication-log.md](publication-log.md) for source provenance, Worker version, and production checks. The initial Node build passed but did not catch Workers-specific limitations: arbitrary content files were unavailable and runtime MDX evaluation was forbidden. The build now regenerates content/tutorials.generated.json, including pre-rendered HTML for contentFormat markdown guides. Source MDX remains the editorial input; commit the regenerated bundle with content changes. Shared content components preserve the existing article styling.
+
+For isolated deployments, install the locked dependencies in that checkout. Do not symlink node_modules from another checkout: OpenNext can bundle an unpatched Next runtime, causing dynamic-require failures. Run the OpenNext Cloudflare preview with its cache populated, then scripts/verify-tutorial-publication.mjs against the preview and production. An optional base URL and slug list support daily guide verification. Posting and analytics access-control smoke checks must also pass so content deployments preserve existing features.
