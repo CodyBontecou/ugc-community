@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ugc.community/schemas/subscrape-job-board-v1.json",
+  "title": "Subscrape job-board review feed v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "jobs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/job"
+      }
+    }
+  },
+  "$defs": {
+    "job": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "id",
+        "sourceKey",
+        "sourceKind",
+        "status",
+        "verified",
+        "campaignKey",
+        "sourceKeys",
+        "duplicateOf",
+        "classification",
+        "company",
+        "title",
+        "description",
+        "compensationType",
+        "compensationText",
+        "cashAmount",
+        "pay",
+        "deliverables",
+        "eligibility",
+        "usageRights",
+        "applicationUrl",
+        "applicationMethod",
+        "applicationEvidence",
+        "closingAt",
+        "closingText",
+        "sourceUrl",
+        "sourcePublishedAt",
+        "capturedAt",
+        "editedAt",
+        "contentStatus",
+        "reviewFlags"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "id": {
+          "type": "string"
+        },
+        "sourceKey": {
+          "type": "string"
+        },
+        "sourceKind": {
+          "const": "external"
+        },
+        "status": {
+          "const": "pending_review"
+        },
+        "verified": {
+          "const": false
+        },
+        "campaignKey": {
+          "type": "string"
+        },
+        "sourceKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "duplicateOf": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "classification": {
+          "enum": [
+            "paid_ugc_job",
+            "performance_only_offer",
+            "platform_signup",
+            "creator_job",
+            "hiring_unconfirmed"
+          ]
+        },
+        "company": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "compensationType": {
+          "enum": [
+            "cash",
+            "mixed",
+            "performance_only",
+            "affiliate",
+            "gifted_or_unpaid",
+            "unspecified"
+          ]
+        },
+        "compensationText": {
+          "type": "string"
+        },
+        "cashAmount": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "pay": {
+          "type": "object",
+          "required": [
+            "amount",
+            "minimum",
+            "maximum",
+            "currency",
+            "currencySymbol",
+            "unit",
+            "evidence",
+            "ambiguous"
+          ],
+          "properties": {
+            "amount": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "minimum": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "maximum": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "currency": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "currencySymbol": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ambiguous": {
+              "type": "boolean"
+            }
+          }
+        },
+        "deliverables": {
+          "type": "string"
+        },
+        "eligibility": {
+          "type": "string"
+        },
+        "usageRights": {
+          "type": "string"
+        },
+        "applicationUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "applicationMethod": {
+          "enum": [
+            "form",
+            "website",
+            "email",
+            "reddit_dm",
+            "reddit_comment",
+            "unknown"
+          ]
+        },
+        "applicationEvidence": {
+          "type": "object",
+          "required": [
+            "url",
+            "method",
+            "source",
+            "sourceId",
+            "text",
+            "alternatives"
+          ]
+        },
+        "closingAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "closingText": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "sourcePublishedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "capturedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "editedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "contentStatus": {
+          "enum": [
+            "available",
+            "deleted",
+            "removed"
+          ]
+        },
+        "reviewFlags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

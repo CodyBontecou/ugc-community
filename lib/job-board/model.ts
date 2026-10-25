@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { readSubscrapeDraft, type SubscrapeDraft } from "./subscrape-draft";
+
+export const SUBSCRAPE_SUBREDDITS = new Set(["ugccreators", "ugc_forhire", "ugcconnect", "ugc"]);
 
 export const PAY_TYPES = ["cash", "mixed", "performance_only", "affiliate", "gifted_or_unpaid", "unspecified"] as const;
 export const PAY_LABELS: Record<string, string> = { cash: "Guaranteed cash", mixed: "Base + variable pay", performance_only: "Performance only", affiliate: "Affiliate / commission", gifted_or_unpaid: "Gifted / unpaid", unspecified: "Pay not specified" };
@@ -37,32 +40,37 @@ export interface BoardJob {
 export interface SourceSnapshot {
   key: string; revision: string; source: string; title: string; fullText: string; publishedAt: string | null;
   capturedAt: string; contentStatus: string; classification: string; compensationType: string; compensationText: string;
+  jobBoard?: SubscrapeDraft | null;
 }
 const archive = z.object({
   type: z.literal("source"), source: z.string().max(2000), subreddit: z.string(), title: z.string().max(1000),
   fullText: z.string().max(1_000_000), publishedAt: z.string().nullable().optional(), capturedAt: z.iso.datetime(),
   contentStatus: z.enum(["available", "deleted", "removed"]).default("available"),
-  classification: z.string().max(100).default("other"), compensationType: z.enum(PAY_TYPES).default("unspecified"),
+  classification: z.string().max(100).default("other"), compensationType: z.enum([...PAY_TYPES, "not_applicable"]).default("unspecified"),
+  jobBoard: z.unknown().optional(), duplicateOf: z.string().max(2000).nullable().optional(),
   compensationEvidence: z.string().max(2000).default(""), included: z.union([z.boolean(), z.enum(["true", "false"])]).optional(),
 });
 export function sourceKey(value: string) {
   try {
     const url = new URL(value);
     if (url.protocol !== "https:" || !["www.reddit.com", "reddit.com", "old.reddit.com"].includes(url.hostname) || url.username || url.password || url.port) return null;
-    const match = url.pathname.match(/^\/r\/ugccreators\/comments\/([a-z0-9]+)(?:\/[^/]+(?:\/([a-z0-9]+))?)?\/?$/i);
-    return match ? `reddit:${match[1].toLowerCase()}:${match[2]?.toLowerCase() || "post"}` : null;
+    const match = url.pathname.match(/^\/r\/([a-z0-9_]+)\/comments\/([a-z0-9]+)(?:\/[^/]+(?:\/([a-z0-9]+))?)?\/?$/i);
+    return match && SUBSCRAPE_SUBREDDITS.has(match[1].toLowerCase()) ? `reddit:${match[2].toLowerCase()}:${match[3]?.toLowerCase() || "post"}` : null;
   } catch { return null; }
 }
 export async function normalizeSource(input: unknown): Promise<SourceSnapshot | null> {
   const result = archive.safeParse(input);
   if (!result.success) return null;
   const row = result.data, key = sourceKey(row.source);
-  if (!key || row.subreddit.toLowerCase() !== "ugccreators" || row.included === false || row.included === "false") return null;
+  if (!key || !SUBSCRAPE_SUBREDDITS.has(row.subreddit.toLowerCase()) || new URL(row.source).pathname.split("/")[2]?.toLowerCase() !== row.subreddit.toLowerCase() || row.included === false || row.included === "false") return null;
   const publishedAt = row.publishedAt && z.iso.datetime().safeParse(row.publishedAt).success ? new Date(row.publishedAt).toISOString() : null;
-  const revisionData = [row.title, row.fullText, publishedAt, row.contentStatus, row.classification, row.compensationType, row.compensationEvidence];
+  const compensationType = row.compensationType === "not_applicable" ? "unspecified" : row.compensationType;
+  const jobBoard = readSubscrapeDraft(row.jobBoard, { key, source: row.source, publishedAt, classification: row.classification, compensationType });
+  const classification = row.duplicateOf || jobBoard?.duplicateOf ? "duplicate_campaign_source" : row.classification;
+  const revisionData = [row.title, row.fullText, publishedAt, row.contentStatus, classification, compensationType, row.compensationEvidence, jobBoard ? { ...jobBoard, capturedAt: undefined } : null];
   const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(revisionData)));
   const revision = [...new Uint8Array(hash)].map(byte => byte.toString(16).padStart(2, "0")).join("");
-  return { key, revision, source: row.source, title: row.title, fullText: row.fullText, publishedAt, capturedAt: new Date(row.capturedAt).toISOString(), contentStatus: row.contentStatus, classification: row.classification, compensationType: row.compensationType, compensationText: row.compensationEvidence };
+  return { key, revision, source: row.source, title: row.title, fullText: row.fullText, publishedAt, capturedAt: new Date(row.capturedAt).toISOString(), contentStatus: row.contentStatus, classification, compensationType, compensationText: row.compensationEvidence, jobBoard };
 }
 export function qualifyingExternal(job: BoardJob, source: { full_text: string } | null, now: string) {
   return job.source_kind === "external" && job.status === "published" && ["cash", "mixed"].includes(job.compensation_type)

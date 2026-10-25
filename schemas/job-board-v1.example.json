@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-24T13:00:00.000Z",
+  "jobs": [
+    {
+      "schemaVersion": 1,
+      "id": "reddit:example123:post",
+      "sourceKey": "reddit:example123:post",
+      "sourceKind": "external",
+      "status": "pending_review",
+      "verified": false,
+      "campaignKey": "subscrape:reddit:example123:post",
+      "sourceKeys": [
+        "reddit:example123:post"
+      ],
+      "duplicateOf": null,
+      "classification": "paid_ugc_job",
+      "company": "Example Studio",
+      "title": "Hiring UGC creators — USD $200/video",
+      "description": "Brand Name: Example Studio We are hiring UGC creators. Pay: USD $200 per approved video. Deliverables: Film one video. Must be based in the US. Usage rights: 30 days of paid advertising. Apply at https://example.com/apply",
+      "compensationType": "cash",
+      "compensationText": "Pay: USD $200 per approved video.",
+      "cashAmount": 200,
+      "pay": {
+        "amount": 200,
+        "currency": "USD",
+        "currencySymbol": "$",
+        "minimum": 200,
+        "maximum": 200,
+        "unit": "video",
+        "evidence": [
+          "Pay: USD $200 per approved video."
+        ],
+        "ambiguous": false
+      },
+      "deliverables": "Deliverables: Film one video.",
+      "eligibility": "Must be based in the US.",
+      "usageRights": "Usage rights: 30 days of paid advertising.",
+      "applicationUrl": "https://example.com/apply",
+      "applicationMethod": "website",
+      "applicationEvidence": {
+        "url": "https://example.com/apply",
+        "method": "website",
+        "source": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+        "sourceId": "t3_example123",
+        "text": "Apply at https://example.com/apply",
+        "alternatives": []
+      },
+      "closingAt": null,
+      "closingText": "",
+      "sourceUrl": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+      "sourcePublishedAt": "2026-10-24T12:00:00.000Z",
+      "capturedAt": "2026-10-24T13:00:00.000Z",
+      "editedAt": null,
+      "contentStatus": "available",
+      "reviewFlags": [
+        "employer_unverified",
+        "availability_unknown"
+      ]
+    }
+  ]
+}

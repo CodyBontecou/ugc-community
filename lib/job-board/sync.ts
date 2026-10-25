@@ -2,12 +2,15 @@ import type { R2Object } from "@/cloudflare-env";
 import { parseExport, MAX_EXPORT_BYTES } from "@/lib/creator-database/records";
 import { normalizeSource } from "./model";
 import { storeSources } from "./store";
+import { prefillSourceDrafts } from "./subscrape-draft";
 export type BoardBindings = Pick<CloudflareEnv, "JOB_BOARD" | "SUBSCRAPE_EXPORTS">;
 
 async function importJobObject(env: BoardBindings, object: R2Object) {
   const db = env.JOB_BOARD;
+  // Replay old checkpoints once when the accepted source contract changes.
+  const importTag = `subscrape-job-board-v1:${object.etag}`;
   const previous = await db.prepare("SELECT etag FROM board_imports WHERE object_key=?").bind(object.key).first<{ etag: string }>();
-  if (previous?.etag === object.etag) return false;
+  if (previous?.etag === importTag) return false;
   if (object.size > MAX_EXPORT_BYTES) throw new Error("Export exceeds the 8 MB import limit");
   const file = await env.SUBSCRAPE_EXPORTS.get(object.key);
   if (!file || file.size > MAX_EXPORT_BYTES) throw new Error("Export unavailable or too large");
@@ -22,12 +25,13 @@ async function importJobObject(env: BoardBindings, object: R2Object) {
     sources++;
   }
   await storeSources(db, [...latest.values()]);
+  await prefillSourceDrafts(db, [...latest.values()]);
   // Snapshot and observation identities make replay after interruption safe.
   await db.batch([
     db.prepare(`INSERT INTO board_imports VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(object_key) DO UPDATE SET
       etag=excluded.etag, imported_at=excluded.imported_at, source_records=excluded.source_records,
       legacy_records=excluded.legacy_records, rejected=excluded.rejected`)
-      .bind(object.key, file.etag, new Date().toISOString(), sources, legacy, rejected),
+      .bind(object.key, importTag, new Date().toISOString(), sources, legacy, rejected),
     db.prepare("DELETE FROM board_import_errors WHERE object_key=?").bind(object.key),
   ]);
   return true;

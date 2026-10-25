@@ -1,0 +1,95 @@
+{
+  "key": "[\"source\",\"t3_example123\"]",
+  "type": "source",
+  "value": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+  "source": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+  "sourceId": "t3_example123",
+  "sourceType": "post",
+  "postId": "t3_example123",
+  "parentId": null,
+  "title": "Hiring UGC creators — USD $200/video",
+  "subreddit": "UGC_forhire",
+  "author": "ExampleBrand",
+  "fullText": "Brand Name: Example Studio\nWe are hiring UGC creators.\nPay: USD $200 per approved video.\nDeliverables: Film one video.\nMust be based in the US.\nUsage rights: 30 days of paid advertising.\nApply at https://example.com/apply",
+  "publishedAt": "2026-10-24T12:00:00.000Z",
+  "editedAt": null,
+  "crosspostParentId": null,
+  "destinationUrl": "",
+  "contentStatus": "available",
+  "evidence": "Brand Name: Example Studio We are hiring UGC creators. Pay: USD $200 per approved video. Deliverables: Film one video. Must be based in the US. Usage rights: 30 days of paid advertising. Apply at https://example.com/apply",
+  "capturedAt": "2026-10-24T13:00:00.000Z",
+  "included": true,
+  "confidence": "needs_review",
+  "jobBoard": {
+    "schemaVersion": 1,
+    "id": "reddit:example123:post",
+    "sourceKey": "reddit:example123:post",
+    "sourceKind": "external",
+    "status": "pending_review",
+    "verified": false,
+    "campaignKey": "subscrape:reddit:example123:post",
+    "sourceKeys": [
+      "reddit:example123:post"
+    ],
+    "duplicateOf": null,
+    "classification": "paid_ugc_job",
+    "company": "Example Studio",
+    "title": "Hiring UGC creators — USD $200/video",
+    "description": "Brand Name: Example Studio We are hiring UGC creators. Pay: USD $200 per approved video. Deliverables: Film one video. Must be based in the US. Usage rights: 30 days of paid advertising. Apply at https://example.com/apply",
+    "compensationType": "cash",
+    "compensationText": "Pay: USD $200 per approved video.",
+    "cashAmount": 200,
+    "pay": {
+      "amount": 200,
+      "currency": "USD",
+      "currencySymbol": "$",
+      "minimum": 200,
+      "maximum": 200,
+      "unit": "video",
+      "evidence": [
+        "Pay: USD $200 per approved video."
+      ],
+      "ambiguous": false
+    },
+    "deliverables": "Deliverables: Film one video.",
+    "eligibility": "Must be based in the US.",
+    "usageRights": "Usage rights: 30 days of paid advertising.",
+    "applicationUrl": "https://example.com/apply",
+    "applicationMethod": "website",
+    "applicationEvidence": {
+      "url": "https://example.com/apply",
+      "method": "website",
+      "source": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+      "sourceId": "t3_example123",
+      "text": "Apply at https://example.com/apply",
+      "alternatives": []
+    },
+    "closingAt": null,
+    "closingText": "",
+    "sourceUrl": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+    "sourcePublishedAt": "2026-10-24T12:00:00.000Z",
+    "capturedAt": "2026-10-24T13:00:00.000Z",
+    "editedAt": null,
+    "contentStatus": "available",
+    "reviewFlags": [
+      "employer_unverified",
+      "availability_unknown"
+    ]
+  },
+  "campaignId": "campaign:t3_example123",
+  "duplicateOf": null,
+  "duplicateReason": "",
+  "campaignSources": [
+    {
+      "sourceId": "t3_example123",
+      "source": "https://www.reddit.com/r/UGC_forhire/comments/example123/job/",
+      "publishedAt": "2026-10-24T12:00:00.000Z"
+    }
+  ],
+  "classification": "paid_ugc_job",
+  "compensationType": "cash",
+  "classificationReason": "Hiring language and compensation signal found; terms and employer need review.",
+  "compensationEvidence": "hiring ugc creators — usd $200/video\nbrand name: example studio\nwe are hiring ugc creators.\npay: usd $200 per approved video.\ndeli",
+  "classifierVersion": 3,
+  "availability": "unknown"
+}
