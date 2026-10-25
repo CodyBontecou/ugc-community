@@ -1,6 +1,6 @@
 # Recommended for App implementation
 
-The canonical report now scores **100/100**, with all 11 essential checks passing. The first completed interface scan passed 19 of 24 recommended checks (17.6/20), with five bonus points. Evidence: [app-report.json](app-report.json). Public report: https://is-agentic.com/scan/ugc.community
+The canonical report now scores **100/100**, with all 11 essential checks passing. The final App view passes 17 of 19 recommendations. The broader report passes 20 of 24 recommended checks (17.9/20), with five bonus points. Evidence: [app-report.json](app-report.json). Public report: https://is-agentic.com/scan/ugc.community
 
 The public interfaces now support the recommended agent workflows without exposing account data or write operations.
 
@@ -41,6 +41,8 @@ A real business mailing address intended for publication is still needed to comp
 
 The earlier 98-point report remains in final-report.json as historical evidence. Use the Rescan button after deployments to request fresh technical checks; a new report URL or query marker alone may still reuse Ora's cached snapshot. Agent journey and search observations may remain cached separately from current HTTP checks.
 
-## Policy check freshness
+## Final scan
 
-The first 100-point snapshot predates the dedicated /docs/deprecation page, its rel=deprecation API response link, and the OpenAPI x-deprecation-policy metadata. Those are now live and verified by HTTP; a fresh scan was requested after deployment. Do not add fictional Sunset dates to active operations just to satisfy the scanner. The historical agent journey can describe older site content even after current technical checks improve.
+The canonical scan at 2026-10-25T01:46:05.378Z confirms that versioning and deprecation policy now passes. The dedicated /docs/deprecation page, rel=deprecation API response link, and OpenAPI x-deprecation-policy metadata are live. Active operations have no fictional Sunset date. The App view has two remaining partial recommendations: Organization postal address and registry-published CLI. The broader report also retains search discovery findings. The historical agent journey can describe older site content even after current technical checks improve.
+
+Final production deployment: c7046ddd-52c1-4c2c-8f0e-bf3a63d2f76d.
