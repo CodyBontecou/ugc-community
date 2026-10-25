@@ -29,6 +29,7 @@ export const metadata: Metadata = {
   title: "UGC Jobs & Creator Opportunities — ugc.community",
   description:
     "Find UGC jobs and brand opportunities in one searchable feed. Browse reviewed external opportunities and directly posted jobs. Free for creators.",
+  other: { "is-agentic-site-type": "app" },
   keywords: [
     "UGC",
     "creator",
@@ -40,12 +41,14 @@ export const metadata: Metadata = {
     title: "UGC Jobs & Creator Opportunities — ugc.community",
     description:
       "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",
+    images: [{ url: "/social-preview.png", width: 1200, height: 630, alt: "ugc.community — UGC jobs and creator opportunities" }],
     type: "website",
     locale: "en_US",
     siteName: "ugc.community",
   },
   twitter: {
     card: "summary_large_image",
+    images: ["/social-preview.png"],
     title: "UGC Jobs & Creator Opportunities — ugc.community",
     description:
       "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",
@@ -62,6 +65,7 @@ const structuredData = {
       name: "ugc.community",
       url: "https://ugc.community/",
       email: "cody@isolated.tech",
+      contactPoint: { "@type": "ContactPoint", email: "cody@isolated.tech", contactType: "customer support", url: "https://ugc.community/contact", availableLanguage: "English" },
     },
     {
       "@type": "WebApplication",

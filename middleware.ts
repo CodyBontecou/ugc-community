@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prefersMarkdown } from "./lib/agent-content/negotiation";
 import type { NextRequest } from "next/server";
 
 // AI and scraper bots to block at the edge
@@ -107,6 +108,14 @@ export function middleware(request: NextRequest) {
     if (isBlockedBot) {
       return new NextResponse("Access denied", { status: 403 });
     }
+  }
+
+  const markdownPaths = new Set(["/", "/jobs", "/about", "/contact", "/guide"]);
+  if (["GET", "HEAD"].includes(request.method) && markdownPaths.has(pathname) && prefersMarkdown(request.headers.get("Accept"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/site-content.md";
+    url.searchParams.set("path", pathname);
+    return NextResponse.rewrite(url);
   }
 
   const response = NextResponse.next();

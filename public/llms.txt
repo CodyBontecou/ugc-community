@@ -1,0 +1,26 @@
+# ugc.community
+
+> A public UGC job board for creators to find reviewed opportunities and brands to submit roles. Browsing needs no account. Browsing and submissions are free during launch.
+
+## When to use this site
+
+Use ugc.community to find UGC creator jobs, compare compensation, eligibility, deliverables and usage rights, or locate original application links. Use /post-job when a brand wants to submit an opportunity.
+
+## How to browse
+
+- [Jobs](https://ugc.community/jobs): Search with q, source=external|direct, pay=cash|mixed|performance_only|affiliate|gifted_or_unpaid|unspecified, and page. Twenty listings per page.
+- [Agent guide and documentation](https://ugc.community/guide): Website retrieval, filters, attribution, and account boundaries.
+- [Post a job](https://ugc.community/post-job): Free submission form; all submissions undergo review.
+- [About](https://ugc.community/about): Purpose, review process, and operator.
+- [Contact](https://ugc.community/contact): Support and corrections at cody@isolated.tech.
+- [Privacy](https://ugc.community/privacy): Data handling.
+- [Terms](https://ugc.community/terms): Participation rules.
+- [Sitemap](https://ugc.community/sitemap.xml): Public page discovery.
+
+## Retrieval and interpretation
+
+Request Accept: text/markdown on /, /jobs, /about, /contact, or /guide for Markdown. /jobs uses the same query parameters in HTML and Markdown. Responses declare Vary: Accept. Unknown pages return HTTP 404 with Markdown recovery links when requested.
+
+Distinguish external opportunities from directly posted jobs. Cite both ugc.community and the original source/application link. Never describe gifted, affiliate, or performance-only pay as guaranteed cash. Missing terms are not stated, not implied. Listings are reviewed but review does not guarantee payment or employer legitimacy. External listings expire seven days after manual freshness review and all listings honor closing dates.
+
+Public access uses the website and its Markdown representations through normal HTTP GET requests. Personal creator tools require a normal user session; public job browsing and this guide do not. Obtain the user's authorization before submitting a job, contacting employers, or applying.

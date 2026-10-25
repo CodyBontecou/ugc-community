@@ -31,7 +31,8 @@
     "test:job-board": "tsx --test lib/job-board/*.test.ts",
     "jobs:sync": "tsx scripts/sync-job-board.ts",
     "db:jobs:migrate": "wrangler d1 migrations apply JOB_BOARD --remote",
-    "jobs:review": "tsx scripts/review-job-board.ts"
+    "jobs:review": "tsx scripts/review-job-board.ts",
+    "test:agent-content": "node --import tsx --test lib/agent-content/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

@@ -31,18 +31,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
-    {
-      url: `${baseUrl}/sign-in`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/sign-up`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.3,
-    },
+    { url: `${baseUrl}/about`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/contact`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${baseUrl}/guide`, changeFrequency: "monthly", priority: 0.6 },
   ];
 
   return staticPages;
