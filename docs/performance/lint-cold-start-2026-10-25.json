@@ -1,0 +1,407 @@
+{
+  "date": "2026-10-25",
+  "sourceCommit": "12eb80f",
+  "publicWorker": {
+    "name": "ugc-community-public",
+    "version": "e5f0dc2a-788a-4836-911c-fec8dbb89fed",
+    "entryBytes": 715058,
+    "compressedUploadKiB": 124.31,
+    "cloudflareReportedStartupMs": 4
+  },
+  "privateApp": {
+    "name": "ugc-community",
+    "version": "2da09bcf-3cf9-4623-a4d3-c4445f681d48",
+    "secretsAndPrivateServicesRetained": true
+  },
+  "previousCombinedEntryBytes": 17203091,
+  "lint": {
+    "errors": 0,
+    "warnings": 0,
+    "sixAvatarWarningsResolved": true,
+    "method": "Shared Next Image avatar with explicit dimensions; optimize configured public hosts and preserve direct loading for other/custom sources."
+  },
+  "runs": [
+    {
+      "url": "https://ugc.community/",
+      "device": "mobile",
+      "fetchTime": "2026-10-25T19:40:40.552Z",
+      "report": "/Users/codybontecou/.codex/visualizations/2026/10/25/01a173c9-31bb-7370-affb-bffdcf43df6a/lighthouse/cold-start/ugc-latency-final-mobile.report.html",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "documentLatency": {
+        "score": 1,
+        "estimatedSavings": {
+          "FCP": 0,
+          "LCP": 0
+        }
+      },
+      "serverResponse": "Root document took 250\u00a0ms",
+      "remainingNonperfectAudits": [
+        {
+          "id": "network-dependency-tree-insight",
+          "score": 0,
+          "display": null,
+          "savings": {
+            "LCP": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://ugc.community/jobs",
+      "device": "mobile",
+      "fetchTime": "2026-10-25T19:40:53.771Z",
+      "report": "/Users/codybontecou/.codex/visualizations/2026/10/25/01a173c9-31bb-7370-affb-bffdcf43df6a/lighthouse/cold-start/ugc-latency-final-jobs-mobile.report.html",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "documentLatency": {
+        "score": 1,
+        "estimatedSavings": {
+          "FCP": 0,
+          "LCP": 0
+        }
+      },
+      "serverResponse": "Root document took 270\u00a0ms",
+      "remainingNonperfectAudits": [
+        {
+          "id": "network-dependency-tree-insight",
+          "score": 0,
+          "display": null,
+          "savings": {
+            "LCP": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://ugc.community/",
+      "device": "desktop",
+      "fetchTime": "2026-10-25T19:41:07.071Z",
+      "report": "/Users/codybontecou/.codex/visualizations/2026/10/25/01a173c9-31bb-7370-affb-bffdcf43df6a/lighthouse/cold-start/ugc-latency-final-desktop.report.html",
+      "categories": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100,
+        "agentic-browsing": 100
+      },
+      "runWarnings": [],
+      "documentLatency": {
+        "score": 1,
+        "estimatedSavings": {
+          "FCP": 0,
+          "LCP": 0
+        }
+      },
+      "serverResponse": "Root document took 90\u00a0ms",
+      "remainingNonperfectAudits": [
+        {
+          "id": "network-dependency-tree-insight",
+          "score": 0,
+          "display": null,
+          "savings": {
+            "LCP": 0
+          }
+        }
+      ]
+    }
+  ],
+  "latency": {
+    "before": {
+      "at": "2026-10-25T19:20:56.821Z",
+      "results": [
+        {
+          "path": "/",
+          "label": "first",
+          "status": 200,
+          "headersMs": 862,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 67,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 127,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "first",
+          "status": 200,
+          "headersMs": 288,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 79,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 111,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    "partialLazyModuleAttempt": {
+      "at": "2026-10-25T19:22:14.455Z",
+      "results": [
+        {
+          "path": "/",
+          "label": "first",
+          "status": 200,
+          "headersMs": 895,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 73,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 130,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "first",
+          "status": 200,
+          "headersMs": 696,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 80,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 150,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    "afterServiceIsolation": {
+      "at": "2026-10-25T19:39:07.678Z",
+      "results": [
+        {
+          "path": "/",
+          "label": "first",
+          "status": 200,
+          "headersMs": 514,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 170,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 136,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "first",
+          "status": 200,
+          "headersMs": 145,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 65,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 156,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    "repeat": {
+      "at": "2026-10-25T19:41:29.868Z",
+      "results": [
+        {
+          "path": "/",
+          "label": "first",
+          "status": 200,
+          "headersMs": 474,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 80,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 127,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "first",
+          "status": 200,
+          "headersMs": 124,
+          "cache": "MISS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "repeat",
+          "status": 200,
+          "headersMs": 153,
+          "cache": "HIT",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "path": "/jobs",
+          "label": "reload",
+          "status": 200,
+          "headersMs": 105,
+          "cache": "BYPASS",
+          "cacheControl": "private, no-cache, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    "publicWorkerCpu": [
+      {
+        "cpuMs": 34,
+        "wallMs": 94,
+        "version": "e5f0dc2a-788a-4836-911c-fec8dbb89fed",
+        "outcome": [
+          [
+            "{\"event\":\"public_page_cache\",\"outcome\":\"MISS\"}"
+          ]
+        ]
+      },
+      {
+        "cpuMs": 1,
+        "wallMs": 6,
+        "version": "e5f0dc2a-788a-4836-911c-fec8dbb89fed",
+        "outcome": [
+          [
+            "{\"event\":\"public_page_cache\",\"outcome\":\"HIT\"}"
+          ]
+        ]
+      },
+      {
+        "cpuMs": 10,
+        "wallMs": 61,
+        "version": "e5f0dc2a-788a-4836-911c-fec8dbb89fed",
+        "outcome": [
+          [
+            "{\"event\":\"public_page_cache\",\"outcome\":\"MISS\"}"
+          ]
+        ]
+      },
+      {
+        "cpuMs": 1,
+        "wallMs": 4,
+        "version": "e5f0dc2a-788a-4836-911c-fec8dbb89fed",
+        "outcome": [
+          [
+            "{\"event\":\"public_page_cache\",\"outcome\":\"HIT\"}"
+          ]
+        ]
+      }
+    ],
+    "interpretation": "Moving the full Next bundle into a lazy module alone did not improve fresh-version live response latency. A separate public Worker removes that bundle entirely from public isolate startup. First measured homepage headers after routing activation improved from862ms (895ms in the partial attempt) to514ms; jobs were145ms. These include connection and network time and do not prove every request or isolate will have the same latency."
+  },
+  "verification": {
+    "fullBuild": "passed",
+    "typescript": "passed",
+    "analyticsTests": 50,
+    "jobBoardTests": 40,
+    "performanceTests": 8,
+    "liveAuthPrivacyGuides": "passed through public-to-app service binding",
+    "optimizedAvatarHttp": 200,
+    "publicHtmlNoNextRuntime": true,
+    "pinkGradient": "Browse jobs, Search jobs and Apply verified before and after domain deployment: coral rgb(255,154,139) to rose rgb(255,107,149)",
+    "mobileOverflow": false,
+    "publicBuildBudgetBytes": 1048576,
+    "privateBuildBudgetBytes": 2097152,
+    "livePositivePerformanceEvent": {
+      "http": 204,
+      "matched": 1,
+      "remaining": 0
+    }
+  },
+  "allCategories100": true,
+  "documentLatencyPasses": true,
+  "limitations": [
+    "Measurements reflect the tested network/region; internet/connection latency cannot be guaranteed away.",
+    "Local startup CPU profiles were diagnostic only and not used as production latency claims.",
+    "Existing Next middleware and Node build-tool deprecation/default-secret build diagnostics remain separate from lint; production authentication guards pass.",
+    "Public application/API requests add an in-account service-binding hop; private authorization and request headers remain enforced by the existing app."
+  ],
+  "artifactDirectory": "/Users/codybontecou/.codex/visualizations/2026/10/25/01a173c9-31bb-7370-affb-bffdcf43df6a/lighthouse/cold-start",
+  "completedTodo": ".pi/todos/perf0002.md"
+}
