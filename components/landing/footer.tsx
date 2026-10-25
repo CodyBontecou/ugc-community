@@ -24,7 +24,6 @@ export function Footer() {
           <nav aria-label="Site information" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <Link href="/jobs" className="hover:text-white">Browse jobs</Link>
             <Link href="/post-job" className="hover:text-white">Post a job</Link>
-            <Link href="/creators" className="hover:text-white">Community portfolios</Link>
             <Link href="/#faq" className="hover:text-white">FAQ</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
