@@ -65,6 +65,14 @@ const structuredData = {
       name: "ugc.community",
       url: "https://ugc.community/",
       email: "cody@isolated.tech",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "76-6182 Lehua Rd",
+        addressLocality: "Kailua-Kona",
+        addressRegion: "HI",
+        postalCode: "96740",
+        addressCountry: "US",
+      },
       contactPoint: { "@type": "ContactPoint", email: "cody@isolated.tech", contactType: "customer support", url: "https://ugc.community/contact", availableLanguage: "English" },
     },
     {

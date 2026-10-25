@@ -13,6 +13,7 @@ export const informationPages = {
     title: "Contact ugc.community",
     description: "Get support, report an expired UGC job, or ask about your creator account and portfolio.",
     sections: [
+      { heading: "Business mailing address", text: "76-6182 Lehua Rd, Kailua-Kona, HI 96740, United States." },
       { heading: "Support and general questions", text: "Email cody@isolated.tech for questions about ugc.community, creator accounts, portfolio hosting, or job submissions. Include the page URL and a short description of what you need help with. Do not include passwords, authentication codes, API keys, or other secret credentials in your message." },
       { heading: "Report an expired or incorrect opportunity", text: "Send the listing or original source URL and describe the incorrect terms, closed applications, or other concern. We can review the evidence and correct or close a listing. Employers manage hiring decisions. Creators can submit an application through ugc.community when a listing explicitly accepts applications by email. Other applications use the original destination. ugc.community cannot promise employer responses." },
       { heading: "Brands and hiring teams", text: "Use the Post a job page to submit an opportunity for free during launch. Provide compensation, deliverables, eligibility, usage rights, an application destination, and a closing date. Submissions are reviewed before they appear publicly. If you need to amend a submission, email support with the company and role title." },
