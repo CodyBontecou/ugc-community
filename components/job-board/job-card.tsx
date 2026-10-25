@@ -9,7 +9,7 @@ export function JobCard({ job }: { job: BoardJob }) {
     </div>
     <p className="text-sm text-warm-gray-600 mb-2 break-words">{job.company}</p>
     <h2 className="text-3xl mb-4 break-words">{job.title}</h2>
-    <p className="text-warm-gray-600 whitespace-pre-line break-words mb-5">{job.description.slice(0, 600)}{job.description.length > 600 ? "…" : ""}</p>
+    <p className="text-warm-gray-600 whitespace-pre-line break-words mb-5">{job.description}</p>
     <p className="font-medium text-warm-gray-900 mb-5 break-words">{job.compensation_text}</p>
     <dl className="grid sm:grid-cols-2 gap-4 text-sm mb-6">{[["Deliverables", job.deliverables], ["Eligibility", job.eligibility], ["Usage rights", job.usage_rights]].map(([label, value]) => <div key={label}><dt className="font-medium text-warm-gray-900 mb-1">{label}</dt><dd className="text-warm-gray-600 whitespace-pre-line break-words">{value || "Not stated in the source"}</dd></div>)}</dl>
     <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-warm-gray-600 mb-6">

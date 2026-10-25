@@ -1,30 +1,64 @@
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { boardBindings } from "@/lib/job-board/access";
 import { listBoardJobs, type JobFilters } from "@/lib/job-board/search";
 import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/model";
-import { JobCard } from "./job-card";
+import { JobTable } from "./job-table";
 
 export async function JobFeed({ params = {} }: { params?: Record<string, string | string[] | undefined> }) {
   const one = (name: string) => typeof params[name] === "string" ? params[name] as string : "";
-  const filters: JobFilters = { q: one("q").slice(0, 100), source: one("source"), pay: one("pay"), page: Number(one("page")) || 1 };
+  const filters: JobFilters = {
+    q: one("q").trim().slice(0, 100),
+    source: ["external", "direct"].includes(one("source")) ? one("source") : "",
+    pay: PAY_TYPES.some(type => type === one("pay")) ? one("pay") : "",
+    page: Number(one("page")) || 1,
+  };
+  const activeFilters = [
+    ...(filters.q ? [{ key: "q", label: `Search: ${filters.q}` }] : []),
+    ...(filters.source ? [{ key: "source", label: filters.source === "direct" ? "Posted directly" : "External opportunities" }] : []),
+    ...(filters.pay ? [{ key: "pay", label: PAY_LABELS[filters.pay] }] : []),
+  ];
   let result: Awaited<ReturnType<typeof listBoardJobs>> | null = null;
   try { result = await listBoardJobs((await boardBindings()).JOB_BOARD, filters); } catch { /* Show a truthful unavailable state. */ }
-  const pageUrl = (page: number) => `/jobs?${new URLSearchParams({ q: filters.q, source: filters.source, pay: filters.pay, page: String(page) })}`;
-  return <section id="jobs" className="relative z-[1] scroll-mt-28 pb-20">
-    <div className="container max-w-5xl">
-      <form action="/jobs" className="bg-white border border-warm-gray-200 rounded-[28px] p-5 flex flex-col md:flex-row gap-4 mb-7">
-        <label className="flex-1 text-sm font-medium">Search opportunities<input name="q" defaultValue={filters.q} maxLength={100} placeholder="Brand, role, or keyword" className="block w-full border border-warm-gray-200 rounded-xl mt-2 px-4 py-3" /></label>
-        <label className="text-sm font-medium">Source<select name="source" defaultValue={filters.source} className="block w-full border border-warm-gray-200 bg-white rounded-xl mt-2 px-4 py-3"><option value="">All sources</option><option value="external">External opportunity</option><option value="direct">Posted directly</option></select></label>
-        <label className="text-sm font-medium">Compensation<select name="pay" defaultValue={filters.pay} className="block w-full border border-warm-gray-200 bg-white rounded-xl mt-2 px-4 py-3"><option value="">All compensation</option>{PAY_TYPES.map(type => <option key={type} value={type}>{PAY_LABELS[type]}</option>)}</select></label>
-        <button className="self-start md:self-end bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3 font-medium">Search</button>
-      </form>
-      <p className="text-sm text-warm-gray-600 mb-6">Free to browse · Reviewed before publication · Applications go to the original destination</p>
-      {!result ? <div role="alert" className="bg-white rounded-[28px] border border-warm-gray-200 p-10 text-center"><h2 className="text-3xl mb-3">The feed is temporarily unavailable</h2><p className="text-warm-gray-600">Please try again shortly.</p></div> : !result.jobs.length ? <div className="bg-white rounded-[28px] border border-warm-gray-200 p-10 sm:p-14 text-center">
-        <h2 className="text-3xl mb-4">{filters.q || filters.source || filters.pay ? "No opportunities match yet" : "Our first opportunities are under review"}</h2>
-        <p className="text-warm-gray-600 max-w-lg mx-auto mb-6">{filters.q || filters.source || filters.pay ? "Try a different search or clear the filters." : "We’re checking original briefs, compensation, and freshness before adding jobs to the feed. Have a role for a UGC creator? Submit it for free."}</p>
-        <div className="flex flex-wrap justify-center gap-4"><Link href="/post-job" className="bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3">Submit a job for free</Link>{(filters.q || filters.source || filters.pay) && <Link href="/jobs" className="rounded-full border border-warm-gray-200 px-6 py-3">Clear filters</Link>}</div>
-      </div> : <><p className="text-sm text-warm-gray-600 mb-5">{result.total} {result.total === 1 ? "opportunity" : "opportunities"}</p><div className="space-y-6">{result.jobs.map(job => <JobCard key={job.id} job={job} />)}</div>
-        <nav aria-label="Job pagination" className="flex justify-between items-center text-sm mt-8">{result.page > 1 ? <Link href={pageUrl(result.page - 1)} className="underline">Previous</Link> : <span />}<span>Page {result.page} of {Math.ceil(result.total / result.pageSize)}</span>{result.page * result.pageSize < result.total ? <Link href={pageUrl(result.page + 1)} className="underline">Next</Link> : <span />}</nav></>}
-    </div>
-  </section>;
+  const filterUrl = (remove?: string, page?: number) => {
+    const query = new URLSearchParams();
+    for (const key of ["q", "source", "pay"] as const) if (filters[key] && key !== remove) query.set(key, filters[key]);
+    if (page && page > 1) query.set("page", String(page));
+    return `/jobs${query.size ? `?${query}` : ""}`;
+  };
+  const controlClass = "h-11 w-full rounded-xl border border-warm-gray-200 bg-white px-3 text-sm text-warm-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark";
+
+  return (
+    <section id="jobs" aria-label="Browse UGC opportunities" className="relative z-[1] scroll-mt-28 pb-20">
+      <div className="container max-w-6xl">
+        <div className="overflow-hidden rounded-[24px] border border-warm-gray-200 bg-white/95 shadow-sm">
+          <form action="/jobs" role="search" className="grid grid-cols-2 items-end gap-3 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_180px_210px_auto]">
+            <label className="col-span-2 lg:col-span-1">
+              <span className="sr-only">Search opportunities</span>
+              <span className="relative block"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 text-warm-gray-500" /><input name="q" defaultValue={filters.q} maxLength={100} placeholder="Search roles, brands, keywords…" className={`${controlClass} pl-10`} /></span>
+            </label>
+            <label><span className="sr-only">Source</span><select name="source" defaultValue={filters.source} className={controlClass}><option value="">All sources</option><option value="external">External opportunity</option><option value="direct">Posted directly</option></select></label>
+            <label><span className="sr-only">Compensation</span><select name="pay" defaultValue={filters.pay} className={controlClass}><option value="">All compensation</option>{PAY_TYPES.map(type => <option key={type} value={type}>{PAY_LABELS[type]}</option>)}</select></label>
+            <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-rose px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Filter jobs</button>
+          </form>
+          {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link href="/jobs" className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-warm-gray-200 px-4 py-3 text-xs text-warm-gray-600 sm:px-6">
+            <p>{result ? <><span className="font-semibold tabular-nums text-warm-gray-900">{result.total}</span> {result.total === 1 ? "opportunity" : "opportunities"}{activeFilters.length > 0 ? " found" : " to explore"}</> : "UGC opportunities"}</p>
+            <span>Newest first</span>
+          </div>
+          {!result ? <div role="alert" className="border-t border-warm-gray-200 px-6 py-14 text-center"><h2 className="mb-3 text-3xl">Jobs are temporarily unavailable</h2><p className="text-sm text-warm-gray-600">Please try again shortly.</p></div> : !result.jobs.length ? <div className="border-t border-warm-gray-200 px-6 py-14 text-center">
+            <h2 className="mb-3 text-3xl">{activeFilters.length ? "No matching opportunities" : "New opportunities are on the way"}</h2>
+            <p className="mx-auto mb-6 max-w-md text-sm text-warm-gray-600">{activeFilters.length ? "Try another keyword or clear your filters." : "We’re reviewing the first briefs. Hiring a UGC creator? Post your role for free."}</p>
+            <Link href={activeFilters.length ? "/jobs" : "/post-job"} className="inline-flex rounded-full border border-warm-gray-200 px-5 py-2.5 text-sm font-medium hover:bg-peach-100">{activeFilters.length ? "Clear filters" : "Post a free job"}</Link>
+          </div> : <JobTable jobs={result.jobs} />}
+          {result && result.total > result.pageSize && <nav aria-label="Job pagination" className="flex items-center justify-between border-t border-warm-gray-200 px-4 py-4 text-xs sm:px-6">
+            {result.page > 1 ? <Link href={filterUrl(undefined, result.page - 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100"><ArrowLeft size={14} />Previous</Link> : <span />}
+            <span className="tabular-nums text-warm-gray-600">Page {result.page} of {Math.ceil(result.total / result.pageSize)}</span>
+            {result.page * result.pageSize < result.total ? <Link href={filterUrl(undefined, result.page + 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100">Next<ArrowRight size={14} /></Link> : <span />}
+          </nav>}
+        </div>
+        <p className="mt-4 text-center text-xs text-warm-gray-600">Free to browse · Reviewed before publication · Apply at the original destination</p>
+      </div>
+    </section>
+  );
 }
