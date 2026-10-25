@@ -26,7 +26,7 @@ function context() {
   let id = document.cookie.split(";").map(v => v.trim()).find(v => v.startsWith(`${SESSION_COOKIE}=`))?.slice(SESSION_COOKIE.length + 1);
   if (!id || !/^[a-f0-9-]{36}$/i.test(id)) id = crypto.randomUUID();
   document.cookie = `${SESSION_COOKIE}=${id}; Path=/; Max-Age=${SESSION_SECONDS}; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
-  let source = referralSource(document.referrer, location.origin);
+  let source = referralSource(document.referrer, location.origin, location.href);
   try {
     const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
     if (saved?.id === id) source = saved.source;

@@ -20,4 +20,5 @@ const tutorials = await Promise.all(files.map(async file => {
   return { ...data, slug: file.slice(0, -4), content, ...(html ? { html } : {}) };
 }));
 await writeFile(path.resolve("content/tutorials.generated.json"), `${JSON.stringify(tutorials, null, 2)}\n`);
+await writeFile(path.resolve("content/tutorial-paths.generated.json"), `${JSON.stringify(tutorials.filter(t => t.contentFormat === "markdown" && t.html).map(t => `/tutorials/${t.slug}`), null, 2)}\n`);
 console.log(`Bundled ${tutorials.length} tutorials`);

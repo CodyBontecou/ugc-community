@@ -1,5 +1,4 @@
 import { z } from "zod";
-
 import { BROWSER_EVENTS, SOURCES, SESSION_COOKIE, analyticsPath } from "./browser";
 export { CONSENT_KEY, SESSION_COOKIE, SESSION_SECONDS, RETENTION_DAYS, BROWSER_EVENTS, SERVER_EVENTS, SOURCES, analyticsPath, referralSource } from "./browser";
 export type { Source, Device, BrowserEvent, ServerEvent } from "./browser";

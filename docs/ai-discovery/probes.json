@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "brand": "ugc.community",
+  "protocol": "Use fresh independent conversations. Disable personalization where available. Request web search, record visible product/model labels, and keep this exact prompt wording. Never name the brand in a discovery prompt. Record mentions and linked source citations separately. Do not click links to our site during tests or generate collector events.",
+  "prompts": [
+    { "id": "paid-jobs", "text": "Search the web: where can I find paid UGC creator jobs with clearly stated cash compensation? Recommend up to five places, explain how they differ, and cite the sources you use." },
+    { "id": "beginner-applications", "text": "Search the web: how should a beginner apply for UGC creator jobs, and where can they find suitable opportunities? Give practical steps and cite the sources you use." },
+    { "id": "compare-offers", "text": "Search the web: how do I compare UGC job offers with fixed fees, performance bonuses, affiliate commissions, and gifted products? Include deliverables and usage questions, and cite useful sources." },
+    { "id": "brand-brief", "text": "Search the web: what should a brand include in a UGC creator job brief, and where can it post the opportunity? Give a practical checklist and cite useful sources." }
+  ],
+  "services": ["ChatGPT", "Gemini", "Perplexity", "Claude", "Copilot"],
+  "fields": ["observedAt", "service", "visibleModel", "mode", "personalization", "promptId", "promptVersion", "availability", "brandMention", "siteCitation", "citedUrls", "evidenceFile", "notes"],
+  "missingDataRule": "Use null for mention/citation fields when blocked, unavailable, not run, or incomplete; never count those attempts as negative answers. A brand misspelling or another UGC domain is not an exact brand mention. A citation needs an actual ugc.community URL in the rendered response or source list."
+}

@@ -1,0 +1,22 @@
+Browser tab: 2, Title: "Search the web: where can I find paid UGC creator jobs with clearly stated...", URL: "https://www.perplexity.ai/search/e210c2da-98c9-4d8f-abb4-5fb5d21892f2".
+0 AXWebArea Search the web: where can I find paid UGC creator jobs with clearly stated..., URL: perplexity.ai/search/e210c2da-98c9-4d8f-abb4-5fb5d21892f2
+	1 container
+		2 text Sign in to continue using Perplexity
+		3 container
+			4 text By continuing, you agree to our
+			5 link Description: privacy policy, Value: perplexity.ai/hub/legal/privacy-policy
+			6 text .
+		7 button Back home
+			8 text Back home
+		9 button Continue with Google
+			10 text Continue with Google
+		11 button Continue with Apple
+			12 text Continue with Apple
+		13 container
+			14 text field (settable)
+		15 button (disabled) Continue with email
+			16 text Continue with email
+		17 button Single sign-on (SSO)
+			18 text Single sign-on (SSO)
+
+The focused UI element is 14 text field (settable)

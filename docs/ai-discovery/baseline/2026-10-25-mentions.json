@@ -1,0 +1,92 @@
+{
+  "date": "2026-10-25",
+  "timezone": "America/Puerto_Rico",
+  "promptVersion": 1,
+  "promptId": "paid-jobs",
+  "results": [
+    {
+      "service": "ChatGPT",
+      "visibleModel": "Instant",
+      "mode": "web search requested; linked sources visible",
+      "personalization": "Temporary chat, Unpersonalized",
+      "availability": "completed",
+      "brandMention": false,
+      "siteCitation": false,
+      "recommendedNames": [
+        "JoinBrands",
+        "Billo",
+        "Insense",
+        "Collabstr",
+        "Twirl"
+      ],
+      "evidenceFile": "2026-10-25-chatgpt.txt",
+      "screenshot": "2026-10-25-chatgpt.png",
+      "notes": "One response to one unbranded prompt. No inference about other prompts or users. Conversation was temporary; saved evidence is the durable record.",
+      "citedUrls": [
+        "https://joinbrands.com/?utm_source=chatgpt.com",
+        "https://help.joinbrands.com/en/articles/6267226-creators-how-much-can-i-earn?utm_source=chatgpt.com",
+        "https://help.joinbrands.com/en/articles/8301491-creators-job-marketplace?utm_source=chatgpt.com",
+        "https://billo.app/?utm_source=chatgpt.com",
+        "https://help.billo.app/en/articles/5766115-for-creators-getting-started-guide?utm_source=chatgpt.com",
+        "https://help.billo.app/en/articles/5830098-for-creators-how-and-when-you-ll-get-paid?utm_source=chatgpt.com",
+        "https://insense.pro/?utm_source=chatgpt.com",
+        "https://help-creators.insense.pro/4525?utm_source=chatgpt.com",
+        "https://insense.pro/faq?utm_source=chatgpt.com",
+        "https://collabstr.com/creator?utm_source=chatgpt.com",
+        "https://collabstr.com/creator?utm_source=chatgpt.com",
+        "https://collabstr.com/pricing?utm_source=chatgpt.com",
+        "https://portal.usetwirl.com/creator/creator-application?utm_source=chatgpt.com",
+        "https://portal.usetwirl.com/creator/creator-application?utm_source=chatgpt.com",
+        "https://ugc.live/ugc-jobs?utm_source=chatgpt.com"
+      ],
+      "observedAt": "2026-10-25T18:02:40.373Z"
+    },
+    {
+      "service": "Gemini",
+      "visibleModel": "Flash-Lite",
+      "mode": "guest; web search requested; sources visible",
+      "personalization": "Signed out, fresh conversation",
+      "availability": "completed",
+      "brandMention": false,
+      "siteCitation": false,
+      "recommendedNames": [
+        "Pitchlo",
+        "UGCJobs.com",
+        "Billo",
+        "Insense",
+        "Backstage"
+      ],
+      "citedUrls": [
+        "https://pitchlo.com/ugc-creator-jobs",
+        "https://pitchlo.com/blog/paid-ugc-platforms",
+        "https://ugcjobs.com/blog/best-ugc-platforms-for-creators-2026",
+        "https://backstage.com/ugc-jobs/"
+      ],
+      "evidenceFile": "2026-10-25-gemini.txt",
+      "screenshot": "2026-10-25-gemini.png",
+      "notes": "One response. Competitor statements were captured as evidence of this response, not independently verified product claims.",
+      "observedAt": "2026-10-25T18:02:40.374Z"
+    },
+    {
+      "service": "Perplexity",
+      "availability": "blocked_sign_in",
+      "brandMention": null,
+      "siteCitation": null,
+      "evidenceFile": "2026-10-25-perplexity.txt",
+      "notes": "The public search form accepted the prompt but required sign-in before showing an answer. No completed result available."
+    },
+    {
+      "service": "Claude",
+      "availability": "not_run",
+      "brandMention": null,
+      "siteCitation": null
+    },
+    {
+      "service": "Copilot",
+      "availability": "not_run",
+      "brandMention": null,
+      "siteCitation": null
+    }
+  ],
+  "otherPrompts": "The other three fixed prompts have not been run in this initial sample. Weekly runs should cover all accessible service/prompt combinations and retain missingness explicitly."
+}

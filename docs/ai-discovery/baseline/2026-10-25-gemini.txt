@@ -1,0 +1,143 @@
+Browser tab: 3, Title: "Top Paid UGC Job Platforms - Google Gemini", URL: "https://gemini.google.com/app/c61ea28290540059".
+0 AXWebArea Top Paid UGC Job Platforms - Google Gemini, URL: gemini.google.com/app/c61ea28290540059
+	1 container
+		2 container
+			3 link Description: New chat, Value: gemini.google.com/
+			4 container Side Navigation
+				5 container
+					6 button (expanded) Description: Close sidebar, Secondary Actions: Collapse
+					7 container Main actions menu
+						52 link Description: New chat, Value: gemini.google.com/app
+					8 container Additional actions menu
+						9 link Description: Images, Value: gemini.google.com/images
+					10 container
+						11 link Description: Sign in, Value: gemini.google.com/#
+						12 text  to save activity
+					13 button Sign in
+					14 pop up button (collapsed) Description: Settings, Secondary Actions: Expand
+			15 container xap-skip-link-target
+				16 container
+					39 heading Conversation with Gemini, Value: 1
+						40 text Conversation with Gemini
+					53 container 66b995ae802809e6
+						54 container
+							55 heading Value: 5, You said Search the web: where can I find paid UGC creator jobs with clearly stated cash compensation? Recomm…
+								56 text You said  Search the web: where can I find paid UGC creator jobs with clearly stated cash compensation? Recomm…
+							57 text Search the web: where can I find paid UGC creator jobs with clearly stated cash compensation? Recommend up to five places, explain how they differ, and cite the sources you use.
+						58 button Copy prompt
+						59 button Edit
+						60 container
+							61 heading Gemini said, Value: 6
+								62 text Gemini said
+							63 container model-response-message-contentr_66b995ae802809e6
+								64 container
+									65 text Finding reliable,  paid User-Generated Content (UGC) jobs with transparent cash compensation can save you from endless "gifted product" pitches and vague collaboration offers.
+								66 text Five distinct platforms and marketplaces where you can find paid UGC creator jobs with clearly stated cash budgets include:
+								67 heading 1. Pitchlo, Value: 3
+									68 text 1. Pitchlo
+								69 content list
+									70 container p-rc_df9108534444b837-36
+										71 text How it works: Pitchlo is a dedicated job marketplace where brands post specific UGC and short-form video tasks with upfront dollar amounts attached.
+										72 text Creators browse the live board, filter by niche, and submit pitches directly to brands.
+										73 pop up button (collapsed) Description: View source details for citations from Pitchlo and Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+									74 container p-rc_df9108534444b837-37
+										75 text Cash Transparency: High. Every listing on the board explicitly displays the cash payment (ranging typically from $50 to $500+ per video), alongside specific requirements (e.g., Meta ads, TikTok reviews, or unboxing).
+										76 pop up button (collapsed) Description: View source details for citation from Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+									77 container p-rc_df9108534444b837-38
+										78 text How it differs: Unlike older generic gig apps, it is built exclusively for UGC creators to skip cold pitching and view active, pre-budgeted briefs.
+										79 text There are no follower minimums, making it beginner-friendly.
+										80 pop up button (collapsed) Description: View source details for citations from Pitchlo and Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+								81 heading 2. UGCJobs.com, Value: 3
+									82 text 2. UGCJobs.com
+								83 content list
+									84 container p-rc_df9108534444b837-39
+										85 text How it works:  A specialized job board curated for digital creators. Brands looking for content creators post listings with precise scopes of work, and creators apply directly with zero platform middleman commission.
+										86 pop up button (collapsed) Description: View source details for citation from UGCJobs. Press Enter to open sources dialog., Secondary Actions: Expand
+									87 container
+										88 text Cash Transparency: High.  Job posts include clear compensation expectations (typically averaging $50 to $1, 000+ per video depending on the complexity and usage rights).
+									89 container
+										90 text How it differs:  It acts purely as a direct bridge between creators and brands.  Because there is no internal escrow system or app marketplace commission taking a cut,  you keep 100% of the agreed-upon cash fee and deal directly with the company.
+								91 heading 3. Billo, Value: 3
+									92 text 3. Billo
+								93 content list
+									94 container p-rc_df9108534444b837-40
+										95 text How it works: Billo is a structured, product-based marketplace designed primarily for e-commerce and Direct-to-Consumer (DTC) brands needing short-form video ads.
+										96 text  Brands post tasks,  and creators claim them,  receive free products,  film the videos,  and upload them.
+										97 pop up button (collapsed) Description: View source details for citation from Reddit. Press Enter to open sources dialog., Secondary Actions: Expand
+									98 container p-rc_df9108534444b837-41
+										99 text Cash Transparency: High. Payouts are fixed and stated upfront before you accept a task, usually ranging between $50 and $200 per video.
+										100 pop up button (collapsed) Description: View source details for citation from Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+									101 container p-rc_df9108534444b837-42
+										102 text How it differs:  It offers a streamlined,  automated workflow. It is less about pitching and more about execution—ideal if you want a reliable, predictable stream of product unboxings and quick turnaround ads without creative strategy headaches.
+										103 pop up button (collapsed) Description: View source details for citation from Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+								104 heading 4. Insense, Value: 3
+									105 text 4. Insense
+								106 content list
+									107 container p-rc_df9108534444b837-43
+										108 text How it works: Insense is an established campaign marketplace connecting creators with mid-to-large DTC brands and marketing agencies that run heavy paid social ad campaigns (Meta, TikTok).
+										109 text Creators apply to open briefs inside the portal.
+										110 pop up button (collapsed) Description: View source details for citations from Pitchlo and Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+									111 container
+										112 text Cash Transparency: High.  Budgets are pre-set by the brand for each campaign package,  typically ranging from $100 to $500+ per deliverable,  often factoring in usage rights.
+									113 container p-rc_df9108534444b837-44
+										114 text How it differs: It is tailored for intermediate to polished creators who have a professional portfolio.
+										115 text It features built-in payment escrow and contract protection, making transactions secure, though the platform takes a commission.
+										116 pop up button (collapsed) Description: View source details for citation from Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+								117 heading 5. Backstage, Value: 3
+									118 text 5. Backstage
+								119 content list
+									120 container p-rc_df9108534444b837-45
+										121 text How it works: Traditionally known for acting and modeling gigs, Backstage has expanded heavily into digital media, casting calls for short-form video ads, user-generated testimonials, and social media content.
+										122 pop up button (collapsed) Description: View source details for citation from Backstage. Press Enter to open sources dialog., Secondary Actions: Expand
+									123 container
+										124 text Cash Transparency: High.  Casting notices on Backstage are required to list compensation structures,  with budgets explicitly clear (often ranging from flat cash rates per video to hourly rates for shoot days).
+									125 container
+										126 text How it differs:  It leans heavily toward performance-oriented,  acting-heavy,  or scripted UGC briefs.  If you have an acting background or enjoy high-production-value talking-head videos,  it offers unique commercial briefs you won't find on standard e-commerce platforms.
+								127 heading Sources Cited, Value: 3
+									128 text Sources Cited
+								129 content list
+									130 container p-rc_df9108534444b837-46
+										131 text Pitchlo:
+										132 link Description: Pitchlo UGC Job Marketplace, Value: pitchlo.com/ugc-creator-jobs
+										133 text  &
+										134 link Description: 7 Best Paid UGC Platforms for Creators, Value: pitchlo.com/blog/paid-ugc-platforms
+										135 text .
+										136 pop up button (collapsed) Description: View source details for citation from Pitchlo. Press Enter to open sources dialog., Secondary Actions: Expand
+									137 container p-rc_df9108534444b837-47
+										138 text UGCJobs.com:
+										139 link Description: The 12 Best UGC Platforms for Creators, Value: ugcjobs.com/blog/best-ugc-platforms-for-creators-2026
+										140 text .
+										141 pop up button (collapsed) Description: View source details for citation from UGCJobs. Press Enter to open sources dialog., Secondary Actions: Expand
+									142 container p-rc_df9108534444b837-48
+										143 text Reddit (r/UGCcreators): Community insights on beginner-friendly platforms like Billo, Insense, and Upwork.
+										144 pop up button (collapsed) Description: View source details for citation from Reddit. Press Enter to open sources dialog., Secondary Actions: Expand
+									145 container
+										146 text Backstage:
+										147 link Description: UGC and Content Creator Job Board, Value: backstage.com/ugc-jobs/
+										148 text .
+							149 button Redo
+							150 button Copy
+							151 button Show more options
+					20 container
+						46 container
+							47 text Sign in to connect to Google apps, create images, and more
+							48 button Sign in
+						21 container
+							22 container
+								23 text entry area (settable) Description: Enter a prompt for Gemini, Value:
+
+									152 text Ask Gemini
+							25 pop up button (collapsed) Description: Upload & tools, Secondary Actions: Expand
+							26 container
+								27 pop up button (collapsed) Description: Open mode picker, currently Flash-Lite, Secondary Actions: Expand
+								153 container
+									154 button Dictate (⌘⇧D)
+						51 text Gemini is AI and can make mistakes.
+			34 link Description: About Gemini link, Value: gemini.google/about/?utm_source=gemini&utm_medium=web&utm_campaign=gemini_zero_state_link_to_marketing_microsite
+			35 link Description: Get Gemini app link, Value: gemini.google.com/app/download
+			36 link Description: Subscriptions link, Value: one.google.com/ai
+			37 link Description: For Business link, Value: g.co/cloud/gemini-for-business
+			38 button Sign in
+		155 text Searching the web
+
+The focused UI element is 23 text entry area (settable) Description: Enter a prompt for Gemini, Value:

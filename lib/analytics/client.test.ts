@@ -50,3 +50,21 @@ test("departing page engagement retains its original route", async () => {
   await flush();
   assert.equal(JSON.parse(requests[0]).events[0].path, "/about");
 });
+test("a consented tutorial landing keeps only the recognized AI campaign category", async () => {
+  const oldReferrer = document.referrer;
+  const oldLocation = Object.getOwnPropertyDescriptor(globalThis, "location")!;
+  Object.defineProperty(document, "referrer", { value: "", configurable: true, writable: true });
+  Object.defineProperty(globalThis, "location", { value: { pathname: "/tutorials/find-paid-ugc-jobs", origin: "https://ugc.community", protocol: "https:", href: "https://ugc.community/tutorials/find-paid-ugc-jobs?utm_source=chatgpt.com&email=private@example.com" }, configurable: true, writable: true });
+  try {
+    setTrackingConsent(true); track("page_view"); await flush();
+    assert.equal(requests.length, 1);
+    const payload = JSON.parse(requests[0]);
+    assert.equal(payload.source, "chatgpt");
+    assert.equal(payload.events[0].path, "/tutorials/find-paid-ugc-jobs");
+    assert.doesNotMatch(requests[0], /private@example|utm_source|chatgpt\.com/);
+    assert.equal(batchSchema.safeParse(payload).success, true);
+  } finally {
+    Object.defineProperty(document, "referrer", { value: oldReferrer, configurable: true, writable: true });
+    Object.defineProperty(globalThis, "location", oldLocation);
+  }
+});

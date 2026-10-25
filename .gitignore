@@ -51,3 +51,6 @@ next-env.d.ts
 # Misc
 *.local
 .env*.local
+
+# Private operational AI discovery snapshots
+/.local/ai-discovery/

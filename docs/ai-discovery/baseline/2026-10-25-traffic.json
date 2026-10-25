@@ -1,0 +1,207 @@
+{
+  "environment": "production",
+  "generatedAt": "2026-10-25T17:59:12.558Z",
+  "timezone": "America/Puerto_Rico",
+  "available": true,
+  "coverage": {
+    "firstEventAt": null,
+    "lastEventAt": null,
+    "retainedEvents": 0
+  },
+  "periods": [
+    {
+      "label": "previous7",
+      "startsAt": "2026-10-11T04:00:00.000Z",
+      "endsAt": "2026-10-18T04:00:00.000Z",
+      "complete": true,
+      "allTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "aiTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "byAssistant": [
+        {
+          "source": "chatgpt",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "perplexity",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "claude",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "copilot",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "gemini",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        }
+      ]
+    },
+    {
+      "label": "last7",
+      "startsAt": "2026-10-18T04:00:00.000Z",
+      "endsAt": "2026-10-25T04:00:00.000Z",
+      "complete": true,
+      "allTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "aiTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "byAssistant": [
+        {
+          "source": "chatgpt",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "perplexity",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "claude",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "copilot",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "gemini",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        }
+      ]
+    },
+    {
+      "label": "today",
+      "startsAt": "2026-10-25T04:00:00.000Z",
+      "endsAt": "2026-10-25T17:59:12.558Z",
+      "complete": false,
+      "allTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "aiTraffic": {
+        "sessions": 0,
+        "pageviews": 0,
+        "applyClicks": 0,
+        "applicationsSent": 0,
+        "jobSubmissions": 0
+      },
+      "byAssistant": [
+        {
+          "source": "chatgpt",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "perplexity",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "claude",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "copilot",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        },
+        {
+          "source": "gemini",
+          "sessions": 0,
+          "pageviews": 0,
+          "applyClicks": 0,
+          "applicationsSent": 0,
+          "jobSubmissions": 0
+        }
+      ]
+    }
+  ],
+  "aiEntries": [],
+  "limitations": [
+    "Consented measured sessions, not people or all visits. No historical backfill.",
+    "Attribution comes from the first tracked browser event in each window; a session may have begun earlier.",
+    "Referrers and recognized UTM tags are reported source labels, not proof of an assistant citation. Google/Bing traffic is not attributed to an AI product.",
+    "Consent refusal, privacy signals, blocked scripts, missing referrers/tags, and collection failures reduce coverage.",
+    "Application sends are provider acceptance, not hires or completed external applications. Today's partial totals are separate from complete-day comparisons."
+  ]
+}
