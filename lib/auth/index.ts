@@ -98,7 +98,11 @@ export const auth = betterAuth({
           subject: "Sign in to ugc.community",
           html: generateMagicLinkEmail(url),
         });
-        if (error) throw new Error("Could not send sign-in link");
+        if (error) {
+          const providerMessage = error.message.split(process.env.RESEND_API_KEY || "__no_key__").join("[redacted]").slice(0, 400);
+          console.error("Magic-link email rejected", { name: error.name, statusCode: error.statusCode, message: providerMessage });
+          throw new Error("Could not send sign-in link");
+        }
       },
       expiresIn: 60 * 5, // 5 minutes
       disableSignUp: false,

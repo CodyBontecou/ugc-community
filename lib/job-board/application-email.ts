@@ -18,6 +18,10 @@ export async function sendApplicationEmail(application: Application, profile: Cr
     subject: `UGC application: ${application.job_title} — ${profile.name}`.replace(/[\r\n]/g, " ").slice(0, 250),
     ...applicationEmailContent(application, profile),
   }, { idempotencyKey: `job-application/${application.id}` });
+  if (error) {
+    const providerMessage = error.message.split(process.env.RESEND_API_KEY).join("[redacted]").slice(0, 400);
+    console.error("Application email rejected", { name: error.name, statusCode: error.statusCode, message: providerMessage });
+  }
   if (error || !data?.id) throw new Error("Application email was not accepted");
   return data.id;
 }
