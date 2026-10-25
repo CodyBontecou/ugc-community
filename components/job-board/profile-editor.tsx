@@ -2,7 +2,8 @@
 import { useState, type FormEvent } from "react";
 import { creatorProfileSchema, generateProfile, type CreatorProfile } from "@/lib/job-board/profiles";
 import { CreatorProfileView } from "./creator-profile-view";
-export function ProfileEditor({ initial, initialShareId }: { initial: CreatorProfile; initialShareId?: string }) {
+import { ProfileAccountHeader } from "./profile-account-header";
+export function ProfileEditor({ initial, initialShareId, accountEmail, accountName }: { initial: CreatorProfile; initialShareId?: string; accountEmail: string; accountName?: string }) {
   const [profile, setProfile] = useState(initial);
   const [brief, setBrief] = useState(initial.bio);
   const [shareId, setShareId] = useState(initialShareId);
@@ -28,8 +29,8 @@ export function ProfileEditor({ initial, initialShareId }: { initial: CreatorPro
     } catch (error) { setError(error instanceof Error ? error.message : "Could not save profile"); }
     finally { setBusy(false); }
   }
-  return <div className="grid lg:grid-cols-2 gap-8 items-start"><form onSubmit={save} className="bg-white border border-warm-gray-200 rounded-[28px] p-6 sm:p-8 space-y-5">
-    <h2 className="text-2xl">Your quick-apply profile</h2>
+  return <div className="space-y-8"><ProfileAccountHeader email={accountEmail} name={accountName} hasProfile={Boolean(shareId)} /><div className="grid lg:grid-cols-2 gap-8 items-start"><form onSubmit={save} className="bg-white border border-warm-gray-200 rounded-[28px] p-6 sm:p-8 space-y-5">
+    <h2 className="text-2xl">{shareId ? "Edit your creator details" : "Your creator details"}</h2>
     <p className="text-sm text-warm-gray-600">Add your details, generate a draft, and edit it before saving. We only use the facts you provide.</p>
     {([["name", "Name", 100], ["location", "Location (optional)", 160], ["niches", "Content niches (optional)", 300]] as const).map(([key, label, max]) => <label key={key} className="block text-sm font-medium">{label}<input value={profile[key]} onChange={e => update(key, e.target.value)} required={key === "name"} maxLength={max} className={input} /></label>)}
     <label className="block text-sm font-medium">Tell us about your work<textarea value={brief} onChange={e => setBrief(e.target.value)} maxLength={1600} rows={4} placeholder="What do you create? Which products or styles do you work with? Add relevant experience in your own words." className={input} /></label>
@@ -42,6 +43,6 @@ export function ProfileEditor({ initial, initialShareId }: { initial: CreatorPro
     <label className="flex items-start gap-3 text-sm"><input type="checkbox" required className="mt-1 accent-rose" />I agree to create a profile accessible to anyone with its link and share it with employers when I apply. My email stays off the profile page.</label>
     {error && <p role="alert" className="text-red-700">{error}</p>}
     {saved && <p role="status">Profile saved. You can now quick apply to email-enabled jobs.</p>}
-    <button disabled={busy} className="bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Saving…" : "Save profile for quick apply"}</button>
-  </form><div className="space-y-4"><p className="text-sm text-warm-gray-600">Profile preview</p><CreatorProfileView profile={profile} />{shareId && <a href={`/creator-profile/${shareId}`} className="inline-block underline text-rose">View saved profile</a>}<p className="text-sm text-warm-gray-600">Future applications use your latest saved profile. Applications already submitted keep their original details.</p><a href="/jobs" className="inline-block underline">Browse jobs</a></div></div>;
+    <button disabled={busy} className="bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Saving…" : shareId ? "Save profile changes" : "Create my quick-apply profile"}</button>
+  </form><div className="space-y-4"><p className="text-sm text-warm-gray-600">Profile preview</p><CreatorProfileView profile={profile} />{shareId && <a href={`/creator-profile/${shareId}`} className="inline-block underline text-rose">View saved profile</a>}<p className="text-sm text-warm-gray-600">Future applications use your latest saved profile. Applications already submitted keep their original details.</p><a href="/jobs" className="inline-block underline">Browse jobs</a></div></div></div>;
 }
