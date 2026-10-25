@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="coral-rose" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9A8B"/>
+      <stop offset="1" stop-color="#FF6B95"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#coral-rose)"/>
+  <path d="M164 184V292C164 342.81 205.19 384 256 384C306.81 384 348 342.81 348 292V184" stroke="#FFFBF9" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="348" cy="104" r="28" fill="#FFFBF9"/>
+</svg>
