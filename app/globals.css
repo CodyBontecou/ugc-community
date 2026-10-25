@@ -244,15 +244,15 @@ img {
   }
 }
 
-/* High-contrast primary actions across job browsing, profiles and authentication. */
+/* Shared brand gradient for primary actions. */
 .primary-action {
   color: #fff;
-  background: var(--color-purple-dark);
-  transition: background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  background: linear-gradient(to right, var(--color-coral), var(--color-rose));
+  transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 @media (hover: hover) {
-  .primary-action:hover { background: #5b21b6; color: #fff; }
+  .primary-action:hover { opacity: 0.9; color: #fff; }
 }
 .primary-action:active { transform: scale(0.98); }
-.primary-action:focus-visible { outline-color: var(--color-purple-dark); }
+.primary-action:focus-visible { outline-color: var(--color-rose); }
 .primary-action:disabled { cursor: not-allowed; }
