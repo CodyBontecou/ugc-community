@@ -65,6 +65,35 @@ Apply migration `0005_posting_analytics_indexes.sql` after `0004_behavior_analyt
 
 ## Production release
 
-Analytics is deployed as of October 25, 2026. Production JOB_BOARD migrations 0004 and 0005 are applied. Release commit `a50e9c2` is served by Cloudflare version `f209bbce-6953-4c69-977d-43e746ee789e`; prior version `2d43080b-ff58-491a-a7da-7253a184b70f` is the rollback reference. The release used a clean source archive and excluded unrelated uncommitted changes.
+Analytics is deployed as of October 25, 2026. Production JOB_BOARD migrations 0004 and 0005 are applied. The initial analytics release commit `a50e9c2` was served by Cloudflare version `f209bbce-6953-4c69-977d-43e746ee789e`; prior version `2d43080b-ff58-491a-a7da-7253a184b70f` is the rollback reference. The release used a clean source archive and excluded unrelated uncommitted changes.
 
 Production smoke checks confirmed protected report endpoints, sign-in redirects, origin checks, privacy-signal suppression, and a consented event reaching D1 exactly once across duplicate submissions. The synthetic event was removed after verification. The normal post-job authentication checks passed and IndexNow accepted 11 sitemap URLs. Signed-in owner/admin walkthroughs and observing the daily retention run remain in `ana00001`.
+
+## Live owner-isolation verification: October 25, 2026
+
+Two dedicated accounts were created through normal email verification using aliases of the operator's mailbox. They had distinct account IDs and sessions, but their job submissions deliberately shared the same contact email. Three test jobs were submitted through the production API and stayed in pending review: two belonging to A (one with zero activity) and one belonging to B. None appeared in the public jobs API.
+
+| Live check | Result |
+| --- | --- |
+| A's report and rendered dashboard | Only A's two postings; 3 brief opens, 1 apply click, 1 anonymous interacting session |
+| B's report and rendered dashboard | Only B's posting; 1 brief open, 5 apply clicks, 1 anonymous interacting session |
+| 7/30/90-day windows | Correct isolated summaries, per-job counts, daily totals, referral sources and devices |
+| Individual own posting | 200, one owned posting |
+| Another account's posting ID | Generic 404 in both directions; browser showed a 404 page |
+| Missing posting or SQL-like posting ID | Same generic 404 |
+| Spoofed userId, owner and accountId query parameters | Session's own scope retained; no foreign posting returned |
+| Ordinary poster requesting the sitewide admin report | 401 |
+| Anonymous or tampered primary session cookie | 401 |
+| JSON report download payload | Private/no-store, Vary: Cookie; no raw sessions, private submission contacts or review notes |
+| Replayed event batch | Counted once |
+| Zero-activity posting and extreme page/period parameters | Correct zero metrics and bounded defaults |
+
+The test used synthetic consented collector activity rather than sending job applications. Both dashboards were inspected in the live browser. All three private postings and their ten unique analytics events were removed, their absence verified in production D1, and both accounts' server sessions revoked. Dedicated test identities remain available for future checks; no session credentials are committed.
+
+A concurrent performance deployment (`ccb8060c-af1e-4f3f-bffd-e84377b189ad`) replaced the tested analytics release with an older snapshot during cleanup, causing missing-route 404s rather than a data leak. With the user's authorization, the performance and content chats coordinated a replacement. Version `4b5642d7-940c-41ce-8e01-a02d82c6fc41` restored analytics, and the live authentication/privacy guard passed again. Future deployments through the standard release script now run this guard as well.
+
+Reusable checks:
+
+- `node scripts/verify-analytics-auth.mjs` checks live route presence, anonymous access, origin rejection and DNT/GPC without creating data.
+- `node scripts/verify-posting-analytics-isolation.mjs /private/path/state.json` runs authenticated isolation verification. The private state file needs a unique `analytics-<lowercase alphanumeric>` run marker and two fresh dedicated accounts, each with `label` (`a`/`b`), `email` containing the run marker, `id` and normal signed-in `cookie`. Keep it outside the repository with mode 0600. The script saves exact fixture identities as it runs.
+- Add `--cleanup` to the isolation command after inspection. It validates dedicated test identities and the exact unpublished fixtures before deleting those D1 records, verifies absence, revokes their sessions and removes cookies from the private state file. It does not delete the test identities. Never point it at real employer accounts.
