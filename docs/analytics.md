@@ -62,3 +62,9 @@ Any active signed-in account can open `/dashboard/postings` from the dashboard m
 Inventory is paginated at 20 jobs. Pending, rejected, closed, and zero-activity jobs remain visible to their owner. Summary metrics cover the complete selected scope rather than only the visible page. The report does not count feed page views as impressions for an individual job. A repeat open/click is another event; interacting sessions deduplicate browser sessions. Email sends are consented analytics outcomes, so they can undercount actual applications. Referral/device breakdowns are drawn only from browser interactions with owned jobs.
 
 Apply migration `0005_posting_analytics_indexes.sql` after `0004_behavior_analytics.sql` before deploying this feature. It adds indexes for account inventory and per-job event lookups. Older jobs without an associated submitting account cannot be claimed through contact email; any future ownership transfer needs a separate verified workflow.
+
+## Production release
+
+Analytics is deployed as of October 25, 2026. Production JOB_BOARD migrations 0004 and 0005 are applied. Release commit `a50e9c2` is served by Cloudflare version `f209bbce-6953-4c69-977d-43e746ee789e`; prior version `2d43080b-ff58-491a-a7da-7253a184b70f` is the rollback reference. The release used a clean source archive and excluded unrelated uncommitted changes.
+
+Production smoke checks confirmed protected report endpoints, sign-in redirects, origin checks, privacy-signal suppression, and a consented event reaching D1 exactly once across duplicate submissions. The synthetic event was removed after verification. The normal post-job authentication checks passed and IndexNow accepted 11 sitemap URLs. Signed-in owner/admin walkthroughs and observing the daily retention run remain in `ana00001`.
