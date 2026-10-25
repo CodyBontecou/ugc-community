@@ -40,10 +40,10 @@ export function DashboardShell({ userName }: DashboardShellProps) {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="min-w-0 max-w-5xl mx-auto">
       {/* Greeting */}
       <div className="mb-6">
-        <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900">
+        <h1 className="break-words text-3xl md:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900">
           Hey {firstName}!
         </h1>
         <p className="text-warm-gray-500 mt-1">
@@ -53,12 +53,13 @@ export function DashboardShell({ userName }: DashboardShellProps) {
 
       {/* Tab Bar */}
       <div className="relative mb-8">
-        <div className="flex items-center gap-1 border-b border-warm-gray-200 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="grid grid-cols-4 items-center gap-1 border-b border-warm-gray-200 sm:flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleNavigate(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              aria-pressed={activeTab === tab.id}
+              className={`relative flex min-w-0 flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? "text-coral"
                   : "text-warm-gray-400 hover:text-warm-gray-700"
@@ -108,11 +109,7 @@ export function DashboardShell({ userName }: DashboardShellProps) {
 
           {activeTab === "media" && (
             <div
-              className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden"
-              style={{
-                height: "calc(100dvh - 300px)",
-                minHeight: "500px",
-              }}
+              className="h-[max(32rem,calc(100dvh-16rem))] bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 overflow-hidden"
             >
               <MediaLibrary />
             </div>

@@ -172,7 +172,7 @@ export function RewardsOverview() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-warm-gray-200 rounded w-1/3" />
           <div className="space-y-3">
@@ -198,7 +198,7 @@ export function RewardsOverview() {
   const featureRewards = rewards.filter((r) => r.type !== "badge");
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
       <h2 className="text-lg font-semibold text-warm-gray-900 mb-6 flex items-center gap-2">
         <Gift size={20} className="text-coral" />
         Unlocked Rewards

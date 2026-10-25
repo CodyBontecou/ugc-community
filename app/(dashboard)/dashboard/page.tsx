@@ -45,12 +45,12 @@ export default function DashboardPage() {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-[104px] bg-warm-gray-100 rounded-[--radius-lg]"
+                  className="h-[104px] bg-warm-gray-100 rounded-[var(--radius-lg)]"
                 />
               ))}
             </div>
-            <div className="h-[100px] bg-warm-gray-100 rounded-[--radius-xl]" />
-            <div className="h-[140px] bg-warm-gray-100 rounded-[--radius-xl]" />
+            <div className="h-[100px] bg-warm-gray-100 rounded-[var(--radius-xl)]" />
+            <div className="h-[140px] bg-warm-gray-100 rounded-[var(--radius-xl)]" />
           </div>
         </div>
       }

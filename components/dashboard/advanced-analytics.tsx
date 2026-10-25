@@ -143,7 +143,7 @@ export function AdvancedAnalytics() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-warm-gray-200 rounded w-1/3" />
           <div className="h-32 bg-warm-gray-100 rounded-lg" />
@@ -154,7 +154,7 @@ export function AdvancedAnalytics() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="text-center text-warm-gray-500 text-sm">{error}</div>
       </div>
     );
@@ -219,8 +219,8 @@ export function AdvancedAnalytics() {
   };
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-lg font-semibold text-warm-gray-900 flex items-center gap-2">
           <BarChart3 size={20} className="text-coral" />
           Advanced Analytics
@@ -287,19 +287,19 @@ export function AdvancedAnalytics() {
           <Download size={16} className="text-warm-gray-500" />
           <h3 className="font-medium text-warm-gray-900">Export Data</h3>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           {hasAdvanced ? (
             <>
               <button
                 onClick={() => handleExport("csv")}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
+                className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
               >
                 <FileSpreadsheet size={16} />
                 Export CSV
               </button>
               <button
                 onClick={() => handleExport("json")}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
+                className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
               >
                 <FileJson size={16} />
                 Export JSON
@@ -309,14 +309,14 @@ export function AdvancedAnalytics() {
             <>
               <LockedButton
                 unlockRequirement={FEATURE_REQUIREMENTS.dataExport.label}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-400"
+                className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-400"
               >
                 <FileSpreadsheet size={16} />
                 Export CSV
               </LockedButton>
               <LockedButton
                 unlockRequirement={FEATURE_REQUIREMENTS.dataExport.label}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-400"
+                className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-warm-gray-200 text-warm-gray-400"
               >
                 <FileJson size={16} />
                 Export JSON

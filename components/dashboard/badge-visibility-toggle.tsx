@@ -39,7 +39,7 @@ export function BadgeVisibilityToggle({
   }
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
           <Award size={20} className="text-amber-600" />
@@ -54,7 +54,7 @@ export function BadgeVisibilityToggle({
           <button
             onClick={handleToggle}
             disabled={saving}
-            className={`mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[--radius-md] border transition-all ${
+            className={`mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[var(--radius-md)] border transition-all ${
               hideBadges
                 ? "bg-warm-gray-50 border-warm-gray-200 text-warm-gray-700 hover:bg-warm-gray-100"
                 : "bg-mint-soft/10 border-mint/20 text-mint hover:bg-mint-soft/20"

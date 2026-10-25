@@ -167,7 +167,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-warm-gray-400" />
         </div>
@@ -176,14 +176,14 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-br from-coral/10 via-rose/10 to-violet/10 p-6 border-b border-coral/10">
-        <div className="flex items-start gap-4">
+      <div className="bg-gradient-to-br from-coral/10 via-rose/10 to-violet/10 p-5 sm:p-6 border-b border-coral/10">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:gap-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold text-warm-gray-900 mb-1">
               {hasSubmitted ? "Your Portfolio Vision" : "Tell me about your dream portfolio"}
             </h2>
@@ -194,7 +194,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             </p>
           </div>
           {hasSubmitted && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+            <span className="sm:ml-auto inline-flex shrink-0 items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
               <Check className="w-4 h-4" />
               Submitted
             </span>
@@ -203,7 +203,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6">
         {/* Subdomain */}
         <div>
           <label
@@ -212,8 +212,8 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
           >
             Choose your portfolio URL *
           </label>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Globe className="h-5 w-5 text-warm-gray-400" />
               </div>
@@ -223,7 +223,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
                 value={subdomain}
                 onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                 placeholder="yourname"
-                className={`w-full pl-10 pr-4 py-3 rounded-[--radius-lg] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 ${
+                className={`min-w-0 w-full text-base pl-10 pr-10 py-3 rounded-[var(--radius-lg)] border outline-none transition-all text-warm-gray-900 placeholder:text-warm-gray-400 ${
                   subdomainStatus.available === true
                     ? "border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                     : subdomainStatus.available === false
@@ -250,10 +250,10 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
                 </div>
               )}
             </div>
-            <span className="text-warm-gray-500 text-sm whitespace-nowrap">.ugc.community</span>
+            <span className="self-end text-warm-gray-500 text-sm whitespace-nowrap sm:self-auto">.ugc.community</span>
           </div>
           {subdomainStatus.available === true && subdomain.length >= 3 && (
-            <p className="mt-1.5 text-xs text-green-600 flex items-center gap-1">
+            <p className="mt-1.5 break-words text-xs text-green-600">
               <Check className="w-3 h-3" />
               Available! Your portfolio will be at {subdomain}.ugc.community
             </p>
@@ -304,7 +304,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             onChange={(e) => setPortfolioVision(e.target.value)}
             placeholder={EXAMPLE_VISION}
             rows={5}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
+            className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
             required
             minLength={10}
             maxLength={2000}
@@ -328,7 +328,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             onChange={(e) => setInspiringBrands(e.target.value)}
             placeholder="e.g., Glossier's minimalist aesthetic, Apple's clean product photography, Aesop's elegant typography..."
             rows={3}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
+            className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
             maxLength={1000}
           />
           <p className="mt-1.5 text-xs text-warm-gray-500">
@@ -350,7 +350,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
             onChange={(e) => setPortfolioExamples(e.target.value)}
             placeholder="Share links to creator portfolios or websites you like. What specifically do you like about them?"
             rows={3}
-            className="w-full px-4 py-3 rounded-[--radius-lg] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
+            className="w-full px-4 py-3 rounded-[var(--radius-lg)] border border-warm-gray-200 focus:border-coral focus:ring-2 focus:ring-coral/20 outline-none transition-all resize-none text-warm-gray-900 placeholder:text-warm-gray-400"
             maxLength={1000}
           />
           <p className="mt-1.5 text-xs text-warm-gray-500">
@@ -360,12 +360,12 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
 
         {/* Error/Success Messages */}
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[--radius-md]">
+          <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-[var(--radius-md)]">
             {error}
           </p>
         )}
         {successMessage && (
-          <p className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-[--radius-md] flex items-center gap-2">
+          <p className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-[var(--radius-md)] flex items-center gap-2">
             <Check className="w-4 h-4" />
             {successMessage}
           </p>
@@ -400,7 +400,7 @@ export function OnboardingForm({ onSubmitSuccess }: OnboardingFormProps) {
       </form>
 
       {/* Calendly Link - Now secondary */}
-      <div className="px-6 pb-6 pt-2">
+      <div className="px-5 pb-5 pt-2 sm:px-6 sm:pb-6">
         <div className="border-t border-warm-gray-100 pt-6">
           <div className="flex items-center gap-3 text-warm-gray-600">
             <Calendar className="w-5 h-5 text-warm-gray-400 flex-shrink-0" />

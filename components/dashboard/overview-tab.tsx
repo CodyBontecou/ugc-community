@@ -92,15 +92,15 @@ export function OverviewTab({ onNavigate }: OverviewTabProps) {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-[104px] bg-warm-gray-100 rounded-[--radius-lg]"
+              className="h-[104px] bg-warm-gray-100 rounded-[var(--radius-lg)]"
             />
           ))}
         </div>
-        <div className="h-[100px] bg-warm-gray-100 rounded-[--radius-xl]" />
-        <div className="h-[140px] bg-warm-gray-100 rounded-[--radius-xl]" />
+        <div className="h-[100px] bg-warm-gray-100 rounded-[var(--radius-xl)]" />
+        <div className="h-[140px] bg-warm-gray-100 rounded-[var(--radius-xl)]" />
         <div className="grid grid-cols-2 gap-3">
-          <div className="h-[88px] bg-warm-gray-100 rounded-[--radius-lg]" />
-          <div className="h-[88px] bg-warm-gray-100 rounded-[--radius-lg]" />
+          <div className="h-[88px] bg-warm-gray-100 rounded-[var(--radius-lg)]" />
+          <div className="h-[88px] bg-warm-gray-100 rounded-[var(--radius-lg)]" />
         </div>
       </div>
     );
@@ -302,7 +302,7 @@ function StatTile({
   const c = STAT_COLORS[color] ?? STAT_COLORS.coral;
 
   return (
-    <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-4 hover:shadow-sm transition-shadow">
+    <div className="bg-white rounded-[var(--radius-lg)] border border-warm-gray-200 p-4 hover:shadow-sm transition-shadow">
       <div className="flex items-center gap-2 mb-2">
         <div
           className={`w-8 h-8 rounded-full ${c.bg} flex items-center justify-center`}
@@ -365,7 +365,7 @@ function NextActionCard({
 
   const inner = (
     <div
-      className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-[--radius-xl] bg-gradient-to-br ${style.card} border`}
+      className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-[var(--radius-xl)] bg-gradient-to-br ${style.card} border`}
     >
       <div className="w-11 h-11 rounded-full bg-white/80 shadow-sm flex items-center justify-center flex-shrink-0">
         <Icon size={22} className={style.iconClass} />
@@ -448,7 +448,7 @@ function CompactMilestones({
   if (tracks.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-5">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-warm-gray-900 flex items-center gap-2">
           <Trophy size={18} className="text-coral" />
@@ -534,7 +534,7 @@ function CompactPortfolioStatus({
   onManage: () => void;
 }) {
   return (
-    <div className="bg-white rounded-[--radius-lg] border border-warm-gray-200 p-4 flex items-center gap-4">
+    <div className="bg-white rounded-[var(--radius-lg)] border border-warm-gray-200 p-4 grid grid-cols-[auto_minmax(0,1fr)] gap-3 sm:flex sm:items-center sm:gap-4">
       <div
         className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
           status.isActive ? "bg-mint/10" : "bg-amber-100"
@@ -551,7 +551,7 @@ function CompactPortfolioStatus({
         <p className="font-medium text-warm-gray-900">
           Portfolio {status.isActive ? "Active" : "Inactive"}
         </p>
-        <p className="text-sm text-warm-gray-500 truncate">
+        <p className="text-sm text-warm-gray-500">
           {status.hasHostingReward
             ? "Free hosting unlocked via milestone"
             : status.isActive
@@ -562,7 +562,7 @@ function CompactPortfolioStatus({
 
       <button
         onClick={onManage}
-        className="text-sm font-medium text-coral hover:text-coral-dark transition-colors flex-shrink-0"
+        className="col-start-2 justify-self-start min-h-11 text-sm font-medium text-coral hover:text-coral-dark transition-colors flex-shrink-0"
       >
         Manage
       </button>

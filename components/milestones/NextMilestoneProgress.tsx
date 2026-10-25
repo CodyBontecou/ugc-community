@@ -221,7 +221,7 @@ export function NextMilestoneProgress() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-4">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-4">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-warm-gray-200 rounded w-1/3" />
           <div className="h-16 bg-warm-gray-100 rounded-lg" />
@@ -247,7 +247,7 @@ export function NextMilestoneProgress() {
   };
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-4">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-4">
       <h3 className="text-sm font-semibold text-warm-gray-900 mb-3 flex items-center gap-2">
         <Target size={16} className="text-coral" />
         Next Milestones

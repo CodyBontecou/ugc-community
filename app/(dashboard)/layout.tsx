@@ -36,11 +36,11 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProviders>
-      <div className="min-h-screen bg-warm-gray-50">
+      <div className="min-h-dvh bg-warm-gray-50">
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-warm-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-14">
+            <div className="flex justify-between items-center gap-3 h-14">
               <BrandLink className="hover:text-coral transition-colors" />
 
               <DashboardNav user={session.user} isAdmin={userIsAdmin} />
@@ -49,7 +49,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Main content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:pt-8">
           {children}
         </main>
       </div>

@@ -40,7 +40,8 @@ async function SettingsContent() {
       <div className="flex items-center gap-4">
         <Link
           href="/dashboard"
-          className="w-10 h-10 rounded-full bg-warm-gray-100 hover:bg-warm-gray-200 flex items-center justify-center text-warm-gray-600 transition-colors"
+          aria-label="Back to dashboard"
+          className="w-11 h-11 shrink-0 rounded-full bg-warm-gray-100 hover:bg-warm-gray-200 flex items-center justify-center text-warm-gray-600 transition-colors"
         >
           <ArrowLeft size={18} />
         </Link>
@@ -55,24 +56,24 @@ async function SettingsContent() {
       </div>
 
       {/* Account info */}
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-5 sm:p-6">
         <div className="flex items-center gap-4 mb-6">
           {session.user.image ? (
             <img
               src={session.user.image}
               alt={session.user.name || ""}
-              className="w-16 h-16 rounded-full"
+              className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-full"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-xl font-semibold">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-xl font-semibold">
               {session.user.name?.charAt(0) || <User size={24} />}
             </div>
           )}
-          <div>
-            <h2 className="text-lg font-medium text-warm-gray-900">
+          <div className="min-w-0">
+            <h2 className="break-words text-lg font-medium text-warm-gray-900">
               {session.user.name}
             </h2>
-            <p className="text-sm text-warm-gray-500">{session.user.email}</p>
+            <p className="break-all text-sm text-warm-gray-500">{session.user.email}</p>
           </div>
         </div>
 
@@ -97,7 +98,7 @@ async function SettingsContent() {
       )}
 
       {/* Sign out */}
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-5 sm:p-6">
         <h3 className="font-medium text-warm-gray-900 mb-2">Sign Out</h3>
         <p className="text-sm text-warm-gray-500 mb-4">
           Sign out of your account on this device.
@@ -114,8 +115,8 @@ export default function SettingsPage() {
       fallback={
         <div className="animate-pulse space-y-8 max-w-2xl mx-auto">
           <div className="h-12 bg-warm-gray-200 rounded w-1/4" />
-          <div className="h-48 bg-warm-gray-200 rounded-[--radius-xl]" />
-          <div className="h-32 bg-warm-gray-200 rounded-[--radius-xl]" />
+          <div className="h-48 bg-warm-gray-200 rounded-[var(--radius-xl)]" />
+          <div className="h-32 bg-warm-gray-200 rounded-[var(--radius-xl)]" />
         </div>
       }
     >

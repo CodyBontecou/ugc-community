@@ -199,7 +199,7 @@ export function ContentPostsTable({
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="animate-pulse space-y-4">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 bg-warm-gray-200 rounded" />
@@ -208,7 +208,7 @@ export function ContentPostsTable({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-16 bg-warm-gray-50 rounded-[--radius-lg]"
+              className="h-16 bg-warm-gray-50 rounded-[var(--radius-lg)]"
             />
           ))}
         </div>
@@ -219,7 +219,7 @@ export function ContentPostsTable({
   /* ── Error ── */
   if (error) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <p className="text-sm text-warm-gray-500">{error}</p>
       </div>
     );
@@ -228,7 +228,7 @@ export function ContentPostsTable({
   /* ── Empty ── */
   if (posts.length === 0) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-8">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-8">
         <div className="flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-coral/8 flex items-center justify-center mb-4">
             <Inbox size={24} className="text-coral/60" />
@@ -283,11 +283,11 @@ export function ContentPostsTable({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden"
+      className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4">
-        <h2 className="text-lg font-semibold text-warm-gray-900 flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
+        <h2 className="text-base sm:text-lg font-semibold text-warm-gray-900 flex items-center gap-2.5">
           <FileCheck2 size={20} className="text-coral" />
           Recognized Posts
         </h2>
@@ -307,7 +307,7 @@ export function ContentPostsTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overscroll-x-contain">
         <table className="w-full">
           <thead>
             <tr className="border-y border-warm-gray-100 bg-warm-gray-50/50">
@@ -389,7 +389,7 @@ export function ContentPostsTable({
                         href={post.postUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-warm-gray-300 hover:text-coral transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                        className="text-warm-gray-300 hover:text-coral transition-colors flex-shrink-0 inline-flex min-h-11 min-w-11 items-center justify-center"
                         title="Open post"
                       >
                         <ExternalLink size={14} />
@@ -459,7 +459,9 @@ export function ContentPostsTable({
                       onClick={() =>
                         setExpandedRow(isExpanded ? null : post.id)
                       }
-                      className="p-1 rounded-md hover:bg-warm-gray-100 text-warm-gray-300 hover:text-warm-gray-500 transition-colors"
+                      aria-label={`${isExpanded ? "Hide" : "Show"} details for ${post.content || platform.label + " post"}`}
+                      aria-expanded={isExpanded}
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md hover:bg-warm-gray-100 text-warm-gray-300 hover:text-warm-gray-500 transition-colors"
                     >
                       {isExpanded ? (
                         <ChevronUp size={14} />
@@ -599,7 +601,7 @@ function EngagementStat({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-3 bg-white rounded-[--radius-md] px-3.5 py-2.5 border border-warm-gray-100">
+    <div className="flex items-center gap-3 bg-white rounded-[var(--radius-md)] px-3.5 py-2.5 border border-warm-gray-100">
       <Icon size={16} className={color} />
       <div>
         <p className="text-base font-semibold text-warm-gray-900 tabular-nums leading-none">

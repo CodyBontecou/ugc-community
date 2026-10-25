@@ -4,7 +4,7 @@ export function ProfileAccountHeader({ email, name, hasProfile }: { email: strin
   return <header className="space-y-6">
     <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-950">
       <CheckCircle2 size={20} aria-hidden="true" className="mt-0.5 shrink-0" />
-      <div className="min-w-0"><p className="font-medium">{name?.trim() ? `Signed in as ${name}` : "You’re signed in"}</p><p className="mt-1 break-all text-sm">{email}</p></div>
+      <div className="min-w-0"><p className="break-words font-medium">{name?.trim() ? `Signed in as ${name}` : "You’re signed in"}</p><p className="mt-1 break-all text-sm">{email}</p></div>
     </div>
     <div>
       <p className="mb-3 text-sm font-medium text-rose">{hasProfile ? "Your quick-apply profile" : "First-time profile setup"}</p>

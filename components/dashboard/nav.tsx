@@ -63,7 +63,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-[--radius-md] transition-colors relative ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-[var(--radius-md)] transition-colors relative ${
                 isActive
                   ? "text-warm-gray-900 bg-warm-gray-50"
                   : "text-warm-gray-500 hover:text-warm-gray-800 hover:bg-warm-gray-50"
@@ -80,7 +80,10 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-warm-gray-700 hover:bg-warm-gray-50 rounded-[--radius-md] transition-colors"
+          aria-label="Account menu"
+          aria-expanded={isOpen}
+          aria-controls="dashboard-account-menu"
+          className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-warm-gray-700 hover:bg-warm-gray-50 rounded-[var(--radius-md)] transition-colors"
         >
           {user.image ? (
             <img
@@ -114,7 +117,8 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.97 }}
                 transition={{ duration: 0.14, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-56 bg-white rounded-[--radius-lg] shadow-lg border border-warm-gray-200 py-1.5 z-50"
+                id="dashboard-account-menu"
+                className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-[var(--radius-lg)] shadow-lg border border-warm-gray-200 py-1.5 z-50"
               >
                 {/* User info header */}
                 <div className="px-4 py-2.5 border-b border-warm-gray-100">
@@ -133,7 +137,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
+                      className="flex items-center min-h-11 gap-2.5 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
                     >
                       <item.icon size={16} className="text-warm-gray-400" />
                       {item.label}
@@ -146,7 +150,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
                   <Link
                     href="/dashboard/settings"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
+                    className="flex items-center min-h-11 gap-2.5 px-4 py-2 text-sm text-warm-gray-700 hover:bg-warm-gray-50 transition-colors"
                   >
                     <Settings size={16} className="text-warm-gray-400" />
                     Settings
@@ -157,7 +161,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
                 <div className="border-t border-warm-gray-100 pt-1">
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="w-full flex items-center min-h-11 gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut size={16} />
                     Sign Out

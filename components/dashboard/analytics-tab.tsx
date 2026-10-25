@@ -139,7 +139,7 @@ function LockedAnalyticsCard() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-[--radius-xl] border border-warm-gray-200 overflow-hidden"
+      className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 overflow-hidden"
     >
       {/* Header */}
       <div className="p-6 pb-4">
@@ -147,8 +147,8 @@ function LockedAnalyticsCard() {
           <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
             <Lock size={18} className="text-coral" />
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-semibold text-warm-gray-900">
                 Advanced Analytics
               </h3>
@@ -173,7 +173,7 @@ function LockedAnalyticsCard() {
           {features.map((feature) => (
             <div
               key={feature.label}
-              className="flex items-start gap-3 p-3.5 rounded-[--radius-lg] bg-warm-gray-50 border border-warm-gray-100"
+              className="flex items-start gap-3 p-3.5 rounded-[var(--radius-lg)] bg-warm-gray-50 border border-warm-gray-100"
             >
               <feature.icon
                 size={18}
@@ -193,7 +193,7 @@ function LockedAnalyticsCard() {
       </div>
 
       {/* Footer CTA */}
-      <div className="px-6 py-4 bg-warm-gray-50 border-t border-warm-gray-100 flex items-center justify-between">
+      <div className="px-6 py-4 bg-warm-gray-50 border-t border-warm-gray-100 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-warm-gray-500">
           Keep posting to unlock these features
         </p>

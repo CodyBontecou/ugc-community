@@ -399,7 +399,7 @@ export function UserProgressionPath({
   if (loading) {
     return (
       <div
-        className={`bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 ${className}`}
+        className={`bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6 ${className}`}
       >
         <div className="animate-pulse space-y-6">
           <div className="h-6 bg-warm-gray-200 rounded w-1/4" />
@@ -431,7 +431,7 @@ export function UserProgressionPath({
 
   return (
     <motion.div
-      className={`relative bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6 overflow-hidden ${className}`}
+      className={`relative bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6 overflow-hidden ${className}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}

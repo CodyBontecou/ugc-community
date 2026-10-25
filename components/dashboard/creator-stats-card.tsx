@@ -29,7 +29,7 @@ export function CreatorStatsCard() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+      <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-warm-gray-200 rounded w-1/4" />
           <div className="grid grid-cols-2 gap-4">
@@ -51,7 +51,7 @@ export function CreatorStatsCard() {
   }
 
   return (
-    <div className="bg-white rounded-[--radius-xl] border border-warm-gray-200 p-6">
+    <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-6">
       <h2 className="text-lg font-semibold text-warm-gray-900 mb-4 flex items-center gap-2">
         <TrendingUp size={20} className="text-coral" />
         Your Stats
@@ -125,8 +125,8 @@ export function CreatorStatsCard() {
             <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center flex-shrink-0">
               <BarChart3 size={20} className="text-coral" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h3 className="font-medium text-warm-gray-900">
                   Advanced Analytics
                 </h3>

@@ -235,7 +235,7 @@ export function MediaLibrary({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-[--radius-lg] overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-[var(--radius-lg)] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-warm-gray-200">
         <div>
@@ -247,7 +247,7 @@ export function MediaLibrary({
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-sm] transition-colors"
+            className="p-2 text-warm-gray-400 hover:text-warm-gray-600 hover:bg-warm-gray-100 rounded-[var(--radius-sm)] transition-colors"
           >
             <X size={20} />
           </button>
@@ -255,7 +255,7 @@ export function MediaLibrary({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-warm-gray-100">
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b border-warm-gray-100">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -263,7 +263,7 @@ export function MediaLibrary({
               setActiveTab(tab.id);
               setPage(1);
             }}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-[--radius-md] transition-colors ${
+            className={`flex min-h-11 items-center gap-2 px-3 py-1.5 text-sm rounded-[var(--radius-md)] transition-colors ${
               activeTab === tab.id
                 ? "bg-coral/10 text-coral"
                 : "text-warm-gray-600 hover:bg-warm-gray-100"
@@ -283,7 +283,7 @@ export function MediaLibrary({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-[--radius-md] cursor-pointer transition-colors ${
+          className={`flex flex-col items-center justify-center p-4 sm:p-6 text-center border-2 border-dashed rounded-[var(--radius-md)] cursor-pointer transition-colors ${
             isDragging
               ? "border-coral bg-coral/[0.04]"
               : "border-warm-gray-200 hover:border-warm-gray-300 hover:bg-warm-gray-50"
@@ -325,7 +325,7 @@ export function MediaLibrary({
             exit={{ opacity: 0, height: 0 }}
             className="p-4 border-b border-warm-gray-100"
           >
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-[--radius-md] text-sm text-red-700">
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-[var(--radius-md)] text-sm text-red-700">
               <AlertCircle size={16} />
               {error}
               <button
@@ -340,7 +340,7 @@ export function MediaLibrary({
       </AnimatePresence>
 
       {/* Media Grid */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 size={24} className="text-coral animate-spin" />
@@ -351,7 +351,7 @@ export function MediaLibrary({
             <p className="text-sm">No media uploaded yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {items.map((item) => (
               <MediaItem
                 key={item.id}
@@ -373,7 +373,7 @@ export function MediaLibrary({
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
-            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] disabled:opacity-50"
+            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[var(--radius-md)] disabled:opacity-50"
           >
             Previous
           </button>
@@ -383,7 +383,7 @@ export function MediaLibrary({
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || loading}
-            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[--radius-md] disabled:opacity-50"
+            className="px-3 py-1 text-sm text-warm-gray-600 hover:bg-warm-gray-100 rounded-[var(--radius-md)] disabled:opacity-50"
           >
             Next
           </button>
@@ -403,7 +403,7 @@ export function MediaLibrary({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="bg-white rounded-[--radius-lg] p-6 max-w-sm w-full shadow-xl"
+              className="bg-white rounded-[var(--radius-lg)] p-6 max-w-sm w-full shadow-xl"
             >
               <h3 className="font-semibold text-warm-gray-900 mb-2">
                 Delete Media?
@@ -415,14 +415,14 @@ export function MediaLibrary({
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2 text-sm text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-[--radius-md] transition-colors"
+                  className="flex-1 px-4 py-2 text-sm text-warm-gray-700 bg-warm-gray-100 hover:bg-warm-gray-200 rounded-[var(--radius-md)] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
                   disabled={deleting}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-[--radius-md] transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-red-500 hover:bg-red-600 rounded-[var(--radius-md)] transition-colors"
                 >
                   {deleting ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -461,7 +461,7 @@ function MediaItem({
 
   return (
     <div
-      className={`group relative aspect-square bg-warm-gray-100 rounded-[--radius-md] overflow-hidden ${
+      className={`group relative aspect-square bg-warm-gray-100 rounded-[var(--radius-md)] overflow-hidden ${
         selectionMode ? "cursor-pointer" : ""
       } ${isDeleting ? "opacity-50" : ""}`}
       onClick={() => selectionMode && onSelect?.(item)}
