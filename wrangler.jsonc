@@ -45,16 +45,7 @@
   "observability": {
     "enabled": true
   },
-  "routes": [
-    {
-      "pattern": "ugc.community",
-      "custom_domain": true
-    },
-    {
-      "pattern": "www.ugc.community",
-      "custom_domain": true
-    }
-  ],
+  "routes": [],
   "triggers": {
     "crons": [
       "0 3 * * *",

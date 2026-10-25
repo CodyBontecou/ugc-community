@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "compatibility_date": "2026-07-25",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  "main": "./public-worker.ts",
+  "name": "ugc-community-public",
+  "workers_dev": true,
+  "preview_urls": true,
+  "services": [
+    {
+      "binding": "APP",
+      "service": "ugc-community"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "JOB_BOARD",
+      "database_name": "ugc-job-board",
+      "database_id": "2de569eb-1427-466c-bc02-72bc0c4ded96",
+      "migrations_dir": "migrations/job-board"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "ugc.community",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.ugc.community",
+      "custom_domain": true
+    }
+  ]
+}

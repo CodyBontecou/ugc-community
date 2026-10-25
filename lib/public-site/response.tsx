@@ -12,7 +12,7 @@ import { publicFeed, feedFilters } from "./feed";
 import { structuredData } from "./metadata";
 import { publicRenderState } from "../performance/public-page-cache";
 export interface PublicAssets { css: string; fonts: string[]; htmlClass: string; script: string }
-export async function publicDocument(request: Request, env: CloudflareEnv, assets: PublicAssets) {
+export async function publicDocument(request: Request, env: Pick<CloudflareEnv, "JOB_BOARD">, assets: PublicAssets) {
  const url = new URL(request.url), home = url.pathname === "/", path = home ? "/" : "/jobs";
  const filters = feedFilters(Object.fromEntries(url.searchParams));
  let data: Awaited<ReturnType<typeof publicFeed>> | null = null;
