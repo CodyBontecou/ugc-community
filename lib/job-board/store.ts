@@ -51,7 +51,7 @@ export async function storeSources(db: D1Database, rows: SourceSnapshot[]) {
 export async function submitDirectJob(db: D1Database, input: Submission, user: { id: string; email: string }) {
   const data = submissionSchema.parse(input);
   const id = crypto.randomUUID(), now = new Date().toISOString();
-  // The server supplies an account ID or salted network hash for the daily cap.
+  // The server supplies the signed-in account ID for the daily cap.
   // Submissions never publish themselves.
   const saved = await db.prepare(`INSERT INTO board_jobs
     (id, source_kind, company, title, description, compensation_type, compensation_text, cash_amount, deliverables, eligibility,

@@ -15,7 +15,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
     <>
       <SignInForm callbackURL={callbackURL} />
       <div className="w-full max-w-md px-2 text-center text-sm leading-relaxed text-warm-gray-600 sm:px-4">
-        <p>Save a creator profile and apply to email-enabled jobs with an account. Browsing jobs, reading guides, and submitting an opportunity are public and free during launch.</p>
+        <p>Create an account or sign in to post a job, save a creator profile, or apply to email-enabled jobs. Browsing jobs and reading guides require no account. Job posting is free during launch.</p>
         <a href="/jobs" className="mt-3 inline-flex min-h-11 items-center justify-center text-rose underline underline-offset-4">Browse UGC jobs without signing in</a>
       </div>
     </>

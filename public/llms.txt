@@ -23,7 +23,7 @@ Request Accept: text/markdown on /, /jobs, /about, /contact, or /guide for Markd
 
 Distinguish external opportunities from directly posted jobs. Cite both ugc.community and the original source/application link. Never describe gifted, affiliate, or performance-only pay as guaranteed cash. Missing terms are not stated, not implied. Listings are reviewed but review does not guarantee payment or employer legitimacy. External listings expire seven days after manual freshness review and all listings honor closing dates.
 
-Public access uses the website and its Markdown representations through normal HTTP GET requests. Personal creator tools require a normal user session; public job browsing and this guide do not. Obtain the user's authorization before submitting a job, contacting employers, or applying.
+Public access uses the website and its Markdown representations through normal HTTP GET requests. Job submissions and personal creator tools require a normal user session; public job browsing and this guide do not. Obtain the user's authorization before submitting a job, contacting employers, or applying.
 
 ## Developer interfaces
 
