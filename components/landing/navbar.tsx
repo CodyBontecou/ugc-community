@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "@/lib/auth/client";
 
@@ -16,12 +17,19 @@ export function Navbar() {
     >
       <div className="container flex items-center justify-between">
         <div className="flex-1">
-          <Link href="/" className="font-semibold text-[1.1rem] text-warm-gray-900">
-            ugc.community
+          <Link href="/" className="inline-flex items-center gap-2.5 whitespace-nowrap font-semibold text-[1.1rem] text-warm-gray-900">
+            <Image
+              src="/brand/icon.svg"
+              alt=""
+              width={32}
+              height={32}
+              className="shrink-0"
+            />
+            <span>ugc.community</span>
           </Link>
         </div>
 
-        <div className="hidden md:flex gap-12">
+        <div className="hidden md:flex gap-6 lg:gap-12">
           <a
             href="/#features"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
