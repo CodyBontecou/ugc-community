@@ -244,10 +244,10 @@ img {
   }
 }
 
-/* Dark rose keeps white action labels readable. */
+/* Shared brand gradient for primary actions. */
 .primary-action {
   color: #fff;
-  background: #a92e55;
+  background: linear-gradient(to right, var(--color-coral), var(--color-rose));
   transition: opacity 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 @media (hover: hover) {
