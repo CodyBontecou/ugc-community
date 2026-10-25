@@ -1,3 +1,4 @@
+import { performanceReport } from "./performance";
 import type { D1Database } from "@/cloudflare-env";
 import { reportDays } from "./model";
 
@@ -5,6 +6,7 @@ export type MetricRow = { label: string; events: number; sessions: number };
 export type Summary = { sessions: number; pageviews: number; engaged: number; seconds: number; applyClicks: number; sent: number; profiles: number; submissions: number };
 export type FunnelStep = { label: string; sessions: number };
 export type AnalyticsReport = {
+  performance?: Awaited<ReturnType<typeof performanceReport>>;
   days: number; startsAt: string; endsAt: string; current: Summary; previous: Summary;
   daily: { day: string; sessions: number; pageviews: number; applications: number }[];
   pages: MetricRow[]; sources: MetricRow[]; devices: MetricRow[]; events: MetricRow[];
@@ -63,7 +65,7 @@ export async function analyticsReport(db: D1Database, requestedDays = 30, now = 
     daily.push(dailyRows.results.find(row => row.day === day) || { day, sessions: 0, pageviews: 0, applications: 0 });
   }
   const dimension = (type: string) => dimensions.results.filter(r => r.dimension === type).map(r => ({ label: r.label, events: r.sessions, sessions: r.sessions })).sort((a, b) => b.sessions - a.sessions);
-  return { days, startsAt: start, endsAt: end, current: summary(current), previous: summary(previous), daily, pages: pages.results, events: events.results, sources: dimension("source"), devices: dimension("device"), jobs: jobs.results, browserFunnel, applicationFunnel, employerFunnel };
+  return { performance: await performanceReport(db, start, end), days, startsAt: start, endsAt: end, current: summary(current), previous: summary(previous), daily, pages: pages.results, events: events.results, sources: dimension("source"), devices: dimension("device"), jobs: jobs.results, browserFunnel, applicationFunnel, employerFunnel };
 }
 export function reportCsv(report: AnalyticsReport) {
   const cell = (value: string | number) => `"${String(value).replace(/^[=+@\-\t\r]/, "'$&").replaceAll('"', '""')}"`;
@@ -72,5 +74,6 @@ export function reportCsv(report: AnalyticsReport) {
   for (const row of report.daily) rows.push(["daily pageviews", row.day, row.pageviews, row.sessions]);
   for (const section of ["browserFunnel", "applicationFunnel", "employerFunnel"] as const) for (const row of report[section]) rows.push([section, row.label, "", row.sessions]);
   for (const row of report.jobs) rows.push(["job apply clicks", `${row.id}: ${row.title}`, row.clicks, ""]);
+  for (const row of report.performance || []) rows.push(["performance p75", row.metric, row.p75, row.samples]);
   return rows.map(row => row.map(cell).join(",")).join("\r\n");
 }

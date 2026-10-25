@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/public/link";
 import { ArrowUpRight, BriefcaseBusiness } from "lucide-react";
 
 export function Hero() {

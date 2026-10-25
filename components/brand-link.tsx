@@ -1,5 +1,4 @@
-import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/public/link";
 
 export function BrandLink({
   href = "/",
@@ -19,7 +18,9 @@ export function BrandLink({
       aria-label="ugc.community home"
       className={`inline-flex items-center gap-2.5 whitespace-nowrap font-semibold text-[1.1rem] ${light ? "text-white" : "text-warm-gray-900"} ${className}`}
     >
-      <Image src="/brand/icon.svg" alt="" width={iconSize} height={iconSize} style={{ width: iconSize, height: iconSize }} className="shrink-0" />
+      {/* Fixed-size SVG needs no image optimization or client runtime. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/icon.svg" alt="" width={iconSize} height={iconSize} style={{ width: iconSize, height: iconSize }} className="shrink-0" />
       <span>ugc.community</span>
     </Link>
   );

@@ -1,0 +1,12 @@
+import { readFile, writeFile, readdir } from "node:fs/promises";
+import { build } from "esbuild";
+const result = await build({ entryPoints: ["lib/public-site/browser.ts"], bundle: true, splitting: true, format: "esm", target: ["chrome111", "firefox111", "safari16.4"], minify: true, outdir: ".open-next/assets/public-site", entryNames: "[name]-[hash]", chunkNames: "[name]-[hash]", metafile: true });
+const entry = Object.entries(result.metafile.outputs).find(([, value]) => value.entryPoint === "lib/public-site/browser.ts")[0];
+const html = await readFile(".next/server/app/about.html", "utf8");
+const cssFiles = await readdir(".next/static/css", { recursive: true });
+const css = (await Promise.all(cssFiles.filter(p => p.endsWith(".css")).map(p => readFile(".next/static/css/" + p, "utf8")))).join("\n");
+const fonts = [...html.matchAll(/<link[^>]+as="font"[^>]*>/g)].map(m => m[0].match(/href="([^"]+)"/)[1]);
+const assets = { css, fonts, htmlClass: html.match(/<html[^>]*class="([^"]*)"/)[1], script: "/" + entry.split(".open-next/assets/")[1] };
+await writeFile(".open-next/public-site-assets.json", JSON.stringify(assets));
+console.log("Public browser entry:", assets.script, "bytes:", result.metafile.outputs[entry].bytes);
+await writeFile(".open-next/assets/_headers", await readFile("public/_headers"));

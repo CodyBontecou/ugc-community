@@ -4,6 +4,9 @@ export { CONSENT_KEY, SESSION_COOKIE, SESSION_SECONDS, RETENTION_DAYS, BROWSER_E
 export type { Source, Device, BrowserEvent, ServerEvent } from "./browser";
 
 export const propertiesSchema = z.object({
+  metric: z.enum(["LCP", "INP", "CLS", "FCP", "TTFB"]).optional(),
+  value: z.number().finite().min(0).max(600000).optional(),
+  sample: z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),
   jobId: z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),
   destination: z.enum(["external", "email", "profile", "jobs", "post-job", "sign-in", "sign-up", "other"]).optional(),
   form: z.enum(["search", "profile", "application", "job", "sign-in", "sign-up", "contact"]).optional(),
@@ -19,6 +22,7 @@ export const eventSchema = z.object({
   id: z.uuid(), occurredAt: z.iso.datetime(), name: z.enum(BROWSER_EVENTS), path: z.string().max(300).refine(value => analyticsPath(value) !== null),
   properties: propertiesSchema.default({}),
 }).strict().superRefine((event, ctx) => {
+  if (event.name === "web_vital" && (!event.properties.metric || event.properties.value === undefined || !event.properties.sample || (event.properties.metric === "CLS" && event.properties.value > 100))) ctx.addIssue({ code: "custom", path: ["properties"], message: "A bounded metric, value and anonymous sample are required" });
   if (event.name === "job_impression" && !event.properties.jobId) ctx.addIssue({ code: "custom", path: ["properties", "jobId"], message: "Listing impressions require a job ID" });
 });
 export const batchSchema = z.object({

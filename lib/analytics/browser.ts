@@ -8,7 +8,7 @@ export const SESSION_COOKIE = "ugc_analytics_session";
 export const SESSION_SECONDS = 30 * 60;
 export const RETENTION_DAYS = 90;
 export const BROWSER_EVENTS = [
-  "page_view", "page_engagement", "scroll_depth", "job_impression", "job_brief_open", "apply_click",
+  "web_vital", "page_view", "page_engagement", "scroll_depth", "job_impression", "job_brief_open", "apply_click",
   "source_click", "navigation_click", "form_start", "form_submit", "form_error",
   "job_search", "profile_draft", "application_preview",
 ] as const;

@@ -126,3 +126,24 @@ test("impression ingestion requires a public job identifier and rejects private 
   const invalid = { ...valid, events: [{ ...valid.events[0], properties: { jobId: "job-public-id", email: "private@example.com" } }] };
   assert.equal((await collectEvents(request(invalid), bindings)).status, 400);
 });
+
+test("performance events require bounded measurements and no identifying payload", () => {
+  const valid = batch([{ name: "web_vital", properties: { metric: "LCP", value: 1250.5, sample: "v6-123-456" } }]);
+  assert.equal(batchSchema.safeParse(valid).success, true);
+  for (const properties of [{ metric: "LCP" }, { metric: "CLS", value: 101, sample: "a" }, { metric: "INP", value: -1, sample: "a" }, { metric: "LCP", value: 10, sample: "a", url: "private" }]) {
+    assert.equal(batchSchema.safeParse({ ...valid, events: [{ ...valid.events[0], properties }] }).success, false);
+  }
+});
+test("performance p75 uses the latest value per metric sample and selected time window", async () => {
+  await writeEvents(db, batch([
+    { name: "web_vital", properties: { metric: "LCP", value: 9000, sample: "one" }, at: 1 },
+    { name: "web_vital", properties: { metric: "LCP", value: 1000, sample: "one" }, at: 2 },
+    { name: "web_vital", properties: { metric: "LCP", value: 2000, sample: "two" }, at: 3 },
+    { name: "web_vital", properties: { metric: "LCP", value: 3000, sample: "three" }, at: 4 },
+    { name: "web_vital", properties: { metric: "LCP", value: 4000, sample: "four" }, at: 5 },
+    { name: "web_vital", properties: { metric: "CLS", value: 0.02, sample: "layout" }, at: 6 },
+  ]), now);
+  const report = await analyticsReport(db, 7, new Date(now.getTime()+1000));
+  assert.deepEqual(report.performance, [{ metric: "CLS", samples: 1, p75: 0.02 }, { metric: "LCP", samples: 4, p75: 3000 }]);
+  assert.match(reportCsv(report), /performance p75/);
+});

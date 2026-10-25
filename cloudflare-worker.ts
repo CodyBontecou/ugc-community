@@ -30,7 +30,10 @@ const worker = {
     if (!["ugc.community", "www.ugc.community", "localhost", "127.0.0.1"].includes(hostname) && !hostname.endsWith(".workers.dev")) return (await appHandler()).fetch(request, env, ctx);
     const cache = typeof caches !== "undefined" && "default" in caches ? caches.default as PublicPageCache : undefined;
     const response = await publicPageResponse(request, env, ctx,
-      async requestEnv => (await appHandler()).fetch(request, requestEnv, ctx), cache);
+      async requestEnv => {
+        const { publicDocumentRequest, publicDocument } = await import("./lib/public-site/response");
+        return publicDocumentRequest(request) ? publicDocument(request, requestEnv) : (await appHandler()).fetch(request, requestEnv, ctx);
+      }, cache);
     return agentResponse(request, response);
   },
 
