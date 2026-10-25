@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { publicDocument, publicDocumentRequest } from "../public-site/response";
+import { publicDocument } from "../public-site/response";
+import { publicDocumentRequest } from "../public-site/request";
 
 test("standalone public renderer preserves safe HTML, filters, private isolation, and native controls", async () => {
   const job = { id: "safe-id", source_kind: "direct", title: "<script>unsafe</script>", company: "Fixture", description: "A public brief", compensation_type: "cash", compensation_text: "$500", published_at: "2026-10-25T00:00:00Z", application_url: "https://example.com/apply" };
@@ -8,7 +9,7 @@ test("standalone public renderer preserves safe HTML, filters, private isolation
   const state = { ready: false, validUntil: 0 };
   const env = { JOB_BOARD: { prepare: () => statement }, __ugcPublicRender: state } as unknown as CloudflareEnv;
   for (const cookie of [undefined, "better-auth.session_token=private"]) {
-    const response = await publicDocument(new Request("https://ugc.community/?q=fixture&pay=cash", { headers: cookie ? { Cookie: cookie } : {} }), env);
+    const response = await publicDocument(new Request("https://ugc.community/?q=fixture&pay=cash", { headers: cookie ? { Cookie: cookie } : {} }), env, { css: "", fonts: [], htmlClass: "", script: "/public-site/browser-test.js" });
     const html = await response.text();
     assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "private, no-store");
     assert.equal(response.headers.get("x-content-type-options"), "nosniff");
