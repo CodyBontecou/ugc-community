@@ -1,0 +1,53 @@
+{
+  "target": "https://ugc.community/?agent-readiness=2",
+  "display_target": "ugc.community?agent-readiness=2",
+  "report_url": "https://is-agentic.com/scan/ugc.community%3Fagent-readiness%3D2",
+  "score": 98,
+  "score_label": "Strong technical baseline",
+  "scanned_at": "2026-10-25T01:22:11.158+00:00",
+  "eligible_checks": 17,
+  "score_breakdown": {
+    "essential": {
+      "earned": 80,
+      "available": 80,
+      "passing": 6,
+      "total": 6
+    },
+    "recommended": {
+      "earned": 15.5,
+      "available": 20,
+      "passing": 8,
+      "total": 11
+    },
+    "bonus": {
+      "points": 2.6,
+      "positive_signals": 11
+    }
+  },
+  "issues": [
+    {
+      "details": "Agent searched for \"ugc.community\" developer resources but found nothing relevant",
+      "id": "agentic-search-specific",
+      "name": "Developer resource discoverability",
+      "recommendation": "Check whether your developer resources (API docs, OpenAPI spec, auth docs, developer portal, MCP server, SDK documentation) surface in name-based searches. If they do not, use predictable URLs, link them in llms.txt, and include your product name in page titles and headings. This result reflects one search sample.",
+      "result": "failed",
+      "tier": "recommended"
+    },
+    {
+      "details": "ugc.community was not in the top 10 for \"ugc.community job board\"",
+      "id": "brand-search-accuracy",
+      "name": "Brand name discoverability",
+      "recommendation": "Make sure your own domain ranks in the top results when people search your brand together with your main product (for example \"Acme payments API\"). If it does not, your brand may be too generic, conflict with a more established term, or not yet indexed. Strengthen it by describing your main product clearly in your homepage title and headings, earning press mentions that link to your domain, and avoiding redirect chains that mask your main domain in search results.",
+      "result": "failed",
+      "tier": "recommended"
+    },
+    {
+      "details": "Organization schema found but missing: address",
+      "id": "org-schema-completeness",
+      "name": "Organization schema completeness",
+      "recommendation": "Add Organization JSON-LD that includes both contactPoint (with email/phone and contactType) and address (PostalAddress). This lets AI verify your business legitimacy and answer contact queries.",
+      "result": "partial",
+      "tier": "recommended"
+    }
+  ]
+}
