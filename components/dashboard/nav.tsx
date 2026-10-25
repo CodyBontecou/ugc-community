@@ -6,8 +6,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut,
-  ChevronDown,
   User,
+  ChevronDown,
   Shield,
   Briefcase,
   Settings,
@@ -27,7 +27,8 @@ interface DashboardNavProps {
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/apply-profile", label: "Creator profile", icon: User },
+  { href: "/jobs", label: "Browse jobs", icon: Briefcase },
 ];
 
 export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {

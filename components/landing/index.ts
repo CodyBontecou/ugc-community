@@ -1,15 +1,8 @@
 export { Navbar } from "./navbar";
 export { BackgroundBlobs } from "./background-blobs";
 export { Hero } from "./hero";
-export { SocialProof } from "./social-proof";
 export { Features } from "./features";
-export { TheTrade } from "./the-trade";
 export { HowItWorks } from "./how-it-works";
-export { MilestonesRewards } from "./milestones-rewards";
-export { MilestonesTiers } from "./milestones-tiers";
-export { RewardsShowcase } from "./rewards-showcase";
-export { Examples } from "./examples";
-export { Testimonials } from "./testimonials";
 export { Pricing } from "./pricing";
 export { FAQ } from "./faq";
 export { FinalCTA } from "./final-cta";

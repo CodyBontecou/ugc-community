@@ -1,3 +1,4 @@
+import { listCreatorApplications, applicationStatusLabel } from "./application-history";
 import { EmailDeliveryError } from "../email/delivery";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
@@ -159,4 +160,18 @@ test("an ambiguous Cloudflare send is never repeated, even after its lease expir
   await db.prepare("UPDATE board_applications SET status='failed' WHERE job_id='uncertain'").run();
   await assert.rejects(() => submitApplication(db, user("uncertain-user"), "uncertain", input, async () => { sends++; return "legacy-duplicate"; }), /needs checking/);
   assert.equal(sends, 1);
+});
+
+
+test("dashboard history is private to its creator and keeps submitted job snapshots", async () => {
+  await job("history-job");
+  await saveCreatorProfile(db, "history-owner", profile);
+  await submitApplication(db, user("history-owner"), "history-job", input, async () => "history-message");
+  await db.prepare("UPDATE board_jobs SET title='Changed listing title', status='closed' WHERE id='history-job'").run();
+  const history = await listCreatorApplications(db, "history-owner");
+  assert.equal(history.length, 1);
+  assert.equal(history[0].job_title, "Skincare launch");
+  assert.equal(history[0].company, "Brand");
+  assert.equal(applicationStatusLabel(history[0]), "Sent to email provider");
+  assert.deepEqual(await listCreatorApplications(db, "another-history-owner"), []);
 });

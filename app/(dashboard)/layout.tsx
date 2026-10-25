@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { BrandLink } from "@/components/brand-link";
 import { getServerSession } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/nav";
-import { DashboardProviders } from "@/components/dashboard/providers";
 import { isAdmin, canAccessDashboard, type UserStatus } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -35,24 +34,22 @@ export default async function DashboardLayout({
   const userIsAdmin = isAdmin(session.user.email);
 
   return (
-    <DashboardProviders>
-      <div className="min-h-dvh bg-warm-gray-50">
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-warm-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center gap-3 h-14">
-              <BrandLink className="hover:text-coral transition-colors" />
+    <div className="min-h-dvh bg-warm-gray-50">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-warm-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center gap-3 h-14">
+            <BrandLink className="hover:text-coral transition-colors" />
 
-              <DashboardNav user={session.user} isAdmin={userIsAdmin} />
-            </div>
+            <DashboardNav user={session.user} isAdmin={userIsAdmin} />
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Main content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:pt-8">
-          {children}
-        </main>
-      </div>
-    </DashboardProviders>
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:pt-8">
+        {children}
+      </main>
+    </div>
   );
 }

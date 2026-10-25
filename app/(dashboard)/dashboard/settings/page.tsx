@@ -2,12 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
-import { BadgeVisibilityToggle } from "@/components/dashboard/badge-visibility-toggle";
 import { ArrowLeft, User } from "lucide-react";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { getUserBadgeMilestones } from "@/lib/milestones/queries";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,20 +15,6 @@ export const dynamic = "force-dynamic";
 async function SettingsContent() {
   const session = await getServerSession();
   if (!session) return null;
-
-  // Fetch user data for badge toggle eligibility
-  const [userData] = await db
-    .select({
-      hideBadges: users.hideBadges,
-      lifetimePostCount: users.lifetimePostCount,
-    })
-    .from(users)
-    .where(eq(users.id, session.user.id))
-    .limit(1);
-
-  // Check if user has earned any badges
-  const earnedBadges = await getUserBadgeMilestones(session.user.id);
-  const hasBadges = earnedBadges.length > 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -79,23 +60,16 @@ async function SettingsContent() {
 
         <div className="pt-4 border-t border-warm-gray-100">
           <p className="text-xs text-warm-gray-400 mb-4">
-            Your subdomain settings can be managed from the dashboard.
+            Manage the creator details and work links you share with employers.
           </p>
           <Link
-            href="/dashboard"
+            href="/apply-profile"
             className="text-sm font-medium text-coral hover:text-coral-dark transition-colors"
           >
-            Go to Dashboard
+            Edit creator profile
           </Link>
         </div>
       </div>
-
-      {/* Badge visibility — only shown once the user has earned at least one badge */}
-      {hasBadges && (
-        <BadgeVisibilityToggle
-          initialHideBadges={userData?.hideBadges ?? false}
-        />
-      )}
 
       {/* Sign out */}
       <div className="bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 p-5 sm:p-6">

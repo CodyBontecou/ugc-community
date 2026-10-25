@@ -1,73 +1,51 @@
-# React + TypeScript + Vite
+# ugc.community
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A UGC job board with reviewed external opportunities, direct brand submissions, reusable creator profiles, and email applications.
 
-Currently, two official plugins are available:
+## Main flows
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `/jobs`: search published opportunities by keyword, source, and compensation.
+- `/post-job`: submit a brief for review.
+- `/apply-profile`: create or edit a quick-apply profile and work links.
+- `/dashboard`: manage your job search and view email application history.
+- `/dashboard/admin/opportunities`: review listings and validate job supply.
+- `/docs`: public REST API, MCP, and CLI documentation.
 
-## React Compiler
+The app runs on Next.js and Cloudflare Workers through OpenNext. Cloudflare D1 stores job-board records; existing PostgreSQL accounts provide authentication and account status.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Development
 
-## Expanding the ESLint configuration
+Use the pnpm version declared in `package.json`.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+pnpm install
+pnpm dev --webpack
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Authentication needs the configured account database and auth settings. Job-board pages also need their Cloudflare bindings; a plain Next.js dev server can show unavailable states when bindings are absent. Keep local credentials out of Git.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Checks
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+pnpm lint
+pnpm build
+pnpm test:job-board
+pnpm test:public-api
+pnpm test:agent-content
 ```
+
+The job-board tests use local Miniflare databases and cover profiles, application isolation, sending retries, listing review, imports, and retired creator-program endpoints. Public-interface tests cover REST, MCP, and the CLI.
+
+## Deployment
+
+```sh
+pnpm deploy
+```
+
+This builds for Cloudflare, deploys the Worker and assets, and submits recent sitemap URLs to IndexNow when its CLI is installed. Worker bindings and routes live in `wrangler.jsonc`. Scheduled work imports job sources and performs retention housekeeping.
+
+## Retired creator program
+
+Milestones, rewards, posting quotas, generated portfolio onboarding, campaign tracking, and media management are retired. Their private endpoints return HTTP 410; old dashboard pages redirect to the current job-board tools. Existing files and database records are preserved. External portfolio and social links remain supported in creator profiles.
+
+The former Fly/Inngest worker workflow is manual-only. External-service and archived-data cleanup is tracked in [issue #6](https://github.com/CodyBontecou/ugc-community/issues/6).

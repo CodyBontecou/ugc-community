@@ -146,7 +146,6 @@ export function UnifiedTable() {
       result = result.filter((r) => {
         if (r.email.toLowerCase().includes(searchLower)) return true;
         if (r.name?.toLowerCase().includes(searchLower)) return true;
-        if (r.subdomain?.toLowerCase().includes(searchLower)) return true;
         if (r.displayName?.toLowerCase().includes(searchLower)) return true;
         if (r.socials) {
           const socials = r.socials;
@@ -382,11 +381,7 @@ export function UnifiedTable() {
 
   function renderDetailsCell(record: UnifiedRecord) {
     if (record.type === "user") {
-      return record.subdomain ? (
-        <span className="text-sm text-warm-gray-600 font-mono">{record.subdomain}</span>
-      ) : (
-        <span className="text-sm text-warm-gray-400">—</span>
-      );
+      return <span className="text-sm capitalize text-warm-gray-600">{record.role || "creator"}</span>;
     }
 
     if (record.type === "invite") {

@@ -19,8 +19,6 @@ interface ExecutionContextLike {
 
 const CRON_ROUTES: Record<string, string> = {
   "0 3 * * *": "/api/cron/cleanup-views",
-  "0 4 * * *": "/api/cron/portfolio-enforcement",
-  "0 6 * * *": "/api/cron/profile-monitoring",
 };
 
 export default {
@@ -62,8 +60,7 @@ export default {
     );
 
     if (!response.ok) {
-      const body = (await response.text()).slice(0, 500);
-      throw new Error(`${path} failed with ${response.status}: ${body}`);
+      throw new Error(`${path} failed with ${response.status}`);
     }
 
     console.log(`${path} completed with ${response.status}`);

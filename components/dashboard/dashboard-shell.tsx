@@ -1,121 +1,43 @@
-"use client";
+import Link from "next/link";
+import { ArrowRight, Search, UserRound } from "lucide-react";
+import { ApplicationHistory } from "@/components/job-board/application-history";
+import type { ApplicationHistoryEntry } from "@/lib/job-board/application-history";
 
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  LayoutDashboard,
-  BarChart3,
-  Globe,
-  Image as ImageIcon,
-} from "lucide-react";
-
-import { OverviewTab } from "./overview-tab";
-import { AnalyticsTab } from "./analytics-tab";
-import { OnboardingForm } from "./onboarding-form";
-import { PortfolioStatus } from "./portfolio-status";
-import { RewardsOverview } from "@/components/milestones/RewardsOverview";
-import { UserProgressionPath } from "@/components/milestones/UserProgressionPath";
-import { MediaLibrary } from "@/components/media/media-library";
-
-export type TabId = "overview" | "analytics" | "portfolio" | "media";
-
-const tabs: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "portfolio", label: "Portfolio", icon: Globe },
-  { id: "media", label: "Media", icon: ImageIcon },
-];
-
-interface DashboardShellProps {
+export function DashboardShell({ userName, profileSaved, profileShareId, applications }: {
   userName: string;
-}
-
-export function DashboardShell({ userName }: DashboardShellProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
-  const firstName = userName?.split(" ")[0] || "Creator";
-
-  const handleNavigate = useCallback((tab: TabId) => {
-    setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
+  profileSaved: boolean | null;
+  profileShareId?: string;
+  applications: ApplicationHistoryEntry[] | null;
+}) {
+  const firstName = userName.trim().split(/\s+/)[0] || "Creator";
   return (
-    <div className="min-w-0 max-w-5xl mx-auto">
-      {/* Greeting */}
-      <div className="mb-6">
-        <h1 className="break-words text-3xl md:text-4xl font-[family-name:var(--font-display)] text-warm-gray-900">
-          Hey {firstName}!
-        </h1>
-        <p className="text-warm-gray-500 mt-1">
-          Here&apos;s what&apos;s happening with your content
-        </p>
-      </div>
-
-      {/* Tab Bar */}
-      <div className="relative mb-8">
-        <div className="grid grid-cols-4 items-center gap-1 border-b border-warm-gray-200 sm:flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleNavigate(tab.id)}
-              aria-pressed={activeTab === tab.id}
-              className={`relative flex min-w-0 flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.id
-                  ? "text-coral"
-                  : "text-warm-gray-400 hover:text-warm-gray-700"
-              }`}
-            >
-              <tab.icon size={18} />
-              <span>{tab.label}</span>
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="dashboard-active-tab"
-                  className="absolute bottom-0 left-2 right-2 h-[2.5px] bg-gradient-to-r from-coral to-rose rounded-full"
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                />
-              )}
-            </button>
-          ))}
+    <div className="mx-auto min-w-0 max-w-5xl space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-warm-gray-500">Your job search</p>
+          <h1 className="break-words text-3xl sm:text-4xl">Hey {firstName}!</h1>
+          <p className="mt-2 text-warm-gray-600">Find your next brief and keep your applications in one place.</p>
         </div>
+        <Link href="/jobs" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-coral to-rose px-6 py-3 font-medium text-white"><Search size={18} aria-hidden="true" />Browse jobs</Link>
       </div>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-        >
-          {activeTab === "overview" && (
-            <OverviewTab onNavigate={handleNavigate} />
-          )}
-
-          {activeTab === "analytics" && (
-            <AnalyticsTab onNavigate={handleNavigate} />
-          )}
-
-          {activeTab === "portfolio" && (
-            <div className="space-y-6">
-              <PortfolioStatus />
-              <OnboardingForm />
-              <div id="milestone-progress">
-                <UserProgressionPath />
-              </div>
-              <RewardsOverview />
+      <section aria-labelledby="profile-heading" className="rounded-[28px] border border-warm-gray-200 bg-white p-5 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-peach-100 text-rose"><UserRound size={22} aria-hidden="true" /></div>
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-warm-gray-500">Quick apply</p>
+            <h2 id="profile-heading" className="mb-2 text-2xl sm:text-3xl">{profileSaved === null ? "Your creator profile" : profileSaved ? "Your profile is ready" : "Create your creator profile"}</h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-warm-gray-600">{profileSaved === null ? "Your profile status is temporarily unavailable. Open your profile to try again." : profileSaved ? "Keep your work links and creator details up to date for your next email application." : "Add your details and work links once, then reuse them for jobs that accept applications by email."}</p>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/apply-profile" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-warm-gray-200 px-5 py-2 text-sm font-medium text-warm-gray-700 hover:bg-peach-100">{profileSaved === null ? "Open profile" : profileSaved ? "Edit profile" : "Set up profile"}<ArrowRight size={16} aria-hidden="true" /></Link>
+              {profileShareId && <Link href={`/creator-profile/${profileShareId}`} className="inline-flex min-h-11 items-center justify-center px-3 text-sm text-rose underline underline-offset-4">View shareable profile</Link>}
             </div>
-          )}
+          </div>
+        </div>
+      </section>
 
-          {activeTab === "media" && (
-            <div
-              className="h-[max(32rem,calc(100dvh-16rem))] bg-white rounded-[var(--radius-xl)] border border-warm-gray-200 overflow-hidden"
-            >
-              <MediaLibrary />
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+      <ApplicationHistory applications={applications} />
+      <p className="text-center text-sm text-warm-gray-600">Hiring a creator? <Link href="/post-job" className="inline-flex min-h-11 items-center text-rose underline underline-offset-4">Post a job for free</Link></p>
     </div>
   );
 }

@@ -1,9 +1,7 @@
 name: Deploy Worker to Fly.io
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
