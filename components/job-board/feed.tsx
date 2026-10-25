@@ -57,7 +57,8 @@ export async function JobFeed({ params = {} }: { params?: Record<string, string 
             {result.page * result.pageSize < result.total ? <Link href={filterUrl(undefined, result.page + 1)} className="inline-flex items-center gap-2 rounded-lg p-2 hover:bg-peach-100">Next<ArrowRight size={14} /></Link> : <span />}
           </nav>}
         </div>
-        <p className="mt-4 text-center text-xs text-warm-gray-600">Free to browse · Reviewed before publication · Apply at the original destination</p>
+        <p className="mt-4 text-center text-sm"><Link href="/apply-profile" className="text-rose underline">Create your quick-apply profile</Link></p>
+        <p className="mt-4 text-center text-xs text-warm-gray-600">Free to browse · Reviewed before publication · Quick apply by email where accepted</p>
       </div>
     </section>
   );

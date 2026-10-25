@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Mail, Loader2, CheckCircle } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 
-export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: "/dashboard" | "/jobs" | "/post-job" }) {
+export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: string }) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -105,10 +105,10 @@ export function SignInForm({ callbackURL = "/dashboard" }: { callbackURL?: "/das
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-[family-name:var(--font-display)] text-warm-gray-900 mb-2">
-            Welcome back
+            Welcome to ugc.community
           </h1>
           <p className="text-warm-gray-500">
-            Sign in to continue to your dashboard
+            Create an account or sign in with your email
           </p>
         </div>
 

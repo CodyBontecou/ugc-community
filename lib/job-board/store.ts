@@ -55,11 +55,11 @@ export async function submitDirectJob(db: D1Database, input: Submission, user: {
   // Submissions never publish themselves.
   const saved = await db.prepare(`INSERT INTO board_jobs
     (id, source_kind, company, title, description, compensation_type, compensation_text, cash_amount, deliverables, eligibility,
-      usage_rights, application_url, closing_at, submitter_user_id, submitter_email, created_at, updated_at)
-    SELECT ?, 'direct', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      usage_rights, application_url, application_email, closing_at, submitter_user_id, submitter_email, created_at, updated_at)
+    SELECT ?, 'direct', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     WHERE (SELECT COUNT(*) FROM board_jobs WHERE submitter_user_id=? AND created_at>=?) < 5`)
     .bind(id, data.company, data.title, data.description, data.compensationType, data.compensationText, data.cashAmount, data.deliverables,
-      data.eligibility, data.usageRights, data.applicationUrl, data.closingAt, user.id, user.email, now, now, user.id, new Date(Date.now() - 86400_000).toISOString()).run();
+      data.eligibility, data.usageRights, data.applicationUrl, data.applicationEmail || null, data.closingAt, user.id, user.email, now, now, user.id, new Date(Date.now() - 86400_000).toISOString()).run();
   if (!saved.meta.changes) throw new Error("Daily submission limit reached");
   return id;
 }
@@ -68,6 +68,7 @@ export interface ReviewInput {
   id: string; expectedUpdatedAt: string; action: "publish" | "reject" | "close";
   company: string; title: string; description: string; compensationType: string; compensationText: string; cashAmount: number | null;
   deliverables: string; eligibility: string; usageRights: string; applicationUrl: string; closingAt: string | null;
+  applicationEmail?: string;
   campaignKey: string; notes: string; verified: boolean;
 }
 export async function reviewJob(db: D1Database, input: ReviewInput, evidence: { sourceCapturedAt?: string } = {}) {
@@ -75,6 +76,7 @@ export async function reviewJob(db: D1Database, input: ReviewInput, evidence: { 
   if (!job) throw new Error("Listing not found");
   if (job.updated_at !== input.expectedUpdatedAt) throw new Error("Listing changed; reload before reviewing");
   const now = new Date().toISOString();
+  const applicationEmail = input.applicationEmail === undefined ? job.application_email || null : input.applicationEmail || null;
   // An archive review cannot extend freshness beyond the evidence's capture date.
   const verifiedAt = evidence.sourceCapturedAt || now;
   if (input.action === "publish") {
@@ -85,6 +87,7 @@ export async function reviewJob(db: D1Database, input: ReviewInput, evidence: { 
     if (job.source_kind === "external") {
       if (input.description.trim().length < 20 || input.description.length > 1000) throw new Error("External listings require a short reviewed summary (20–1000 characters)");
       const source = await db.prepare("SELECT full_text, content_status, published_at FROM board_sources WHERE source_key=?").bind(job.source_key).first<{ full_text: string; content_status: string; published_at: string | null }>();
+      if (applicationEmail && source && !source.full_text.toLowerCase().includes(applicationEmail.toLowerCase())) throw new Error("Application email must be explicitly stated in the original brief");
       if (!source?.full_text.trim() || source.content_status !== "available" || !source.published_at || source.published_at > now) throw new Error("Full source text and an original posting date are required before publishing");
     }
     const duplicate = await db.prepare("SELECT id FROM board_jobs WHERE campaign_key=? AND id<>?").bind(input.campaignKey.trim().toLowerCase(), job.id).first();
@@ -92,10 +95,10 @@ export async function reviewJob(db: D1Database, input: ReviewInput, evidence: { 
   }
   const status = input.action === "publish" ? "published" : input.action === "reject" ? "rejected" : "closed";
   const update = db.prepare(`UPDATE board_jobs SET status=?, company=?, title=?, description=?, compensation_type=?, compensation_text=?, cash_amount=?,
-    deliverables=?, eligibility=?, usage_rights=?, application_url=?, closing_at=?, campaign_key=?, review_notes=?, verified_at=?,
+    deliverables=?, eligibility=?, usage_rights=?, application_url=?, application_email=?, closing_at=?, campaign_key=?, review_notes=?, verified_at=?,
     published_at=CASE WHEN ?='published' THEN COALESCE(published_at, ?) ELSE published_at END, updated_at=? WHERE id=? AND updated_at=?`)
     .bind(status, input.company, input.title, input.description, input.compensationType, input.compensationText, input.cashAmount, input.deliverables,
-      input.eligibility, input.usageRights, input.applicationUrl, input.closingAt,
+      input.eligibility, input.usageRights, input.applicationUrl, applicationEmail, input.closingAt,
       input.action === "publish" ? input.campaignKey.trim().toLowerCase() : job.campaign_key, input.notes,
       input.action === "publish" ? verifiedAt : null, status, now, now, job.id, input.expectedUpdatedAt);
   const qualifications = input.action === "publish" ? db.prepare(`

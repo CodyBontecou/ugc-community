@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   if (Object.hasOwn(informationPages, page)) {
     body = informationMarkdown(informationPages[page as keyof typeof informationPages]);
   } else if (path === "/" || path === "/jobs") {
-    body = "# ugc.community — UGC jobs and creator opportunities\n\nFind reviewed external opportunities and directly posted UGC jobs. Free to browse without an account. Brands can submit jobs for free during launch. Applications go to the original destination.\n\n";
+    body = "# ugc.community — UGC jobs and creator opportunities\n\nFind reviewed external opportunities and directly posted UGC jobs. Free to browse without an account. Brands can submit jobs for free during launch. Creators can save a reusable profile and quick apply to email-enabled jobs. Other applications go to the original destination.\n\n";
     try {
       const result = await listBoardJobs((await boardBindings()).JOB_BOARD, {
         q: (url.searchParams.get("q") || "").slice(0, 100), source: url.searchParams.get("source") || "",
@@ -26,7 +26,8 @@ export async function GET(request: Request) {
         body += `### ${escape(job.title)}\n\nCompany: ${escape(job.company)}\n\n${job.source_kind === "external" ? "External opportunity" : "Posted directly"} · ${PAY_LABELS[job.compensation_type]}\n\n${escape(job.description)}\n\nCompensation: ${escape(job.compensation_text)}\n\n`;
         for (const [label, value] of [["Deliverables", job.deliverables], ["Eligibility", job.eligibility], ["Usage rights", job.usage_rights], ["Closes (UTC)", job.closing_at], ["Originally posted", job.source_published_at || job.published_at], ["Reviewed", job.verified_at]]) body += `${label}: ${escape(value || "Not stated in the source")}\n\n`;
         const application = safeLink(job.application_url), source = job.source_url && safeLink(job.source_url);
-        if (application) body += `[Apply at original destination](${application.replace(/\(/g, "%28").replace(/\)/g, "%29")})\n\n`;
+        if (job.email_apply_enabled) body += `[Quick apply by email](https://ugc.community/jobs/${encodeURIComponent(job.id)}/apply)\n\n`;
+        else if (application) body += `[Apply at original destination](${application.replace(/\(/g, "%28").replace(/\)/g, "%29")})\n\n`;
         if (source) body += `[Original source](${source.replace(/\(/g, "%28").replace(/\)/g, "%29")})\n\n`;
       }
       if (result.page * result.pageSize < result.total) {

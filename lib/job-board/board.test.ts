@@ -19,7 +19,8 @@ const archive = (id: string, extra = {}) => ({ type: "source", source: `https://
 const filters = { q: "", source: "", pay: "", page: 1 };
 before(async () => {
   const sql = await readFile(new URL("../../migrations/job-board/0001_job_board.sql", import.meta.url), "utf8");
-  for (const statement of sql.replace(/^--.*$/gm, "").split(";").filter(s => s.trim())) await db.prepare(statement).run();
+  const applicationsSql = await readFile(new URL("../../migrations/job-board/0002_applications.sql", import.meta.url), "utf8");
+  for (const statement of (sql + applicationsSql).replace(/^--.*$/gm, "").split(";").filter(s => s.trim())) await db.prepare(statement).run();
   await db.prepare("UPDATE board_validation_window SET starts_at=?, ends_at=?").bind(new Date(Date.now() - 3600_000).toISOString(), new Date(Date.now() + 14 * 86400_000).toISOString()).run();
 });
 after(async () => { await mf.dispose(); });

@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@ugc.community";
 const FROM_NAME = process.env.FROM_NAME || "ugc.community";
 
@@ -93,15 +92,16 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        await resend.emails.send({
+        const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
           from: `${FROM_NAME} <${FROM_EMAIL}>`,
           to: email,
           subject: "Sign in to ugc.community",
           html: generateMagicLinkEmail(url),
         });
+        if (error) throw new Error("Could not send sign-in link");
       },
       expiresIn: 60 * 5, // 5 minutes
-      disableSignUp: true,
+      disableSignUp: false,
     }),
   ],
   socialProviders: {

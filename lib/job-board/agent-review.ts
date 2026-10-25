@@ -21,7 +21,7 @@ export const agentDecisionSchema = z.object({
 export async function agentReviewQueue(db: D1Database) {
   const jobs = await db.prepare(`SELECT j.id, j.source_kind, j.status, j.source_key, j.campaign_key,
     j.company, j.title, j.description, j.compensation_type, j.compensation_text, j.cash_amount,
-    j.deliverables, j.eligibility, j.usage_rights, j.application_url, j.closing_at,
+    j.deliverables, j.eligibility, j.usage_rights, j.application_url, j.application_email, j.closing_at,
     j.source_url, j.source_published_at, j.verified_at, j.updated_at, j.review_notes,
     s.full_text, s.revision, s.captured_at AS source_captured_at, s.content_status, s.classification
     FROM board_jobs j LEFT JOIN board_sources s ON s.source_key=j.source_key

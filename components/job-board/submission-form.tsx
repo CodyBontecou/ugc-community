@@ -10,7 +10,7 @@ export function SubmissionForm() {
     const value = (key: string) => String(form.get(key) || "").trim();
     setState("saving"); setError("");
     try {
-      const body = Object.fromEntries(["contactEmail", "company", "title", "description", "compensationType", "compensationText", "deliverables", "eligibility", "usageRights", "applicationUrl"].map(key => [key, value(key)]));
+      const body = Object.fromEntries(["contactEmail", "company", "title", "description", "compensationType", "compensationText", "deliverables", "eligibility", "usageRights", "applicationUrl", "applicationEmail"].map(key => [key, value(key)]));
       const response = await fetch("/api/job-board/submissions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, cashAmount: value("cashAmount") ? Number(value("cashAmount")) : null, closingAt: `${value("closingDate")}T23:59:59.000Z` }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Submission failed");
@@ -27,7 +27,8 @@ export function SubmissionForm() {
     <label className="block text-sm font-medium">Compensation details<textarea name="compensationText" required maxLength={2000} rows={3} placeholder="For example: USD $250 per approved video, paid within 14 days. Include any variable pay or gifted product terms." className={input} /></label>
     {[["deliverables", "Deliverables", "Number of videos, length, formats, deadlines, and revisions."], ["eligibility", "Eligibility", "Countries, languages, experience, or other job-related requirements."], ["usageRights", "Usage rights", "Organic or paid usage, duration, channels, whitelisting, exclusivity, and raw footage."]].map(([key, label, placeholder]) => <label key={key} className="block text-sm font-medium">{label}<textarea name={key} required maxLength={3000} rows={3} placeholder={placeholder} className={input} /></label>)}
     <div className="grid sm:grid-cols-2 gap-5"><label className="text-sm font-medium">Application destination<input name="applicationUrl" type="url" required maxLength={2000} placeholder="https://yourbrand.com/apply" className={input} /></label><label className="text-sm font-medium">Closing date (end of day, UTC)<input name="closingDate" type="date" required className={input} /></label></div>
-    <p className="text-sm text-warm-gray-600">We’ll review the listing before publication. Your contact email stays private. Applications go to the destination you provide.</p>
+    <label className="block text-sm font-medium">Application email (optional)<input name="applicationEmail" type="email" maxLength={254} className={input} /><span className="block text-xs text-warm-gray-600 mt-2">Provide this only if you accept creator applications by email. After review, applicants can send their profile and message here through ugc.community.</span></label>
+    <p className="text-sm text-warm-gray-600">We’ll review the listing before publication. Your contact email stays private. Email-enabled listings support quick apply; otherwise applications go to your original destination.</p>
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     <button disabled={state === "saving"} className="bg-gradient-to-r from-coral to-rose text-white rounded-full px-7 py-4 font-medium disabled:opacity-50">{state === "saving" ? "Submitting…" : "Submit job for free"}</button>
   </form>;

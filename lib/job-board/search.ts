@@ -2,7 +2,7 @@ import type { D1Database } from "@/cloudflare-env";
 import type { BoardJob } from "./model";
 
 export interface JobFilters { q: string; source: string; pay: string; page: number }
-export const PUBLIC_FIELDS = "id, source_kind, company, title, description, compensation_type, compensation_text, cash_amount, deliverables, eligibility, usage_rights, application_url, closing_at, source_url, source_published_at, captured_at, verified_at, published_at";
+export const PUBLIC_FIELDS = "id, source_kind, company, title, description, compensation_type, compensation_text, cash_amount, deliverables, eligibility, usage_rights, application_url, CASE WHEN application_email IS NOT NULL THEN 1 ELSE 0 END AS email_apply_enabled, closing_at, source_url, source_published_at, captured_at, verified_at, published_at";
 // External listings expire seven days after a live check or the capture used
 // in an archive review. Rereading an old archive cannot renew freshness.
 export const VISIBLE = "status='published' AND (closing_at IS NULL OR closing_at>?) AND (source_kind='direct' OR verified_at>=?)";

@@ -12,6 +12,7 @@ export function safeLink(value: string) {
 const text = (max: number) => z.string().trim().min(1).max(max);
 export const submissionSchema = z.object({
   contactEmail: z.email().max(254),
+  applicationEmail: z.union([z.email().max(254), z.literal("")]).optional(),
   company: text(160), title: text(200), description: text(12_000),
   compensationType: z.enum(PAY_TYPES), compensationText: text(2000),
   cashAmount: z.number().positive().max(10_000_000).nullable(),
@@ -25,6 +26,7 @@ export const submissionSchema = z.object({
 });
 export type Submission = z.infer<typeof submissionSchema>;
 export interface BoardJob {
+  application_email?: string | null; email_apply_enabled?: number;
   id: string; source_kind: "external" | "direct"; status: string; source_key: string | null; campaign_key: string | null;
   company: string; title: string; description: string; compensation_type: string; compensation_text: string; cash_amount: number | null;
   deliverables: string; eligibility: string; usage_rights: string; application_url: string; closing_at: string | null;
