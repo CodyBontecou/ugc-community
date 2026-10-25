@@ -18,7 +18,7 @@ export function JobCard({ job }: { job: BoardJob }) {
       <span>Reviewed {job.verified_at?.slice(0, 10)}</span>
     </div>
     <div className="flex flex-wrap items-center gap-5">
-      {job.email_apply_enabled ? <a href={`/jobs/${job.id}/apply`} className="inline-flex items-center gap-2 bg-gradient-to-r from-coral to-rose text-white rounded-full py-3 px-6 font-medium">Quick apply by email</a> : safeLink(job.application_url) && <a href={job.application_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-2 bg-gradient-to-r from-coral to-rose text-white rounded-full py-3 px-6 font-medium">Apply at original destination<ExternalLink size={15} /></a>}
+      {job.email_apply_enabled ? <a href={`/jobs/${job.id}/apply`} className="inline-flex items-center gap-2 primary-action text-white rounded-full py-3 px-6 font-medium">Quick apply by email</a> : safeLink(job.application_url) && <a href={job.application_url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-2 primary-action text-white rounded-full py-3 px-6 font-medium">Apply at original destination<ExternalLink size={15} /></a>}
       {job.source_url && safeLink(job.source_url) && <a href={job.source_url} target="_blank" rel="noopener noreferrer nofollow" className="text-sm text-warm-gray-600 underline underline-offset-4">View original source</a>}
     </div>
   </article>;

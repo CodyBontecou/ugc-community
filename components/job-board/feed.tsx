@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { boardBindings } from "@/lib/job-board/access";
-import { listBoardJobs, type JobFilters } from "@/lib/job-board/search";
+import { boardFilterCounts, listBoardJobs, type JobFilters } from "@/lib/job-board/search";
 import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/model";
 import { JobTable } from "./job-table";
 
@@ -19,7 +19,11 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
     ...(filters.pay ? [{ key: "pay", label: PAY_LABELS[filters.pay] }] : []),
   ];
   let result: Awaited<ReturnType<typeof listBoardJobs>> | null = null;
-  try { result = await listBoardJobs((await boardBindings()).JOB_BOARD, filters); } catch { /* Show a truthful unavailable state. */ }
+  let counts: Awaited<ReturnType<typeof boardFilterCounts>> | null = null;
+  try {
+    const db = (await boardBindings()).JOB_BOARD;
+    [result, counts] = await Promise.all([listBoardJobs(db, filters), boardFilterCounts(db)]);
+  } catch { /* Show a truthful unavailable state. */ }
   const filterUrl = (remove?: string, page?: number) => {
     const query = new URLSearchParams();
     for (const key of ["q", "source", "pay"] as const) if (filters[key] && key !== remove) query.set(key, filters[key]);
@@ -34,12 +38,12 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm" aria-label="Popular job filters">
           <span className="mr-1 hidden sm:inline text-xs text-warm-gray-600">Jump into</span>
           {[
-            { label: "All jobs", query: "", active: !activeFilters.length },
-            { label: "Guaranteed cash", query: "?pay=cash", active: filters.pay === "cash" && !filters.q && !filters.source },
-            { label: "Posted directly", query: "?source=direct", active: filters.source === "direct" && !filters.q && !filters.pay },
-          ].map(({ label, query, active }) => (
+            { label: "All jobs", count: counts?.total, show: true, query: "", active: !activeFilters.length },
+            { label: "Guaranteed cash", count: counts?.cash, show: !counts || counts.cash > 0 || filters.pay === "cash", query: "?pay=cash", active: filters.pay === "cash" && !filters.q && !filters.source },
+            { label: "Posted directly", count: counts?.direct, show: !counts || counts.direct > 0 || filters.source === "direct", query: "?source=direct", active: filters.source === "direct" && !filters.q && !filters.pay },
+          ].filter(filter => filter.show).map(({ label, count, query, active }) => (
             <Link key={label} href={`${basePath}${query}#jobs`} aria-current={active ? "page" : undefined} className={`inline-flex min-h-11 items-center rounded-full border px-3 py-2 text-xs font-medium ${active ? "border-warm-gray-900 bg-warm-gray-900 text-white" : "border-warm-gray-200 bg-white/80 text-warm-gray-700 hover:bg-peach-100"}`}>
-              {label}
+              {label}{count !== undefined && <span className="ml-2 tabular-nums opacity-75">{count}</span>}
             </Link>
           ))}
         </div>
@@ -63,7 +67,7 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
               </select>
               <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-gray-600 forced-colors:hidden" />
             </label>
-            <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-rose px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Search jobs</button>
+            <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl primary-action px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Search jobs</button>
           </form>
           {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link href={`${basePath}#jobs`} className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-warm-gray-200 px-4 py-3 text-xs text-warm-gray-600 sm:px-6">

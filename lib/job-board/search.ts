@@ -24,6 +24,14 @@ export async function listBoardJobs(db: D1Database, filters: JobFilters, now = n
     .bind(...values, pageSize, (page - 1) * pageSize).all<BoardJob>();
   return { jobs: jobs.results, total, page, pageSize };
 }
+export async function boardFilterCounts(db: D1Database, now = new Date().toISOString()) {
+  const counts = await db.prepare(`SELECT COUNT(*) AS total,
+    COALESCE(SUM(CASE WHEN compensation_type='cash' THEN 1 ELSE 0 END), 0) AS cash,
+    COALESCE(SUM(CASE WHEN source_kind='direct' THEN 1 ELSE 0 END), 0) AS direct
+    FROM board_jobs WHERE ${VISIBLE}`).bind(...visibleBindings(now)).first<{ total: number; cash: number; direct: number }>();
+  return counts || { total: 0, cash: 0, direct: 0 };
+}
+
 export async function supplyReport(db: D1Database) {
   const window = await db.prepare("SELECT starts_at, ends_at FROM board_validation_window WHERE id=1").first<{ starts_at: string; ends_at: string }>();
   if (!window) throw new Error("Validation window not initialized");

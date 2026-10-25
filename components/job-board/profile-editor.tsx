@@ -43,6 +43,6 @@ export function ProfileEditor({ initial, initialShareId, accountEmail, accountNa
     <label className="flex items-start gap-3 text-sm"><input type="checkbox" required className="mt-1 size-5 shrink-0 accent-rose" />I agree to create a profile accessible to anyone with its link and share it with employers when I apply. My email stays off the profile page.</label>
     {error && <p role="alert" className="text-red-700">{error}</p>}
     {saved && <p role="status">Profile saved. You can now quick apply to email-enabled jobs.</p>}
-    <button disabled={busy} className="w-full sm:w-auto bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Saving…" : shareId ? "Save profile changes" : "Create my quick-apply profile"}</button>
+    <button disabled={busy} className="w-full sm:w-auto primary-action text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Saving…" : shareId ? "Save profile changes" : "Create my quick-apply profile"}</button>
   </form><div className="min-w-0 space-y-4"><p className="text-sm text-warm-gray-600">Profile preview</p><CreatorProfileView profile={profile} />{shareId && <a href={`/creator-profile/${shareId}`} className="inline-block underline text-rose">View saved profile</a>}<p className="text-sm text-warm-gray-600">Future applications use your latest saved profile. Applications already submitted keep their original details.</p><a href="/jobs" className="inline-block underline">Browse jobs</a></div></div></div>;
 }

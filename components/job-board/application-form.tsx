@@ -29,6 +29,6 @@ export function ApplicationForm({ jobId, company, recipient, email, profile, exi
     <CreatorProfileView profile={profile} />
     <label className="flex items-start gap-3 text-sm"><input type="checkbox" required checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1 accent-rose" />I want ugc.community to email my profile, message, and email address to this employer for this job.</label>
     {error && <p role="alert" className="text-red-700">{error}</p>}
-    <div className="flex flex-wrap gap-4"><button disabled={busy} className="bg-gradient-to-r from-coral to-rose text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Sending…" : preview ? "Send application" : "Preview application"}</button>{preview && <button type="button" disabled={busy} onClick={() => setPreview(false)} className="underline">Back</button>}</div>
+    <div className="flex flex-wrap gap-4"><button disabled={busy} className="primary-action text-white rounded-full px-6 py-3 disabled:opacity-50">{busy ? "Sending…" : preview ? "Send application" : "Preview application"}</button>{preview && <button type="button" disabled={busy} onClick={() => setPreview(false)} className="underline">Back</button>}</div>
   </form>;
 }

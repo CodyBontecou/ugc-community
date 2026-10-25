@@ -27,7 +27,7 @@ export function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center justify-end gap-2 md:flex-1 md:gap-4">
-          <Link href="/jobs" className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-coral to-rose px-4 py-2 text-sm font-medium text-white hover:opacity-90 sm:px-5">
+          <Link href="/jobs" className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full primary-action px-4 py-2 text-sm font-medium text-white hover:opacity-90 sm:px-5">
             Browse jobs
           </Link>
           {isPending ? (
@@ -44,7 +44,7 @@ export function Navbar() {
                 />
               ) : (
                 <motion.div
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-coral to-rose flex items-center justify-center text-white text-sm font-medium cursor-pointer"
+                  className="w-8 h-8 rounded-full primary-action flex items-center justify-center text-white text-sm font-medium cursor-pointer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

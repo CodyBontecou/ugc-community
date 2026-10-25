@@ -6,7 +6,7 @@ import type { BoardBindings } from "./sync";
 import { syncJobBoard } from "./sync";
 import { normalizeSource, sourceKey, submissionSchema, type BoardJob } from "./model";
 import { storeSource, reviewJob, submitDirectJob, type ReviewInput } from "./store";
-import { listBoardJobs, supplyReport } from "./search";
+import { boardFilterCounts, listBoardJobs, supplyReport } from "./search";
 import { refreshTargets } from "./refresh-targets";
 import { readBody, sameOrigin } from "./http";
 import { seedAuditLeads } from "./seed";
@@ -45,6 +45,7 @@ test("audit candidates stay private and cannot count as date-verified jobs", asy
   await seedAuditLeads(db, leads); await seedAuditLeads(db, leads);
   assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM board_jobs").first<{ n: number }>())?.n, 5);
   assert.equal((await listBoardJobs(db, filters)).total, 0);
+  assert.deepEqual(await boardFilterCounts(db), { total: 0, cash: 0, direct: 0 });
   const lead = await db.prepare("SELECT id FROM board_jobs LIMIT 1").first<{ id: string }>();
   await assert.rejects(() => review(lead!.id), /Full source text/);
   assert.equal((await supplyReport(db)).qualifying, 0);
@@ -59,6 +60,7 @@ test("imports full sources, ignores contact matches, and never auto-publishes cl
   const job = await db.prepare("SELECT id FROM board_jobs WHERE source_key='reddit:post123:comment1'").first<{ id: string }>(); assert.ok(job);
   await review(job.id);
   const feed = await listBoardJobs(db, { ...filters, q: "Example brand", pay: "cash" }); assert.equal(feed.total, 1);
+  assert.deepEqual(await boardFilterCounts(db), { total: 1, cash: 1, direct: 0 });
   assert.equal((await listBoardJobs(db, { ...filters, source: "direct" })).total, 0);
   assert.equal((await listBoardJobs(db, { ...filters, q: "%" })).total, 0);
   assert.equal("submitter_email" in feed.jobs[0], false);
@@ -86,6 +88,7 @@ test("expired listings leave the feed without erasing historical qualifying yiel
   await db.prepare("UPDATE board_jobs SET closing_at=? WHERE id=?").bind(new Date(Date.now() - 1000).toISOString(), job.id).run();
   assert.equal((await listBoardJobs(db, { ...filters, q: `UGC role ${job.id}` })).total, 0);
   assert.equal((await supplyReport(db)).qualifying, before);
+  assert.equal((await boardFilterCounts(db)).total, (await listBoardJobs(db, filters)).total);
   await review(job.id, { action: "reject" });
   assert.equal((await supplyReport(db)).qualifying, before - 1);
 });
@@ -104,6 +107,7 @@ test("direct submissions require all terms, remain pending, and cannot spoof sou
   await assert.rejects(() => review(id, { usageRights: "" }), /Direct listings/);
   await review(id);
   assert.equal((await listBoardJobs(db, { ...filters, source: "direct" })).total, 1);
+  assert.equal((await boardFilterCounts(db)).direct, 1);
   await assert.rejects(() => review(id, { expectedUpdatedAt: "2000-01-01T00:00:00.000Z" }), /Listing changed/);
 });
 

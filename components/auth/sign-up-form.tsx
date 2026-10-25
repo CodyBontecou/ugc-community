@@ -154,7 +154,7 @@ export function SignUpForm() {
           <motion.button
             type="submit"
             disabled={anyLoading}
-            className="min-h-12 w-full py-3 px-3 sm:px-4 bg-gradient-to-r from-coral to-rose font-medium rounded-[var(--radius-md)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
+            className="min-h-12 w-full py-3 px-3 sm:px-4 primary-action font-medium rounded-[var(--radius-md)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2 text-white"
             whileHover={{ scale: anyLoading ? 1 : 1.01 }}
             whileTap={{ scale: anyLoading ? 1 : 1.01 }}
           >
