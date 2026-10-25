@@ -39,6 +39,25 @@ export async function generateMetadata({
   return {
     title: `${tutorial.title} — ugc.community`,
     description: tutorial.description,
+    alternates: {
+      canonical: `/tutorials/${slug}`,
+      ...(tutorial.contentFormat === "markdown" ? { types: { "text/markdown": `/tutorials/${slug}/content.md` } } : {}),
+    },
+    openGraph: {
+      type: "article",
+      title: tutorial.title,
+      description: tutorial.description,
+      url: `/tutorials/${slug}`,
+      publishedTime: tutorial.publishedAt,
+      modifiedTime: tutorial.updatedAt,
+      images: ["/social-preview.png?v=brand-icon"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: tutorial.title,
+      description: tutorial.description,
+      images: ["/social-preview.png?v=brand-icon"],
+    },
   };
 }
 
@@ -190,9 +209,23 @@ export default async function TutorialPage({ params }: PageProps) {
 
   const headings = extractHeadings(tutorial.content);
   const { prev, next } = getAdjacentTutorials(slug);
+  const article = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `https://ugc.community/tutorials/${slug}#article`,
+    headline: tutorial.title,
+    description: tutorial.description,
+    mainEntityOfPage: `https://ugc.community/tutorials/${slug}`,
+    datePublished: tutorial.publishedAt,
+    dateModified: tutorial.updatedAt,
+    ...(tutorial.publishedAt ? { author: { "@type": "Organization", name: "ugc.community", url: "https://ugc.community/about" } } : {}),
+    publisher: { "@id": "https://ugc.community/#organization" },
+    image: "https://ugc.community/social-preview.png?v=brand-icon",
+  };
 
   return (
     <div className="relative overflow-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(article).replace(/</g, "\\u003c") }} />
       <Navbar />
 
       <section className="pt-32 pb-16 sm:pt-36 sm:pb-20">
@@ -227,6 +260,10 @@ export default async function TutorialPage({ params }: PageProps) {
                   <p className="text-lg text-warm-gray-500">
                     {tutorial.description}
                   </p>
+                  {tutorial.contentFormat === "markdown" && <p className="mt-4 text-sm text-warm-gray-600">
+                    {tutorial.publishedAt && <><Link href="/about" className="underline underline-offset-2">By ugc.community</Link>{" · "}<time dateTime={tutorial.updatedAt || tutorial.publishedAt}>{tutorial.updatedAt ? "Updated" : "Published"} {tutorial.updatedAt || tutorial.publishedAt}</time>{" · "}</>}
+                    <a href={`/tutorials/${slug}/content.md`} className="underline underline-offset-2">Read as Markdown</a>
+                  </p>}
                 </header>
 
                 {/* MDX content */}

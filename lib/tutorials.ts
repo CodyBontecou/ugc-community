@@ -11,6 +11,9 @@ export interface TutorialFrontmatter {
   order: number;
   category: "Getting Started" | "Content Creation" | "Growth & Strategy";
   estimatedReadTime: string;
+  contentFormat?: "markdown";
+  publishedAt?: string;
+  updatedAt?: string;
 }
 
 export interface TutorialMeta extends TutorialFrontmatter {
@@ -44,6 +47,7 @@ export function getAllTutorials(): TutorialMeta[] {
 }
 
 export function getTutorialBySlug(slug: string): Tutorial | null {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return null;
   const fullPath = path.join(TUTORIALS_DIR, `${slug}.mdx`);
   if (!fs.existsSync(fullPath)) return null;
 

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getAllTutorials } from "@/lib/tutorials";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://ugc.community";
@@ -38,5 +39,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/guide`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
   ];
 
-  return staticPages;
+  return [...staticPages, ...getAllTutorials().map(tutorial => ({
+    url: `${baseUrl}/tutorials/${tutorial.slug}`,
+    ...(tutorial.updatedAt || tutorial.publishedAt ? { lastModified: new Date(`${tutorial.updatedAt || tutorial.publishedAt}T12:00:00Z`) } : {}),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }))];
 }

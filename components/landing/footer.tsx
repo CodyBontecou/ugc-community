@@ -12,6 +12,7 @@ export function Footer() {
           </p>
           <nav aria-label="Site information" className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
             <Link prefetch={false} href="/jobs" className="hover:text-white">Browse jobs</Link>
+            <Link prefetch={false} href="/tutorials" className="hover:text-white">Creator guides</Link>
             <Link prefetch={false} href="/post-job" className="hover:text-white">Post a job</Link>
             <Link prefetch={false} href="/#faq" className="hover:text-white">FAQ</Link>
             <Link prefetch={false} href="/about" className="hover:text-white">About</Link>

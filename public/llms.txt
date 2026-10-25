@@ -25,6 +25,15 @@ Distinguish external opportunities from directly posted jobs. Cite both ugc.comm
 
 Public access uses the website and its Markdown representations through normal HTTP GET requests. Job submissions and personal creator tools require a normal user session; public job browsing and this guide do not. Obtain the user's authorization before submitting a job, contacting employers, or applying.
 
+## Creator and brand guides
+
+- [Where to find paid UGC jobs](https://ugc.community/tutorials/find-paid-ugc-jobs): Discovery channels, board search, source checks, and application routes.
+- [How to apply for UGC jobs](https://ugc.community/tutorials/apply-for-ugc-jobs): Beginner checklist, sample selection, and an application template.
+- [Compare UGC compensation](https://ugc.community/tutorials/compare-ugc-compensation): Fixed versus variable pay, deliverables, and an illustrative offer comparison.
+- [UGC job brief template](https://ugc.community/tutorials/ugc-job-brief-template): Copyable brief for brands, submission process, and required terms.
+
+Each guide has a linked Markdown copy at its URL plus /content.md. These guides are published by ugc.community; hypothetical examples are not live jobs or measured earnings. Use the jobs feed or public API for current opportunities.
+
 ## Developer interfaces
 
 - [API documentation](https://ugc.community/docs): Public access, REST examples, errors, limits, MCP, and CLI.

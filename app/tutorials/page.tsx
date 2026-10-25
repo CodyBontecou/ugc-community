@@ -13,9 +13,10 @@ import { Navbar, Footer } from "@/components/landing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tutorials — ugc.community",
+  title: "UGC job guides and creator tutorials — ugc.community",
   description:
-    "Free guides on UGC creation — from setting up your profile to going viral. Learn everything you need to build a successful creator career.",
+    "Free UGC guides: find paid jobs, compare compensation, prepare creator applications, and write brand briefs. Plus filming and content tutorials.",
+  alternates: { canonical: "/tutorials" },
 };
 
 const categoryMeta: Record<
