@@ -100,7 +100,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Block known AI bots from API routes
-  if (pathname.startsWith("/api/")) {
+  if (pathname.startsWith("/api/") && !pathname.startsWith("/api/v1/")) {
     const isBlockedBot = BLOCKED_USER_AGENTS.some((bot) =>
       userAgent.toLowerCase().includes(bot.toLowerCase())
     );
@@ -110,7 +110,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const markdownPaths = new Set(["/", "/jobs", "/about", "/contact", "/guide"]);
+  const markdownPaths = new Set(["/", "/jobs", "/about", "/contact", "/guide", "/docs"]);
   if (["GET", "HEAD"].includes(request.method) && markdownPaths.has(pathname) && prefersMarkdown(request.headers.get("Accept"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/site-content.md";

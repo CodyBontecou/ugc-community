@@ -32,7 +32,8 @@
     "jobs:sync": "tsx scripts/sync-job-board.ts",
     "db:jobs:migrate": "wrangler d1 migrations apply JOB_BOARD --remote",
     "jobs:review": "tsx scripts/review-job-board.ts",
-    "test:agent-content": "node --import tsx --test lib/agent-content/*.test.ts"
+    "test:agent-content": "node --import tsx --test lib/agent-content/*.test.ts",
+    "test:public-api": "node --import tsx --test lib/public-api/*.test.ts && node --test packages/cli/test/*.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
@@ -40,6 +41,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@modelcontextprotocol/server": "2.4.0",
     "@neondatabase/serverless": "^0.10.4",
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.0.1",

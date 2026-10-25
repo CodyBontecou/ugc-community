@@ -5,27 +5,27 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "Googlebot",
-        allow: "/",
+        allow: ["/", "/api/v1/"],
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
       {
         userAgent: "OAI-SearchBot",
-        allow: "/",
+        allow: ["/", "/api/v1/"],
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
       {
         userAgent: "PerplexityBot",
-        allow: "/",
+        allow: ["/", "/api/v1/"],
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
       {
         userAgent: "Claude-SearchBot",
-        allow: "/",
+        allow: ["/", "/api/v1/"],
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/api/v1/"],
         disallow: ["/api/", "/dashboard/", "/admin/"],
       },
       // Training crawlers remain separate from search and user-directed retrieval.

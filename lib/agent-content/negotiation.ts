@@ -21,7 +21,7 @@ export function varyAccept(headers: Headers): void {
 export function agentResponse(request: Request, response: Response): Response {
   const headers = new Headers(response.headers);
   varyAccept(headers);
-  if (response.status === 404 && prefersMarkdown(request.headers.get("Accept"))) {
+  if (response.status === 404 && !new URL(request.url).pathname.startsWith("/api/") && prefersMarkdown(request.headers.get("Accept"))) {
     void response.body?.cancel();
     headers.set("Content-Type", "text/markdown; charset=utf-8");
     for (const header of ["Content-Length", "Content-Encoding", "ETag"]) headers.delete(header);

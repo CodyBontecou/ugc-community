@@ -66,5 +66,15 @@
       "database_id": "2de569eb-1427-466c-bc02-72bc0c4ded96",
       "migrations_dir": "migrations/job-board"
     }
+  ],
+  "ratelimits": [
+    {
+      "name": "PUBLIC_API_RATE_LIMITER",
+      "namespace_id": "472913",
+      "simple": {
+        "limit": 120,
+        "period": 60
+      }
+    }
   ]
 }
