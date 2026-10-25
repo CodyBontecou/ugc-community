@@ -7,6 +7,7 @@ import { syncJobBoard } from "./sync";
 import { normalizeSource, sourceKey, submissionSchema, type BoardJob } from "./model";
 import { storeSource, reviewJob, submitDirectJob, type ReviewInput } from "./store";
 import { listBoardJobs, supplyReport } from "./search";
+import { refreshTargets } from "./refresh-targets";
 import { readBody, sameOrigin } from "./http";
 import { seedAuditLeads } from "./seed";
 import leads from "../../content/jobs/audit-leads.json";
@@ -203,4 +204,28 @@ test("Subscrape full text can approve a job without browsing Reddit and cannot r
   await assert.rejects(() => applyAgentDecision(db, { ...decision, capturedSource: { ...decision.capturedSource, capturedAt: oldCapture }, review: { ...decision.review, expectedUpdatedAt: current.updated_at } }), /last seven days/);
   await db.prepare("UPDATE board_sources SET captured_at=?, content_status='removed' WHERE source_key=?").bind(capturedAt, source.key).run();
   await assert.rejects(() => applyAgentDecision(db, { ...decision, review: { ...decision.review, expectedUpdatedAt: current.updated_at } }), /available, complete/);
+});
+
+test("daily observations update source freshness without duplicating campaigns or auto-renewing approvals", async () => {
+  const source = (await normalizeSource(archive("dailyobservation")))!;
+  await storeSource(db, source);
+  const job = await db.prepare("SELECT * FROM board_jobs WHERE source_key=?").bind(source.key).first<BoardJob>(); assert.ok(job);
+  await review(job.id);
+  const before = (await supplyReport(db)).qualifying;
+  const saved = await db.prepare("SELECT verified_at FROM board_jobs WHERE id=?").bind(job.id).first<{ verified_at: string }>(); assert.ok(saved);
+  const tomorrow = new Date(Date.now() + 86400_000).toISOString();
+  const refreshed = (await normalizeSource({ ...archive("dailyobservation"), capturedAt: tomorrow, refreshDay: tomorrow.slice(0, 10) }))!;
+  assert.equal(refreshed.revision, source.revision);
+  await storeSource(db, refreshed);
+  assert.equal((await db.prepare("SELECT captured_at FROM board_sources WHERE source_key=?").bind(source.key).first<{ captured_at: string }>())?.captured_at, tomorrow);
+  assert.equal((await db.prepare("SELECT verified_at FROM board_jobs WHERE id=?").bind(job.id).first<{ verified_at: string }>())?.verified_at, saved.verified_at);
+  assert.equal((await supplyReport(db)).qualifying, before);
+  await db.prepare("UPDATE board_jobs SET verified_at=? WHERE id=?").bind(new Date(Date.now() - 8 * 86400_000).toISOString(), job.id).run();
+  const targets = await refreshTargets(db);
+  assert.ok(targets.sources.some(row => row.sourceKey === source.key));
+  assert.ok(targets.sources.every(row => Object.keys(row).sort().join(',') === 'source,sourceKey,title'));
+  await review(job.id, { action: "close" });
+  assert.ok(!(await refreshTargets(db)).sources.some(row => row.sourceKey === source.key));
+  const neverPublic = await db.prepare("SELECT source_key FROM board_jobs WHERE published_at IS NULL AND source_key IS NOT NULL LIMIT 1").first<{ source_key: string }>();
+  if (neverPublic) assert.ok(!targets.sources.some(row => row.sourceKey === neverPublic.source_key));
 });
