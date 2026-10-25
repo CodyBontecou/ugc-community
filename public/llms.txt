@@ -28,6 +28,7 @@ Public access uses the website and its Markdown representations through normal H
 ## Developer interfaces
 
 - [API documentation](https://ugc.community/docs): Public access, REST examples, errors, limits, MCP, and CLI.
+- [Versioning and deprecation policy](https://ugc.community/docs/deprecation): v1 compatibility, 90-day notice, Deprecation and Sunset signals.
 - [OpenAPI specification](https://ugc.community/openapi.json): Typed searchJobs and getJob operations.
 - [Jobs API](https://ugc.community/api/v1/jobs): GET public, current opportunities. Same q, source, pay, page filters as the website. Twenty per page; follow next until null.
 - [MCP server card](https://ugc.community/.well-known/mcp/server-card.json): Streamable HTTP endpoint https://ugc.community/mcp with read-only search_jobs and get_job tools.

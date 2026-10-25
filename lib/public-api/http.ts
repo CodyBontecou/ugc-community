@@ -8,7 +8,7 @@ export const publicHeaders = {
   "X-Content-Type-Options": "nosniff",
   "Cache-Control": "no-store",
   "RateLimit-Policy": '"public";q=120;w=60',
-  Link: '<https://ugc.community/openapi.json>; rel="service-desc", <https://ugc.community/docs>; rel="service-doc"',
+  Link: '<https://ugc.community/openapi.json>; rel="service-desc", <https://ugc.community/docs>; rel="service-doc", <https://ugc.community/docs/deprecation>; rel="deprecation"; type="text/html"',
 };
 export function problem(status: number, code: string, detail: string, resolution: string, extraHeaders: HeadersInit = {}) {
   return Response.json({ type: `https://ugc.community/docs#${code}`, title: code.replace(/_/g, " "), status, code, detail, resolution }, { status, headers: { ...publicHeaders, "Content-Type": "application/problem+json", ...extraHeaders } });

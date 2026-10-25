@@ -5,7 +5,8 @@ const problemSchema = { type: "object", required: ["type", "title", "status", "c
 const errorResponse = { description: "Problem details with a stable code and a recovery hint.", content: { "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } } } };
 const searchJson = z.toJSONSchema(searchSchema, { target: "openapi-3.0" });
 export const openapi = {
-  openapi: "3.0.3", info: { title: "ugc.community public jobs API", version: "1.0.0", description: "Read-only public UGC opportunities. No API key or OAuth is required. Accounts, applications, contacts, private source records, and review queues are not exposed. No write operations or subscriptions are supported.", contact: { name: "ugc.community support", email: "cody@isolated.tech", url: "https://ugc.community/contact" } },
+  openapi: "3.0.3", info: { title: "ugc.community public jobs API", version: "1.0.0", description: "Read-only public UGC opportunities. No API key or OAuth is required. Accounts, applications, contacts, private source records, and review queues are not exposed. No write operations or subscriptions are supported. Stable versions have at least 90 days of deprecation notice, with Deprecation and Sunset headers plus migration links. Policy: https://ugc.community/docs/deprecation.", contact: { name: "ugc.community support", email: "cody@isolated.tech", url: "https://ugc.community/contact" } },
+  "x-deprecation-policy": { url: "https://ugc.community/docs/deprecation", minimumNoticeDays: 90, signals: ["Deprecation", "Sunset", "Link"], currentlyDeprecated: false },
   servers: [{ url: "https://ugc.community" }], security: [],
   externalDocs: { description: "Authentication policy, examples, limits, MCP and CLI usage", url: "https://ugc.community/docs" },
   paths: {
