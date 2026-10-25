@@ -52,3 +52,13 @@ Collection is best effort. A bounded in-memory queue flushes periodically and us
 Run `pnpm test:analytics`, `pnpm test:job-board`, `pnpm test:public-api`, `pnpm exec tsc --noEmit`, `pnpm lint`, and `pnpm build`.
 
 Before deployment, apply the D1 migration, deploy the app, and verify that no requests occur before opt-in. After opt-in, check brief opens, external/email apply clicks, searches on both `/` and `/jobs`, profile saves, and a controlled application. Check decline/withdrawal, browser privacy signals, export authentication, and cleanup. Do not submit real applications merely to validate analytics. Follow-up is tracked in `.pi/todos/ana00001.md`.
+
+## Job poster analytics
+
+Any active signed-in account can open `/dashboard/postings` from the dashboard menu, dashboard home, or post-job page. It lists jobs submitted from that account, with review/publication status, brief opens, apply clicks, consented email sends, and anonymous interacting sessions. Select a listing to view only its activity. Reports offer 7/30/90-day windows, previous-period comparisons, daily totals, source/device breakdowns, and an aggregate JSON download.
+
+`/api/analytics/postings` derives account scope from the authenticated session and checks current account status. Every report query joins events to direct jobs whose `submitter_user_id` matches that account. Supplying a different user ID, sharing a submission email, being an administrator, or knowing another job's ID does not grant access. An unowned/nonexistent selected job returns the same 404. Response caching is private/no-store with Vary: Cookie. No applicant information, raw session IDs, private submission emails, or internal review notes are returned.
+
+Inventory is paginated at 20 jobs. Pending, rejected, closed, and zero-activity jobs remain visible to their owner. Summary metrics cover the complete selected scope rather than only the visible page. The report does not count feed page views as impressions for an individual job. A repeat open/click is another event; interacting sessions deduplicate browser sessions. Email sends are consented analytics outcomes, so they can undercount actual applications. Referral/device breakdowns are drawn only from browser interactions with owned jobs.
+
+Apply migration `0005_posting_analytics_indexes.sql` after `0004_behavior_analytics.sql` before deploying this feature. It adds indexes for account inventory and per-job event lookups. Older jobs without an associated submitting account cannot be claimed through contact email; any future ownership transfer needs a separate verified workflow.

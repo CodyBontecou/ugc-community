@@ -37,6 +37,7 @@ export function DashboardShell({ userName, profileSaved, profileShareId, applica
       </section>
 
       <ApplicationHistory applications={applications} />
+      <p className="text-center text-sm"><Link href="/dashboard/postings" className="inline-flex min-h-11 items-center text-rose underline underline-offset-4">View your job postings and analytics</Link></p>
       <p className="text-center text-sm text-warm-gray-600">Hiring a creator? <Link href="/post-job" className="inline-flex min-h-11 items-center text-rose underline underline-offset-4">Post a job for free</Link></p>
     </div>
   );

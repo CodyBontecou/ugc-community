@@ -28,6 +28,7 @@ interface DashboardNavProps {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/apply-profile", label: "Creator profile", icon: User },
+  { href: "/dashboard/postings", label: "Your postings", icon: Briefcase },
   { href: "/jobs", label: "Browse jobs", icon: Briefcase },
 ];
 
@@ -53,7 +54,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
   return (
     <div className="flex items-center gap-2">
       {/* Desktop Navigation Links */}
-      <nav className="hidden md:flex items-center gap-1">
+      <nav className="hidden xl:flex items-center gap-1">
         {allNavItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -132,7 +133,7 @@ export function DashboardNav({ user, isAdmin = false }: DashboardNavProps) {
                 </div>
 
                 {/* Mobile-only nav items */}
-                <div className="md:hidden py-1 border-b border-warm-gray-100">
+                <div className="xl:hidden py-1 border-b border-warm-gray-100">
                   {allNavItems.map((item) => (
                     <Link
                       key={item.href}
