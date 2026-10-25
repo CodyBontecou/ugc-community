@@ -4,7 +4,7 @@
   "report_url": "https://is-agentic.com/scan/ugc.community",
   "score": 100,
   "score_label": "Strong technical baseline",
-  "scanned_at": "2026-10-25T01:46:05.378Z",
+  "scanned_at": "2026-10-25T01:51:22.469Z",
   "eligible_checks": 35,
   "score_breakdown": {
     "essential": {
@@ -14,9 +14,9 @@
       "total": 11
     },
     "recommended": {
-      "earned": 17.9,
+      "earned": 18.3,
       "available": 20,
-      "passing": 20,
+      "passing": 21,
       "total": 24
     },
     "bonus": {
@@ -38,14 +38,6 @@
       "id": "agentic-search-specific",
       "name": "Developer resource discoverability",
       "recommendation": "Check whether your developer resources (API docs, OpenAPI spec, auth docs, developer portal, MCP server, SDK documentation) surface in name-based searches. If they do not, use predictable URLs, link them in llms.txt, and include your product name in page titles and headings. This result reflects one search sample.",
-      "result": "partial",
-      "tier": "recommended"
-    },
-    {
-      "details": "Organization schema found but missing: address",
-      "id": "org-schema-completeness",
-      "name": "Organization schema completeness",
-      "recommendation": "Add Organization JSON-LD that includes both contactPoint (with email/phone and contactType) and address (PostalAddress). This lets AI verify your business legitimacy and answer contact queries.",
       "result": "partial",
       "tier": "recommended"
     },
