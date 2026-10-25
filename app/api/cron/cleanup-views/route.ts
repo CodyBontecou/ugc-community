@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { portfolioViewDedupe } from "@/lib/db/schema";
-import { lt, sql } from "drizzle-orm";
+import { lt } from "drizzle-orm";
+
+import { analyticsDatabase } from "@/lib/analytics/server";
+import { pruneEvents } from "@/lib/analytics/store";
 
 const RETENTION_DAYS = 7;
 
 export async function GET(request: NextRequest) {
   // Verify cron secret for security
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,10 +20,12 @@ export async function GET(request: NextRequest) {
     const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
     // Delete old records
-    const result = await db
-      .delete(portfolioViewDedupe)
-      .where(lt(portfolioViewDedupe.viewedAt, cutoffDate))
-      .returning({ id: portfolioViewDedupe.id });
+    const [, result] = await Promise.all([
+      analyticsDatabase().then(database => pruneEvents(database)),
+      db.delete(portfolioViewDedupe)
+        .where(lt(portfolioViewDedupe.viewedAt, cutoffDate))
+        .returning({ id: portfolioViewDedupe.id }),
+    ]);
 
     const deletedCount = result.length;
 

@@ -26,6 +26,8 @@ export default async function AdminLayout({
 
       <a href="/dashboard/admin/opportunities" className="inline-block text-sm text-warm-gray-700 underline underline-offset-4">Job review & supply validation →</a>
 
+      <a href="/dashboard/admin/analytics" className="inline-block text-sm text-warm-gray-700 underline underline-offset-4">Product analytics →</a>
+
       {children}
     </div>
   );

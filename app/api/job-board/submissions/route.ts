@@ -1,3 +1,4 @@
+import { recordOutcome } from "@/lib/analytics/server";
 import { getServerSession } from "@/lib/auth/session";
 import { boardBindings } from "@/lib/job-board/access";
 import { submissionSchema } from "@/lib/job-board/model";
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
     if (!parsed.success) return Response.json({ error: parsed.error.issues[0]?.message || "Complete all required fields" }, { status: 400 });
     const { JOB_BOARD } = await boardBindings();
     const id = await submitDirectJob(JOB_BOARD, parsed.data, { id: session.user.id, email: parsed.data.contactEmail });
+    await recordOutcome(request, "job_submitted", "/post-job", {}, id);
     return Response.json({ id, status: "pending_review" }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message === "Daily submission limit reached") return Response.json({ error: error.message }, { status: 429 });

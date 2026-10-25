@@ -28,7 +28,7 @@ export function JobTable({ jobs }: { jobs: BoardJob[] }) {
           const applicationUrl = safeLink(job.application_url);
           const detailsId = `job-details-${job.id}`;
           return (
-            <li key={job.id} className={open ? "bg-peach-100/70" : "hover:bg-peach-100/50"}>
+            <li key={job.id} data-analytics-job-id={job.id} className={open ? "bg-peach-100/70" : "hover:bg-peach-100/50"}>
               <div className={`space-y-3 p-4 sm:p-6 lg:space-y-0 ${columns}`}>
                 <div className="min-w-0">
                   <h2 className="font-[family-name:var(--font-body)] text-base font-semibold leading-6">

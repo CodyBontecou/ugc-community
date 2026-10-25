@@ -4,6 +4,8 @@ import { mock, test } from "node:test";
 let session: { user: { id: string; email: string } } | null = null;
 let bindingReads = 0;
 const saved: unknown[][] = [];
+const outcomes: unknown[][] = [];
+mock.module("../../lib/analytics/server.ts", { namedExports: { recordOutcome: async (...args: unknown[]) => { outcomes.push(args); } } });
 mock.module("../../lib/auth/session.ts", { namedExports: { getServerSession: async () => session } });
 mock.module("../../lib/job-board/access.ts", { namedExports: { boardBindings: async () => { bindingReads++; return { JOB_BOARD: "test-db" }; } } });
 mock.module("../../lib/job-board/store.ts", { namedExports: { submitDirectJob: async (...args: unknown[]) => { saved.push(args); return "new-job"; } } });
@@ -19,6 +21,7 @@ test("anonymous submissions are rejected before validation or storage", async ()
   }
   assert.equal(bindingReads, 0);
   assert.equal(saved.length, 0);
+  assert.equal(outcomes.length, 0);
 });
 
 test("signed-in submissions use the session account and retain the private contact email", async () => {
@@ -30,4 +33,7 @@ test("signed-in submissions use the session account and retain the private conta
   const invalid = await POST(request("invalid json"));
   assert.equal(invalid.status, 400);
   assert.equal(saved.length, 1);
+  assert.equal(outcomes.length, 1);
+  assert.equal(outcomes[0][1], "job_submitted");
+  assert.equal(outcomes[0][4], "new-job");
 });

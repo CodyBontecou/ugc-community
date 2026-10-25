@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/lib/analytics/client";
 import { useState, type FormEvent } from "react";
 import { CreatorProfileView } from "./creator-profile-view";
 import type { CreatorProfile } from "@/lib/job-board/profiles";
@@ -7,7 +8,7 @@ export function ApplicationForm({ jobId, company, recipient, email, profile, exi
   const [preview, setPreview] = useState(false), [busy, setBusy] = useState(false), [sent, setSent] = useState(existing?.status === "sent"), [error, setError] = useState(""), [uncertain, setUncertain] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!preview) { setPreview(true); return; }
+    if (!preview) { track("application_preview", { form: "application", jobId }); setPreview(true); return; }
     setBusy(true); setError("");
     let confirmedRejection = false;
     try {

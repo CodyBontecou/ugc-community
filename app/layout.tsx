@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Outfit } from "next/font/google";
-import { Analytics } from "@vercel/analytics/react";
 import AIReferralTracker from "@/components/analytics/ai-referral-tracker";
 import "./globals.css";
 
@@ -115,7 +114,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <Analytics />
         <AIReferralTracker />
       </body>
     </html>

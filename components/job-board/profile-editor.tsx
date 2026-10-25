@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/lib/analytics/client";
 import { useState, type FormEvent } from "react";
 import { creatorProfileSchema, generateProfile, type CreatorProfile } from "@/lib/job-board/profiles";
 import { CreatorProfileView } from "./creator-profile-view";
@@ -14,6 +15,7 @@ export function ProfileEditor({ initial, initialShareId, accountEmail, accountNa
   function generate() {
     if (brief.trim().length < 20) { setError("Add a short brief about the content you make (at least 20 characters)."); return; }
     setProfile(current => ({ ...current, ...generateProfile({ ...current, brief }) }));
+    track("profile_draft", { form: "profile" });
     setGenerated(true); setSaved(false); setError("");
   }
   async function save(event: FormEvent<HTMLFormElement>) {
