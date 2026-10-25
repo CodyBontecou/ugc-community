@@ -94,14 +94,15 @@ function getCommunityBadgeStyles(): string {
       0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
-  #ugc-badge a:hover #ugc-badge-sparkle {
-    transform: scale(1.3) rotate(15deg);
-  }
-
-  #ugc-badge-sparkle {
-    font-size: 9px;
-    transition: transform 0.3s ease;
-    filter: brightness(1.2);
+  #ugc-badge-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    object-fit: contain;
+    border: 0;
+    margin: 0;
+    padding: 0;
   }
 
   #ugc-badge-label {
@@ -135,12 +136,12 @@ function getCommunityBadgeStyles(): string {
 /**
  * HTML for the community pill badge widget.
  * A rounded pill badge in the bottom-right that links
- * back to ugc.community with a sparkle accent.
+ * back to ugc.community with the brand icon.
  */
 function getCommunityBadgeHtml(): string {
   return `<div id="ugc-badge" role="complementary" aria-label="UGC Community badge">
   <a href="https://ugc.community" target="_blank" rel="noopener noreferrer" title="Part of ugc.community">
-    <span id="ugc-badge-sparkle" aria-hidden="true">&#10022;</span>
+    <img id="ugc-badge-icon" src="https://ugc.community/icon.png" alt="" width="18" height="18" />
     <span id="ugc-badge-label">ugc.community</span>
   </a>
 </div>`;

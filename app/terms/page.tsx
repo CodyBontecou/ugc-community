@@ -1,5 +1,5 @@
+import { BrandLink } from "@/components/brand-link";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms — ugc.community",
@@ -11,7 +11,7 @@ export default function TermsPage() {
   return (
     <main className="min-h-screen bg-[#fff5f3] px-6 py-20">
       <article className="mx-auto max-w-3xl rounded-3xl border border-warm-gray-100 bg-white p-8 md:p-12">
-        <Link href="/" className="text-rose hover:underline">← ugc.community</Link>
+        <BrandLink />
         <h1 className="mt-8 text-5xl text-warm-gray-900">Terms</h1>
         <p className="mt-3 text-sm text-warm-gray-500">Last updated October 24, 2026</p>
         <div className="mt-10 space-y-8 leading-7 text-warm-gray-600">

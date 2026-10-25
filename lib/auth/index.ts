@@ -1,3 +1,4 @@
+import { emailBrandMark } from "@/lib/email/brand";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
@@ -26,7 +27,7 @@ function generateMagicLinkEmail(url: string): string {
           </tr>
           <tr>
             <td align="center" style="padding: 48px 40px 0 40px;">
-              <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">ugc.community</span>
+              ${emailBrandMark()}
             </td>
           </tr>
           <tr>

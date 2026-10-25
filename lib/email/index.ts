@@ -1,3 +1,4 @@
+import { emailBrandMark } from "./brand";
 import { Resend } from "resend";
 
 let resend: Resend | null = null;
@@ -107,7 +108,7 @@ export async function sendWaitlistConfirmation(email: string) {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -250,7 +251,7 @@ export async function sendInvitationEmail(email: string, inviteUrl: string) {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -416,7 +417,7 @@ export async function sendContactInquiry(params: ContactInquiryParams) {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -553,7 +554,7 @@ export async function sendContactConfirmation(params: ContactConfirmationParams)
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -690,7 +691,7 @@ export async function sendMilestoneEarnedEmail(params: MilestoneEarnedParams) {
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -838,7 +839,7 @@ export async function sendPortfolioDisabledEmail(params: PortfolioDisabledParams
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>
@@ -984,7 +985,7 @@ export async function sendPortfolioReenabledEmail(params: PortfolioReenabledPara
               <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 400; color: #1A1614; letter-spacing: -0.02em;">
-                    ugc.community
+                    ${emailBrandMark()}
                   </td>
                 </tr>
               </table>

@@ -1,23 +1,12 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BrandLink } from "@/components/brand-link";
 
 export function Footer() {
   return (
     <footer className="relative z-[1] bg-warm-gray-900 py-16 text-warm-gray-300">
       <div className="container">
         <div className="mb-12">
-          <Link href="/" className="flex items-center gap-2 mb-6">
-            <Image
-              src="/icon.png"
-              alt="ugc.community logo"
-              width={36}
-              height={36}
-              className="rounded-[--radius-md]"
-            />
-            <span className="font-semibold text-[1.1rem] text-white">
-              ugc.community
-            </span>
-          </Link>
+          <BrandLink light iconSize={36} className="mb-6" />
           <p className="text-sm leading-relaxed max-w-[280px] mb-6">
             Find your next UGC opportunity. Collected jobs and brand-posted briefs in one place.
           </p>

@@ -41,14 +41,14 @@ export const metadata: Metadata = {
     title: "ugc.community — UGC Job Board & Creator Opportunities",
     description:
       "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",
-    images: [{ url: "/social-preview.png", width: 1200, height: 630, alt: "ugc.community — UGC jobs and creator opportunities" }],
+    images: [{ url: "/social-preview.png?v=brand-icon", width: 1200, height: 630, alt: "ugc.community — UGC jobs and creator opportunities" }],
     type: "website",
     locale: "en_US",
     siteName: "ugc.community",
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/social-preview.png"],
+    images: ["/social-preview.png?v=brand-icon"],
     title: "ugc.community — UGC Job Board & Creator Opportunities",
     description:
       "Find reviewed UGC jobs, clear compensation terms, and original application links. Free for creators.",

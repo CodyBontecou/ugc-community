@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import { BrandLink } from "@/components/brand-link";
 import { getServerSession } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard/nav";
 import { DashboardProviders } from "@/components/dashboard/providers";
@@ -42,19 +41,7 @@ export default async function DashboardLayout({
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-warm-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2.5 whitespace-nowrap font-semibold text-warm-gray-900 hover:text-coral transition-colors"
-              >
-                <Image
-                  src="/brand/icon.svg"
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="shrink-0"
-                />
-                <span>ugc.community</span>
-              </Link>
+              <BrandLink className="hover:text-coral transition-colors" />
 
               <DashboardNav user={session.user} isAdmin={userIsAdmin} />
             </div>

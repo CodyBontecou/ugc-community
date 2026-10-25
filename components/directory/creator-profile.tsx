@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { BrandLink } from "@/components/brand-link";
 import {
   ArrowLeft,
   MapPin,
@@ -46,18 +47,14 @@ export function CreatorProfile({ creator }: CreatorProfileProps) {
         <div className="container flex items-center justify-between h-16">
           <Link
             href="/creators"
+            aria-label="Back to Directory"
             className="inline-flex items-center gap-2 text-sm font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back to Directory
+            <span className="hidden sm:inline">Back to Directory</span>
           </Link>
-          <Link
-            href="/"
-            className="font-semibold text-[1.1rem] text-warm-gray-900 hover:text-coral transition-colors"
-          >
-            ugc.community
-          </Link>
-          <div className="w-[140px]" /> {/* Spacer for centering */}
+          <BrandLink className="hover:text-coral transition-colors" />
+          <div className="hidden sm:block w-[140px]" /> {/* Spacer for centering */}
         </div>
       </nav>
 
