@@ -32,7 +32,7 @@ export async function JobFeed({ params = {} }: { params?: Record<string, string 
     <section id="jobs" aria-label="Browse UGC opportunities" className="relative z-[1] scroll-mt-28 pb-20">
       <div className="container max-w-6xl">
         <div className="overflow-hidden rounded-[24px] border border-warm-gray-200 bg-white/95 shadow-sm">
-          <form action="/jobs" role="search" className="grid grid-cols-2 items-end gap-3 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_180px_210px_auto]">
+          <form key={JSON.stringify([filters.q, filters.source, filters.pay])} action="/jobs" role="search" className="grid grid-cols-2 items-end gap-3 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_180px_210px_auto]">
             <label className="col-span-2 lg:col-span-1">
               <span className="sr-only">Search opportunities</span>
               <span className="relative block"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 text-warm-gray-500" /><input name="q" defaultValue={filters.q} maxLength={100} placeholder="Search roles, brands, keywords…" className={`${controlClass} pl-10`} /></span>
