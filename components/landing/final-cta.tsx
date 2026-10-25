@@ -8,25 +8,25 @@ export function FinalCTA() {
     <section className="relative z-[1] py-32">
       <div className="container">
         <motion.div
-          className="bg-gradient-to-br from-coral via-rose to-lavender rounded-[--radius-2xl] p-16 text-center shadow-glow"
+          className="bg-gradient-to-br from-coral via-rose to-lavender rounded-[--radius-2xl] p-8 sm:p-16 text-center shadow-glow"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-[clamp(2rem,4vw,2.75rem)] text-white mb-4">
-            Ready to level up your creator game?
+            Find the creators behind your next campaign.
           </h2>
           <p className="text-lg text-white/90 mb-12">
-            Join UGC creators who've already made the switch.
+            Get notified when subscriptions open.
           </p>
           <motion.a
-            href="/sign-up"
+            href="#pricing"
             className="inline-flex items-center justify-center gap-2 font-medium rounded-full py-4 px-8 text-base bg-white text-warm-gray-900 shadow-md hover:shadow-lg transition-shadow"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
           >
-            Get Started
+            Get early access
             <ArrowRight size={18} />
           </motion.a>
         </motion.div>

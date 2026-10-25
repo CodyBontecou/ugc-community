@@ -26,7 +26,7 @@ export function Navbar() {
             href="/#features"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            Features
+            The database
           </a>
           <a
             href="/#pricing"
@@ -35,10 +35,10 @@ export function Navbar() {
             Pricing
           </a>
           <Link
-            href="/tutorials"
+            href="/#database-preview"
             className="text-[0.95rem] font-medium text-warm-gray-600 hover:text-warm-gray-900 transition-colors"
           >
-            Tutorials
+            Database preview
           </Link>
         </div>
 

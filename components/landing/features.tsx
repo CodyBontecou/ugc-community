@@ -12,42 +12,12 @@ import {
 import type { ReactNode } from "react";
 
 const features = [
-  {
-    icon: <Target size={24} />,
-    title: "Job Board with Hooks",
-    description:
-      "Browse content jobs with specific hooks to use. Just create content naturally — no applications needed.",
-  },
-  {
-    icon: <Repeat size={24} />,
-    title: "Automatic Detection",
-    description:
-      "We scrape your TikTok every 12 hours and use AI to match your posts to job hooks automatically.",
-  },
-  {
-    icon: <Globe size={24} />,
-    title: "Your Own Subdomain",
-    description:
-      "Get a professional URL like sarah.ugc.community. Post regularly and we'll keep your portfolio live.",
-  },
-  {
-    icon: <Palette size={24} />,
-    title: "Custom Portfolio",
-    description:
-      "Your profile is uniquely crafted to match your brand and showcase your best work beautifully.",
-  },
-  {
-    icon: <BarChart3 size={24} />,
-    title: "Analytics Dashboard",
-    description:
-      "See who's viewing your profile, track your post performance, and watch your milestones grow.",
-  },
-  {
-    icon: <Zap size={24} />,
-    title: "Milestone Rewards",
-    description:
-      "1 post/month keeps your portfolio live. Hit 10 posts to unlock unlimited edits and premium perks.",
-  },
+  { icon: <Target size={24} />, title: "Search in one place", description: "Find creator records by Reddit username, social platform, and the links they share." },
+  { icon: <Repeat size={24} />, title: "New discoveries over time", description: "The subscription is being built around ongoing additions from r/UGCcreators, so you can return for new leads." },
+  { icon: <Globe size={24} />, title: "Find their work", description: "Explore shared Instagram, TikTok, YouTube, and portfolio links when those details are available." },
+  { icon: <Palette size={24} />, title: "Keep the context", description: "Understand where a detail came from with its source post or comment and supporting text." },
+  { icon: <BarChart3 size={24} />, title: "Know what is available", description: "See which records include an email, a portfolio, or social links before you start researching." },
+  { icon: <Zap size={24} />, title: "Built for your next campaign", description: "Spend less time collecting scattered links and more time reviewing creators for your brand." },
 ];
 
 function FeatureCard({
@@ -98,12 +68,12 @@ export function Features() {
             Features
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)] mb-6">
-            Create content,
+            Less searching,
             <br />
-            <span className="gradient-text">we handle the rest</span>
+            <span className="gradient-text">more discovering</span>
           </h2>
           <p className="text-lg text-warm-gray-500 max-w-[500px] mx-auto">
-            Post to TikTok using job hooks. We automatically track everything and unlock rewards.
+            A clearer starting point for brands and agencies looking for their next UGC collaboration.
           </p>
         </motion.div>
 

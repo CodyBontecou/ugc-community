@@ -26,9 +26,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ugc.community"),
-  title: "ugc.community - For UGC Creators",
+  title: "UGC Creator Database — ugc.community",
   description:
-    "The modern way for content creators to showcase their work and land brand deals. Your own corner of the internet at yourname.ugc.community",
+    "Discover UGC creators, social profiles, portfolios, and shared contact details. Join early access to a searchable creator database for brands and agencies.",
   keywords: [
     "UGC",
     "creator",
@@ -37,18 +37,18 @@ export const metadata: Metadata = {
     "influencer",
   ],
   openGraph: {
-    title: "ugc.community - For UGC Creators",
+    title: "UGC Creator Database — ugc.community",
     description:
-      "The modern way for content creators to showcase their work and land brand deals.",
+      "A searchable UGC creator database for brands and agencies. Join early access.",
     type: "website",
     locale: "en_US",
     siteName: "ugc.community",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ugc.community - For UGC Creators",
+    title: "UGC Creator Database — ugc.community",
     description:
-      "The modern way for content creators to showcase their work and land brand deals.",
+      "A searchable UGC creator database for brands and agencies. Join early access.",
   },
   alternates: { canonical: "/" },
 };
@@ -71,20 +71,11 @@ const structuredData = {
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description:
-        "Portfolio hosting, creator discovery, campaign hooks, milestone rewards, and analytics for UGC creators.",
+        "A UGC creator discovery database for brands and agencies. Subscription access is coming soon.",
       provider: { "@id": "https://ugc.community/#organization" },
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-        description: "Creator Partner access is free with qualifying content participation.",
-      },
       featureList: [
-        "Creator portfolio subdomains",
-        "UGC job board and campaign hooks",
-        "Automatic TikTok post matching",
-        "Portfolio and post analytics",
-        "Milestone-based creator rewards",
+        "Searchable UGC creator database preview",
+        "Subscription early-access registration",
       ],
     },
     {

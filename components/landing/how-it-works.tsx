@@ -3,24 +3,9 @@
 import { motion } from "framer-motion";
 
 const steps = [
-  {
-    step: "01",
-    title: "Sign Up & Connect TikTok",
-    description:
-      "Create your free account and link your TikTok handle so we can track your content.",
-  },
-  {
-    step: "02",
-    title: "Browse Jobs & Use the Hooks",
-    description:
-      "Check the job board for active campaigns. Use the provided hooks in your TikTok content.",
-  },
-  {
-    step: "03",
-    title: "We Handle the Rest",
-    description:
-      "Our system automatically detects your posts, matches hooks, and unlocks rewards — portfolio hosting, edits, and more.",
-  },
+  { step: "01", title: "Discover creators", description: "Search the database for creator records and filter by the platforms and contact fields that matter to you." },
+  { step: "02", title: "Review the source", description: "Check shared work and the original Reddit context. A public mention is a starting point; confirm fit and availability directly." },
+  { step: "03", title: "Come back for new discoveries", description: "The planned subscription will include database additions as new uploads are processed, rather than a single frozen download." },
 ];
 
 export function HowItWorks() {
@@ -38,9 +23,9 @@ export function HowItWorks() {
             How It Works
           </span>
           <h2 className="text-[clamp(2.5rem,5vw,3.5rem)]">
-            Post content,
+            Discover. Review.
             <br />
-            <span className="gradient-text">unlock rewards</span>
+            <span className="gradient-text">Find your next fit.</span>
           </h2>
         </motion.div>
 
