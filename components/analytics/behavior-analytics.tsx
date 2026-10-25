@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CONSENT_KEY, analyticsPath, type EventProperties } from "@/lib/analytics/browser";
+import { observeListingImpressions } from "@/lib/analytics/impressions";
 import { clearTracking, flush, setTrackingConsent, track, trackingAllowed } from "@/lib/analytics/client";
 
 function formType(path: string, form: HTMLFormElement): EventProperties["form"] {
@@ -42,6 +43,9 @@ export function BehaviorAnalytics() {
         track("job_search", { hasQuery: Boolean(search.get("q")), pay: ["cash", "mixed", "gifted_or_unpaid", "affiliate", "performance_only", "unspecified", "all"].includes(pay) ? pay as EventProperties["pay"] : "other", source: ["external", "direct"].includes(source) ? source as "external" | "direct" : "all", page: Math.min(10000, Math.max(1, Math.floor(Number(search.get("page")) || 1))) });
       }
     }
+    const stopImpressions = ["/", "/jobs"].includes(pathname)
+      ? observeListingImpressions(jobId => track("job_impression", { jobId }, pathname))
+      : () => {};
     let activeSeconds = 0;
     const depths = new Set<number>();
     const started = new WeakSet<HTMLFormElement>();
@@ -133,6 +137,7 @@ export function BehaviorAnalytics() {
       void flush(true);
       clearInterval(timer); clearInterval(sender);
       observer.disconnect();
+      stopImpressions();
       document.removeEventListener("invalid", invalid, true);
       document.removeEventListener("toggle", disclosure, true);
       document.removeEventListener("click", clicked, true);

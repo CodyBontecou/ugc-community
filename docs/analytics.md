@@ -20,6 +20,7 @@ Events are retained for 90 days. The existing daily authenticated `/api/cron/cle
 | `page_engagement` | Focused, visible page time, emitted every 15 seconds and on departure |
 | `scroll_depth` | First reach of 25%, 50%, 75%, or 100% of document height per navigation |
 | `job_search` | Filtered results view, including query presence, allowlisted pay/source filters, and page number; no search terms |
+| `job_impression` | At least 50% of a listing summary visible continuously for one second in a visible, focused tab |
 | `job_brief_open` | Native disclosure opened, or legacy brief control expanded |
 | `apply_click` | Apply link clicked, with public job ID and email/external destination category |
 | `source_click` | Original source opened separately from applying |
@@ -59,7 +60,7 @@ Any active signed-in account can open `/dashboard/postings` from the dashboard m
 
 `/api/analytics/postings` derives account scope from the authenticated session and checks current account status. Every report query joins events to direct jobs whose `submitter_user_id` matches that account. Supplying a different user ID, sharing a submission email, being an administrator, or knowing another job's ID does not grant access. An unowned/nonexistent selected job returns the same 404. Response caching is private/no-store with Vary: Cookie. No applicant information, raw session IDs, private submission emails, or internal review notes are returned.
 
-Inventory is paginated at 20 jobs. Pending, rejected, closed, and zero-activity jobs remain visible to their owner. Summary metrics cover the complete selected scope rather than only the visible page. The report does not count feed page views as impressions for an individual job. A repeat open/click is another event; interacting sessions deduplicate browser sessions. Email sends are consented analytics outcomes, so they can undercount actual applications. Referral/device breakdowns are drawn only from browser interactions with owned jobs.
+Inventory is paginated at 20 jobs. Pending, rejected, closed, and zero-activity jobs remain visible to their owner. Summary metrics cover the complete selected scope rather than only the visible page. Listing impressions measure actual visibility of each listing summary. A repeat open/click is another event; interacting sessions deduplicate browser sessions. Email sends are consented analytics outcomes, so they can undercount actual applications. Referral/device breakdowns are drawn only from browser interactions with owned jobs.
 
 Apply migration `0005_posting_analytics_indexes.sql` after `0004_behavior_analytics.sql` before deploying this feature. It adds indexes for account inventory and per-job event lookups. Older jobs without an associated submitting account cannot be claimed through contact email; any future ownership transfer needs a separate verified workflow.
 
@@ -97,3 +98,21 @@ Reusable checks:
 - `node scripts/verify-analytics-auth.mjs` checks live route presence, anonymous access, origin rejection and DNT/GPC without creating data.
 - `node scripts/verify-posting-analytics-isolation.mjs /private/path/state.json` runs authenticated isolation verification. The private state file needs a unique `analytics-<lowercase alphanumeric>` run marker and two fresh dedicated accounts, each with `label` (`a`/`b`), `email` containing the run marker, `id` and normal signed-in `cookie`. Keep it outside the repository with mode 0600. The script saves exact fixture identities as it runs.
 - Add `--cleanup` to the isolation command after inspection. It validates dedicated test identities and the exact unpublished fixtures before deleting those D1 records, verifies absence, revokes their sessions and removes cookies from the private state file. It does not delete the test identities. Never point it at real employer accounts.
+
+## Listing impressions and conversion rates
+
+A browser records `job_impression` only after at least half of a listing summary is visible continuously for one second while the document is visible and focused. Scrolling out, hiding/blurring the tab, removing a row, leaving the route, or withdrawing consent cancels pending observation. The summary is observed rather than the expanded brief, so opening a long brief does not change the measurement target. Streamed or subsequently inserted rows are observed too. Unsupported browsers do not fabricate impressions. Tracking remains behind explicit consent and DNT/GPC suppression.
+
+The browser emits once per listing per navigation. Poster reports deduplicate impressions by `(jobId, anonymous session)` within the selected period, so revisits and batch retries do not inflate the denominator. A visitor viewing two different jobs creates one opportunity for each job. Daily impression totals deduplicate within each calendar day; their sum can exceed the full-period count when a session crosses midnight. Raw event counts in administrator action breakdowns may include repeated navigations.
+
+For each owned listing/session pair with a measured view, the report checks for later actions on that same listing and session in the selected window:
+
+- View to brief rate: viewed listing sessions with a subsequent brief open / viewed listing sessions.
+- View to apply-click rate: viewed listing sessions with a subsequent apply click / viewed listing sessions.
+- View to email-send rate: viewed listing sessions with a subsequent server-confirmed email send / viewed listing sessions.
+
+Each opportunity contributes at most once to each numerator. Overall rates sum opportunities and conversions across owned listings before dividing; they do not average per-job percentages. These are independent rates from a view, since creators may click Apply without opening a brief. External application completion, qualification and hiring remain unknown. Email sends indicate provider acceptance, not inbox delivery. Actions without a measured view remain in event totals but do not enter conversion numerators.
+
+The owner API adds `impressions` to summary, per-job and daily metrics, `conversions` and `previousConversions` at report level, and `conversions` on each job. Rates are percentages rounded to one decimal, or `null` when no views were measured; the UI shows an em dash rather than inventing a zero baseline. Count fields (`impressions`, `opened`, `applied`, `sent`) explain the rates without exposing session identifiers. Previous-period comparisons use percentage-point differences.
+
+All queries retain the direct-posting account ownership constraint. The existing analytics table and per-job index support the new event; no D1 migration is required. Views begin with the feature release. Historical clicks cannot reconstruct impressions or conversion rates. Local verification covers visibility timing/lifecycle, strict ingestion, duplicate/replayed events, chronological same-job attribution, weighted aggregates, historical missing baselines, previous periods and cross-owner isolation. A real browser fixture verified an impression after visibility and no duplicate on expansion, plus desktop and 390px report layouts.

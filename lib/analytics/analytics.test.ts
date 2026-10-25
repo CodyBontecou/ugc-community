@@ -118,3 +118,11 @@ test("collector rate limits and fails closed without production protections", as
   assert.equal((await collectEvents(request(payload), async () => { throw new Error("secret"); })).status, 503);
   assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM analytics_events").first<{ n: number }>())?.n, 0);
 });
+test("impression ingestion requires a public job identifier and rejects private properties", async () => {
+  const valid = batch([{ name: "job_impression", properties: { jobId: "job-public-id" } }]);
+  assert.equal(batchSchema.safeParse(valid).success, true);
+  assert.equal(batchSchema.safeParse(batch([{ name: "job_impression" }])).success, false);
+  assert.equal((await collectEvents(request(valid), bindings)).status, 204);
+  const invalid = { ...valid, events: [{ ...valid.events[0], properties: { jobId: "job-public-id", email: "private@example.com" } }] };
+  assert.equal((await collectEvents(request(invalid), bindings)).status, 400);
+});

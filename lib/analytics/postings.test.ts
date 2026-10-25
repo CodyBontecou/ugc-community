@@ -81,3 +81,63 @@ test("closed and rejected postings retain their owner's historical activity", as
   assert.equal(report.jobs.find(job => job.id === "alice-closed")?.clicks, 1);
   assert.equal(report.jobs.find(job => job.id === "alice-rejected")?.status, "rejected");
 });
+
+async function visitor(sessionId: string, jobId: string, events: { name: EventBatch["events"][number]["name"]; seconds: number }[], received = recent) {
+  const batch: EventBatch = { consent: true, sessionId, source: "direct", device: "desktop", events: events.map(event => ({ id: crypto.randomUUID(), name: event.name, path: "/jobs", occurredAt: new Date(now.getTime() + event.seconds * 1000).toISOString(), properties: { jobId } })) };
+  await writeEvents(db, batch, received); return batch;
+}
+test("conversion rates deduplicate views/actions and require a prior view in the same listing session", async () => {
+  const converted = crypto.randomUUID();
+  const first = await visitor(converted, "alice-job", [{ name: "job_impression", seconds: -60 }, { name: "job_impression", seconds: -59 }, { name: "job_brief_open", seconds: -58 }, { name: "apply_click", seconds: -57 }, { name: "apply_click", seconds: -56 }]);
+  await writeEvents(db, first, recent); // Batch replay must not affect counters.
+  await visitor(crypto.randomUUID(), "alice-job", [{ name: "job_impression", seconds: -60 }, { name: "job_brief_open", seconds: -58 }]);
+  await visitor(crypto.randomUUID(), "alice-job", [{ name: "apply_click", seconds: -61 }, { name: "job_impression", seconds: -60 }]);
+  await visitor(crypto.randomUUID(), "alice-job", [{ name: "job_impression", seconds: -60 }]);
+  await visitor(crypto.randomUUID(), "alice-job", [{ name: "apply_click", seconds: -40 }]); // No recorded view, e.g. older client.
+  await visitor(crypto.randomUUID(), "bob-job", [{ name: "job_impression", seconds: -60 }, { name: "apply_click", seconds: -40 }]);
+  await writeServerEvent(db, converted, "application_sent", "/jobs/:id/apply", { jobId: "alice-job" }, "converted-send");
+  await writeServerEvent(db, crypto.randomUUID(), "application_sent", "/jobs/:id/apply", { jobId: "alice-job" }, "unattributed-send");
+  await db.prepare("UPDATE analytics_events SET received_at=?,occurred_at=? WHERE origin='server'").bind(recent.toISOString(), new Date(now.getTime() - 30_000).toISOString()).run();
+  const report = await postingReport(db, "alice", { days: 7 }, now);
+  assert.equal(report.current.impressions, 4); assert.equal(report.current.clicks, 4); assert.equal(report.current.sent, 2);
+  assert.deepEqual(report.conversions, { impressions: 4, opened: 2, applied: 1, sent: 1, briefRate: 50, applyRate: 25, emailRate: 25 });
+  assert.deepEqual(report.jobs.find(job => job.id === "alice-job")?.conversions, report.conversions);
+  assert.equal(report.jobs.find(job => job.id === "alice-pending")?.conversions.applyRate, null);
+});
+test("a view of one posting cannot attribute an application to another posting", async () => {
+  const session = crypto.randomUUID();
+  await visitor(session, "alice-job", [{ name: "job_impression", seconds: -60 }]);
+  await visitor(session, "alice-pending", [{ name: "apply_click", seconds: -40 }]);
+  const report = await postingReport(db, "alice", {}, now);
+  assert.equal(report.conversions.impressions, 1); assert.equal(report.conversions.applied, 0); assert.equal(report.conversions.applyRate, 0);
+  const other = await postingReport(db, "alice", { jobId: "alice-pending" }, now);
+  assert.equal(other.current.clicks, 1); assert.equal(other.conversions.applyRate, null);
+});
+test("overall conversion is weighted by listing opportunities, not an average of percentages", async () => {
+  for (let i = 0; i < 3; i++) await visitor(crypto.randomUUID(), "alice-job", [{ name: "job_impression", seconds: -60 }]);
+  await visitor(crypto.randomUUID(), "alice-pending", [{ name: "job_impression", seconds: -60 }, { name: "apply_click", seconds: -40 }]);
+  const report = await postingReport(db, "alice", {}, now);
+  assert.equal(report.conversions.applyRate, 25); assert.equal(report.current.impressions, 4);
+  assert.equal(report.jobs.find(job => job.id === "alice-pending")?.conversions.applyRate, 100);
+});
+test("no historical impressions produces unavailable rates, not a fabricated zero baseline", async () => {
+  await activity("alice-job", ["apply_click"]);
+  const report = await postingReport(db, "alice", {}, now);
+  assert.equal(report.current.impressions, 0); assert.equal(report.current.clicks, 1);
+  assert.equal(report.conversions.applyRate, null); assert.equal(report.previousConversions.applyRate, null);
+});
+test("same session can view multiple listings, with one impression per listing across repeat days", async () => {
+  const session = crypto.randomUUID();
+  await visitor(session, "alice-job", [{ name: "job_impression", seconds: -60 }]);
+  await visitor(session, "alice-pending", [{ name: "job_impression", seconds: -60 }, { name: "apply_click", seconds: -40 }]);
+  await visitor(session, "alice-job", [{ name: "job_impression", seconds: -86460 }], new Date(now.getTime() - 86400_000));
+  const report = await postingReport(db, "alice", {}, now);
+  assert.equal(report.current.impressions, 2); assert.equal(report.conversions.impressions, 2); assert.equal(report.conversions.applyRate, 50);
+  assert.equal(report.current.sessions, 1); assert.equal(report.daily.reduce((sum, day) => sum + day.impressions, 0), 3);
+});
+test("prior-period conversion cohorts are separate from the current window", async () => {
+  const prior = new Date(now.getTime() - 9 * 86400_000), session = crypto.randomUUID();
+  await writeEvents(db, { consent: true, sessionId: session, source: "direct", device: "desktop", events: ["job_impression", "apply_click"].map((name, i) => ({ id: crypto.randomUUID(), name: name as "job_impression" | "apply_click", path: "/jobs", occurredAt: new Date(prior.getTime() - 2000 + i * 1000).toISOString(), properties: { jobId: "alice-job" } })) }, prior);
+  const report = await postingReport(db, "alice", { days: 7 }, now);
+  assert.equal(report.previousConversions.applyRate, 100); assert.equal(report.conversions.applyRate, null);
+});

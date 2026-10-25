@@ -18,7 +18,9 @@ export type EventProperties = z.infer<typeof propertiesSchema>;
 export const eventSchema = z.object({
   id: z.uuid(), occurredAt: z.iso.datetime(), name: z.enum(BROWSER_EVENTS), path: z.string().max(300).refine(value => analyticsPath(value) !== null),
   properties: propertiesSchema.default({}),
-}).strict();
+}).strict().superRefine((event, ctx) => {
+  if (event.name === "job_impression" && !event.properties.jobId) ctx.addIssue({ code: "custom", path: ["properties", "jobId"], message: "Listing impressions require a job ID" });
+});
 export const batchSchema = z.object({
   consent: z.literal(true), sessionId: z.uuid(), source: z.enum(SOURCES),
   device: z.enum(["mobile", "tablet", "desktop"]), events: z.array(eventSchema).min(1).max(20),

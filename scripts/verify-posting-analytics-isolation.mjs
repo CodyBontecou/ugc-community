@@ -118,7 +118,7 @@ pass("Test jobs remain absent from the public jobs API");
 state.analyticsSessions = [];
 for (const [job, source, device, briefs, clicks] of [[jobA, "chatgpt", "mobile", 3, 1], [jobB, "social", "desktop", 1, 5]]) {
   const sessionId = crypto.randomUUID(); state.analyticsSessions.push(sessionId); await save();
-  const events = [...Array(briefs).fill("job_brief_open"), ...Array(clicks).fill("apply_click")].map(name => ({ id: crypto.randomUUID(), occurredAt: new Date().toISOString(), name, path: "/jobs", properties: { jobId: job.id, ...(name === "apply_click" ? { destination: "external" } : {}) } }));
+  const events = ["job_impression", ...Array(briefs).fill("job_brief_open"), ...Array(clicks).fill("apply_click")].map(name => ({ id: crypto.randomUUID(), occurredAt: new Date().toISOString(), name, path: "/jobs", properties: { jobId: job.id, ...(name === "apply_click" ? { destination: "external" } : {}) } }));
   const payload = { consent: true, sessionId, source, device, events };
   const response = await request("/api/analytics/events", null, { method: "POST", headers: { "Content-Type": "application/json", Origin: base, Cookie: `ugc_analytics_session=${sessionId}` }, body: JSON.stringify(payload) });
   assert.equal(response.status, 204);
@@ -130,9 +130,11 @@ for (const [job, source, device, briefs, clicks] of [[jobA, "chatgpt", "mobile",
 pass("Distinct consented activity ingested through production collector; A retried unchanged");
 for (const days of [7, 30, 90]) {
   const ra = await report(a, `?days=${days}`), rb = await report(b, `?days=${days}`);
+  assert.equal(ra.conversions.applyRate, 100); assert.equal(rb.conversions.applyRate, 100);
+  assert.equal(ra.conversions.emailRate, 0); assert.equal(rb.conversions.emailRate, 0);
   assert.equal(ra.totalJobs, 2); assert.equal(rb.totalJobs, 1);
-  assert.deepEqual(ra.current, { briefs: 3, clicks: 1, sent: 0, sessions: 1 });
-  assert.deepEqual(rb.current, { briefs: 1, clicks: 5, sent: 0, sessions: 1 });
+  assert.deepEqual(ra.current, { impressions: 1, briefs: 3, clicks: 1, sent: 0, sessions: 1 });
+  assert.deepEqual(rb.current, { impressions: 1, briefs: 1, clicks: 5, sent: 0, sessions: 1 });
   assert.deepEqual(ra.jobs.map(j => j.id).sort(), [jobA.id, zero.id].sort());
   assert.deepEqual(rb.jobs.map(j => j.id), [jobB.id]);
   assert.deepEqual(ra.sources, [{ label: "chatgpt", sessions: 1 }]); assert.deepEqual(rb.sources, [{ label: "social", sessions: 1 }]);
@@ -162,7 +164,7 @@ for (const [account, ownJob, foreignJob, foreignAccount] of [[a, jobA, jobB, b],
   assert.equal((await request("/api/analytics/report", account)).status, 401);
 }
 pass("Both users can open their own pages and reports; cross-owner IDs, spoofing and SQL-like IDs fail");
-const empty = await report(a, `?job=${zero.id}`); assert.deepEqual(empty.current, { briefs: 0, clicks: 0, sent: 0, sessions: 0 });
+const empty = await report(a, `?job=${zero.id}`); assert.deepEqual(empty.current, { impressions: 0, briefs: 0, clicks: 0, sent: 0, sessions: 0 });
 const paged = await report(a, "?page=99999&days=invalid"); assert.equal(paged.page, 1); assert.equal(paged.days, 30); assert.equal(paged.totalJobs, 2);
 assert.equal((await request("/api/analytics/postings")).status, 401);
 const tampered = { cookie: a.cookie.replace(/session_token=([^;])/, 'session_token=x$1') };
