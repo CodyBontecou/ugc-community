@@ -19,7 +19,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
               <h1 className="mb-3 mt-3 text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.05]">Good briefs. <span className="gradient-text">Great opportunities.</span></h1>
               <p className="text-sm text-warm-gray-600 sm:text-base">Find your next UGC gig. The details up front, the full brief one click away.</p>
             </div>
-            <Link href="/post-job" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-warm-gray-200 bg-white/70 px-5 py-2.5 text-sm font-medium text-warm-gray-700 hover:bg-peach-100">Post a free job<ArrowUpRight size={16} aria-hidden="true" /></Link>
+            <Link prefetch={false} href="/post-job" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-warm-gray-200 bg-white/70 px-5 py-2.5 text-sm font-medium text-warm-gray-700 hover:bg-peach-100">Post a free job<ArrowUpRight size={16} aria-hidden="true" /></Link>
           </div>
         </div>
         <JobFeed params={await searchParams} />
