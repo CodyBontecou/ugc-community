@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { boardBindings } from "@/lib/job-board/access";
 import { listBoardJobs, type JobFilters } from "@/lib/job-board/search";
 import { PAY_LABELS, PAY_TYPES } from "@/lib/job-board/model";
@@ -49,8 +49,20 @@ export async function JobFeed({ params = {}, basePath = "/jobs" }: { params?: Re
               <span className="sr-only">Search opportunities</span>
               <span className="relative block"><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-3.5 text-warm-gray-500" /><input type="search" enterKeyHint="search" name="q" defaultValue={filters.q} maxLength={100} placeholder="Search roles, brands, keywords…" className={`${controlClass} pl-10`} /></span>
             </label>
-            <label><span className="sr-only">Source</span><select name="source" defaultValue={filters.source} className={controlClass}><option value="">All sources</option><option value="external">External opportunity</option><option value="direct">Posted directly</option></select></label>
-            <label><span className="sr-only">Compensation</span><select name="pay" defaultValue={filters.pay} className={controlClass}><option value="">All pay types</option>{PAY_TYPES.map(type => <option key={type} value={type}>{PAY_LABELS[type]}</option>)}</select></label>
+            <label className="relative min-w-0">
+              <span className="sr-only">Source</span>
+              <select name="source" defaultValue={filters.source} className={`${controlClass} appearance-none pr-10 forced-colors:appearance-auto`}>
+                <option value="">All sources</option><option value="external">External opportunity</option><option value="direct">Posted directly</option>
+              </select>
+              <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-gray-600 forced-colors:hidden" />
+            </label>
+            <label className="relative min-w-0">
+              <span className="sr-only">Compensation</span>
+              <select name="pay" defaultValue={filters.pay} className={`${controlClass} appearance-none pr-10 forced-colors:appearance-auto`}>
+                <option value="">All pay types</option>{PAY_TYPES.map(type => <option key={type} value={type}>{PAY_LABELS[type]}</option>)}
+              </select>
+              <ChevronDown size={16} aria-hidden="true" className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-gray-600 forced-colors:hidden" />
+            </label>
             <button className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-coral to-rose px-5 text-sm font-medium text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-dark lg:col-span-1"><SlidersHorizontal size={15} aria-hidden="true" />Search jobs</button>
           </form>
           {activeFilters.length > 0 && <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">{activeFilters.map(filter => <Link key={filter.key} href={filterUrl(filter.key)} aria-label={`Remove ${filter.label} filter`} className="inline-flex max-w-full items-center gap-2 rounded-full bg-peach-100 px-3 py-1.5 text-xs text-warm-gray-700 hover:bg-peach-200"><span className="truncate">{filter.label}</span><X size={12} aria-hidden="true" className="shrink-0" /></Link>)}<Link href={`${basePath}#jobs`} className="px-2 py-1 text-xs text-warm-gray-600 underline underline-offset-4">Clear all</Link></div>}
